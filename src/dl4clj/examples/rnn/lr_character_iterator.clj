@@ -1,31 +1,16 @@
 (ns ^{:doc "
 A DataSetIterator for use in the graves-lstm-char-modelling-example
 
-@author Joachim De Beule, based on Alex Black's java implementation (see https://github.com/deeplearning4j/dl4j-0.4-examples/blob/master/src/main/java/org/deeplearning4j/examples/rnn/GravesLSTMCharModellingExample.java)
+@author Joachim De Beule
 "}
   dl4clj.examples.rnn.lr-character-iterator
-  (:require [dl4clj.examples.example-utils :refer (shakespeare index-map)])
-  (:import [java.io File]
-           [java.io IOException]
-           [java.nio.charset Charset]
-           [java.nio.file Files]
-           [java.util Arrays]
-           [java.util HashMap]
-           [java.util LinkedList]
-           [java.util List]
-           [java.util Map]
-           [java.util NoSuchElementException]
-           [java.util Random]
-           
-           [org.apache.commons.io FileUtils]
-
-           [org.deeplearning4j.datasets.iterator DataSetIterator]
-           
-           [org.nd4j.linalg.api.ndarray INDArray]
-           [org.nd4j.linalg.indexing NDArrayIndex]
-           [org.nd4j.linalg.dataset DataSet]
-           [org.nd4j.linalg.dataset.api DataSetPreProcessor]
-           [org.nd4j.linalg.factory Nd4j]))
+  (:require [nd4clj.linalg.factory.nd4j :refer (zeros)]
+            [dl4clj.examples.example-utils :refer (shakespeare index-map)]
+            [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-scalar shape)]
+            [nd4clj.linalg.dataset.api.data-set :refer :all]
+            [nd4clj.linalg.dataset.data-set :refer (data-set)])
+  (:import [java.util NoSuchElementException]           
+           [org.deeplearning4j.datasets.iterator DataSetIterator]))
 
 (defrecord LRCharDataSetIterator [valid-chars char-to-idx ^"[C" input-chars segment-length n-segments batch-size char-pointer max-char-pointer]
   DataSetIterator
@@ -37,20 +22,18 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     (when  (> (+ @char-pointer (* n segment-length)) max-char-pointer)
       (throw (NoSuchElementException.)))
     ;; Allocate space:
-    (let [^INDArray input (Nd4j/zeros (int-array [n (count valid-chars) segment-length]))
-          ^INDArray labels (Nd4j/zeros (int-array [n (count valid-chars) segment-length]))]
+    (let [input (zeros [n (count valid-chars) segment-length])
+          labels (zeros [n (count valid-chars) segment-length])]
       (dotimes [i n]
         (let [start-idx @char-pointer
               end-idx (swap! char-pointer + segment-length)]
-          (.putScalar input (int-array [i (char-to-idx (aget input-chars start-idx)) 0]) 1.0)
+          (put-scalar input [i (char-to-idx (aget input-chars start-idx)) 0] 1.0)
           (doseq [c (range 1 segment-length)]
             (let [char-idx (char-to-idx (aget input-chars (+ start-idx c)))]
-              (.putScalar input (int-array [i char-idx c]) 1.0)
-              (.putScalar labels(int-array [i char-idx (dec c)]) 1.0)))
-          (.putScalar labels (int-array [i 
-                                         (char-to-idx (aget input-chars end-idx)) 
-                                         (dec segment-length)]) 1.0)))
-          (DataSet. input labels)))
+              (put-scalar input [i char-idx c] 1.0)
+              (put-scalar labels [i char-idx (dec c)] 1.0)))
+          (put-scalar labels [i  (char-to-idx (aget input-chars end-idx)) (dec segment-length)] 1.0)))
+      (data-set input labels)))
   (hasNext [this]
     (<= @char-pointer (- max-char-pointer (* batch-size segment-length))))
   (numExamples [this] n-segments)
@@ -64,9 +47,6 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
                  ",batch-size=" (:batch-size iter)
                  ",char-pointer=" @(:char-pointer iter)
                  "]")))
-
-;; (defmethod print-dup LRCharDataSetIterator [iter out]
-;;   (.write out (prn iter)))
 
 (defn lr-character-iterator 
   "Reifies a Datasetiterator iterating over text segments in a string from left to right."
@@ -82,7 +62,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
   (let [valid-chars (into #{} (or valid-chars string))
         chars (char-array (if valid-chars (filter valid-chars string) string))
         max-char-pointer (dec (count chars))
-        max-segments (Math/floorDiv max-char-pointer segment-length)]
+        max-segments (Math/floorDiv (long max-char-pointer) (long segment-length))]
     (when (and n-segments (> n-segments max-segments)) 
       (throw (IllegalArgumentException. (str "n-segments exceeds number of available segments " max-segments))))
     (when (and n-segments (not (zero? (mod n-segments batch-size))))
@@ -97,20 +77,20 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
                             (atom 0)
                             max-char-pointer))))
 
-(defn- char-indices [example ^INDArray features-array]
-  (for [pos (range (first (.shape features-array)))]
-    (for [fi (range (second (.shape features-array)))]
-      (first (.getScalar features-array (int-array [example fi pos]))))))
+(defn- char-indices [example features-array]
+  (for [pos (range (first (shape features-array)))]
+    (for [fi (range (second (shape features-array)))]
+      (first (get-scalar features-array [example fi pos])))))
 
 (defn- binary-feature->char-idx [bf]
   (let [idx (remove #(zero? (first %)) (map vector bf (range)))]
     ;; (assert (= 1 (count idx)))
     (second (first idx))))
 
-(defn- batch-examples [^DataSet batch idx-to-char]
-  (for [example (range (.numExamples batch))]
-    (let [features-array (.getFeatures batch)
-          labels-array (.getLabels batch)]
+(defn- batch-examples [batch idx-to-char]
+  (for [example (range (num-examples batch))]
+    (let [features-array (get-features batch)
+          labels-array (get-labels batch)]
       {:input (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
                               (char-indices example features-array)))
        :output (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
@@ -135,7 +115,8 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
   (:n-segments lr-shakespeare-iterator)
   ;; => 55898
 
-  (take 10 (example-seq lr-shakespeare-iterator))
-  ;; => ...
+  (first (example-seq lr-shakespeare-iterator))
+  ;; => {:input "﻿The Project Gutenberg EBook of The Complete Works of William Shakespeare, by\r\nWilliam Shakespeare\r\n",
+  ;;     :output "The Project Gutenberg EBook of The Complete Works of William Shakespeare, by\r\nWilliam Shakespeare\r\n\r"}
   
   )
