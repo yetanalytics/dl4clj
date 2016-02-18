@@ -17,6 +17,9 @@
 (defn tensor-along-dimension [^INDArray a index dimensions]
   (.tensorAlongDimension a (int index) (int-array dimensions)))
 
+(defn data [^INDArray a]
+  (into [] (.data a)))
+
 (defn slice 
   ([^INDArray a i]
    (.slice a (int i)))
