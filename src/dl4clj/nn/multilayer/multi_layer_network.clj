@@ -13,12 +13,14 @@
     (MultiLayerNetwork. (.build ^MultiLayerConfiguration$Builder (ml-cfg/builder (update-in opts [:confs] #(map nn-cfg/neural-net-configuration %)))))))
 
 (defn init [^MultiLayerNetwork mln]
-  (.init mln))
+  (.init mln)
+  mln)
 
 (defn rnn-clear-previous-state 
   "Clear the previous state of the RNN layers (if any)."
   [^MultiLayerNetwork rnn]
-  (.rnnClearPreviousState rnn))
+  (.rnnClearPreviousState rnn)
+  rnn)
 
 (defn rnn-time-step 
   "If this MultiLayerNetwork contains one or more RNN layers: conduct forward pass (prediction) but using previous stored state for any RNN layers. The activations for the final step are also stored in the RNN layers for use next time rnnTimeStep() is called.
@@ -45,9 +47,11 @@ Otherwise output is 3d [miniBatchSize,outputSize,inputTimeSeriesLength] when usi
 
 (defmethod model/fit MultiLayerNetwork 
   ([^MultiLayerNetwork net]
-   (.fit net))
+   (.fit net)
+   net)
   ([^MultiLayerNetwork net x]
-   (.fit net x)))
+   (.fit net x)
+   net))
 
 (defmethod model/num-params MultiLayerNetwork 
   ([^MultiLayerNetwork net]
@@ -59,9 +63,11 @@ Otherwise output is 3d [miniBatchSize,outputSize,inputTimeSeriesLength] when usi
 
 (defmethod classifier/fit MultiLayerNetwork 
   ([^MultiLayerNetwork net]
-   (.fit net))
+   (.fit net)
+   net)
   ([^MultiLayerNetwork net x]
-   (.fit net x)))
+   (.fit net x)
+   net))
 
 
 ;;; Model interface (see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html):
