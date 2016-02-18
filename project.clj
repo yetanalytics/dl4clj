@@ -8,4 +8,5 @@
                  ;; [org.nd4j/nd4j-x86 "0.4-rc3.5"]              ;; CPU
                  [org.nd4j/nd4j-jblas "0.4-rc3.6"]            ;; MacBook requirement
                  [org.clojure/data.json "0.2.6"]
-                 [com.google.collections/google-collections "1.0"]]) ;; for plot-vocab in word2vec example
+                 ;; [com.google.collections/google-collections "1.0"]
+                 ]) 
