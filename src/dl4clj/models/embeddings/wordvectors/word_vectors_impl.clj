@@ -11,7 +11,7 @@
   (.accuracy impl s))
 
 (defmethod get-word-vector  WordVectorsImpl [^WordVectorsImpl impl ^String s]
-  (.getWordVector impl s))
+  (into [] (.getWordVector impl s)))
 
 (defmethod get-word-vector-matrix WordVectorsImpl [^WordVectorsImpl impl ^String s]
   (.getWordVectorMatrix impl s))
