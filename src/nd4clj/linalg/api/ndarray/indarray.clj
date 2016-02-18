@@ -18,7 +18,10 @@
   (.tensorAlongDimension a (int index) (int-array dimensions)))
 
 (defn data [^INDArray a]
-  (into [] (.data a)))
+  (let [da (double-array (.length a))]
+    (dotimes [i (.length a)]
+      (aset da i (.getDouble a (int i))))
+    (into [] da)))
 
 (defn slice 
   ([^INDArray a i]
@@ -26,3 +29,10 @@
   ([^INDArray a i dimension]
    (.slice a (int i) (int dimension))))
 
+
+(comment 
+  
+  (def a (nd4clj.linalg.factory.nd4j/create [1 2 3 4] [2 2]))
+  (data a)
+  
+  )
