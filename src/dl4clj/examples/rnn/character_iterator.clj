@@ -37,7 +37,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
   (char-array (filter (into #{} valid-characters)
                       (slurp (clojure.java.io/as-file path)))))
 
-(defrecord CharacterIterator [max-scan-length valid-characters char-idx-to-map file-characters example-length mini-batch-size num-examples-to-fetch examples-so-far rng num-characters always-start-at-newline?]
+(defrecord CharacterIterator [max-scan-length valid-characters char-to-idx-map file-characters example-length mini-batch-size num-examples-to-fetch examples-so-far rng num-characters always-start-at-newline?]
   DataSetIterator
   (hasNext [this] (<= (+ @examples-so-far mini-batch-size) num-examples-to-fetch ))
   (next [this] (.next this mini-batch-size))
