@@ -13,61 +13,61 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
   (:import [java.util NoSuchElementException]           
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator]))
 
-(defrecord LRCharDataSetIterator [valid-chars char-to-idx ^"[C" input-chars segment-length n-segments batch-size char-pointer max-char-pointer]
+(defrecord LRCharDataSetIterator [valid-characters char-to-idx-map ^"[C" input-chars segment-length n-segments mini-batch-size char-pointer max-char-pointer]
   DataSetIterator
-  (batch [this] batch-size)
+  (batch [this] mini-batch-size)
   (cursor [this] (throw (Exception. "not yet implemented")))
   (inputColumns [this] (throw (Exception. "not yet implemented")))
-  (hasNext [this] (<= @char-pointer (- max-char-pointer (* batch-size segment-length))))
-  (next [this] (.next this batch-size))
+  (hasNext [this] (<= @char-pointer (- max-char-pointer (* mini-batch-size segment-length))))
+  (next [this] (.next this mini-batch-size))
   (next [this n]
     (when  (> (+ @char-pointer (* n segment-length)) max-char-pointer)
       (throw (NoSuchElementException.)))
     ;; Allocate space:
-    (let [input (zeros [n (count valid-chars) segment-length])
-          labels (zeros [n (count valid-chars) segment-length])]
+    (let [input (zeros [n (count valid-characters) segment-length])
+          labels (zeros [n (count valid-characters) segment-length])]
       (dotimes [i n]
         (let [start-idx @char-pointer
               end-idx (swap! char-pointer + segment-length)]
-          (put-scalar input [i (char-to-idx (aget input-chars start-idx)) 0] 1.0)
+          (put-scalar input [i (char-to-idx-map (aget input-chars start-idx)) 0] 1.0)
           (doseq [c (range 1 segment-length)]
-            (let [char-idx (char-to-idx (aget input-chars (+ start-idx c)))]
+            (let [char-idx (char-to-idx-map (aget input-chars (+ start-idx c)))]
               (put-scalar input [i char-idx c] 1.0)
               (put-scalar labels [i char-idx (dec c)] 1.0)))
-          (put-scalar labels [i  (char-to-idx (aget input-chars end-idx)) (dec segment-length)] 1.0)))
+          (put-scalar labels [i  (char-to-idx-map (aget input-chars end-idx)) (dec segment-length)] 1.0)))
       (data-set input labels)))
   (numExamples [this] n-segments)
   (reset [this] (reset! char-pointer 0))
   (totalExamples [this] n-segments) 
-  (totalOutcomes [this] (count valid-chars)))
+  (totalOutcomes [this] (count valid-characters)))
 
 (defn lr-character-iterator
   ([string]
    (lr-character-iterator string {}))
-  ([^String string {:keys [batch-size    ;; number of text segments per batch
+  ([^String string {:keys [mini-batch-size    ;; number of text segments per batch
                            segment-length ;; number of characters per text segment
                            n-segments ;; number of segments to iterate. Leave unspecified to return the maximum number of segments
-                           valid-chars] ;; set of allowed characters. Leave unspecified to allow all characters.
-                    :or {batch-size 100
+                           valid-characters] ;; set of allowed characters. Leave unspecified to allow all characters.
+                    :or {mini-batch-size 100
                          segment-length 100}
                     :as opts}]
-   (let [valid-chars (into #{} (or valid-chars string))
-         input-chars (char-array (if valid-chars (filter valid-chars string) string))
-         char-to-idx (index-map valid-chars)
+   (let [valid-characters (into #{} (or valid-characters string))
+         input-chars (char-array (if valid-characters (filter valid-characters string) string))
+         char-to-idx-map (index-map valid-characters)
          char-pointer (atom 0)
          max-char-pointer (dec (count input-chars))
          max-segments (Math/floorDiv (long max-char-pointer) (long segment-length))]
      (when (and n-segments (> n-segments max-segments)) 
        (throw (IllegalArgumentException. (str "n-segments exceeds number of available segments " max-segments))))
-     (when (and n-segments (not (zero? (mod n-segments batch-size))))
-       (throw (IllegalArgumentException. (str "n-segments must be a multiple of batch-size"))))
-     (println "data has" (count string) "characters," (count valid-chars) "unique.")
-     (LRCharDataSetIterator. valid-chars 
-                             (index-map valid-chars) 
+     (when (and n-segments (not (zero? (mod n-segments mini-batch-size))))
+       (throw (IllegalArgumentException. (str "n-segments must be a multiple of mini-batch-size"))))
+     (println "data has" (count string) "characters," (count valid-characters) "unique.")
+     (LRCharDataSetIterator. valid-characters 
+                             (index-map valid-characters) 
                              input-chars 
                              segment-length 
                              (or n-segments max-segments)
-                             batch-size 
+                             mini-batch-size 
                              (atom 0)
                              max-char-pointer))))
 
@@ -99,9 +99,9 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     "Note: NOT thread safe!"
     [^LRCharDataSetIterator iter]
     (.reset iter)
-    (let [idx-to-char (zipmap (map (:char-to-idx iter)
-                                   (:valid-chars iter))
-                              (:valid-chars iter))]
+    (let [idx-to-char (zipmap (map (:char-to-idx-map iter)
+                                   (:valid-characters iter))
+                              (:valid-characters iter))]
       (mapcat #(batch-examples % idx-to-char) 
               (iterator-seq iter))))
 
