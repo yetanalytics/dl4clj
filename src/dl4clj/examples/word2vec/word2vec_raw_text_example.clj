@@ -11,11 +11,8 @@
             [dl4clj.text.tokenization.tokenizer.preprocessor.ending-pre-processor :refer (ending-pre-processor)]
             [dl4clj.models.sequencevectors.sequence-vectors :refer (fit)]
             [dl4clj.models.embeddings.wordvectors.word-vectors :refer (similarity words-nearest get-word-vector)]
-            [dl4clj.models.embeddings.wordvectors.word-vectors-impl :refer ()]
             [dl4clj.models.word2vec.word2vec :refer (word2vec)]
             [dl4clj.plot.barnes-hut-tsne :refer ()]
-            [dl4clj.models.embeddings.weight-lookup-table :refer ()]
-            [dl4clj.models.embeddings.inmemory.in-memory-lookup-table :refer ()]
             [dl4clj.models.embeddings.loader.word-vector-serializer :refer (write-word-vectors load-txt-vectors)]))
 
 ;;; This example code follows the word2vec code snippets at http://deeplearning4j.org/word2vec.html#just
@@ -56,9 +53,9 @@
 ;;; Evalating the model
 
 (similarity v "people" "money")
-;; => 0.27
+;; => 0.22
 (similarity v "day" "night")
-;; => 0.68
+;; => 0.70
 
 (words-nearest v ["man"] [] 10)
 ;; => ["president" "team" ":" "program" "fami" "company" "law" "unit" "director" "part"]
@@ -67,7 +64,7 @@
 (words-nearest v ["day"] [] 10)
 ;; => ["year" "week" "night" "game" "season" "ago" "while" "time" "children" "people"]
 (words-nearest v ["king" "woman"] ["queen"] 10)
-;; => [] ??
+;; => [] ("king" is not in the model)
   
 
 ;;; Visualizing the Model
@@ -86,5 +83,5 @@
 ;;; Saving, Reloading & Using the Model
 
 (write-word-vectors v "/tmp/words.txt")
-(def word-vectors (load-txt-vectorors "/tmp/words.txt"))
+(def word-vectors (load-txt-vectors "/tmp/words.txt"))
 (get-word-vector word-vectors "queen")
