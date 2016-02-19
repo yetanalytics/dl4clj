@@ -1,9 +1,7 @@
 (ns ^{:doc "See http://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"} 
   dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.nn.conf.multi-layer-configuration :as ml-cfg]
-            [dl4clj.nn.conf.neural-net-configuration :as nn-cfg]
-            [dl4clj.nn.api.model :as model]
-            [dl4clj.nn.api.classifier :as classifier])
+            [dl4clj.nn.conf.neural-net-configuration :as nn-cfg])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]))
 
@@ -41,42 +39,3 @@ Otherwise output is 3d [miniBatchSize,outputSize,inputTimeSeriesLength] when usi
 
 (defn get-layer [^MultiLayerNetwork mln i]
   (.getLayer mln i))
-
-
-;;; Model Interface
-
-(defmethod model/fit MultiLayerNetwork 
-  ([^MultiLayerNetwork net]
-   (.fit net)
-   net)
-  ([^MultiLayerNetwork net x]
-   (.fit net x)
-   net))
-
-(defmethod model/num-params MultiLayerNetwork 
-  ([^MultiLayerNetwork net]
-   (.numParams net))
-  ([^MultiLayerNetwork net x]
-   (.numParams net x)))
-
-;;; Classifier Interface
-
-(defmethod classifier/fit MultiLayerNetwork 
-  ([^MultiLayerNetwork net]
-   (.fit net)
-   net)
-  ([^MultiLayerNetwork net x]
-   (.fit net x)
-   net))
-
-
-;;; Model interface (see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html):
-;;;   fit()
-;;;   fit(INDArray data)
-
-;;; Classifier interface (see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html)
-;;;   fit(DataSet data)
-;;;   fit(DataSetIterator iter)
-;;;   fit(INDArray examples, INDArray labels)
-;;;   fit(INDArray examples, int[] labels)
-

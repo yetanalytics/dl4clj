@@ -3,26 +3,32 @@
   (:import [org.deeplearning4j.text.sentenceiterator SentenceIterator]
            [org.deeplearning4j.text.sentenceiterator SentencePreProcessor]))
 
-(defmulti next-sentence 
+(defn next-sentence 
   "Gets the next sentence or null if there's nothing left (Do yourself a favor and check has-next)" 
-  (fn [^SentenceIterator i] (type i)))
+  [^SentenceIterator i]
+  (.nextSentence i))
 
-(defmulti has-next 
+(defn has-next 
   "whether there's anymore sentences left"
-  (fn [^SentenceIterator i] (type i)))
+  [^SentenceIterator i]
+  (.hasNext i))
 
-(defmulti reset 
+(defn reset 
   "Resets the iterator to the beginning"
-  (fn [^SentenceIterator i] (type i)))
+  [^SentenceIterator i]
+  (.reset i))
 
-(defmulti finish 
+(defn finish 
   "Allows for any finishing (closing of input streams or the like)"
-  (fn [^SentenceIterator i] (type i)))
+  [^SentenceIterator i]
+  (.finish i))
 
-(defmulti get-pre-processor 
-  (fn [^SentenceIterator i] (type i)))
+(defn get-pre-processor 
+  [^SentenceIterator i]
+  (.getPreProcessor i))
 
-(defmulti set-pre-processor 
-  (fn [^SentenceIterator i ^SentencePreProcessor p] (type i)))
+(defn set-pre-processor 
+  [^SentenceIterator i ^SentencePreProcessor p]
+  (.setPreProcessor i p))
 
 

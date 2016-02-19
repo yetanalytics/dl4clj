@@ -2,55 +2,73 @@
   dl4clj.models.embeddings.weight-lookup-table
   (:import [org.deeplearning4j.models.embeddings WeightLookupTable]))
 
-(defmulti get-gradient
+(defn get-gradient
   "Returns gradient for specified word"
-  (fn [this column gradient] (type this)))
+  [^WeightLookupTable this column gradient]
+  (.getGradient this (int column) (double gradient)))
 
-(defmulti get-table-id
+(defn get-table-id
   "Returns unique ID of this table."
-  (fn [this] (type this)))
+  [^WeightLookupTable this]
+  (.getLabelId this))
 
-(defmulti get-vocab-cache
+(defn get-vocab-cache
   "Returns corresponding vocabulary"
-  (fn [this] (type this)))
+  [^WeightLookupTable this]
+  (.getVocabCache this))
 
-(defmulti get-weights
-  (fn [this] (type this)))
+(defn get-weights
+  [^WeightLookupTable this]
+  (.getWeights this))
 
-(defmulti layer-size
+(defn layer-size
   "The layer size for the lookup table"
-  (fn [this] (type this)))
+  [^WeightLookupTable this]
+  (.layerSize this))
 
-(defmulti load-codes 
+(defn load-codes 
   "Loads the co-occurrences for the given codes"
-  (fn [this ints] (type this)))
+  [^WeightLookupTable this ints]
+  (.loadCodes this (int-array ints)))
 
-(defmulti plot-vocab
+(defn plot-vocab
   "Render the words via tsne"
-  (fn [this & more ] (type this)))
+  ([^WeightLookupTable this]
+   (.plotVocab this))
+  ([^WeightLookupTable this tsne]
+   (.plotVocab this tsne)))
 
-(defmulti put-code 
-  (fn [this code-index code] (type this)))
+(defn put-code 
+  [^WeightLookupTable this code-index code]
+  (.putCode this (int code-index) code))
 
-(defmulti put-vector
+(defn put-vector
   "Inserts a word vector"
-  (fn [this word vector] (type this)))
+  [^WeightLookupTable this ^String word vector]
+  (.putVector this word vector))
 
-(defmulti reset-weights
+(defn reset-weights
   "Reset the weights of the cache"
-  (fn [this & more] (type this)))
+  ([^WeightLookupTable this]
+   (.resetWeights this))
+  ([^WeightLookupTable this reset?]
+   (.resetWeights this (boolean reset?))))
 
-(defmulti set-learning-rate
+(defn set-learning-rate
   "Sets the learning rate"
-  (fn [this lr] (type this)))
+  [^WeightLookupTable this lr]
+  (.setLearningRate this (double lr)))
 
-(defmulti set-table-id 
+(defn set-table-id 
   "Set's table Id."
-  (fn [this table-id] (type this)))
+  [^WeightLookupTable this table-id]
+  (.setTableId this (long table-id)))
 
-(defmulti vector
-  (fn [this word] (type this)))
+(defn vector
+  [^WeightLookupTable this ^String word]
+  (.vector this word))
 
-(defmulti vectors
+(defn vectors
   "Iterates through all of the vectors in the cache"
-  (fn [this] (type this)))
+  [^WeightLookupTable this]
+  (.vectors this))

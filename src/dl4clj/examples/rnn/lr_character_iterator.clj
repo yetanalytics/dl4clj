@@ -4,19 +4,21 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
 @author Joachim De Beule
 "}
   dl4clj.examples.rnn.lr-character-iterator
+  (:refer-clojure :exclude [next])
   (:require [nd4clj.linalg.factory.nd4j :refer (zeros)]
             [dl4clj.examples.example-utils :refer (shakespeare index-map)]
             [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-scalar shape)]
-            [nd4clj.linalg.dataset.api.data-set :refer :all]
+            [nd4clj.linalg.dataset.api.data-set :refer (get-features get-labels)]
             [nd4clj.linalg.dataset.data-set :refer (data-set)])
   (:import [java.util NoSuchElementException]           
-           [org.deeplearning4j.datasets.iterator DataSetIterator]))
+           [org.nd4j.linalg.dataset.api.iterator DataSetIterator]))
 
 (defrecord LRCharDataSetIterator [valid-chars char-to-idx ^"[C" input-chars segment-length n-segments batch-size char-pointer max-char-pointer]
   DataSetIterator
-  (batch [_] batch-size)
-  (cursor [_] (mod @char-pointer segment-length)) 
-  (inputColumns [_] (count valid-chars))
+  (batch [this] batch-size)
+  (cursor [this] (throw (Exception. "not yet implemented")))
+  (inputColumns [this] (throw (Exception. "not yet implemented")))
+  (hasNext [this] (<= @char-pointer (- max-char-pointer (* batch-size segment-length))))
   (next [this] (.next this batch-size))
   (next [this n]
     (when  (> (+ @char-pointer (* n segment-length)) max-char-pointer)
@@ -34,22 +36,12 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
               (put-scalar labels [i char-idx (dec c)] 1.0)))
           (put-scalar labels [i  (char-to-idx (aget input-chars end-idx)) (dec segment-length)] 1.0)))
       (data-set input labels)))
-  (hasNext [this]
-    (<= @char-pointer (- max-char-pointer (* batch-size segment-length))))
   (numExamples [this] n-segments)
   (reset [this] (reset! char-pointer 0))
   (totalExamples [this] n-segments) 
   (totalOutcomes [this] (count valid-chars)))
 
-(defmethod print-method LRCharDataSetIterator [iter ^java.io.Writer w]
-  (.write w (str "#LRCharDataSetIterator["
-                 "n-segments=" (:n-segments iter) 
-                 ",batch-size=" (:batch-size iter)
-                 ",char-pointer=" @(:char-pointer iter)
-                 "]")))
-
-(defn lr-character-iterator 
-  "Reifies a Datasetiterator iterating over text segments in a string from left to right."
+(defn lr-character-iterator
   ([string]
    (lr-character-iterator string {}))
   ([^String string {:keys [batch-size    ;; number of text segments per batch
@@ -60,8 +52,10 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
                          segment-length 100}
                     :as opts}]
    (let [valid-chars (into #{} (or valid-chars string))
-         chars (char-array (if valid-chars (filter valid-chars string) string))
-         max-char-pointer (dec (count chars))
+         input-chars (char-array (if valid-chars (filter valid-chars string) string))
+         char-to-idx (index-map valid-chars)
+         char-pointer (atom 0)
+         max-char-pointer (dec (count input-chars))
          max-segments (Math/floorDiv (long max-char-pointer) (long segment-length))]
      (when (and n-segments (> n-segments max-segments)) 
        (throw (IllegalArgumentException. (str "n-segments exceeds number of available segments " max-segments))))
@@ -70,7 +64,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
      (println "data has" (count string) "characters," (count valid-chars) "unique.")
      (LRCharDataSetIterator. valid-chars 
                              (index-map valid-chars) 
-                             chars 
+                             input-chars 
                              segment-length 
                              (or n-segments max-segments)
                              batch-size 
@@ -80,6 +74,8 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
 (comment
 
   ;;; some (inneficient) code for inspecting the examples in an lr-character-iterator
+
+  (require '[nd4j.linalg.dataset.api.iterator.data-set-iterator :refer :all])
 
   (defn- char-indices [example features-array]
     (for [pos (range (first (shape features-array)))]
@@ -91,7 +87,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
       (second (first idx))))
 
   (defn- batch-examples [batch idx-to-char]
-    (for [example (range (num-examples batch))]
+    (for [example (range (nd4clj.linalg.dataset.api.data-set/num-examples batch))]
       (let [features-array (get-features batch)
             labels-array (get-labels batch)]
         {:input (apply str (map #(idx-to-char (binary-feature->char-idx %)) 

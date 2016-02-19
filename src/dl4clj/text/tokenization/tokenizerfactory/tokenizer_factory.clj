@@ -2,14 +2,17 @@
   dl4clj.text.tokenization.tokenizerfactory.tokenizer-factory
   (:import [org.deeplearning4j.text.tokenization.tokenizerfactory TokenizerFactory]))
 
-(defmulti create 
+(defn create 
   "Create a tokenizer based on an input stream"
-  (fn [x is] (type x)))
+  [^TokenizerFactory x is]
+  (.create x (clojure.java.io/input-stream is)))
 
-(defmulti create-from-string 
+(defn create-from-string 
   "Create a tokenizer from string"
-  (fn [x s] (type x)))
+  [^TokenizerFactory x ^String s]
+  (.create x s))
 
-(defmulti set-token-pre-processor 
+(defn set-token-pre-processor 
   "Sets a token pre processor to be used with every tokenizer" 
-  (fn [x pp] (type x)))
+  [^TokenizerFactory x pp]
+  (.setTokenPreProcessor x pp))

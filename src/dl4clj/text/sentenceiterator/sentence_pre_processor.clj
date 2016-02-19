@@ -2,16 +2,15 @@
   dl4clj.text.sentenceiterator.sentence-pre-processor
   (:import [org.deeplearning4j.text.sentenceiterator SentencePreProcessor]))
 
-(defmulti pre-process 
-  (fn [^SentencePreProcessor p ^String s] (type p)))
+(defn pre-process 
+  [^SentencePreProcessor p ^String s]
+  (.preProcess p s))
 
 (deftype CustomSentencePreprocessor [preprocessor]
   SentencePreProcessor
   (preProcess [this s]
     (preprocessor s)))
 
-(defmethod pre-process CustomSentencePreprocessor [p s]
-  (.preProcess ^SentencePreProcessor p s))
 
 (defn sentence-pre-processor [preprocessor]
   (CustomSentencePreprocessor. preprocessor))

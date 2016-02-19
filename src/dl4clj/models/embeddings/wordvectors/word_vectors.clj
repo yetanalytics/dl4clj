@@ -2,50 +2,66 @@
   dl4clj.models.embeddings.wordvectors.word-vectors
   (:import [org.deeplearning4j.models.embeddings.wordvectors WordVectors]))
 
-(defmulti accuracy
+(defn accuracy
   "Accuracy based on questions which are a space separated list of strings where the first
 word is the query word, the next 2 words are negative, and the last word is the
 predicted word to be nearest"
-  (fn [this string] (type this)))
+  [^WordVectors this string]
+  (.accuracy this string))
 
-(defmulti get-word-vector 
+(defn get-word-vector 
   "Get the word vector for a given matrix" 
-  (fn [this string] (type this)))
+  [^WordVectors this string]
+  (.getWordVector this string))
 
-(defmulti get-word-vector-matrix
+(defn get-word-vector-matrix
   "Get the word vector for a given matrix"
-  (fn [this string] (type this)))
+  [^WordVectors this string]
+  (.getWordVectorMatrix this string))
 
-(defmulti get-word-vector-matrix-normalized 
+(defn get-word-vector-matrix-normalized 
   "Returns the word vector divided by the norm2 of the array"
-  (fn [this string] (type this)))
+  [^WordVectors this string]
+  (.getWordVectorMatrixNormalized this string))
 
-(defmulti has-word
+(defn has-word
   "Returns true if the model has this word in the vocab"
-  (fn [this string] (type this)))
+  [^WordVectors this string]
+  (.hasWord this string))
 
-(defmulti index-of
-  (fn [this string] (type this)))
+(defn index-of
+  [^WordVectors this string]
+  (.indexOf this string))
 
-(defmulti lookup-table
+(defn lookup-table
   "Lookup table for the vectors"
-  (fn [this] (type this)))
+  [^WordVectors this]
+  (.lookupTable this))
 
-(defmulti similarity
+(defn similarity
   "Returns the similarity of 2 words"
-  (fn [this string1 string2] (type this)))
+  [^WordVectors this string1 string2]
+  (.similarity this string1 string2))
 
-(defmulti similar-words-in-vocab-to 
+(defn similar-words-in-vocab-to 
   "Find all words with a similar characters in the vocab"
-  (fn [this string ^Double accuracy] (type this)))
+  [^WordVectors this string ^Double accuracy]
+  (.similarWordsInVocabTo this string ^Double accuracy))
 
-(defmulti vocab
+(defn vocab
   "Vocab for the vectors"
-  (fn [this] (type this)))
-        
-(defmulti words-nearest
-  "Words nearest based on positive and negative"
-  (fn [this & more] (type this)))
+  [^WordVectors this]
+  (.vocab this))
 
-(defmulti words-nearest-sum
-  (fn [this & more] (type this)))
+(defn words-nearest
+  "Words nearest based on positive and negative"
+  ;; ([^WordVectors this words]
+  ;;  (.wordsNearest this words))
+  ([^WordVectors this positive negative top]
+   (.wordsNearest this positive negative (int top))))
+
+(defn words-nearest-sum
+  ;; ([^WordVectors this words]
+  ;;  (.wordsNearestSum this words))
+  ([^WordVectors this positive negative top]
+   (.wordsNearestSum this positive negative (int top))))
