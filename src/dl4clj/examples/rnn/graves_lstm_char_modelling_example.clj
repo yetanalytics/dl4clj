@@ -15,7 +15,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
             [dl4clj.nn.conf.layers.rnn-output-layer]
             [nd4clj.linalg.factory.nd4j :refer (zeros set-enforce-numerical-stability!)]
             [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-double tensor-along-dimension slice data)]
-            [dl4clj.nn.conf.distribution.normal-distribution]
+            [dl4clj.nn.conf.distribution.uniform-distribution]
             [nd4clj.linalg.lossfunctions.loss-functions]
             [dl4clj.nn.conf.neural-net-configuration :refer (neural-net-configuration)]
             [dl4clj.nn.multilayer.multi-layer-network :refer (multi-layer-network init get-layers get-layer rnn-clear-previous-state rnn-time-step)]
@@ -140,7 +140,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
   (println "Completed epoch " i )
   (println "Sampling characters from network given initialization \"\"")
   (loop [j 0
-         (def samples (sample-characters-from-network generation-initialization net iter rng n-characters-to-sample n-samples-to-generate))]
+         samples (sample-characters-from-network generation-initialization net iter rng n-characters-to-sample n-samples-to-generate)]
     (println "----- Sample " j " -----")
     (println (first samples))
     (println)
