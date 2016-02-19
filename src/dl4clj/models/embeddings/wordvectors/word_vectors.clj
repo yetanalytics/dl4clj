@@ -12,7 +12,7 @@ predicted word to be nearest"
 (defn get-word-vector 
   "Get the word vector for a given matrix" 
   [^WordVectors this string]
-  (.getWordVector this string))
+  (into [] (.getWordVector this string)))
 
 (defn get-word-vector-matrix
   "Get the word vector for a given matrix"
