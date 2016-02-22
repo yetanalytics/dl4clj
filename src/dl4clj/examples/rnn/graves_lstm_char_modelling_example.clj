@@ -10,7 +10,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
   (:require [dl4clj.examples.example-utils :refer (shakespeare)]
             ;; [dl4clj.examples.rnn.lr-character-iterator :refer (lr-character-iterator)]
             [dl4clj.examples.rnn.character-iterator :refer (get-shakespeare-iterator)]
-            [nd4j.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes)]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes)]
             [dl4clj.nn.conf.layers.graves-lstm]
             [dl4clj.nn.conf.layers.rnn-output-layer]
             [nd4clj.linalg.factory.nd4j :refer (zeros set-enforce-numerical-stability!)]
