@@ -9,7 +9,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
             [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-scalar shape)]
             [nd4clj.linalg.dataset.api.data-set :refer (get-features get-labels)]
             [nd4clj.linalg.dataset.data-set :refer (data-set)]
-            [nd4j.linalg.dataset.api.iterator.data-set-iterator :refer (reset num-examples has-next next)]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (reset num-examples has-next next)]
             [dl4clj.examples.example-utils :refer (shakespeare)])
   (:import [java.util NoSuchElementException]
            [java.util Random]
