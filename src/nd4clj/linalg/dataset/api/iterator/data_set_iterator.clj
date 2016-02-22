@@ -1,5 +1,5 @@
 (ns ^{:doc "see http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.html"}
-  nd4j.linalg.dataset.api.iterator.data-set-iterator
+  nd4clj.linalg.dataset.api.iterator.data-set-iterator
   (:refer-clojure :exclude [next])
   (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
            [org.nd4j.linalg.dataset.api DataSetPreProcessor]))
