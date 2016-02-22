@@ -84,7 +84,6 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 (println "Total number of network parameters: " (reduce + (map model/num-params (get-layers net))))
 
 ;; Do training, and then generate and print samples from network
-
 (defn- sample-from-distribution 
   "Sample from a probability distribution over discrete classes given as a vector of probabilities
   summing to 1.0."
@@ -93,7 +92,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
     (loop [i 0
            sum (nth distribution 0)]
       (cond (<= d sum) i
-            (< i (count distribution)) (recur (inc i) (+ sum (nth distribution i)))
+            (< i (count distribution)) (recur (inc i) (+ sum (nth distribution (inc i))))
             :else (throw (IllegalArgumentException. (str "Distribution is invalid? d= " d ", sum=" sum)))))))
 
 (defn sample-characters-from-network [initialization  net iter rng characters-to-sample num-samples]
@@ -132,7 +131,6 @@ For general instructions using deeplearning4j's implementation of recurrent neur
                    (inc i)))))
     (map #(.toString %) sb))))
 
-;; (def i 0)
 (dotimes [i num-epochs]
   (classifier/fit net iter)
   
@@ -149,4 +147,5 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 
   ;; Reset iterator for another epoch
   (reset iter))
+
 
