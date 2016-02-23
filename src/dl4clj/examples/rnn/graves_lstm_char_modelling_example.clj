@@ -7,18 +7,18 @@ GravesLSTM Character modelling example
 For general instructions using deeplearning4j's implementation of recurrent neural nets see http://deeplearning4j.org/usingrnns.html
 "}
   dl4clj.examples.rnn.graves-lstm-char-modelling-example
-  (:require [dl4clj.examples.example-utils :refer (shakespeare)]
+  (:require [dl4clj.examples.rnn.graves-lstm-char-modelling-example.tools :refer :all]
+            [dl4clj.examples.example-utils :refer (shakespeare)]
             ;; [dl4clj.examples.rnn.lr-character-iterator :refer (lr-character-iterator)]
             [dl4clj.examples.rnn.character-iterator :refer (get-shakespeare-iterator)]
             [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes reset)]
             [dl4clj.nn.conf.layers.graves-lstm]
             [dl4clj.nn.conf.layers.rnn-output-layer]
-            [nd4clj.linalg.factory.nd4j :refer (zeros set-enforce-numerical-stability!)]
-            [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-double tensor-along-dimension slice data)]
+            ;; [nd4clj.linalg.factory.nd4j :refer (set-enforce-numerical-stability!)]
             [dl4clj.nn.conf.distribution.uniform-distribution]
             [nd4clj.linalg.lossfunctions.loss-functions]
             [dl4clj.nn.conf.neural-net-configuration :refer (neural-net-configuration)]
-            [dl4clj.nn.multilayer.multi-layer-network :refer (multi-layer-network init get-layers get-layer rnn-clear-previous-state rnn-time-step)]
+            [dl4clj.nn.multilayer.multi-layer-network :refer (multi-layer-network init get-layers get-layer)]
             [dl4clj.nn.api.model :as model]
             [dl4clj.nn.api.classifier :as classifier]
             [dl4clj.nn.api.layer])
@@ -84,53 +84,6 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 (println "Total number of network parameters: " (reduce + (map model/num-params (get-layers net))))
 
 ;; Do training, and then generate and print samples from network
-(defn- sample-from-distribution 
-  "Sample from a probability distribution over discrete classes given as a vector of probabilities
-  summing to 1.0."
-  [distribution ^Random rng] 
-  (let [d (.nextDouble rng)]
-    (loop [i 0
-           sum (nth distribution 0)]
-      (cond (<= d sum) i
-            (< i (count distribution)) (recur (inc i) (+ sum (nth distribution (inc i))))
-            :else (throw (IllegalArgumentException. (str "Distribution is invalid? d= " d ", sum=" sum)))))))
-
-(defn sample-characters-from-network [initialization  net iter rng characters-to-sample num-samples]
-  ;; Set up initialization. If no initialization: use a random character
-  (let [;; set up initialization. If no initialization: use a random character.
-        initialization (or initialization (str (rand-nth (seq (:valid-characters iter)))))
-        char-to-idx-map (:char-to-idx-map iter)
-        idx-to-char-map (zipmap (vals char-to-idx-map) (keys char-to-idx-map))
-        initialization-input (zeros [num-samples (input-columns iter) (count initialization)])]
-    ;; create input for initialization
-    (dotimes [i (count initialization)]
-      (let [idx (char-to-idx-map (nth initialization i))]
-        (dotimes [j num-samples]
-          (put-scalar initialization-input [j idx i] 1.0))))
-    ;; Sample from network (and feed samples back into input) one character at a time (for all
-    ;; samples). Sampling is done in parallel here
-    (rnn-clear-previous-state net)
-    (let [output (rnn-time-step net initialization-input)
-          sb (for [i (range num-samples)] (StringBuilder.))]
-      (loop [output (tensor-along-dimension output (- (.size output 2) 1) [1 0]) ;; (dec (count start-string))
-             i 0]
-        ;; set up next input (single time step) by sampling from previous output
-        (let [next-input (zeros [num-samples (input-columns iter)])]
-          (dotimes [s num-samples]
-            (let [output-prob-distribution (double-array (total-outcomes iter))]
-              (dotimes [j (count output-prob-distribution)]
-                (aset output-prob-distribution j (get-double output [s j])))
-              (let [sampled-character-idx (sample-from-distribution output-prob-distribution rng)]
-                ;; prepare next time step input
-                (put-scalar next-input [s sampled-character-idx] 1.0)
-                ;; add sampled character to stringbuilder (human readable output)
-                (.append (nth sb s) (idx-to-char-map sampled-character-idx)))))
-          (when (< i characters-to-sample)
-            ;; do one time step of forward pass
-            (recur (rnn-time-step net next-input)
-                   (inc i)))))
-    (map #(.toString %) sb))))
-
 (dotimes [i num-epochs]
   (classifier/fit net iter)
   
