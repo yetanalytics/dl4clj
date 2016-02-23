@@ -29,3 +29,6 @@
       java.lang.String new-name
       clojure.lang.Keyword (keyword new-name)
       clojure.lang.Symbol (symbol new-name))))
+
+(defn indexed [col]
+  (map vector col (range)))
