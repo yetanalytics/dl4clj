@@ -1,5 +1,6 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/models/embeddings/WeightLookupTable.html"}
   dl4clj.models.embeddings.weight-lookup-table
+  (:refer-clojure :exclude [vector])
   (:import [org.deeplearning4j.models.embeddings WeightLookupTable]))
 
 (defn get-gradient
