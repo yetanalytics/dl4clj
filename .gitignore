@@ -10,3 +10,5 @@ pom.xml.asc
 .lein-plugins/
 .lein-failures
 .nrepl-port
+/src/dl4clj/examples/rnn/graves_lstm_char_modelling_example-saved.clj
+/src/dl4clj/examples/rnn/graves_lstm_char_modelling_example.out
