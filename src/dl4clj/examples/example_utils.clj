@@ -1,7 +1,9 @@
 (ns ^{:doc ""}
   dl4clj.examples.example-utils
-  (:import [java.io IOException]
-           [org.apache.commons.io FileUtils]))
+  (:import [java.io IOException BufferedInputStream FileInputStream BufferedOutputStream FileOutputStream]
+           [org.apache.commons.io FileUtils]
+           [org.apache.commons.compress.archivers.tar TarArchiveEntry TarArchiveInputStream]
+           [org.apache.commons.compress.compressors.gzip GzipCompressorInputStream]))
 
 (defn index-map 
   "Utility function to make an map from elements in a collection to indices"
@@ -41,3 +43,20 @@
   []
   (slurp (shakespeare-file)))
 
+(defn extract-tgz 
+  ([file-path output-path]
+   (extract-tgz file-path output-path {:buffer-size 4096}))
+  ([^String file-path output-path {:keys [buffer-size]
+                                   :or {buffer-size 4096}}]
+   (println "Extracting " file-path "to" output-path)
+   (with-open [is (TarArchiveInputStream. (GzipCompressorInputStream. (BufferedInputStream. (FileInputStream. file-path))))]
+     (loop [entry (.getNextEntry is)]
+       (when entry
+         (if (.isDirectory entry)
+           (.mkdirs (clojure.java.io/as-file (str output-path (.getName entry))))
+           (let [data (bytes buffer-size)]
+             (with-open [dest (BufferedOutputStream. (FileOutputStream. (str output-path (.getName entry))) buffer-size)]
+               (loop [count (.read is data 0 buffer-size)]
+                 (when-not (= -1 count)
+                   (.write dest data 0 count)
+                   (recur (.read is data 0 buffer-size))))))))))))
