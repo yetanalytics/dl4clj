@@ -15,10 +15,9 @@
   [lookup-table tokenizer-factory vocab-cache document]
   (let [document-as-tokens (filter (partial contains-word vocab-cache)
                                    (get-tokens (tf/create-from-string tokenizer-factory (get-content document))))
-        all-words (ndf/create (count document-as-tokens)
-                              (lt/layer-size lookup-table))]
+        all-words (ndf/create-from-shape (count document-as-tokens)
+                                         (lt/layer-size lookup-table))]
     (doseq [[word idx] (indexed document-as-tokens)]
       (put-row all-words idx (lt/vector lookup-table word)))
     (mean all-words 0)))
-
 
