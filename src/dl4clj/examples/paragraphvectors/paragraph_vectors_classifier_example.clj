@@ -1,4 +1,5 @@
-(ns ^{:doc "see https://github.com/deeplearning4j/dl4j-0.4-examples/blob/master/src/main/java/org/deeplearning4j/examples/paragraphvectors/ParagraphVectorsClassifierExample.java"}
+(ns ^{:doc "see https://github.com/deeplearning4j/dl4j-0.4-examples/blob/master/src/main/java/org/deeplearning4j/examples/paragraphvectors/ParagraphVectorsClassifierExample.java
+and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
   dl4clj.examples.paragraphvectors.paragraph-vectors-classifier-example
   (:require [dl4clj.text.documentiterator.label-aware-iterator :refer (documents)]
             [dl4clj.examples.paragraphvectors.tools.file-label-aware-iterator :refer (file-label-aware-iterator)]
