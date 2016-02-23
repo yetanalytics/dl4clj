@@ -4,7 +4,7 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Usage
 
-Under construction. For now, have a look at the [examples](https://github.com/engagor/dl4clj/src/dl4clj/examples/) to get started.
+Under construction. For now, have a look at the [examples](https://github.com/engagor/dl4clj/tree/master/src/dl4clj/examples) to get started.
 
 ## License
 
