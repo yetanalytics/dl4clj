@@ -32,8 +32,7 @@ and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
                                           :tokenizer-factory t}))
 
 ;; Start model training
-(time (fit paragraphvectors))
-"Elapsed time: 77194.801 msecs"
+(fit paragraphvectors)
 
 ;; At this point we assume we have a model and we can classify unlabeled documents.
 (def unlabeled-iterator (file-label-aware-iterator (clojure.java.io/resource "paravec/unlabeled")))
