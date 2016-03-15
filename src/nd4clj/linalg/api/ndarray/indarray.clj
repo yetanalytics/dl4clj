@@ -3,6 +3,9 @@
   (:refer-clojure :exclude [min max])
   (:import [org.nd4j.linalg.api.ndarray INDArray]))
 
+;;; Matrix manipulation
+;;; -------------------
+
 (defn put-scalar 
   "Insert the item at the specified indices"
   [^INDArray a indices value]  
@@ -13,17 +16,35 @@
   [^INDArray a row to-put]
   (.putRow a (int row) to-put))
 
-(defn get-scalar 
-  "Get the vector along a particular dimension"
-  [^INDArray a indices]
-  (.getScalar a (int-array indices)))
+;;; matrix properties
+;;; -----------------
+
+(defn is-row-vector [^INDArray a]
+  (.isRowVector a))
+
+(defn is-column-vector [^INDArray a]
+  (.isColumnVector a))
 
 (defn shape
   "Returns the shape of an ndarray"
    [^INDArray a]
   (into [] (.shape a)))
 
-(defn data 
+;;; matrix values
+;;; -------------
+
+(defn get-scalar 
+  "Get the vector along a particular dimension"
+  [^INDArray a indices]
+  (.getScalar a (int-array indices)))
+
+(defn tensor-along-dimension [^INDArray a index dimensions]
+  (.tensorAlongDimension a (int index) (int-array dimensions)))
+
+(defn get-double [^INDArray a indices]
+  (.getDouble a (int-array indices)))
+
+(defn data
   "Returns a linear double array representation of this ndarray"
   [^INDArray a]
   (let [da (double-array (.length a))]
@@ -37,6 +58,9 @@
    (.slice a (int i)))
   ([^INDArray a i dimension]
    (.slice a (int i) (int dimension))))
+
+;;; Matrix reductions
+;;; -----------------
 
 (defn max
   "Returns the overall max of this ndarray"
@@ -54,15 +78,56 @@
   (.min this (int-array [dimension])))
 
 
+;;; Matrix duplication
+;;; ------------------
 
+(defn dup 
+  "Return a copy of an INDarray"
+  [^INDArray a]
+  (.dup a))
 
+;;; Matrix operations
+;;; -----------------
 
-(defn tensor-along-dimension [^INDArray a index dimensions]
-  (.tensorAlongDimension a (int index) (int-array dimensions)))
+(defn mul
+  "Non-destructive element-wise multiplication of an ndarray with a scalar or other ndarray."
+  [^INDArray A a]
+  (.mul A a))
 
-(defn get-double [^INDArray a indices]
-  (.getDouble a (int-array indices)))
+(defn mul!
+  "Destructive element-wise multiplication of an ndarray with a scalar or other ndarray."
+  [^INDArray A a]
+  (.muli A a))
 
+(defn mmul
+  "Non-destructive iner/outer product of two ndarrays."
+  [^INDArray A ^INDArray B]
+  (.mmul A B))
+
+(defn mmul!
+  "Destructive iner/outer product of two ndarrays."
+  [^INDArray A ^INDArray B]
+  (.mmuli A B))
+
+(defn add
+  "Non-destructive addition of ndarray with scalar or other ndarray"
+  [^INDArray A B]
+  (.add A B))
+
+(defn add!
+  "Destructive addition of ndarray with scalar or other ndarray"
+  [^INDArray A B]
+  (.addi A B))
+
+(defn sub
+  "Non-destructive subtraction of ndarray with scalar or other ndarray"
+  [^INDArray A B]
+  (.sub A B))
+
+(defn sub!
+  "Destructive subtraction of ndarray with scalar or other ndarray"
+  [^INDArray A B]
+  (.subi A B))
 
 (comment 
   
