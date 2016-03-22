@@ -8,3 +8,12 @@
   "Cosine similarity"
   [^INDArray d1 ^INDArray d2]
   (Transforms/cosineSim d1 d2))
+
+(defn tanh [^INDArray nda]
+  (Transforms/tanh nda))
+
+(defn sigmoid [^INDArray nda]
+  (Transforms/sigmoid nda))
+
+(defn unit-vec! [^INDArray nda]
+  (Transforms/unitVec nda))
