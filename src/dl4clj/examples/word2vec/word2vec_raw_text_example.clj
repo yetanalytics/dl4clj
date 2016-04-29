@@ -12,7 +12,7 @@
             [dl4clj.models.sequencevectors.sequence-vectors :refer (fit)]
             [dl4clj.models.embeddings.wordvectors.word-vectors :refer (similarity words-nearest get-word-vector)]
             [dl4clj.models.word2vec.word2vec :refer (word2vec)]
-            [dl4clj.plot.barnes-hut-tsne :refer ()]
+            [dl4clj.plot.barnes-hut-tsne :refer (barnes-hut-tsne)]
             [dl4clj.models.embeddings.loader.word-vector-serializer :refer (write-word-vectors load-txt-vectors)]))
 
 ;;; This example code follows the word2vec code snippets at http://deeplearning4j.org/word2vec.html#just
