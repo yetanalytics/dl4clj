@@ -32,7 +32,7 @@
 (defn backprop-gradient
   "Calculate the gradient relative to the error in the next layer"
   [^Layer this ^INDArray epsilon]
-  (. backpropGradient this epsilon))
+  (.backpropGradient this epsilon))
 
 (defn calc-gradient
   "Calculate the gradient"
