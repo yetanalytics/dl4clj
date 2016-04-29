@@ -1,4 +1,4 @@
-(defproject dl4clj "0.1.0-SNAPSHOT"
+(defproject dl4clj "0.0.1-SNAPSHOT"
   :description "ports of some DL4J examples to Clojure"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.deeplearning4j/deeplearning4j-core "0.4-rc3.7"]
