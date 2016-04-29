@@ -7,14 +7,12 @@ GravesLSTM Character modelling example
 For general instructions using deeplearning4j's implementation of recurrent neural nets see http://deeplearning4j.org/usingrnns.html
 "}
   dl4clj.examples.rnn.graves-lstm-char-modelling-example
-  (:require [dl4clj.examples.rnn.graves-lstm-char-modelling-example.tools :refer :all]
+  (:require [dl4clj.examples.rnn.tools :refer [sample-characters-from-network]]
             [dl4clj.examples.example-utils :refer (shakespeare)]
-            ;; [dl4clj.examples.rnn.lr-character-iterator :refer (lr-character-iterator)]
             [dl4clj.examples.rnn.character-iterator :refer (get-shakespeare-iterator)]
             [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes reset)]
             [dl4clj.nn.conf.layers.graves-lstm]
             [dl4clj.nn.conf.layers.rnn-output-layer]
-            ;; [nd4clj.linalg.factory.nd4j :refer (set-enforce-numerical-stability!)]
             [dl4clj.nn.conf.distribution.uniform-distribution]
             [nd4clj.linalg.lossfunctions.loss-functions]
             [dl4clj.nn.conf.neural-net-configuration :refer (neural-net-configuration)]

@@ -1,5 +1,5 @@
 (ns ^{:doc ""}
-  dl4clj.examples.rnn.graves-lstm-char-modelling-example.tools
+  dl4clj.examples.rnn.tools
   (:require [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes)]
             [nd4clj.linalg.factory.nd4j :refer (zeros)]
             [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-double tensor-along-dimension)]
