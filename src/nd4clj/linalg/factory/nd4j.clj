@@ -103,7 +103,7 @@
   [shape stride offset ordering]
   (Nd4j/create (int-array shape) (int-array stride) (int offset) ^java.lang.Character ordering))
 
-(defmulti rand (fn [data & more] (mapv type more)))
+(defmulti rand (fn [data & more] (mapv type (conj more data))))
 (defmethod rand [java.util.Collection] [shape]
   (Nd4j/rand (int-array shape)))
 (defmethod rand [java.util.Collection Distribution] [shape d]
