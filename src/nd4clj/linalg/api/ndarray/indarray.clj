@@ -74,6 +74,11 @@
 ;;; Matrix reductions
 ;;; -----------------
 
+(defn sum-number
+  "Sum the entire array"
+  [^INDArray this]
+  (.sumNumber this))
+
 (defn max
   "Returns the overall max of this ndarray"
   [^INDArray this dimension]
