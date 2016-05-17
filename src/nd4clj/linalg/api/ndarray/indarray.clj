@@ -30,6 +30,18 @@
    [^INDArray a]
   (into [] (.shape a)))
 
+(defn norm1 ^Number [^INDArray v]
+  (.norm1Number v))
+
+(defn norm2 ^Number [^INDArray v]
+  (.norm2Number v))
+
+(defn distance1 [^INDArray v1 ^INDArray v2]
+  (.distance1 v1 v2))
+
+(defn distance2 [^INDArray v1 ^INDArray v2]
+  (.distance2 v1 v2))
+
 ;;; matrix values
 ;;; -------------
 
