@@ -19,6 +19,5 @@
                  [org.apache.commons/commons-io "1.3.2"]
                  [org.nd4j/nd4j-native "0.4-rc3.10"]
                  [org.nd4j/canova-api "0.0.0.14"]
-                 [org.clojure/data.json "0.2.6"]
-                 ;; [com.google.collections/google-collections "1.0"]
-                 ]) 
+                 [org.clojure/data.json "0.2.6"]])
+  
