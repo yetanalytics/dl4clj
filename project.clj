@@ -7,7 +7,7 @@
 ;; the terms of this license.
 ;; You must not remove this notice, or any other, from this software.
 
-(defproject dl4clj "0.0.1-SNAPSHOT"
+(defproject dl4clj "0.0.1"
   :description "ports of some DL4J examples to Clojure"
   :url "https://github.com/engagor/dl4clj"
   :license {:name "BSD C2"

@@ -24,7 +24,7 @@ If using Maven add the following repository definition to your pom.xml:
 With Leiningen:
 
 ```
-[engagor/clj-vw "0.0.1-SNAPSHOT"]
+[engagor/clj-vw "0.0.1"]
 ```
 
 With Maven:
@@ -33,7 +33,7 @@ With Maven:
 <dependency>
   <groupId>engagor</groupId>
   <artifactId>dl4clj</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 </dependency>
 ```
 
