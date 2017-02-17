@@ -3,14 +3,14 @@
   dl4clj.utils)
 
 
-(defn camelize 
+(defn camelize
   "Turn a symbol or keyword or string to a camel-case verion, e.g. (camelize :foo-bar) => :FooBar"
-  [x & capitalize?] 
+  [x & capitalize?]
   (let [parts (clojure.string/split (name x) #"[\s_-]+")
         not-capitalized (clojure.string/join "" (cons (first parts)
-                                                      (map #(str (clojure.string/upper-case (subs % 0 1)) (subs % 1)) 
+                                                      (map #(str (clojure.string/upper-case (subs % 0 1)) (subs % 1))
                                                            (rest parts))))
-        new-name (if capitalize? 
+        new-name (if capitalize?
                    (clojure.string/join [(clojure.string/upper-case (subs not-capitalized 0 1))
                                          (subs not-capitalized 1)])
                    not-capitalized)]

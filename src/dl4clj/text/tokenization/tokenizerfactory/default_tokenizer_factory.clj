@@ -5,4 +5,3 @@
 
 (defn default-tokenizer-factory []
   (DefaultTokenizerFactory.))
-

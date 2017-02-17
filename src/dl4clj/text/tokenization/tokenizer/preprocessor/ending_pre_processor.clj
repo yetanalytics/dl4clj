@@ -4,4 +4,3 @@
 
 (defn ending-pre-processor []
   (EndingPreProcessor.))
-

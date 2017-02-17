@@ -2,7 +2,7 @@
   dl4clj.text.sentenceiterator.sentence-pre-processor
   (:import [org.deeplearning4j.text.sentenceiterator SentencePreProcessor]))
 
-(defn pre-process 
+(defn pre-process
   [^SentencePreProcessor p ^String s]
   (.preProcess p s))
 
@@ -16,8 +16,8 @@
   (CustomSentencePreprocessor. preprocessor))
 
 (comment
-  
-  (def p (sentence-preprocessor clojure.string/lower-case))
+
+  (def p (sentence-pre-processor clojure.string/lower-case))
 
   (pre-process p "Foo Bar !")
 

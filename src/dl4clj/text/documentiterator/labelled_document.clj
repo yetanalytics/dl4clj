@@ -14,7 +14,7 @@
 (defn get-label [^LabelledDocument d]
   (.getLabel d))
 
-(defn labelled-document 
+(defn labelled-document
   ([]
    (LabelledDocument.))
   ([content label]
@@ -22,7 +22,6 @@
      (set-content d content)
      (set-label d label)
      d)))
-
 
 (comment
 

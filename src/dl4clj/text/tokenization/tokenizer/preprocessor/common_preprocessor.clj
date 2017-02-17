@@ -4,4 +4,3 @@
 
 (defn common-preprocessor []
   (CommonPreprocessor.))
-

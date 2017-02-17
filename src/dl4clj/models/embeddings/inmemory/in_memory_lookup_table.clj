@@ -7,7 +7,8 @@
   ([]
    (InMemoryLookupTable.))
   ([vocab-cache vector-length use-ada-grad? learning-rate rng negative]
-   (InMemoryLookupTable. vocab-cache (int vector-length) (boolean use-ada-grad?) (double learning-rate) rng (double negative))))
-  
+   (InMemoryLookupTable. vocab-cache (int vector-length) (boolean use-ada-grad?)
+                         (double learning-rate) rng (double negative))))
+
 (defn get-vocab [^InMemoryLookupTable this]
   (.getVocab this))

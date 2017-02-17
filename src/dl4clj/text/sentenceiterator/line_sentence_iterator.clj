@@ -5,4 +5,3 @@
 
 (defn line-sentence-iterator [x]
   (LineSentenceIterator. ^java.io.File (clojure.java.io/as-file x)))
-

@@ -2,14 +2,14 @@
   dl4clj.text.documentiterator.labels-source
   (:import [org.deeplearning4j.text.documentiterator LabelsSource]))
 
-(defn labels-source 
+(defn labels-source
   "Build LabelsSource, optionally using externally defined list of string labels."
   ([]
    (LabelsSource.))
   ([labels]
    (LabelsSource. labels)))
 
-(defn labels-source-from-template 
+(defn labels-source-from-template
   "Build LabelsSource using string template."
   [^String template]
   (LabelsSource. ^java.util.List template))
@@ -24,7 +24,7 @@
   [^LabelsSource this]
   (.getNumberOfLabelsUsed this))
 
-(defn next-label 
+(defn next-label
   "Returns next label."
   [^LabelsSource this]
   (.nextLabel this))
@@ -41,6 +41,6 @@
 
 (comment
 
-  (labels-source ["label1" "label2"])
+ (labels-source ["label1" "label2"])
 
 )
