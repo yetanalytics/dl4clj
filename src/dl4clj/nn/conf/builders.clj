@@ -1,4 +1,9 @@
 (ns dl4clj.nn.conf.builders
+  (:require [dl4clj.nn.conf.distribution.distribution :refer (distribution)]
+            [dl4clj.nn.conf.gradient-normalization :as gradient-normalization]
+            [nd4clj.linalg.lossfunctions.loss-functions :as loss-functions]
+            [dl4clj.nn.conf.updater :as updater]
+            [dl4clj.nn.weights.weight-init :as weight-init])
   (:import
    [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]
    [org.deeplearning4j.nn.conf NeuralNetConfiguration$ListBuilder NeuralNetConfiguration$Builder]
@@ -15,10 +20,29 @@
 
 (defmulti builder layer-type)
 
-#_(builder {:layers {:graves-lstm {:n-in 50
-                                 :n-out 100
-                                 :forget-gate-bias-init 2.0
-                                 }}})
+#_(builder {:layers {:graves-lstm {:l1 0.0,
+                                   :drop-out 0.0,
+                                   :dist {:uniform {:lower -0.08, :upper 0.08}},
+                                   :rho 0.0,
+                                   :forget-gate-bias-init 1.0,
+                                   :activation :tanh,
+                                   ;;   :learning-rate-after {},
+                                   :gradient-normalization "None",
+                                   :weight-init "DISTRIBUTION",
+                                   :n-out 100,
+                                   :adam-var-decay 0.999,
+                                   :bias-init 0.0,
+                                   :lr-score-based-decay 0.0,
+                                   :momentum-after {},
+                                   :l2 0.001,
+                                   :updater "RMSPROP",
+                                   :momentum 0.5,
+                                   :layer-name "genisys",
+                                   :n-in 50,
+                                   :learning-rate 0.1,
+                                   :adam-mean-decay 0.9,
+                                   :rms-decay 0.95,
+                                   :gradient-normalization-threshold 1.0}}})
 (defn any-layer-builder
   [builder-type {:keys [n-in
                         n-out
@@ -87,13 +111,19 @@
   (if (contains? opts :bias-learning-rate)
     (.biasLearningRate builder-type bias-learning-rate) builder-type)
   (if (contains? opts :dist) ;; could be a map
-    (.dist builder-type dist) builder-type)
+    (if (map? dist)
+      (.dist builder-type (distribution dist))
+      (.dist builder-type dist))
+    builder-type)
   (if (contains? opts :drop-out)
     (.dropOut builder-type drop-out) builder-type)
   (if (contains? opts :epsilon)
     (.epsilon builder-type epsilon) builder-type)
   (if (contains? opts :gradient-normalization)
-    (.gradientNormalization builder-type gradient-normalization) builder-type)
+    (.gradientNormalization
+     builder-type
+     (gradient-normalization/value-of gradient-normalization))
+    builder-type)
   (if (contains? opts :gradient-normalization-threshold)
     (.gradientNormalizationThreshold builder-type gradient-normalization-threshold) builder-type)
   (if (contains? opts :l1)
@@ -117,11 +147,11 @@
   (if (contains? opts :rms-decay)
     (.rmsDecay builder-type rms-decay) builder-type)
   (if (contains? opts :updater)
-    (.updater builder-type updater) builder-type)
+    (.updater builder-type (updater/value-of updater)) builder-type)
   (if (contains? opts :weight-init)
-    (.weightInit builder-type weight-init) builder-type)
+    (.weightInit builder-type (weight-init/value-of weight-init)) builder-type)
   (if (contains? opts :loss-fn)
-    (.lossFunction builder-type loss-fn) builder-type)
+    (.lossFunction builder-type (loss-functions/value-of loss-function)) builder-type)
   (if (contains? opts :corruption-level)
     (.corruptionLevel builder-type corruption-level) builder-type)
   (if (contains? opts :sparsity)
