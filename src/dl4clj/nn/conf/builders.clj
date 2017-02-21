@@ -1,12 +1,13 @@
 (ns dl4clj.nn.conf.builders
   (:require [dl4clj.nn.conf.distribution.distribution :refer (distribution)]
+            [dl4clj.nn.conf.distribution.binomial-distribution]
+            [dl4clj.nn.conf.distribution.normal-distribution]
+            [dl4clj.nn.conf.distribution.uniform-distribution]
             [dl4clj.nn.conf.gradient-normalization :as gradient-normalization]
             [nd4clj.linalg.lossfunctions.loss-functions :as loss-functions]
             [dl4clj.nn.conf.updater :as updater]
             [dl4clj.nn.weights.weight-init :as weight-init])
   (:import
-   [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]
-   [org.deeplearning4j.nn.conf NeuralNetConfiguration$ListBuilder NeuralNetConfiguration$Builder]
    [org.deeplearning4j.nn.conf.layers
     Layer$Builder FeedForwardLayer$Builder ActivationLayer$Builder BaseOutputLayer$Builder
     OutputLayer$Builder RnnOutputLayer$Builder BasePretrainNetwork$Builder AutoEncoder$Builder
@@ -20,7 +21,7 @@
 
 (defmulti builder layer-type)
 
-#_(builder {:layers {:graves-lstm {:l1 0.0,
+(builder {:layers {:graves-lstm {:l1 0.0,
                                    :drop-out 0.0,
                                    :dist {:uniform {:lower -0.08, :upper 0.08}},
                                    :rho 0.0,
@@ -151,7 +152,7 @@
   (if (contains? opts :weight-init)
     (.weightInit builder-type (weight-init/value-of weight-init)) builder-type)
   (if (contains? opts :loss-fn)
-    (.lossFunction builder-type (loss-functions/value-of loss-function)) builder-type)
+    (.lossFunction builder-type (loss-functions/value-of loss-fn)) builder-type)
   (if (contains? opts :corruption-level)
     (.corruptionLevel builder-type corruption-level) builder-type)
   (if (contains? opts :sparsity)
