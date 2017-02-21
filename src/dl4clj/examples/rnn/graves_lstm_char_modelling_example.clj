@@ -38,6 +38,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 (def iter (get-shakespeare-iterator mini-batch-size example-length examples-per-epoch))
 
 ;; Set up network configuration:
+;; broken
 (def conf (neural-net-configuration
            {:optimization-algo :stochastic-gradient-descent
             :iterations 1
@@ -84,7 +85,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 ;; Do training, and then generate and print samples from network
 (dotimes [i num-epochs]
   (classifier/fit net iter)
-  
+
   (println "--------------------")
   (println "Completed epoch " i )
   (println "Sampling characters from network given initialization \"\"")
@@ -98,5 +99,3 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 
   ;; Reset iterator for another epoch
   (reset iter))
-
-

@@ -27,7 +27,7 @@
   [^WeightLookupTable this]
   (.layerSize this))
 
-(defn load-codes 
+(defn load-codes
   "Loads the co-occurrences for the given codes"
   [^WeightLookupTable this ints]
   (.loadCodes this (int-array ints)))
@@ -39,7 +39,7 @@
   ([^WeightLookupTable this tsne]
    (.plotVocab this tsne)))
 
-(defn put-code 
+(defn put-code
   [^WeightLookupTable this code-index code]
   (.putCode this (int code-index) code))
 
@@ -60,7 +60,7 @@
   [^WeightLookupTable this lr]
   (.setLearningRate this (double lr)))
 
-(defn set-table-id 
+(defn set-table-id
   "Set's table Id."
   [^WeightLookupTable this table-id]
   (.setTableId this (long table-id)))

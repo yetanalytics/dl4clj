@@ -59,7 +59,6 @@
   [^Model this]
   (.gradientAndScore this))
 
-
 (defn init-params
   "Initialize the parameters"
   [^Model this]
@@ -126,4 +125,3 @@
   "Validate the input"
   [^Model this]
   (.validateInput this))
-

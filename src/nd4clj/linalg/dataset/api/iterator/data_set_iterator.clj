@@ -2,9 +2,9 @@
   nd4clj.linalg.dataset.api.iterator.data-set-iterator
   (:refer-clojure :exclude [next])
   (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
-           [org.nd4j.linalg.dataset.api DataSetPreProcessor]))
+           [org.nd4j.linalg.dataset.api DataSetPreProcessor])) ;; must have changed
 
-(defn batch 
+(defn batch
   "Batch size"
   [^DataSetIterator this]
   (.batch this))
@@ -36,12 +36,12 @@
   [^DataSetIterator this]
   (.numExamples this))
 
-(defn reset 
+(defn reset
   "Resets the iterator back to the beginning"
   [^DataSetIterator this]
   (.reset this))
 
-(defn set-pre-processor 
+(defn set-pre-processor
   "Set a pre processor"
   [^DataSetIterator this ^DataSetPreProcessor pre-processor]
   (.setPreProcessor this pre-processor))

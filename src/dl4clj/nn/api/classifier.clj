@@ -11,7 +11,7 @@
   ([^Classifier this examples labels]
    (.f1Score this examples labels)))
 
-(defn fit 
+(defn fit
   "Fit the model"
   ([^Classifier this d]
    (.fit this d))
@@ -23,7 +23,7 @@
   [^Classifier this examples]
   (.labelProbabilities this examples))
 
-(defn num-labels 
+(defn num-labels
   "Returns the number of possible labels"
   [^Classifier this]
   (.numLabels this))

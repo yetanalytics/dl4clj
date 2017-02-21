@@ -7,21 +7,21 @@
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$ListBuilder]
            [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]))
 
-(defn builder 
+(defn builder
   ([]
    (builder (MultiLayerConfiguration$Builder.) {}))
   ([opts]
    (builder (MultiLayerConfiguration$Builder.) opts))
   ([^MultiLayerConfiguration$Builder builder {:keys [backprop ;; Whether to do back prop or not (boolean)
-                                                     backprop-type ;; (one of (backprop-type/values)) 
-                                                     cnn-input-size ;; CNN input size, in order of [height,width,depth] (int-array) 
-                                                     confs ;; java.util.List<NeuralNetConfiguration>	
-                                                     input-pre-processors ;; ({integer,InputPreProcessor})	
+                                                     backprop-type ;; (one of (backprop-type/values))
+                                                     cnn-input-size ;; CNN input size, in order of [height,width,depth] (int-array)
+                                                     confs ;; java.util.List<NeuralNetConfiguration>
+                                                     input-pre-processors ;; ({integer,InputPreProcessor})
                                                      pretrain ;; Whether to do pre train or not (boolean)
                                                      redistribute-params ;; Whether to redistribute parameters as a view or not (boolean)
                                                      t-bptt-backward-length ;; When doing truncated BPTT: how many steps of backward should we do?
                                                      ;; Only applicable when doing backpropType(BackpropType.TruncatedBPTT)
-                                                     ;; This is the k2 parameter on pg23 of http://www.cs.utoronto.ca/~ilya/pubs/ilya_sutskever_phd_thesis.pdf(int) 
+                                                     ;; This is the k2 parameter on pg23 of http://www.cs.utoronto.ca/~ilya/pubs/ilya_sutskever_phd_thesis.pdf(int)
                                                      t-bptt-forward-length ;; When doing truncated BPTT: how many steps of forward pass should we do before doing (truncated) backprop? (int)
                                                      ;; Only applicable when doing backpropType(BackpropType.TruncatedBPTT)
                                                      ;; Typically tBPTTForwardLength parameter is same as the the tBPTTBackwardLength parameter, but may be larger than it in some circumstances (but never smaller)
@@ -64,4 +64,32 @@
                  :key-fn #(keyword (camel-to-dashed %))))
 ;; (defn from-edn [cfg]
 ;;   (.build ^MultiLayerConfiguration$Builder (builder (update-in cfg [:confs] #(map neural-net-configuration %)))))
-
+(builder {:optimization-algo :stochastic-gradient-descent
+             :iterations 1
+             :learning-rate 0.1
+             :rms-decay 0.95
+             :seed 12345
+             :regularization true
+             :l2 0.001
+             :list 3
+          :confs  (list {0 {:graves-lstm {:n-in 50
+                                    :n-out 100
+                                    :updater :rmsprop
+                                    :activation :tanh
+                                    :weight-init :distribution
+                                    :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}}}
+                   1 {:graves-lstm {:n-in 100
+                                    :n-out 100
+                                    :updater :rmsprop
+                                    :activation :tanh
+                                    :weight-init :distribution
+                                    :dist {:uniform {:lower -0.08, :upper 0.08}}}}
+                   2 {:rnnoutput {:loss-function :mcxent
+                                  :n-in 100
+                                  :n-out 50
+                                  :activation :softmax
+                                  :updater :rmsprop
+                                  :weight-init :distribution
+                                  :dist {:normal {:mean 0.0, :std 0.05}}}}})
+             :pretrain false
+             :backprop true})

@@ -19,10 +19,10 @@
 
 
 (comment
-  
+
   (rnn-output {:loss-function :reconstruction-crossentropy})
 
-  (rnn-output {:loss-function :mcxent                           
+  (rnn-output {:loss-function :mcxent
                :n-in 100
                :n-out 50
                :activation "softmax"
@@ -38,7 +38,7 @@
            :dist {:uniform {:lower -0.08, :upper 0.08}},
            :rho 0.0,
            :activation-function "softmax",
-           :learning-rate-after {},
+          ;; :learning-rate-after {},
            :gradient-normalization "None",
            :weight-init "DISTRIBUTION",
            :nout 50,
@@ -58,5 +58,3 @@
            :gradient-normalization-threshold 1.0}})
 
   )
-
-

@@ -15,9 +15,9 @@
   (map #(keyword (clojure.string/replace (clojure.string/lower-case (str %)) "_" "-")) (Updater/values)))
 
 (comment
-  
+
   (values)
   (value-of :adagrad)
   (value-of "ADAGRAD")
-  
+
 )

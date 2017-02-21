@@ -8,10 +8,10 @@
 
 (defmethod distribution :uniform [opt]
   (uniform-distribution (:lower (:uniform opt)) (:upper (:uniform opt))))
-  
+
 
 (comment
-  
+
   (uniform-distribution 0.3 10)
   (distribution {:uniform {:lower -0.01, :upper 0.01}})
 

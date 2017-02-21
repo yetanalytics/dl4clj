@@ -57,7 +57,7 @@
 (defn derivative-activation
   "Take the derivative of the given input based on the activation"
   [^Layer this ^INDArray input]
-  (.derivativeActivation this input)) 
+  (.derivativeActivation this input))
 
 (defn error
   "Calculate error with respect to the current layer."
@@ -86,10 +86,12 @@
 
 (defn pre-output
   "Raw activations"
-  [^Layer this ^INDArray x]
-  (.preOutput this x))
+  ([^Layer this ^INDArray x]
+   (.preOutput this x))
+  ([^Layer this ^INDArray x training]
+   (.preOutput this x (boolean training))))
 
-(defn pre-output
+#_(defn pre-output
   "Raw activations"
   [^Layer this ^INDArray x training]
   (.preOutput this x (boolean training)))
@@ -140,4 +142,3 @@
    (.update this gradient))
   ([^Layer this ^INDArray gradient param-type]
    (.update this gradient param-type)))
- 

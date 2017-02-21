@@ -11,11 +11,10 @@
   (map #(keyword (clojure.string/replace (clojure.string/lower-case (str %)) "_" "-")) (OptimizationAlgorithm/values)))
 
 (comment
-  
+
   (values)
   (value-of :stochastic-gradient-descent)
   (value-of "STOCHASTIC_GRADIENT_DESCENT")
 
-  
-)
 
+)

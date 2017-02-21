@@ -11,8 +11,8 @@
   (binomial-distribution (:number-of-trials (:binomial opt)) (:probability-of-success (:binomial opt))))
 
 (comment
-  
+
   (binomial-distribution 10 0.3)
   (distribution {:binomial {:number-of-trials 0, :probability-of-success 0.08}})
-  
+
 )

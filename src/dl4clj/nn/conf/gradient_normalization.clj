@@ -15,9 +15,9 @@
 
 
 (comment
-  
+
   (map value-of (values))
   (value-of :renormalize-l2-per-layer)
   (value-of "RenormalizeL2PerLayer")
-  
+
 )

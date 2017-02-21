@@ -9,8 +9,8 @@ predicted word to be nearest"
   [^WordVectors this string]
   (.accuracy this string))
 
-(defn get-word-vector 
-  "Get the word vector for a given matrix" 
+(defn get-word-vector
+  "Get the word vector for a given matrix"
   [^WordVectors this string]
   (into [] (.getWordVector this string)))
 
@@ -19,7 +19,7 @@ predicted word to be nearest"
   [^WordVectors this string]
   (.getWordVectorMatrix this string))
 
-(defn get-word-vector-matrix-normalized 
+(defn get-word-vector-matrix-normalized
   "Returns the word vector divided by the norm2 of the array"
   [^WordVectors this string]
   (.getWordVectorMatrixNormalized this string))
@@ -43,7 +43,7 @@ predicted word to be nearest"
   [^WordVectors this string1 string2]
   (.similarity this string1 string2))
 
-(defn similar-words-in-vocab-to 
+(defn similar-words-in-vocab-to
   "Find all words with a similar characters in the vocab"
   [^WordVectors this string ^Double accuracy]
   (.similarWordsInVocabTo this string ^Double accuracy))

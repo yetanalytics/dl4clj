@@ -28,7 +28,7 @@
   ;; Example usages:
 
   (graves-lstm)
-  
+
   (graves-lstm {:activation :softmax
                 :adam-mean-decay 0.3
                 :adam-var-decay 0.5
@@ -40,8 +40,8 @@
                 :l1 0.02
                 :l2 0.002
                 :learning-rate 0.95
-                :learning-rate-after {1000 0.5}
-                :learning-rate-score-based-decay-rate 0.001
+             ;;   :learning-rate-after {1000 0.5}
+             ;;   :learning-rate-score-based-decay-rate 0.001
                 :momentum 0.9
                 :momentum-after {10000 1.5}
                 :name "test"
@@ -59,7 +59,7 @@
             :rho 0.0,
             :forget-gate-bias-init 1.0,
             :activation :tanh,
-            :learning-rate-after {},
+         ;;   :learning-rate-after {},
             :gradient-normalization "None",
             :weight-init "DISTRIBUTION",
             :nout 100,
@@ -84,7 +84,7 @@
            :rho 0.0,
            :forget-gate-bias-init 1.0,
            :activation "tanh",
-           :learning-rate-after {},
+         ;;  :learning-rate-after {},
            :gradient-normalization "None",
            :weight-init "DISTRIBUTION",
            :nout 100,

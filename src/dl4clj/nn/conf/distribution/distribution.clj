@@ -3,5 +3,3 @@
   (:import [org.deeplearning4j.nn.conf.distribution Distribution]))
 
 (defmulti distribution (fn [opts] (first (keys opts))))
-
-

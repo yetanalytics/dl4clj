@@ -5,7 +5,7 @@
            [org.apache.commons.compress.archivers.tar TarArchiveEntry TarArchiveInputStream]
            [org.apache.commons.compress.compressors.gzip GzipCompressorInputStream]))
 
-(defn index-map 
+(defn index-map
   "Utility function to make an map from elements in a collection to indices"
   [col]
   (zipmap col (range)))
@@ -35,7 +35,7 @@
     (when-not (.exists f)
       (do (FileUtils/copyURLToFile (clojure.java.io/as-url url) f)
           (println "File downloaded to " (.getAbsolutePath f))))
-    (when-not (.exists f) 
+    (when-not (.exists f)
       (throw (IOException. (str "File does not exist: " file-location))))
     f))
 
@@ -43,7 +43,7 @@
   []
   (slurp (shakespeare-file)))
 
-(defn extract-tgz 
+(defn extract-tgz
   ([file-path output-path]
    (extract-tgz file-path output-path {:buffer-size 4096}))
   ([^String file-path output-path {:keys [buffer-size]

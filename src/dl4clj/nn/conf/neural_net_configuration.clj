@@ -15,14 +15,14 @@
 
 (defn builder [{:keys [activation ;; Activation function / neuron non-linearity Typical values include :relu (rectified linear), :tanh, :sigmoid, :softmax, hardtanh, :leakyrelu, :maxout, :softsign, :softplus
                        activation-function ;; same as activation
-                       adam-mean-decay ;; Mean decay rate for Adam updater (double)
+                       adam-mean-decay ;; Mean decay rate for Adam updater (double) ;; broken
                        adam-var-decay  ;; Variance decay rate for Adam updater (double)
                        bias-init       ;; (double)
                        dist            ;; Distribution to sample initial weights from (Distribution)
                        drop-out        ;; (double)
                        gradient-normalization ;; Gradient normalization strategy (one of (dl4clj.nn.conf.gradient-normalization/values))
-                       gradient-normalization-threshold ;; Threshold for gradient normalization, only used for :clip-l2-per-layer, :clip-l2-per-param-type 
-                       ;; and clip-element-wise-absolute-value: L2 threshold for first two types of clipping, or absolute 
+                       gradient-normalization-threshold ;; Threshold for gradient normalization, only used for :clip-l2-per-layer, :clip-l2-per-param-type
+                       ;; and clip-element-wise-absolute-value: L2 threshold for first two types of clipping, or absolute
                        ;; value threshold for last type of clipping.
 
                        num-iterations      ;; Number of optimization iterations (int)
@@ -51,15 +51,15 @@
                        ;; multi-layer parameters
                        list ;; Number of layers not including input (int)
                        backprop ;; Whether to do back prop or not (boolean)
-                       backprop-type ;; (one of (backprop-type/values)) 
-                       cnn-input-size ;; CNN input size, in order of [height,width,depth] (int-array) 
+                       backprop-type ;; (one of (backprop-type/values))
+                       cnn-input-size ;; CNN input size, in order of [height,width,depth] (int-array)
                        confs ;; ([configuration maps])
-                       input-pre-processors ;; ({integer,InputPreProcessor})	
+                       input-pre-processors ;; ({integer,InputPreProcessor})
                        pretrain ;; Whether to do pre train or not (boolean)
                        redistribute-params ;; Whether to redistribute parameters as a view or not (boolean)
                        t-bptt-backward-length ;; When doing truncated BPTT: how many steps of backward should we do?
                        ;; Only applicable when doing backpropType(BackpropType.TruncatedBPTT)
-                       ;; This is the k2 parameter on pg23 of http://www.cs.utoronto.ca/~ilya/pubs/ilya_sutskever_phd_thesis.pdf(int) 
+                       ;; This is the k2 parameter on pg23 of http://www.cs.utoronto.ca/~ilya/pubs/ilya_sutskever_phd_thesis.pdf(int)
                        t-bptt-forward-length ;; When doing truncated BPTT: how many steps of forward pass should we do before doing (truncated) backprop? (int)
                        ;; Only applicable when doing backpropType(BackpropType.TruncatedBPTT)
                        ;; Typically tBPTTForwardLength parameter is same as the the tBPTTBackwardLength parameter, but may be larger than it in some circumstances (but never smaller)
@@ -70,7 +70,7 @@
   (let [b (NeuralNetConfiguration$Builder.)]
     (when (or activation activation-function)
       (.activation b (name (or activation activation-function))))
-    (when adam-mean-decay
+    #_(when adam-mean-decay
       (.adamMeanDecay b adam-mean-decay))
     (when adam-var-decay
       (.adamVarDecay b adam-var-decay))
@@ -113,7 +113,7 @@
     (when (or regularization use-regularization (contains? opts :regularization) (contains? opts :use-regularization))
       (.regularization b (or regularization use-regularization)))
     (when rho
-      (.rho b rho))  
+      (.rho b rho))
     (when rms-decay
       (.rmsDecay b rms-decay))
     (when (or schedules (contains? opts :schedules))
@@ -128,15 +128,15 @@
       (.useDropConnect b use-drop-connect))
     (when weight-init
       (.weightInit b weight-init))
-    
+
     (cond list
-          (ml-config/list-builder (.list b list) 
+          (ml-config/list-builder (.list b list)
                                   (:layers opts)
                                   opts)
           ;; confs ()
           :else b)))
 
-(defn neural-net-configuration 
+(defn neural-net-configuration
   [opts]
   (.build (builder opts)))
 
@@ -196,11 +196,11 @@
   (def cfg (neural-net-configuration opts))
 
   (to-edn cfg)
-  
+
   (def opts2 (update-in (to-edn cfg) [:confs] #(map neural-net-configuration %)))
 
-  
-  (def cfg2-builder 
+
+  (def cfg2-builder
     (ml-configuration/builder opts2))
 
   (def cfg2 (.build cfg2-builder))
@@ -216,10 +216,10 @@
              :learning-rate 0.1
              :use-regularization true
              :drop-out 0.5
-             
+
              :momentum 0.99
              :rms-decay 0.95
-             
+
              :seed 12345
 
              :list 3
@@ -241,22 +241,22 @@
                                      :n-in 100
                                      :n-out 50
                                      :activation :softmax
-                                     :updater :rmsprop                                                               
+                                     :updater :rmsprop
                                      :weight-init :distribution
                                      :dist {:normal {:mean 0.0, :std 0.1}}}}}
              :pretrain false
              :backprop true})
 
-  
+
 
 
   (map neural-net-configuration (:confs opts2))
-  
-  
+
+
 
   (def cfg (neural-net-configuration opts))
-  
-  
+
+
   (neural-net-configuration (to-edn cfg))
   (print (to-json cfg) )
 
@@ -264,7 +264,7 @@
   ;;; ???
   ;;; - edn doesn't show the layers
   ;;; - is layer needed (check in example)
-  
 
-  
+
+
   )

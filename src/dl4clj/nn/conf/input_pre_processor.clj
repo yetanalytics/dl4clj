@@ -16,4 +16,3 @@
   "Pre preProcess input/activations for a multi layer network"
   [^InputPreProcessor this input mini-batch-size]
   (.preProcess this input (int mini-batch-size)))
-

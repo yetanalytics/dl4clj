@@ -13,5 +13,3 @@
   (when (or n-out nout)
     (.nOut builder (or n-out nout)))
   builder)
-
-

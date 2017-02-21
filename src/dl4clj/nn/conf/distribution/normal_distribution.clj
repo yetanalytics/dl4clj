@@ -11,9 +11,9 @@
   (normal-distribution (:mean (:normal opt)) (:std (:normal opt))))
 
 (comment
-  
+
   (normal-distribution 10 0.3)
   (distribution {:normal {:mean 0.0, :std 0.3}})
-  
-  
+
+
 )

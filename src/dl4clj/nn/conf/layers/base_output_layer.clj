@@ -15,5 +15,3 @@
     (when loss-function
       (.lossFunction b (loss-functions/value-of loss-function)))
     b))
-
-

@@ -11,10 +11,10 @@
   (map #(keyword (clojure.string/lower-case %)) (WeightInit/values)))
 
 (comment
-  
+
   (values)
   (value-of :normalized)
   (value-of "NORMALIZED")
   (value-of :foo)
-  
+
 )

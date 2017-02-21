@@ -36,7 +36,7 @@ and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
 
 ;; At this point we assume we have a model and we can classify unlabeled documents.
 (def unlabeled-iterator (file-label-aware-iterator (clojure.java.io/resource "paravec/unlabeled")))
- 
+
 (def lt (lookup-table paragraphvectors))
 (def v (get-vocab lt))
 (def labels (get-labels (:labels-source iterator)))
@@ -46,7 +46,7 @@ and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
     (println (str "Document '" (get-label document) "' falls into the following categories: "))
     (println scores)))
 
-;; => Document 'finance' falls into the following categories: 
+;; => Document 'finance' falls into the following categories:
 ;;    {science 0.018949185163223244, health -0.11507322176755937, finance 0.40230107446722246}
-;;    Document 'health' falls into the following categories: 
+;;    Document 'health' falls into the following categories:
 ;;    {science -0.022660476948528845, health 0.5559929583559113, finance -0.3899286864778339}

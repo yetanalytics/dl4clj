@@ -5,5 +5,3 @@
 
 (defn builder [^BaseRecurrentLayer$Builder builder opts]
   (ff-layer/builder builder opts))
-
-

@@ -1,10 +1,10 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/models/word2vec/Word2Vec.html"}
-  dl4clj.models.word2vec.word2vec  
-  (require [dl4clj.models.sequencevectors.sequence-vectors :as sequence-vectors])
+  dl4clj.models.word2vec.word2vec
+  (:require [dl4clj.models.sequencevectors.sequence-vectors :as sequence-vectors])
   (:import [org.deeplearning4j.models.word2vec Word2Vec Word2Vec$Builder]))
 
 
-(defn builder   
+(defn builder
   ([opts]
    (builder (Word2Vec$Builder.) opts))
   ([^Word2Vec$Builder b {:keys [batch-size ;; This method defines mini-batch size (int)
@@ -88,7 +88,7 @@
        (.stopWords b stop-words))
      (when (or tokenizer-factory (contains? opts :tokenizer-factory))
        (.tokenizerFactory b tokenizer-factory))
-     (when (or train-elements-representation (contains? opts :train-elements-representation)) 
+     (when (or train-elements-representation (contains? opts :train-elements-representation))
        (.trainElementsRepresentation b train-elements-representation))
      (when (or train-sequences-representation (contains? opts :train-sequences-representation))
        (.trainSequencesRepresentation b train-sequences-representation))
@@ -108,7 +108,7 @@
   (.build ^Word2Vec$Builder (builder opts)))
 
 
-(comment 
+(comment
 
   (.build (builder (Word2Vec$Builder.) {}))
 

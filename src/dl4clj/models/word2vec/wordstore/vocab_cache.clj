@@ -7,7 +7,7 @@
   [^VocabCache this element]
   (.addToken this element))
 
-(defn add-word-to-index 
+(defn add-word-to-index
   ""
   [^VocabCache this index word]
   (.addWordToIndex this (int index) word))
@@ -132,7 +132,7 @@
   [^VocabCache this index]
   (.ordAtIndex this (int index)))
 
-(defn word-for 
+(defn word-for
   ""
   [^VocabCache this word]
   (.wordFor this word))

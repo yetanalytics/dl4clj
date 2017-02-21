@@ -6,12 +6,12 @@
             [dl4clj.nn.multilayer.multi-layer-network :refer (rnn-clear-previous-state rnn-time-step)])
   (:import [java.util Random]))
 
-(defn- sample-from-distribution 
+(defn- sample-from-distribution
   "Sample from a probability distribution over discrete classes given as a vector of probabilities
   summing to 1.0."
-  ([distribution] 
+  ([distribution]
    (sample-from-distribution distribution (Random.)))
-  ([distribution ^Random rng] 
+  ([distribution ^Random rng]
    (let [d (.nextDouble rng)]
      (loop [i 0
             sum (nth distribution 0)]
@@ -54,4 +54,3 @@
             (recur (rnn-time-step net next-input)
                    (inc i)))))
     (map #(.toString ^StringBuilder %) sb))))
-

@@ -6,15 +6,10 @@
 (defn default-step-function []
   (DefaultStepFunction.))
 
-(defn step 
+(defn step
   ([^DefaultStepFunction sf]
    (.step sf))
   ([^DefaultStepFunction sf ^INDArray x ^INDArray line]
    (.step sf x line))
   ([^DefaultStepFunction sf ^INDArray parameters, ^INDArray search-direction, ^double step]
    (.step sf parameters search-direction step)))
-  
-  
-  
-
-

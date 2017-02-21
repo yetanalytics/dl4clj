@@ -3,22 +3,22 @@
   (:import [org.deeplearning4j.plot BarnesHutTsne BarnesHutTsne$Builder]
            [org.nd4j.linalg.api.ndarray INDArray]))
 
-(defn builder [{:keys [invert-distance-metric        ;; (boolean) 
-                       learning-rate                 ;; (double) 
-                       min-gain                      ;; (double) 
-                       normalize                     ;; (boolean) 
-                       perplexity                    ;; (double) 
-                       final-momentum            ;; (double) 
-                       initial-momentum          ;; (double) 
-                       max-iter                  ;; (int) 
-                       momentum                  ;; (double) 
-                       real-min                  ;; (double) 
-                       switch-momentum-iteration ;; (int) 
-                       similarity-function           ;; (String) 
-                       stop-lying-iteration          ;; (int) 
-                       theta                         ;; (double) 
-                       tolerance                     ;; (double) 
-                       use-ada-grad                  ;; (boolean) 
+(defn builder [{:keys [invert-distance-metric        ;; (boolean)
+                       learning-rate                 ;; (double)
+                       min-gain                      ;; (double)
+                       normalize                     ;; (boolean)
+                       perplexity                    ;; (double)
+                       final-momentum            ;; (double)
+                       initial-momentum          ;; (double)
+                       max-iter                  ;; (int)
+                       momentum                  ;; (double)
+                       real-min                  ;; (double)
+                       switch-momentum-iteration ;; (int)
+                       similarity-function           ;; (String)
+                       stop-lying-iteration          ;; (int)
+                       theta                         ;; (double)
+                       tolerance                     ;; (double)
+                       use-ada-grad                  ;; (boolean)
                        use-pca                       ;; (boolean)
                        ]
                 :or {}
@@ -59,32 +59,35 @@
     (when (or use-pca (contains? opts :use-pca))
       (.usePca b (boolean use-pca)))
     ))
-      
 
-(defn barnes-hut-tsne 
+
+;; broken
+(defn barnes-hut-tsne
   ([opts]
    (.build ^BarnesHutTsne$Builder (builder opts)))
-  ([^INDArray x 
-    ^INDArray y 
-    num-dimensions 
-    perplexity 
-    theta 
-    max-iter 
-    stop-lying-iteration 
+  ([^INDArray x
+    ^INDArray y
+    num-dimensions
+    perplexity
+    theta
+    max-iter
+    stop-lying-iteration
     momentum-switch-iteration
     momentum
     final-momentum
     learning-rate]
-   (BarnesHutTsne. x y (int num-dimensions) (double perplexity) (double theta) (int max-iter) (int stop-lying-iteration) (int momentum-switch-iteration) (double momentum) (double final-momentum) (double learning-rate)))
+   (BarnesHutTsne. x y (int num-dimensions) (double perplexity) (double theta)
+                   (int max-iter) (int stop-lying-iteration) (int momentum-switch-iteration)
+                   (double momentum) (double final-momentum) (double learning-rate)))
   ([^INDArray x
     ^INDArray y
     num-dimensions
     ^String simiarlity-function
-    theta 
+    theta
     ^Boolean invert
     max-iter
     real-min
-    initial-momentum 
+    initial-momentum
     final-momentum
     momentum
     switch-momentum-iteration
@@ -96,4 +99,14 @@
     ^Boolean use-ada-grad
     perplexity
     min-gain]
-   (BarnesHutTsne. x y (int num-dimensions) (str simiarlity-function) (double theta) invert (int max-iter) (double real-min) (double initial-momentum) (double final-momentum) (double momentum) (int switch-momentum-iteration) normalize use-pca (int stop-lying-iteration) (double tolerance) (double learning-rate) use-ada-grad (double perplexity) (double min-gain))))
+   (BarnesHutTsne. x y (int num-dimensions)
+                   (str simiarlity-function)
+                   (double theta) invert
+                   (int max-iter) (double real-min)
+                   (double initial-momentum)
+                   (double final-momentum)
+                   (double momentum)
+                   (int switch-momentum-iteration)
+                   normalize use-pca (int stop-lying-iteration)
+                   (double tolerance) (double learning-rate)
+                   use-ada-grad (double perplexity) (double min-gain))))

@@ -3,7 +3,7 @@
   (:import [org.deeplearning4j.models.sequencevectors SequenceVectors SequenceVectors$Builder]
            [org.deeplearning4j.models.sequencevectors.sequence Sequence]))
 
-(defn builder 
+(defn builder
   ([]
    (SequenceVectors.))
   ([opts]
@@ -26,8 +26,8 @@
                                        seed     ;; Sets seed for random numbers generator. (long)
                                        sequence-learning-algorithm ;; Sets specific LearningAlgorithm as Sequence Learning Algorithm (SequenceLearningAlgorithm<T> or STring)
                                        stop-words ;; You can provide collection of objects to be ignored, and excluded out of model Please note Object labels and hashCode will be used for filtering (java.util.Collection<T> OR java.util.List<java.lang.String> stopList)
-                                       train-elements-representation                   ;; (boolean) 
-                                       train-sequences-representation                  ;; (boolean) 
+                                       train-elements-representation                   ;; (boolean)
+                                       train-sequences-representation                  ;; (boolean)
                                        use-ada-grad ;; This method defines if Adaptive Gradients should be used in calculations (boolean)
                                        vocab-cache ;; You can pass externally built vocabCache object, containing vocabulary (VocabCache<T>)
                                        window-size ;; Sets window size for skip-Gram training (int)
@@ -86,16 +86,16 @@
    b))
 
 
-(defn build-vocab 
+(defn build-vocab
   "Builds vocabulary from provided SequenceIterator instance"
   [^SequenceVectors this]
   (.buildVocab this)
   this)
 
-(defn fit 
+(defn fit
   [^SequenceVectors this]
   (.fit this)
   this)
-  
+
 ;; (defn train-sequence [^SequenceVectors this ^Sequence sequence ^java.util.concurrent.atomic.AtomicLong next-random ^Double alpha]
 ;;   (.trainSequence this sequence next-random alpha))

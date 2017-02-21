@@ -5,4 +5,3 @@
 
 (defn cnn-to-rnn-pre-processor [input-height, input-width,  num-Channels]
   (CnnToRnnPreProcessor. input-height input-width  num-Channels))
-

@@ -1,12 +1,12 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/models/paragraphvectors/ParagraphVectors.html"}
   dl4clj.models.paragraphvectors.paragraph-vectors
-  (require [dl4clj.models.word2vec.word2vec :as word2vec])
+  (:require [dl4clj.models.word2vec.word2vec :as word2vec])
   (:import [org.deeplearning4j.models.paragraphvectors ParagraphVectors ParagraphVectors$Builder]))
 
 
 (defn builder [{:keys [batch-size ;; "This method defines mini-batch size" (int)
                        epochs ;; "This method defines number of epochs (iterations over whole training corpus) for training" (int)
-                       index  ;; (InvertedIndex<VocabWord>) 
+                       index  ;; (InvertedIndex<VocabWord>)
                        iterate ;; "This method used to feed DocumentIterator, that contains training corpus, into ParagraphVectors" (DocumentIterator OR LabelAwareDocumentIterator OR LabelAwareIterator OR LabelAwareSentenceIterator OR SentenceIterator OR SequenceIterator<VocabWord> OR iterator)
                        iterations ;; "This method defines number of iterations done for each mini-batch during training" (int)
                        labels-source ;; "This method attaches pre-defined labels source to ParagraphVectors" (LabelsSource)
@@ -32,38 +32,40 @@
                        ]
                 :or {train-sequences-representation true}
                 :as opts}]
-  (let [b ^ParagraphVectors$Builder (word2vec/builder (ParagraphVectors$Builder.) (dissoc opts 
-                                                                                          :batch-size
-                                                                                          :epochs
-                                                                                          :index 
-                                                                                          :iterate
-                                                                                          :iterations
-                                                                                          :labels-source
-                                                                                          :layer-size
-                                                                                          :learning-rate
-                                                                                          :lookup-table
-                                                                                          :min-learning-rate
-                                                                                          :min-word-frequency
-                                                                                          :model-utils
-                                                                                          :negative-sample
-                                                                                          :reset-model
-                                                                                          :sampling
-                                                                                          :seed
-                                                                                          :stop-words
-                                                                                          :tokenizer-factory
-                                                                                          :train-elements-representation
-                                                                                          :train-sequences-representation
-                                                                                          :train-word-vectors
-                                                                                          :use-ada-grad
-                                                                                          :vocab-cache
-                                                                                          :window-size
-                                                                                          :workers))]
+  (let [b ^ParagraphVectors$Builder (word2vec/builder
+                                     (ParagraphVectors$Builder.)
+                                     (dissoc opts
+                                             :batch-size
+                                             :epochs
+                                             :index
+                                             :iterate
+                                             :iterations
+                                             :labels-source
+                                             :layer-size
+                                             :learning-rate
+                                             :lookup-table
+                                             :min-learning-rate
+                                             :min-word-frequency
+                                             :model-utils
+                                             :negative-sample
+                                             :reset-model
+                                             :sampling
+                                             :seed
+                                             :stop-words
+                                             :tokenizer-factory
+                                             :train-elements-representation
+                                             :train-sequences-representation
+                                             :train-word-vectors
+                                             :use-ada-grad
+                                             :vocab-cache
+                                             :window-size
+                                             :workers))]
     (when (or batch-size (contains? opts :batch-size))
       (.batchSize b (int batch-size)))
     (when (or epochs (contains? opts :epochs))
       (.epochs b (int epochs)))
     (when (or index (contains? opts :index))
-      (.index b index)) 
+      (.index b index))
     (when (or iterate (contains? opts :iterate))
       (.iterate b iterate))
     (when (or iterations (contains? opts :iterations))
@@ -112,5 +114,3 @@
 
 (defn paragraph-vectors [opts]
   (.build ^ParagraphVectors$Builder (builder opts)))
-
-

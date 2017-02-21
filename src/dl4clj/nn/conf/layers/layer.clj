@@ -10,12 +10,12 @@
                                               activation-function ;; same as activation
                                               adam-mean-decay ;; Mean decay rate for Adam updater (double)
                                               adam-var-decay ;; Variance decay rate for Adam updater (double)
-                                              bias-init      ;; (double) 
+                                              bias-init      ;; (double)
                                               dist ;; Distribution to sample initial weights from (Distribution or map)
-                                              drop-out ;; (double) 
+                                              drop-out ;; (double)
                                               gradient-normalization ;; Gradient normalization strategy (one of (dl4clj.nn.conf.gradient-normalization/values))
-                                              gradient-normalization-threshold ;; Threshold for gradient normalization, only used for :clip-l2-per-layer, :clip-l2-per-param-type 
-                                              ;; and clip-element-wise-absolute-value: L2 threshold for first two types of clipping, or absolute 
+                                              gradient-normalization-threshold ;; Threshold for gradient normalization, only used for :clip-l2-per-layer, :clip-l2-per-param-type
+                                              ;; and clip-element-wise-absolute-value: L2 threshold for first two types of clipping, or absolute
                                               ;; value threshold for last type of clipping
                                               l1       ;; L1 regularization coefficient (double)
                                               l2       ;; L2 regularization coefficient (double)
@@ -34,7 +34,7 @@
                                        :as opts}]
   (when (or activation activation-function)
     (.activation builder (clojure.core/name (or activation activation-function))))
-  (when adam-mean-decay
+  #_(when adam-mean-decay
     (.adamMeanDecay builder adam-mean-decay))
   (when adam-var-decay
     (.adamVarDecay builder adam-var-decay))
@@ -77,3 +77,23 @@
 
 
 (defmulti layer (fn [opts] (first (keys opts))))
+;; doesnt work with the idx layer map ex showed in neural_net_configuration
+#_(layer {0 {:graves-lstm {:n-in 50
+                          :n-out 100
+                          :updater :rmsprop
+                          :activation :tanh
+                          :weight-init :distribution
+                          :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}}}
+         1 {:graves-lstm {:n-in 100
+                          :n-out 100
+                          :updater :rmsprop
+                          :activation :tanh
+                          :weight-init :distribution
+                          :dist {:uniform {:lower -0.08, :upper 0.08}}}}
+         2 {:rnnoutput {:loss-function :mcxent
+                        :n-in 100
+                        :n-out 50
+                        :activation :softmax
+                        :updater :rmsprop
+                        :weight-init :distribution
+                        :dist {:normal {:mean 0.0, :std 0.05}}}}})
