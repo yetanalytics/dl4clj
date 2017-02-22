@@ -17,33 +17,33 @@
     SubsamplingLayer$Builder SubsamplingLayer$PoolingType ConvolutionLayer$AlgoMode]))
 
 (defn layer-type [opts]
-  (first (keys (:layers opts))))
+  (first (keys opts)))
 
 (defmulti builder layer-type)
 
-(builder {:layers {:graves-lstm {:l1 0.0,
-                                   :drop-out 0.0,
-                                   :dist {:uniform {:lower -0.08, :upper 0.08}},
-                                   :rho 0.0,
-                                   :forget-gate-bias-init 1.0,
-                                   :activation :tanh,
-                                   ;;   :learning-rate-after {},
-                                   :gradient-normalization "None",
-                                   :weight-init "DISTRIBUTION",
-                                   :n-out 100,
-                                   :adam-var-decay 0.999,
-                                   :bias-init 0.0,
-                                   :lr-score-based-decay 0.0,
-                                   :momentum-after {},
-                                   :l2 0.001,
-                                   :updater "RMSPROP",
-                                   :momentum 0.5,
-                                   :layer-name "genisys",
-                                   :n-in 50,
-                                   :learning-rate 0.1,
-                                   :adam-mean-decay 0.9,
-                                   :rms-decay 0.95,
-                                   :gradient-normalization-threshold 1.0}}})
+#_(builder {:graves-lstm {:l1 0.0,
+                           :drop-out 0.0,
+                           :dist {:uniform {:lower -0.08, :upper 0.08}},
+                           :rho 0.0,
+                           :forget-gate-bias-init 1.0,
+                           :activation :tanh,
+                           ;;   :learning-rate-after {},
+                           :gradient-normalization "None",
+                           :weight-init "DISTRIBUTION",
+                           :n-out 100,
+                           :adam-var-decay 0.999,
+                           :bias-init 0.0,
+                           :lr-score-based-decay 0.0,
+                           :momentum-after {},
+                           :l2 0.001,
+                           :updater "RMSPROP",
+                           :momentum 0.5,
+                           :layer-name "genisys",
+                           :n-in 50,
+                           :learning-rate 0.1,
+                           :adam-mean-decay 0.9,
+                           :rms-decay 0.95,
+                           :gradient-normalization-threshold 1.0}})
 (defn any-layer-builder
   [builder-type {:keys [n-in
                         n-out
@@ -196,55 +196,55 @@
   (.build builder-type))
 
 (defmethod builder :layer [opts]
-  (any-layer-builder (Layer$Builder.) (:layer (:layers opts))))
+  (any-layer-builder (Layer$Builder.) (:layer opts)))
 
 (defmethod builder :feed-forward-layer [opts]
-  (any-layer-builder (FeedForwardLayer$Builder.) (:feed-forward-layer (:layers opts))))
+  (any-layer-builder (FeedForwardLayer$Builder.) (:feed-forward-layer opts)))
 
 (defmethod builder :activation-layer [opts]
-  (any-layer-builder (ActivationLayer$Builder.) (:activation-layer (:layers opts))))
+  (any-layer-builder (ActivationLayer$Builder.) (:activation-layer  opts)))
 
 (defmethod builder :base-output-layer [opts]
-  (any-layer-builder (BaseOutputLayer$Builder.) (:base-output-layer (:layers opts))))
+  (any-layer-builder (BaseOutputLayer$Builder.) (:base-output-layer  opts)))
 
 (defmethod builder :output-layer [opts]
-  (any-layer-builder (OutputLayer$Builder.) (:output-layer (:layers opts))))
+  (any-layer-builder (OutputLayer$Builder.) (:output-layer  opts)))
 
 (defmethod builder :rnn-output-layer [opts]
-  (any-layer-builder (RnnOutputLayer$Builder.) (:rnn-output-layer (:layers opts))))
+  (any-layer-builder (RnnOutputLayer$Builder.) (:rnn-output-layer  opts)))
 
 (defmethod builder :base-pretrain-network [opts]
-  (any-layer-builder (BasePretrainNetwork$Builder.) (:base-pretrain-network (:layers opts))))
+  (any-layer-builder (BasePretrainNetwork$Builder.) (:base-pretrain-network  opts)))
 
 (defmethod builder :auto-encoder [opts]
-  (any-layer-builder (AutoEncoder$Builder.) (:auto-encoder (:layers opts))))
+  (any-layer-builder (AutoEncoder$Builder.) (:auto-encoder  opts)))
 
 (defmethod builder :rbm [opts]
-  (any-layer-builder (RBM$Builder.) (:rmb (:layers opts))))
+  (any-layer-builder (RBM$Builder.) (:rmb  opts)))
 
 (defmethod builder :base-recurrent-layer [opts]
-  (any-layer-builder (BaseRecurrentLayer$Builder.) (:base-recurrent-layer (:layers opts))))
+  (any-layer-builder (BaseRecurrentLayer$Builder.) (:base-recurrent-layer  opts)))
 
 (defmethod builder :graves-bidirectional-lstm [opts]
-  (any-layer-builder (GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm (:layers opts))))
+  (any-layer-builder (GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm  opts)))
 
 (defmethod builder :graves-lstm [opts]
-  (any-layer-builder (GravesLSTM$Builder.) (:graves-lstm (:layers opts))))
+  (any-layer-builder (GravesLSTM$Builder.) (:graves-lstm  opts)))
 
 (defmethod builder :batch-normalization [opts]
-  (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization (:layers opts))))
+  (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization  opts)))
 
 (defmethod builder :convolutional-layer [opts]
-  (any-layer-builder (ConvolutionLayer$Builder.) (:convolutional-layer (:layers opts))))
+  (any-layer-builder (ConvolutionLayer$Builder.) (:convolutional-layer  opts)))
 
 (defmethod builder :dense-layer [opts]
-  (any-layer-builder (DenseLayer$Builder.) (:dense-layer (:layers opts))))
+  (any-layer-builder (DenseLayer$Builder.) (:dense-layer  opts)))
 
 (defmethod builder :embedding-layer [opts]
-  (any-layer-builder (EmbeddingLayer$Builder.) (:embedding-layer (:layers opts))))
+  (any-layer-builder (EmbeddingLayer$Builder.) (:embedding-layer  opts)))
 
 (defmethod builder :local-response-normalization [opts]
-  (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization (:layers opts))))
+  (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization  opts)))
 
 (defmethod builder :subsampling-layer [opts]
-  (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer (:layers opts))))
+  (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer  opts)))

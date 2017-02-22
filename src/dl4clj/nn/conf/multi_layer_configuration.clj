@@ -49,6 +49,7 @@
      (.tBPTTForwardLength builder t-bptt-forward-length))
    builder))
 
+
 (defn list-builder [^NeuralNetConfiguration$ListBuilder b layers opts]
   (let [b (builder b opts)]
     (doseq [[idx l] layers]
@@ -62,9 +63,11 @@
 (defn to-edn [^MultiLayerConfiguration cfg]
   (json/read-str (.toJson cfg)
                  :key-fn #(keyword (camel-to-dashed %))))
+
+
 ;; (defn from-edn [cfg]
 ;;   (.build ^MultiLayerConfiguration$Builder (builder (update-in cfg [:confs] #(map neural-net-configuration %)))))
-(builder {:optimization-algo :stochastic-gradient-descent
+#_(builder {:optimization-algo :stochastic-gradient-descent
              :iterations 1
              :learning-rate 0.1
              :rms-decay 0.95

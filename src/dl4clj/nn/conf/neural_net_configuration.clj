@@ -136,6 +136,7 @@
           ;; confs ()
           :else b)))
 
+
 (defn neural-net-configuration
   [opts]
   (.build (builder opts)))
@@ -150,6 +151,7 @@
                  :key-fn #(keyword (camel-to-dashed %))))
 (defn from-edn [cfg]
   (neural-net-configuration cfg))
+
 
 (comment
 
