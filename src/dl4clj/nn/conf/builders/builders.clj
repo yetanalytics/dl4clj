@@ -1,4 +1,4 @@
-(ns dl4clj.nn.conf.builders
+(ns dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distribution.distribution :refer (distribution)]
             [dl4clj.nn.conf.distribution.binomial-distribution]
             [dl4clj.nn.conf.distribution.normal-distribution]
@@ -21,7 +21,7 @@
 
 (defmulti builder layer-type)
 
-#_(builder {:graves-lstm {:l1 0.0,
+#_(.build (builder {:graves-lstm {:l1 0.0,
                            :drop-out 0.0,
                            :dist {:uniform {:lower -0.08, :upper 0.08}},
                            :rho 0.0,
@@ -43,7 +43,7 @@
                            :learning-rate 0.1,
                            :adam-mean-decay 0.9,
                            :rms-decay 0.95,
-                           :gradient-normalization-threshold 1.0}})
+                           :gradient-normalization-threshold 1.0}}))
 (defn any-layer-builder
   [builder-type {:keys [n-in
                         n-out
@@ -193,7 +193,7 @@
     (.n builder-type n) builder-type)
   (if (contains? opts :pooling-type)
     (.poolingType builder-type pooling-type) builder-type)
-  (.build builder-type))
+  builder-type)
 
 (defmethod builder :layer [opts]
   (any-layer-builder (Layer$Builder.) (:layer opts)))
