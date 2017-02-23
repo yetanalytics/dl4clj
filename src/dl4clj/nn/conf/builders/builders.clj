@@ -14,40 +14,18 @@
     RBM$Builder BaseRecurrentLayer$Builder GravesBidirectionalLSTM$Builder
     GravesLSTM$Builder BatchNormalization$Builder ConvolutionLayer$Builder
     DenseLayer$Builder EmbeddingLayer$Builder LocalResponseNormalization$Builder
-    SubsamplingLayer$Builder SubsamplingLayer$PoolingType ConvolutionLayer$AlgoMode]))
+    SubsamplingLayer$Builder SubsamplingLayer$PoolingType ConvolutionLayer$AlgoMode]
+   [org.nd4j.linalg.activations Activation]))
 
 (defn layer-type [opts]
   (first (keys opts)))
 
 (defmulti builder layer-type)
 
-#_(.build (builder {:graves-lstm {:l1 0.0,
-                           :drop-out 0.0,
-                           :dist {:uniform {:lower -0.08, :upper 0.08}},
-                           :rho 0.0,
-                           :forget-gate-bias-init 1.0,
-                           :activation :tanh,
-                           ;;   :learning-rate-after {},
-                           :gradient-normalization "None",
-                           :weight-init "DISTRIBUTION",
-                           :n-out 100,
-                           :adam-var-decay 0.999,
-                           :bias-init 0.0,
-                           :lr-score-based-decay 0.0,
-                           :momentum-after {},
-                           :l2 0.001,
-                           :updater "RMSPROP",
-                           :momentum 0.5,
-                           :layer-name "genisys",
-                           :n-in 50,
-                           :learning-rate 0.1,
-                           :adam-mean-decay 0.9,
-                           :rms-decay 0.95,
-                           :gradient-normalization-threshold 1.0}}))
 (defn any-layer-builder
   [builder-type {:keys [n-in
                         n-out
-                        activation-function ;; Layer activation function (String)
+                        activation-fn ;; Layer activation function (String)
                         adam-mean-decay ;; Mean decay rate for Adam updater (double)
                         adam-var-decay ;; Variance decay rate for Adam updater (double)
                         bias-init ;; (double)
@@ -101,8 +79,8 @@
     (.nIn builder-type n-in) builder-type)
   (if (contains? opts :n-out)
     (.nOut builder-type n-out) builder-type)
-  (if (contains? opts :activation-function)
-    (.activation builder-type activation-function) builder-type)
+  (if (contains? opts :activation-fn)
+    (.activation builder-type (Activation/valueOf activation-fn)) builder-type)
   (if (contains? opts :adam-mean-decay)
     (.adamMeanDecay builder-type adam-mean-decay) builder-type)
   (if (contains? opts :adam-var-decay)
@@ -111,7 +89,7 @@
     (.biasInit builder-type bias-init) builder-type)
   (if (contains? opts :bias-learning-rate)
     (.biasLearningRate builder-type bias-learning-rate) builder-type)
-  (if (contains? opts :dist) ;; could be a map
+  (if (contains? opts :dist)
     (if (map? dist)
       (.dist builder-type (distribution dist))
       (.dist builder-type dist))
@@ -193,7 +171,7 @@
     (.n builder-type n) builder-type)
   (if (contains? opts :pooling-type)
     (.poolingType builder-type pooling-type) builder-type)
-  builder-type)
+  (.build builder-type))
 
 (defmethod builder :layer [opts]
   (any-layer-builder (Layer$Builder.) (:layer opts)))
@@ -248,3 +226,28 @@
 
 (defmethod builder :subsampling-layer [opts]
   (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer  opts)))
+
+
+#_(.build (builder {:graves-lstm {:l1 0.0,
+                                  :drop-out 0.0,
+                                  :dist {:uniform {:lower -0.08, :upper 0.08}},
+                                  :rho 0.0,
+                                  :forget-gate-bias-init 1.0,
+                                  :activation :tanh,
+                                  ;;   :learning-rate-after {},
+                                  :gradient-normalization "None",
+                                  :weight-init "DISTRIBUTION",
+                                  :n-out 100,
+                                  :adam-var-decay 0.999,
+                                  :bias-init 0.0,
+                                  :lr-score-based-decay 0.0,
+                                  :momentum-after {},
+                                  :l2 0.001,
+                                  :updater "RMSPROP",
+                                  :momentum 0.5,
+                                  :layer-name "genisys",
+                                  :n-in 50,
+                                  :learning-rate 0.1,
+                                  :adam-mean-decay 0.9,
+                                  :rms-decay 0.95,
+                                  :gradient-normalization-threshold 1.0}}))

@@ -6,9 +6,10 @@
             NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
+           [org.nd4j.linalg.activations Activation]
            ))
 (defn nn-conf-builder
-  [{:keys [activation-fn
+  [{:keys [global-activation-fn
            adam-mean-decay
            adam-var-decay
            bias-init
@@ -48,8 +49,8 @@
     :or {}
     :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
-    (if (contains? opts :activation-fn)
-      (.activation b activation-fn) b)
+    (if (contains? opts :global-activation-fn)
+      (.activation b (Activation/valueOf global-activation-fn)) b)
     (if (contains? opts :adam-mean-decay)
       (.adamMeanDecay b adam-mean-decay) b)
     (if (contains? opts :adam-var-decay)
@@ -64,7 +65,7 @@
                dist)) b)
     (if (contains? opts :drop-out)
       (.dropOut b drop-out) b)
-    #_(if (contains? opts :epsilon)
+    (if (contains? opts :epsilon)
       (.epsilon b epsilon) b)
     (if (contains? opts :gradient-normalization)
       (.gradientNormalization b gradient-normalization) b)
@@ -74,30 +75,21 @@
       (.l1 b l1) b)
     (if (contains? opts :l2)
       (.l2 b l2) b)
-    #_(if (contains? opts :layer)
-      (.layer b (layer-builders/builder b layer)) b)
-
-
-
-
-
-
-
-
-
-
-
-
-
+    (if (contains? opts :seed)
+      (.seed b seed))
+    (if (contains? opts :layer)
+      (.layer b (layer-builders/builder layer)) b)
     (if (contains? opts :layers) ;; this needs to be last so all the other config is already done
-      (multi-layer/list-builder b (:layers opts)) b)
-    b
-    #_(.build b)))
-(.build (nn-conf-builder {
-                  :layers {0 {:dense-layer {:n-in 100
-                                            :n-out 1000
-                                            :layer-name "first layer"}}
-                           1 {:output-layer {:layer-name "second layer"
-                                             :n-in 1000
-                                             :n-out 10
-                                             }}}}))
+      (multi-layer/list-builder b layers) b)
+    ))
+
+
+#_(nn-conf-builder {:global-activation-fn "RELU"
+                     :layers {0 {:dense-layer {:n-in 100
+                                               :n-out 1000
+                                               :layer-name "first layer"
+                                               :activation-fn "TANH"}}
+                              1 {:output-layer {:layer-name "second layer"
+                                                :n-in 1000
+                                                :n-out 10
+                                                }}}})
