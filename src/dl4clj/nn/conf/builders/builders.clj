@@ -1,12 +1,14 @@
 (ns dl4clj.nn.conf.builders.builders
-  (:require [dl4clj.nn.conf.distribution.distribution :refer (distribution)]
-            [dl4clj.nn.conf.distribution.binomial-distribution]
-            [dl4clj.nn.conf.distribution.normal-distribution]
-            [dl4clj.nn.conf.distribution.uniform-distribution]
-            [dl4clj.nn.conf.gradient-normalization :as gradient-normalization]
+  (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
+            [dl4clj.nn.conf.gradient-normalization :as g-norm]
+            [dl4clj.nn.conf.learning-rate-policy :as l-rate-p]
+            [dl4clj.nn.conf.activation-fns :as activation-fn]
+            [dl4clj.nn.api.optimization-algorithm :as opt-algo]
+            [dl4clj.nn.conf.step-fns :as step-functions]
+            [dl4clj.nn.conf.updater :as updaters]
             [nd4clj.linalg.lossfunctions.loss-functions :as loss-functions]
             [dl4clj.nn.conf.updater :as updater]
-            [dl4clj.nn.weights.weight-init :as weight-init])
+            [dl4clj.nn.weights.weight-init :as w-init])
   (:import
    [org.deeplearning4j.nn.conf.layers
     Layer$Builder FeedForwardLayer$Builder ActivationLayer$Builder BaseOutputLayer$Builder
@@ -19,41 +21,151 @@
 
 (defn layer-type [opts]
   (first (keys opts)))
+;; write specs to check for correct keys given a layer type
+(defmulti builder
+  ":layer opts:
+   :activation-fn, :adam-mean-decay, :adam-var-decay, :bias-init, :bias-learning-rate,
+   :dist :drop-out :epsilon, :gradient-normalization, :gradient-normalization-threshold,
+   :l1 :l2 :layer-name, :learning-rate, :learning-rate-policy, :momentum, :momentum-after,
+   :rho, :rms-decay, :updater, weight-init
 
-(defmulti builder layer-type)
+  subclasses of :layer, FeedForwardLayer, LocalResponseNormalization, SubsamplingLayer
+
+  FeedForwardlayer adds :n-in and :n-out
+  LocalResponsenormalization adds :alpha, :beta, :k, :n
+  Subsamplinglayer adds :kernel-size, :padding, :pooling-type, :stride
+
+  subclasses of FeedFowardLayer: ActivationLayer, BaseOutputlayer, BasePretrainnetwork,
+                                 BaseRecurrentlayer, BatchNormalization, Convolutionlayer,
+                                 DenseLayer, EmbeddingLayer
+  LocalResponseNormalization and SubSamplingLayer have no subclasses
+
+  :activation-layer adds no extra params and has no subclasses
+
+  :base-output-layer adds :loss-fn and has two subclasses:
+  :output-layer and :rnn-output-layer, neither adds any params
+
+  :base-pretrain-network adds :loss-fn and has two subclasses:
+  :auto-encoder and :rbm
+  :auto-encoder adds :corruption-level and :sparsity
+  :rbm adds :hidden-unit, :vissible-unit, :k, :sparsity
+
+  :base-recurrent-layer adds no extra params and has two subclasses:
+  :graves-lstm and :graves-bidirectional-lstm which both add :forget-gate-bias-init
+
+  :batch-normalization has no subclasses and adds:
+  :beta, :decay, :eps, :gamma, :is-mini-batch, :lock-gamma-beta
+
+  :convolutional-layer has no subclasses and adds:
+  :convolution-type, :cudnn-algo-mode, :kernel-size, :padding, :stride
+
+  :dense-layer has no subclasses and has no additional params
+
+  :embedding-layer has no subclasses and has no additional params"
+
+  layer-type)
 
 (defn any-layer-builder
-  [builder-type {:keys [n-in
-                        n-out
-                        activation-fn ;; Layer activation function (String)
-                        adam-mean-decay ;; Mean decay rate for Adam updater (double)
-                        adam-var-decay ;; Variance decay rate for Adam updater (double)
-                        bias-init ;; (double)
-                        bias-learning-rate
-                        dist ;; Distribution to sample initial weights from (Distribution or map)
-                        drop-out ;; (double)
-                        epsilon
-                        gradient-normalization ;; Gradient normalization strategy
-                        ;; (one of (dl4clj.nn.conf.gradient-normalization/values))
-                        gradient-normalization-threshold ;; Threshold for gradient normalization
-                        ;; only used for :clip-l2-per-layer, :clip-l2-per-param-type
-                        ;; and clip-element-wise-absolute-value: L2 threshold for first two types of clipping, or absolute
-                        ;; value threshold for last type of clipping
-                        l1 ;; L1 regularization coefficient (double)
-                        l2 ;; L2 regularization coefficient (double)
-                        layer-name ;; name of the layer (string)
-                        learning-rate ;; (double)
-                        learning-rate-policy
-                        learning-rate-schedule ;; Learning rate schedule (java.util.Map<java.lang.Integer,java.lang.Double>)
-                        momentum ;; Momentum rate (double)
-                        momentum-after ;; Momentum schedule. (java.util.Map<java.lang.Integer,java.lang.Double>)
-                        rho ;; Ada delta coefficient (double)
-                        rms-decay ;; Decay rate for RMSProp (double)
-                        updater ;; Gradient updater  (one of (dl4clj.nn.conf.updater/values))
-                        weight-init ;; Weight initialization scheme
-                        ;; (one of (dl4clj.nn.weights.weight-init/values))
-                        loss-fn
-                        corruption-level
+  "given a map of layer-type and config, generates the desired layer.  Works for
+  all layer types.  Values specified in the config map will not be overwritten by nn-conf-builder.
+
+  Params are:
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :activation-fn (keyword) one of: :cube, :elu, :hard-sigmoid, :hard-tanh, :identity,
+                                   :leaky-relu :relu, :r-relu, :sigmoid, :soft-max,
+                                   :soft-plus, :soft-sign, :tanh
+
+  :adam-mean-decay (double) Mean decay rate for Adam updater
+
+  :adam-var-decay (double) Variance decay rate for Adam updater
+
+  :bias-init (double) Constant for bias initialization
+
+  :bias-learning-rate (double) Bias learning rate
+
+  :dist (map) distribution to sample initial weights from, one of:
+        binomial-distribution {:binomial {:number-of-trails int :probability-of-success double}}
+        normal-distribution {:normal {:mean double :std double}}
+        uniform-distribution {:uniform {:lower double :upper double}}
+
+  :drop-out (double) Dropout probability
+
+  :epsilon (double) Epsilon value for updaters: Adagrad and Adadelta
+
+  :gradient-normalization (keyword) gradient normalization strategy,
+   These are applied on raw gradients, before the gradients are passed to the updater
+   (SGD, RMSProp, Momentum, etc)
+   one of: :none (default), :renormalize-l2-per-layer, :renormalize-l2-per-param-type,
+           :clip-element-wise-absolute-value, :clip-l2-per-layer, :clip-l2-per-param-type
+   reference: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/GradientNormalization.html
+
+  :gradient-normalization-threshold (double) Threshold for gradient normalization,
+   only used for :clip-l2-per-layer, :clip-l2-per-param-type, :clip-element-wise-absolute-value,
+   L2 threshold for first two types of clipping or absolute value threshold for the last type
+
+  :l1 (double) L1 regularization coefficient
+
+  :l2 (double) L2 regularization coefficient used when regularization is set to true
+
+  :layer-name (string) Name of the layer
+
+  :learning-rate (double) Paramter that controls the learning rate
+
+  :learning-rate-policy (keyword) How to decay learning rate during training
+   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/LearningRatePolicy.html
+   one of :none, :exponential, :inverse, :poly, :sigmoid, :step, :torch-step :schedule :score
+
+  :learning-rate-schedule {int double} Map of the iteration to the learning rate to apply at that iteration
+
+  :momentum (double) Momentum rate used only when the :updater is set to :nesterovs
+
+  :momentum-after {int double} Map of the iteration to the momentum rate to apply at that iteration
+   also only used when :updater is :nesterovs
+
+  :rho (double) Ada delta coefficient
+
+  :rms-decay (double) Decay rate for RMSProp, only applies if using :updater :RMSPROP
+
+  :updater (keyword) Gradient updater,
+   one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :adagrad, :rmsprop, :none, :custom
+
+  :weight-init (keyword) Weight initialization scheme
+  see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
+  one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size, :normalized
+
+  :loss-fn (keyword) Error measurement at output layer.  The layer types which use this
+   field are: :base-output-layer, :output-layer, :rnn-output-layer
+              :base-pretrain-network, :auto-encoder, :rbm
+   the loss-fn opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
+                         :reconstruction-crossentropy, :negativeloglikelihood,
+                         :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
+                         :mean-absolute-error, :l2, :mean-absolute-percentage-error,
+                         :mean-squared-logarithmic-error, :poisson
+
+  :corruption-level (double) turns the autoencoder into a denoising autoencoder:
+   see http://deeplearning.net/tutorial/dA.html (code examples in python) and
+   http://www.iro.umontreal.ca/~lisa/publications2/index.php/publications/show/217
+
+   The denoising auto-encoder is a stochastic version of the auto-encoder. Intuitively,
+   a denoising auto-encoder does two things: try to encode the input (preserve the information about the input),
+   and try to undo the effect of a corruption process stochastically applied to the input of the auto-encoder.
+   The latter can only be done by capturing the statistical dependencies between the inputs.
+
+  :sparsity (double), see http://ufldl.stanford.edu/wiki/index.php/Autoencoders_and_Sparsity
+
+  :hidden-unit
+"
+  [builder-type {:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
+                        bias-init bias-learning-rate dist drop-out epsilon
+                        gradient-normalization gradient-normalization-threshold
+                        l1 l2 layer-name learning-rate learning-rate-policy
+                        learning-rate-schedule momentum momentum-after rho
+                        rms-decay updater weight-init loss-fn corruption-level
                         sparsity
                         hidden-unit
                         vissible-unit
@@ -80,7 +192,7 @@
   (if (contains? opts :n-out)
     (.nOut builder-type n-out) builder-type)
   (if (contains? opts :activation-fn)
-    (.activation builder-type (Activation/valueOf activation-fn)) builder-type)
+    (.activation builder-type (activation-fn/value-of activation-fn)) builder-type)
   (if (contains? opts :adam-mean-decay)
     (.adamMeanDecay builder-type adam-mean-decay) builder-type)
   (if (contains? opts :adam-var-decay)
@@ -90,10 +202,9 @@
   (if (contains? opts :bias-learning-rate)
     (.biasLearningRate builder-type bias-learning-rate) builder-type)
   (if (contains? opts :dist)
-    (if (map? dist)
-      (.dist builder-type (distribution dist))
-      (.dist builder-type dist))
-    builder-type)
+    (.dist builder-type (if (map? dist)
+               (distribution/distribution dist)
+               dist)) builder-type)
   (if (contains? opts :drop-out)
     (.dropOut builder-type drop-out) builder-type)
   (if (contains? opts :epsilon)
@@ -101,7 +212,7 @@
   (if (contains? opts :gradient-normalization)
     (.gradientNormalization
      builder-type
-     (gradient-normalization/value-of gradient-normalization))
+     (g-norm/value-of gradient-normalization))
     builder-type)
   (if (contains? opts :gradient-normalization-threshold)
     (.gradientNormalizationThreshold builder-type gradient-normalization-threshold) builder-type)
@@ -114,7 +225,9 @@
   (if (contains? opts :learning-rate)
     (.learningRate builder-type learning-rate) builder-type)
   (if (contains? opts :learning-rate-policy)
-    (.learningRateDecayPolicy builder-type learning-rate-policy) builder-type)
+    (.learningRateDecayPolicy
+     builder-type
+     (l-rate-p/value-of learning-rate-policy)) builder-type)
   (if (contains? opts :learning-rate-schedule)
     (.learningRateSchedule builder-type learning-rate-schedule) builder-type)
   (if (contains? opts :momentum)
@@ -126,9 +239,9 @@
   (if (contains? opts :rms-decay)
     (.rmsDecay builder-type rms-decay) builder-type)
   (if (contains? opts :updater)
-    (.updater builder-type (updater/value-of updater)) builder-type)
+    (.updater builder-type (updaters/value-of updater)) builder-type)
   (if (contains? opts :weight-init)
-    (.weightInit builder-type (weight-init/value-of weight-init)) builder-type)
+    (.weightInit builder-type (w-init/value-of weight-init)) builder-type)
   (if (contains? opts :loss-fn)
     (.lossFunction builder-type (loss-functions/value-of loss-fn)) builder-type)
   (if (contains? opts :corruption-level)
@@ -185,6 +298,11 @@
 (defmethod builder :base-output-layer [opts]
   (any-layer-builder (BaseOutputLayer$Builder.) (:base-output-layer  opts)))
 
+;; add :custom-output-layer-builder
+;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/custom/testlayers/CustomOutputLayer.Builder.html
+;; add :custom-loss-function method to any-layer
+;; https://deeplearning4j.org/customizelossfunction
+;; jk its depreciated
 (defmethod builder :output-layer [opts]
   (any-layer-builder (OutputLayer$Builder.) (:output-layer  opts)))
 
@@ -226,7 +344,6 @@
 
 (defmethod builder :subsampling-layer [opts]
   (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer  opts)))
-
 
 #_(.build (builder {:graves-lstm {:l1 0.0,
                                   :drop-out 0.0,

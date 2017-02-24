@@ -17,7 +17,11 @@
 ;; implement and add documentation for graph builder
 (defn nn-conf-builder
   "given a map of parameters and their values, generates the appropriate
-  builder for constructing a network.  Params are:
+  builder for constructing a network.  The params provided here function
+  as the default params for a layer.  Specifying a param within the layer config maps
+  will be the param used, not the one supplied here.
+
+  Params are:
 
   :global-activation-fn (keyword) default global activation fn,
   wont overwrite activation functions specificed in the layer or layers map.
@@ -228,17 +232,23 @@
     ))
 
 
-(.build (nn-conf-builder {:global-activation-fn "RELU"
-                    :step-fn :negative-gradient-step-fn
-                    :updater :none
-                    :use-drop-connect true
-                            :drop-out 0.2
-                            :weight-init :xavier-uniform
-                    :layers {0 {:dense-layer {:n-in 100
-                                              :n-out 1000
-                                              :layer-name "first layer"
-                                              :activation-fn "TANH"}}
-                             1 {:output-layer {:layer-name "second layer"
-                                               :n-in 1000
-                                               :n-out 10
-                                               }}}}))
+(comment
+  (println
+   (str
+    (.build
+     (nn-conf-builder {:global-activation-fn "RELU"
+                       :step-fn :negative-gradient-step-fn
+                       :updater :none
+                       :use-drop-connect true
+                       :drop-out 0.2
+                       :weight-init :xavier-uniform
+                       :gradient-normalization :renormalize-l2-per-layer
+                       :layers {0 {:dense-layer {:n-in 100
+                                                 :n-out 1000
+                                                 :layer-name "first layer"
+                                                 :activation-fn "TANH"
+                                                 :gradient-normalization :none }}
+                                1 {:output-layer {:layer-name "second layer"
+                                                  :n-in 1000
+                                                  :n-out 10
+                                                  }}}})))))
