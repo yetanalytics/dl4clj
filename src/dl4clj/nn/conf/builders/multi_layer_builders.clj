@@ -1,7 +1,6 @@
 (ns dl4clj.nn.conf.builders.multi-layer-builders
   (:require [dl4clj.nn.conf.builders.builders :as bb]
-            [dl4clj.nn.conf.backprop-type :as backprop-t]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn])
+            [dl4clj.nn.conf.backprop-type :as backprop-t])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
@@ -58,19 +57,20 @@
 
 (comment
 ;; this is working
-  (-> (nn/nn-conf-builder {:drop-out 2
-                           :backprop true
-                           :seed 123
-                           :global-activation-fn "CUBE" ;; wont overwrite the activation fns set at the layer level
-                           :layers {0 {:graves-lstm {:layer-name "first layer"
-                                                     :n-in 10
-                                                     :n-out 10
-                                                     :activation-fn "RELU"
-                                                     :epsilon 2.0}}
-                                    1 {:graves-lstm {:layer-name "genisys"
-                                                     :activation-fn "SOFTMAX"
-                                                     :n-in 10
-                                                     :n-out 20}}}})
+  (-> (dl4clj.nn.conf.builders.nn-conf-builder/nn-conf-builder
+       {:drop-out 2
+        :backprop true
+        :seed 123
+        :global-activation-fn "CUBE" ;; wont overwrite the activation fns set at the layer level
+        :layers {0 {:graves-lstm {:layer-name "first layer"
+                                  :n-in 10
+                                  :n-out 10
+                                  :activation-fn "RELU"
+                                  :epsilon 2.0}}
+                 1 {:graves-lstm {:layer-name "genisys"
+                                  :activation-fn "SOFTMAX"
+                                  :n-in 10
+                                  :n-out 20}}}})
       (multi-layer-config-builder {:backprop true
                                    :tbptt-back-length 10
                                    :tbptt-fwd-length 30

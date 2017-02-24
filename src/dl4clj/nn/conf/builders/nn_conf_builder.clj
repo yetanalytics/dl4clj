@@ -4,7 +4,13 @@
             [dl4clj.nn.conf.builders.multi-layer-builders :as multi-layer])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
-            NeuralNetConfiguration$ListBuilder]
+            NeuralNetConfiguration$ListBuilder
+            ComputationGraphConfiguration$GraphBuilder
+            LearningRatePolicy
+            GradientNormalization
+            Updater]
+           [org.deeplearning4j.nn.weights WeightInit]
+           [org.deeplearning4j.nn.api OptimizationAlgorithm]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.nd4j.linalg.activations Activation]
            ))
@@ -19,6 +25,8 @@
            epsilon
            gradient-normalization
            gradient-normalization-threshold
+           graph-builder
+           iterations
            l1
            l2
            layer
@@ -27,30 +35,30 @@
            learning-rate
            learning-rate-policy
            learning-rate-schedule
+           learning-rate-score-based-decay-rate
            lr-policy-decay-rate
            lr-policy-power
            lr-policy-steps
-           lr-score-based-decay
            max-num-line-search-iterations
            mini-batch
            minimize
            momentum
-           momentum-schedule
-           num-iterations
+           momentum-after
            optimization-algo
+           regularization
            rho
            rms-decay
            seed
            step-fn
            updater
            use-drop-connect
-           use-regularization
-           weight-init]
+           weight-init
+           ]
     :or {}
     :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
     (if (contains? opts :global-activation-fn)
-      (.activation b (Activation/valueOf global-activation-fn)) b)
+      (.activation b (Activation/valueOf global-activation-fn)) b) ;; make a value of string coversion fn
     (if (contains? opts :adam-mean-decay)
       (.adamMeanDecay b adam-mean-decay) b)
     (if (contains? opts :adam-var-decay)
@@ -68,19 +76,69 @@
     (if (contains? opts :epsilon)
       (.epsilon b epsilon) b)
     (if (contains? opts :gradient-normalization)
-      (.gradientNormalization b gradient-normalization) b)
+      (.gradientNormalization
+       b
+       (GradientNormalization/valueOf gradient-normalization))
+      b)
     (if (contains? opts :gradient-normalization-threshold)
       (.gradientNormalizationThreshold b gradient-normalization-threshold) b)
+    (if (contains? opts :iterations)
+      (.iterations b iterations) b)
     (if (contains? opts :l1)
       (.l1 b l1) b)
     (if (contains? opts :l2)
       (.l2 b l2) b)
+    (if (contains? opts :leaky-relu-alpha)
+      (.leakyreluAlpha b leaky-relu-alpha) b)
+    (if (contains? opts :learning-rate)
+      (.learningRate b learning-rate) b)
+    (if (contains? opts :learning-rate-policy)
+      (.learningRateDecayPolicy
+       b
+       (LearningRatePolicy/valueOf learning-rate-policy)) b)
+    (if (contains? opts :learning-rate-schedule)
+      (.learningRateSchedule b learning-rate-schedule) b)
+    (if (contains? opts :learning-rate-score-based-decay-rate)
+      (.learningRateScoreBasedDecayRate b learning-rate-score-based-decay-rate) b)
+    (if (contains? opts :lr-policy-decay-rate)
+      (.lrPolicyDecayRate b lr-policy-decay-rate) b)
+    (if (contains? opts :lr-policy-power)
+      (.lrPolicyPower b lr-policy-power) b)
+    (if (contains? opts :lr-policy-steps)
+      (.lrPolicySteps b lr-policy-steps) b)
+    (if (contains? opts :max-num-line-search-iterations)
+      (.maxNumLineSearchIterations b max-num-line-search-iterations) b)
+    (if (contains? opts :mini-batch)
+      (.miniBatch b mini-batch) b)
+    (if (contains? opts :minimize)
+      (.minimize b minimize) b)
+    (if (contains? opts :momentum)
+      (.momentum b momentum) b)
+    (if (contains? opts :momentum-after)
+      (.momentumAfter b momentum-after) b)
+    (if (contains? opts :optimization-algo)
+      (.optimizationAlgo b (OptimizationAlgorithm/valueOf optimization-algo)) b)
+    (if (contains? opts :regularization)
+      (.regularization b regularization) b)
+    (if (contains? opts :rho)
+      (.rho b rho) b)
+    (if (contains? opts :rms-decay)
+      (.rmsDecay b rms-decay) b)
     (if (contains? opts :seed)
-      (.seed b seed))
+      (.seed b seed) b)
+    #_(if (contains? opts :step-fn)
+        (.stepFunction b )) ;; figure out step fns
+    (if (contains? opts :updater)
+      (.updater b (Updater/valueOf updater)) b)
+    (if (contains? opts :use-drop-connect)
+      (.useDropConnect b use-drop-connect) b)
+    (if (contains? opts :weight-init)
+      (.weightInit b (WeightInit/valueOf weight-init)) b)
     (if (contains? opts :layer)
       (.layer b (layer-builders/builder layer)) b)
     (if (contains? opts :layers) ;; this needs to be last so all the other config is already done
       (multi-layer/list-builder b layers) b)
+    ;; look into how to use the graph builder
     ))
 
 
