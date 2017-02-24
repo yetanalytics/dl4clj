@@ -12,12 +12,14 @@
   (map #(keyword (camel-to-dashed (.name ^GradientNormalization %))) (GradientNormalization/values)))
 
 
-
-
 (comment
 
   (map value-of (values))
+  (value-of :none)
   (value-of :renormalize-l2-per-layer)
+  (value-of :renormalize-l2-per-param-type)
+  (value-of :clip-element-wise-absolute-value)
+  (value-of :clip-l2-per-layer)
+  (value-of :clip-l2-per-param-type)
   (value-of "RenormalizeL2PerLayer")
-
 )
