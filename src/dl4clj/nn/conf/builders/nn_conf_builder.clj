@@ -129,13 +129,14 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold iterations l1 l2 layer layers
            leaky-relu-alpha learning-rate learning-rate-policy
-           learning-rate-schedule learning-rate-score-based-decay-rate
+           learning-rate-schedule lr-score-based-decay-rate
            lr-policy-decay-rate lr-policy-power lr-policy-steps
            max-num-line-search-iterations mini-batch minimize
            momentum momentum-after optimization-algo regularization
            rho rms-decay seed step-fn updater use-drop-connect
            weight-init
            ;;graph-builder
+           ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
            ]
     :or {}
     :as opts}]
@@ -154,6 +155,8 @@
       (.dist b (if (map? dist)
                (distribution/distribution dist)
                dist)) b)
+    (if (contains? opts :drop-out)
+      (.dropOut b drop-out) b)
     (if (contains? opts :epsilon)
       (.epsilon b epsilon) b)
     (if (contains? opts :gradient-normalization)
@@ -179,8 +182,8 @@
        (constants/value-of {:learning-rate-policy learning-rate-policy})) b)
     (if (contains? opts :learning-rate-schedule)
       (.learningRateSchedule b learning-rate-schedule) b)
-    (if (contains? opts :learning-rate-score-based-decay-rate)
-      (.learningRateScoreBasedDecayRate b learning-rate-score-based-decay-rate) b)
+    (if (contains? opts :lr-score-based-decay-rate)
+      (.learningRateScoreBasedDecayRate b lr-score-based-decay-rate) b)
     (if (contains? opts :lr-policy-decay-rate)
       (.lrPolicyDecayRate b lr-policy-decay-rate) b)
     (if (contains? opts :lr-policy-power)
@@ -223,11 +226,16 @@
     (if (contains? opts :weight-init)
       (.weightInit b (constants/value-of {:weight-init weight-init})) b)
     (if (contains? opts :layer)
-      (.layer b (layer-builders/builder layer)) b)
+      (if (seqable? layer)
+        (.layer b (layer-builders/builder layer))
+        (.layer b layer))
+      b)
     (if (contains? opts :layers) ;; this needs to be last so all the other config is already done
-      (multi-layer/list-builder b layers) b)
+      (multi-layer/list-builder b layers)
+      b)
     ;; look into how to use the graph builder
     ))
+
 
 
 (comment
@@ -241,7 +249,19 @@
                        :drop-out 0.2
                        :weight-init :xavier-uniform
                        :gradient-normalization :renormalize-l2-per-layer
-                       :layers {0 {:dense-layer {:n-in 100
+                       #_:layer #_(dl4clj.nn.conf.builders.builders/garves-lstm-layer-builder
+                               {:n-in 100
+                                :n-out 1000
+                                :layer-name "single layer"
+                                :activation-fn :softmax
+                                :gradient-normalization :none })
+                       :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                   {:n-in 100
+                                    :n-out 1000
+                                    :layer-name "first layer"
+                                    :activation-fn "TANH"
+                                    :gradient-normalization :none })
+                                #_{:dense-layer {:n-in 100
                                                  :n-out 1000
                                                  :layer-name "first layer"
                                                  :activation-fn "TANH"

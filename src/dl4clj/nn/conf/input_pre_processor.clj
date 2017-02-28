@@ -1,6 +1,7 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
   dl4clj.nn.conf.input-pre-processor
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
+           [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.conf.preprocessor BinomialSamplingPreProcessor
             ComposableInputPreProcessor UnitVarianceProcessor RnnToCnnPreProcessor
             ZeroMeanAndUnitVariancePreProcessor ZeroMeanPrePreProcessor
@@ -23,13 +24,34 @@
   (.preProcess this input (int mini-batch-size)))
 
 (defn get-output-type
-  "For a given type of input to this preprocessor, what is the type of the output?"
+  "For a given type of input to this preprocessor, what is the type of the output?
+
+  The InputType class is used to track and define the types of activations etc used in a ComputationGraph.
+  This is most useful for automatically adding preprocessors between layers, and automatically setting nIn values."
   [this input-type]
   (.getOutputType this input-type))
 
 (defn pre-process-type
   [opts]
   (first (keys opts)))
+
+(defn input-types
+  [b opts]
+  (let [{typez :type
+         height :height
+         width :width
+         depth :depth
+         size :size} (:input-type (:get-output-type opts))]
+    (cond
+      (= typez :convolutional)
+      (get-output-type b (InputType/convolutional height width depth))
+      (= typez :convolutional-flat)
+      (get-output-type b (InputType/convolutionalFlat height width depth))
+      (= typez :feed-forward)
+      (get-output-type b (InputType/feedForward size))
+      (= typez :recurrent)
+      (get-output-type b (InputType/recurrent size))
+      :else b)))
 
 (defn fn-calls
   "determines what functions to call based on opts map
@@ -47,11 +69,27 @@
         (pre-process b input mini-batch-size))
       b)
     (if (contains? opts :get-output-type)
-      (let [{input-type :input-type} (:get-output-type opts)]
-        (get-output-type b input-type))
+      (input-types b opts)
       b)))
 
-(defmulti pre-processors pre-process-type)
+(defmulti pre-processors
+  "constructs nearly any pre-processor and can run its methods
+
+  opts should look like:
+
+  {:input-height int (these first 3 keys are only needed when dealing with cnn preprocessors)
+  :input-width int
+  :num-channels int
+  :backprop {:output INDarray :mini-batch-size int}} (optional used for call to backprop)
+  :pre-process {:input INDarray :mini-batch-size int} (optional used for call to pre-process)
+  :get-output-type
+  {:input-type (one of: {:type :convolutional
+                         :height int :width int :depth int}
+                        {:type :convolutional-flat
+                         :height int :width int :depth in}
+                        {:type :feed-forward :size int}
+                        {:type :recurrent :size int})}"
+  pre-process-type)
 
 (defmethod pre-processors :binominal-sampling-pre-processor [opts]
   (fn-calls (BinomialSamplingPreProcessor.) opts))

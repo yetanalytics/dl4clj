@@ -650,27 +650,27 @@
                             :n-out 30
                             :forget-gate-bias-init 0.12}})
 
-(garves-lstm-layer-builder {:activation-fn :softmax
-                            :adam-mean-decay 0.3
-                            :adam-var-decay 0.5
-                            :bias-init 0.3
-                              :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
-                            :drop-out 0.01
-                            :gradient-normalization :clip-l2-per-layer
-                            :gradient-normalization-threshold 0.1
-                            :l1 0.02
-                            :l2 0.002
-                            :learning-rate 0.95
-                            :learning-rate-after {1000 0.5}
-                            :learning-rate-score-based-decay-rate 0.001
-                            :momentum 0.9
-                            :momentum-after {10000 1.5}
-                            :layer-name "test"
-                            :rho 0.5
-                            :rms-decay 0.01
-                            :updater :adam
-                            :weight-init :normalized
-                            :n-in 30
-                            :n-out 30
-                            :forget-gate-bias-init 0.12})
+ (garves-lstm-layer-builder {:activation-fn :softmax
+                             :adam-mean-decay 0.3
+                             :adam-var-decay 0.5
+                             :bias-init 0.3
+                             :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
+                             :drop-out 0.01
+                             :gradient-normalization :clip-l2-per-layer
+                             :gradient-normalization-threshold 0.1
+                             :l1 0.02
+                             :l2 0.002
+                             :learning-rate 0.95
+                             :learning-rate-after {1000 0.5}
+                             :learning-rate-score-based-decay-rate 0.001
+                             :momentum 0.9
+                             :momentum-after {10000 1.5}
+                             :layer-name "test"
+                             :rho 0.5
+                             :rms-decay 0.01
+                             :updater :adam
+                             :weight-init :normalized
+                             :n-in 30
+                             :n-out 30
+                             :forget-gate-bias-init 0.12})
 )

@@ -6,12 +6,12 @@
            [org.deeplearning4j.nn.conf.layers ConvolutionLayer$AlgoMode
             RBM$VisibleUnit RBM$HiddenUnit ConvolutionLayer$AlgoMode
             SubsamplingLayer$PoolingType]
+           [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.api OptimizationAlgorithm]
            [org.deeplearning4j.nn.weights WeightInit]
            [org.nd4j.linalg.activations Activation]
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
            [org.nd4j.linalg.convolution Convolution$Type]))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,3 +88,20 @@
 
 (defmethod value-of :optimization-algorithm [opts]
   (constants #(OptimizationAlgorithm/valueOf %) (:optimization-algorithm opts)))
+
+(defn input-types
+  [opts]
+  (let [{typez :type
+         height :height
+         width :width
+         depth :depth
+         size :size} (:input-type opts)]
+    (cond
+      (= typez :convolutional)
+      (InputType/convolutional height width depth)
+      (= typez :convolutional-flat)
+      (InputType/convolutionalFlat height width depth)
+      (= typez :feed-forward)
+      (InputType/feedForward size)
+      (= typez :recurrent)
+      (InputType/recurrent size))))
