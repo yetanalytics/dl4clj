@@ -1,6 +1,7 @@
+;;deprecated
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/NormalDistribution.html"}
   dl4clj.nn.conf.distribution.normal-distribution
-  (:require [dl4clj.nn.conf.distribution.distribution :refer (distribution)])
+  (:require [dl4clj.nn.conf.distribution.distribution :refer [distribution]])
   (:import [org.deeplearning4j.nn.conf.distribution NormalDistribution]))
 
 

@@ -1,79 +1,27 @@
-(ns dl4clj.nn.conf.builders.builders
+(ns ^{:doc "see https://deeplearning4j.org/glossary for param descriptions"}
+    dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
-            [dl4clj.nn.conf.gradient-normalization :as g-norm]
-            [dl4clj.nn.conf.learning-rate-policy :as l-rate-p]
-            [dl4clj.nn.conf.activation-fns :as activation-fn]
-            [dl4clj.nn.api.optimization-algorithm :as opt-algo]
-            [dl4clj.nn.conf.step-fns :as step-functions]
-            [dl4clj.nn.conf.updater :as updaters]
-            [nd4clj.linalg.lossfunctions.loss-functions :as loss-functions]
-            [dl4clj.nn.conf.updater :as updater]
-            [dl4clj.nn.weights.weight-init :as w-init])
+            [dl4clj.nn.conf.constants :as constants])
   (:import
-   [org.deeplearning4j.nn.conf.layers
-    Layer$Builder FeedForwardLayer$Builder ActivationLayer$Builder BaseOutputLayer$Builder
-    OutputLayer$Builder RnnOutputLayer$Builder BasePretrainNetwork$Builder AutoEncoder$Builder
-    RBM$Builder BaseRecurrentLayer$Builder GravesBidirectionalLSTM$Builder
-    GravesLSTM$Builder BatchNormalization$Builder ConvolutionLayer$Builder
-    DenseLayer$Builder EmbeddingLayer$Builder LocalResponseNormalization$Builder
-    SubsamplingLayer$Builder SubsamplingLayer$PoolingType ConvolutionLayer$AlgoMode]
-   [org.nd4j.linalg.activations Activation]))
+   [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
+    OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
+    RBM$Builder GravesBidirectionalLSTM$Builder GravesLSTM$Builder
+    BatchNormalization$Builder ConvolutionLayer$Builder DenseLayer$Builder
+    EmbeddingLayer$Builder LocalResponseNormalization$Builder SubsamplingLayer$Builder]))
 
-(defn layer-type [opts]
+(defn layer-type
+  "dispatch fn for builder"
+  [opts]
   (first (keys opts)))
-;; write specs to check for correct keys given a layer type
+
 (defmulti builder
-  ":layer opts:
-   :activation-fn, :adam-mean-decay, :adam-var-decay, :bias-init, :bias-learning-rate,
-   :dist :drop-out :epsilon, :gradient-normalization, :gradient-normalization-threshold,
-   :l1 :l2 :layer-name, :learning-rate, :learning-rate-policy, :momentum, :momentum-after,
-   :rho, :rms-decay, :updater, weight-init
-
-  subclasses of :layer, FeedForwardLayer, LocalResponseNormalization, SubsamplingLayer
-
-  FeedForwardlayer adds :n-in and :n-out
-  LocalResponsenormalization adds :alpha, :beta, :k, :n
-  Subsamplinglayer adds :kernel-size, :padding, :pooling-type, :stride
-
-  subclasses of FeedFowardLayer: ActivationLayer, BaseOutputlayer, BasePretrainnetwork,
-                                 BaseRecurrentlayer, BatchNormalization, Convolutionlayer,
-                                 DenseLayer, EmbeddingLayer
-  LocalResponseNormalization and SubSamplingLayer have no subclasses
-
-  :activation-layer adds no extra params and has no subclasses
-
-  :base-output-layer adds :loss-fn and has two subclasses:
-  :output-layer and :rnn-output-layer, neither adds any params
-
-  :base-pretrain-network adds :loss-fn and has two subclasses:
-  :auto-encoder and :rbm
-  :auto-encoder adds :corruption-level and :sparsity
-  :rbm adds :hidden-unit, :vissible-unit, :k, :sparsity
-
-  :base-recurrent-layer adds no extra params and has two subclasses:
-  :graves-lstm and :graves-bidirectional-lstm which both add :forget-gate-bias-init
-
-  :batch-normalization has no subclasses and adds:
-  :beta, :decay, :eps, :gamma, :is-mini-batch, :lock-gamma-beta
-
-  :convolutional-layer has no subclasses and adds:
-  :convolution-type, :cudnn-algo-mode, :kernel-size, :padding, :stride
-
-  :dense-layer has no subclasses and has no additional params
-
-  :embedding-layer has no subclasses and has no additional params"
-
+  "multimethod that builds a layer based on the supplied type and opts"
   layer-type)
 
 (defn any-layer-builder
-  "given a map of layer-type and config, generates the desired layer.  Works for
-  all layer types.  Values specified in the config map will not be overwritten by nn-conf-builder.
+  "creates any type of layer given a builder and param map
 
-  Params are:
-
-  :n-in (int) number of inputs to a given layer
-
-  :n-out (int) number of outputs for the given layer
+  params shared between all layers:
 
   :activation-fn (keyword) one of: :cube, :elu, :hard-sigmoid, :hard-tanh, :identity,
                                    :leaky-relu :relu, :r-relu, :sigmoid, :soft-max,
@@ -101,7 +49,6 @@
    (SGD, RMSProp, Momentum, etc)
    one of: :none (default), :renormalize-l2-per-layer, :renormalize-l2-per-param-type,
            :clip-element-wise-absolute-value, :clip-l2-per-layer, :clip-l2-per-param-type
-   reference: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/GradientNormalization.html
 
   :gradient-normalization-threshold (double) Threshold for gradient normalization,
    only used for :clip-l2-per-layer, :clip-l2-per-param-type, :clip-element-wise-absolute-value,
@@ -116,10 +63,9 @@
   :learning-rate (double) Paramter that controls the learning rate
 
   :learning-rate-policy (keyword) How to decay learning rate during training
-   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/LearningRatePolicy.html
    one of :none, :exponential, :inverse, :poly, :sigmoid, :step, :torch-step :schedule :score
 
-  :learning-rate-schedule {int double} Map of the iteration to the learning rate to apply at that iteration
+  :learning-rate-schedule {int double} map of iteration to the learning rate
 
   :momentum (double) Momentum rate used only when the :updater is set to :nesterovs
 
@@ -134,65 +80,25 @@
    one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :adagrad, :rmsprop, :none, :custom
 
   :weight-init (keyword) Weight initialization scheme
-  see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size, :normalized
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size, :normalized"
 
-  :loss-fn (keyword) Error measurement at output layer.  The layer types which use this
-   field are: :base-output-layer, :output-layer, :rnn-output-layer
-              :base-pretrain-network, :auto-encoder, :rbm
-   the loss-fn opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
-                         :reconstruction-crossentropy, :negativeloglikelihood,
-                         :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
-                         :mean-absolute-error, :l2, :mean-absolute-percentage-error,
-                         :mean-squared-logarithmic-error, :poisson
-
-  :corruption-level (double) turns the autoencoder into a denoising autoencoder:
-   see http://deeplearning.net/tutorial/dA.html (code examples in python) and
-   http://www.iro.umontreal.ca/~lisa/publications2/index.php/publications/show/217
-
-   The denoising auto-encoder is a stochastic version of the auto-encoder. Intuitively,
-   a denoising auto-encoder does two things: try to encode the input (preserve the information about the input),
-   and try to undo the effect of a corruption process stochastically applied to the input of the auto-encoder.
-   The latter can only be done by capturing the statistical dependencies between the inputs.
-
-  :sparsity (double), see http://ufldl.stanford.edu/wiki/index.php/Autoencoders_and_Sparsity
-
-  :hidden-unit
-"
-  [builder-type {:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
+  [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
                         gradient-normalization gradient-normalization-threshold
                         l1 l2 layer-name learning-rate learning-rate-policy
                         learning-rate-schedule momentum momentum-after rho
-                        rms-decay updater weight-init loss-fn corruption-level
-                        sparsity
-                        hidden-unit
-                        vissible-unit
-                        k
-                        forget-gate-bias-init
-                        beta
-                        decay
-                        eps
-                        gamma
-                        is-mini-batch
-                        lock-gamma-beta
-                        kernel-size
-                        stride
-                        padding
-                        convolution-type
-                        cudnn-algo-mode
-                        alpha
-                        n
-                        pooling-type]
+                        rms-decay updater weight-init n-in n-out loss-fn corruption-level
+                        sparsity hidden-unit visible-unit k forget-gate-bias-init
+                        beta decay eps gamma is-mini-batch lock-gamma-beta
+                        kernel-size stride padding convolution-type cudnn-algo-mode
+                        alpha n pooling-type]
                  :or {}
                  :as opts}]
-  (if (contains? opts :n-in)
-    (.nIn builder-type n-in) builder-type)
-  (if (contains? opts :n-out)
-    (.nOut builder-type n-out) builder-type)
   (if (contains? opts :activation-fn)
-    (.activation builder-type (activation-fn/value-of activation-fn)) builder-type)
+    (.activation
+     builder-type (constants/value-of {:activation-fn activation-fn}))
+    builder-type)
   (if (contains? opts :adam-mean-decay)
     (.adamMeanDecay builder-type adam-mean-decay) builder-type)
   (if (contains? opts :adam-var-decay)
@@ -211,11 +117,11 @@
     (.epsilon builder-type epsilon) builder-type)
   (if (contains? opts :gradient-normalization)
     (.gradientNormalization
-     builder-type
-     (g-norm/value-of gradient-normalization))
+     builder-type (constants/value-of {:gradient-normalization gradient-normalization}))
     builder-type)
   (if (contains? opts :gradient-normalization-threshold)
-    (.gradientNormalizationThreshold builder-type gradient-normalization-threshold) builder-type)
+    (.gradientNormalizationThreshold builder-type gradient-normalization-threshold)
+    builder-type)
   (if (contains? opts :l1)
     (.l1 builder-type l1) builder-type)
   (if (contains? opts :l2)
@@ -227,7 +133,8 @@
   (if (contains? opts :learning-rate-policy)
     (.learningRateDecayPolicy
      builder-type
-     (l-rate-p/value-of learning-rate-policy)) builder-type)
+     (constants/value-of {:learning-rate-policy learning-rate-policy}))
+    builder-type)
   (if (contains? opts :learning-rate-schedule)
     (.learningRateSchedule builder-type learning-rate-schedule) builder-type)
   (if (contains? opts :momentum)
@@ -239,19 +146,28 @@
   (if (contains? opts :rms-decay)
     (.rmsDecay builder-type rms-decay) builder-type)
   (if (contains? opts :updater)
-    (.updater builder-type (updaters/value-of updater)) builder-type)
+    (.updater builder-type (constants/value-of {:updater updater}))
+    builder-type)
   (if (contains? opts :weight-init)
-    (.weightInit builder-type (w-init/value-of weight-init)) builder-type)
+    (.weightInit builder-type (constants/value-of {:weight-init weight-init}))
+    builder-type)
+  (if (contains? opts :n-in)
+    (.nIn builder-type n-in) builder-type)
+  (if (contains? opts :n-out)
+    (.nOut builder-type n-out) builder-type)
   (if (contains? opts :loss-fn)
-    (.lossFunction builder-type (loss-functions/value-of loss-fn)) builder-type)
+    (.lossFunction builder-type (constants/value-of {:loss-fn loss-fn}))
+    builder-type)
   (if (contains? opts :corruption-level)
     (.corruptionLevel builder-type corruption-level) builder-type)
   (if (contains? opts :sparsity)
     (.sparsity builder-type sparsity) builder-type)
+  (if (contains? opts :visible-unit)
+    (.visibleUnit builder-type (constants/value-of {:visible-unit visible-unit}))
+    builder-type)
   (if (contains? opts :hidden-unit)
-    (.hiddenUnit builder-type hidden-unit) builder-type)
-  (if (contains? opts :vissible-unit)
-    (.visibleUnit builder-type vissible-unit) builder-type)
+    (.hiddenUnit builder-type (constants/value-of {:hidden-unit hidden-unit}))
+    builder-type)
   (if (contains? opts :k)
     (.k builder-type k) builder-type)
   (if (contains? opts :forget-gate-bias-init)
@@ -275,96 +191,469 @@
   (if (contains? opts :padding)
     (.padding builder-type padding) builder-type)
   (if (contains? opts :convolution-type)
-    (.convolutionType builder-type convolution-type) builder-type)
+    (.convolutionType
+     builder-type (constants/value-of {:convolution-type convolution-type}))
+    builder-type)
   (if (contains? opts :cudnn-algo-mode)
-    (.cudnnAlgoMode builder-type cudnn-algo-mode) builder-type)
+    (.cudnnAlgoMode
+     builder-type (constants/value-of {:cudnn-algo-mode cudnn-algo-mode}))
+    builder-type)
   (if (contains? opts :alpha)
     (.alpha builder-type alpha) builder-type)
   (if (contains? opts :n)
     (.n builder-type n) builder-type)
   (if (contains? opts :pooling-type)
-    (.poolingType builder-type pooling-type) builder-type)
+    (.poolingType builder-type (constants/value-of {:pool-type pooling-type}))
+    builder-type)
   (.build builder-type))
 
-(defmethod builder :layer [opts]
-  (any-layer-builder (Layer$Builder.) (:layer opts)))
-
-(defmethod builder :feed-forward-layer [opts]
-  (any-layer-builder (FeedForwardLayer$Builder.) (:feed-forward-layer opts)))
-
 (defmethod builder :activation-layer [opts]
-  (any-layer-builder (ActivationLayer$Builder.) (:activation-layer  opts)))
+  (any-layer-builder (ActivationLayer$Builder.) (:activation-layer opts)))
 
-(defmethod builder :base-output-layer [opts]
-  (any-layer-builder (BaseOutputLayer$Builder.) (:base-output-layer  opts)))
-
-;; add :custom-output-layer-builder
-;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/custom/testlayers/CustomOutputLayer.Builder.html
-;; add :custom-loss-function method to any-layer
-;; https://deeplearning4j.org/customizelossfunction
-;; jk its depreciated
 (defmethod builder :output-layer [opts]
-  (any-layer-builder (OutputLayer$Builder.) (:output-layer  opts)))
+  (any-layer-builder (OutputLayer$Builder.) (:output-layer opts)))
 
 (defmethod builder :rnn-output-layer [opts]
-  (any-layer-builder (RnnOutputLayer$Builder.) (:rnn-output-layer  opts)))
-
-(defmethod builder :base-pretrain-network [opts]
-  (any-layer-builder (BasePretrainNetwork$Builder.) (:base-pretrain-network  opts)))
+  (any-layer-builder (RnnOutputLayer$Builder.) (:rnn-output-layer opts)))
 
 (defmethod builder :auto-encoder [opts]
-  (any-layer-builder (AutoEncoder$Builder.) (:auto-encoder  opts)))
+  (any-layer-builder (AutoEncoder$Builder.) (:auto-encoder opts)))
 
 (defmethod builder :rbm [opts]
-  (any-layer-builder (RBM$Builder.) (:rmb  opts)))
-
-(defmethod builder :base-recurrent-layer [opts]
-  (any-layer-builder (BaseRecurrentLayer$Builder.) (:base-recurrent-layer  opts)))
+  (any-layer-builder (RBM$Builder.) (:rbm opts)))
 
 (defmethod builder :graves-bidirectional-lstm [opts]
-  (any-layer-builder (GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm  opts)))
+  (any-layer-builder (GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm opts)))
 
 (defmethod builder :graves-lstm [opts]
-  (any-layer-builder (GravesLSTM$Builder.) (:graves-lstm  opts)))
+  (any-layer-builder (GravesLSTM$Builder.) (:graves-lstm opts)))
 
 (defmethod builder :batch-normalization [opts]
-  (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization  opts)))
+  (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization opts)))
 
 (defmethod builder :convolutional-layer [opts]
-  (any-layer-builder (ConvolutionLayer$Builder.) (:convolutional-layer  opts)))
+  (any-layer-builder (ConvolutionLayer$Builder.) (:convolutional-layer opts)))
 
 (defmethod builder :dense-layer [opts]
-  (any-layer-builder (DenseLayer$Builder.) (:dense-layer  opts)))
+  (any-layer-builder (DenseLayer$Builder.) (:dense-layer opts)))
 
 (defmethod builder :embedding-layer [opts]
-  (any-layer-builder (EmbeddingLayer$Builder.) (:embedding-layer  opts)))
+  (any-layer-builder (EmbeddingLayer$Builder.) (:embedding-layer opts)))
 
 (defmethod builder :local-response-normalization [opts]
-  (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization  opts)))
+  (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization opts)))
 
 (defmethod builder :subsampling-layer [opts]
-  (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer  opts)))
+  (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer opts)))
 
-#_(.build (builder {:graves-lstm {:l1 0.0,
-                                  :drop-out 0.0,
-                                  :dist {:uniform {:lower -0.08, :upper 0.08}},
-                                  :rho 0.0,
-                                  :forget-gate-bias-init 1.0,
-                                  :activation :tanh,
-                                  ;;   :learning-rate-after {},
-                                  :gradient-normalization "None",
-                                  :weight-init "DISTRIBUTION",
-                                  :n-out 100,
-                                  :adam-var-decay 0.999,
-                                  :bias-init 0.0,
-                                  :lr-score-based-decay 0.0,
-                                  :momentum-after {},
-                                  :l2 0.001,
-                                  :updater "RMSPROP",
-                                  :momentum 0.5,
-                                  :layer-name "genisys",
-                                  :n-in 50,
-                                  :learning-rate 0.1,
-                                  :adam-mean-decay 0.9,
-                                  :rms-decay 0.95,
-                                  :gradient-normalization-threshold 1.0}}))
+;; write specs to check for correct keys given a layer type
+(defn activation-layer-builder
+  "creates an activation layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in and :n-out to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon
+           gradient-normalization gradient-normalization-threshold
+           l1 l2 layer-name learning-rate learning-rate-policy
+           learning-rate-schedule momentum momentum-after rho
+           rms-decay updater weight-init n-in n-out]
+    :or {}
+    :as opts}]
+  (builder {:activation-layer opts}))
+
+(defn output-layer-builder
+  "creates an output layer with params supplied in opts map.
+
+  base case opts can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :loss-fn
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :loss-fn (keyword) Error measurement at the output layer
+   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
+             :reconstruction-crossentropy, :negativeloglikelihood,
+             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
+             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
+             :mean-squared-logarithmic-error, :poisson"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon
+           gradient-normalization gradient-normalization-threshold
+           l1 l2 layer-name learning-rate learning-rate-policy
+           learning-rate-schedule momentum momentum-after rho
+           rms-decay updater weight-init n-in n-out loss-fn]
+    :or {}
+    :as opts}]
+  (builder {:output-layer opts}))
+
+(defn rnn-output-layer-builder
+  "creates a rnn output layer with params supplied in opts map.
+
+  base case opts can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :loss-fn
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :loss-fn (keyword) Error measurement at the output layer
+   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
+             :reconstruction-crossentropy, :negativeloglikelihood,
+             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
+             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
+             :mean-squared-logarithmic-error, :poisson"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out loss-fn]
+    :or {}
+    :as opts}]
+  (builder {:rnn-output-layer opts}))
+
+(defn auto-encoder-layer-builder
+  "creates an autoencoder layer with params supplied in opts map.
+
+  base case opts can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :loss-fn, :corruption-level :sparsity
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :loss-fn (keyword) Error measurement at the output layer
+   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
+             :reconstruction-crossentropy, :negativeloglikelihood,
+             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
+             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
+             :mean-squared-logarithmic-error, :poisson
+
+  :corruption-level (double) turns the autoencoder into a denoising autoencoder:
+   see http://deeplearning.net/tutorial/dA.html (code examples in python) and
+   http://www.iro.umontreal.ca/~lisa/publications2/index.php/publications/show/217
+
+  :sparsity (double), see http://ufldl.stanford.edu/wiki/index.php/Autoencoders_and_Sparsity
+
+   The denoising auto-encoder is a stochastic version of the auto-encoder. Intuitively,
+   a denoising auto-encoder does two things: try to encode the input (preserve the information about the input),
+   and try to undo the effect of a corruption process stochastically applied to the input of the auto-encoder.
+   The latter can only be done by capturing the statistical dependencies between the inputs."
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out loss-fn corruption-level
+           sparsity]
+    :or {}
+    :as opts}]
+  (builder {:auto-encoder opts}))
+
+(defn rbm-layer-builder
+  "creates a rbm layer with params supplied in opts map.
+
+  base case opts can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :loss-fn, :hidden-unit, :visible-unit, :k, :sparsity
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :loss-fn (keyword) Error measurement at the output layer
+   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
+             :reconstruction-crossentropy, :negativeloglikelihood,
+             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
+             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
+             :mean-squared-logarithmic-error, :poisson
+
+  :hidden-unit (keyword), see https://deeplearning4j.org/restrictedboltzmannmachine
+   keyword is one of: :softmax, :binary, :gaussian, :identity, :rectified
+
+  :visible-unit (keyword), see above (hidden-unit link)
+   keyword is one of: :softmax, :binary, :gaussian, :identity, :linear
+
+  :k (int), the number of times you run contrastive divergence (gradient calc)
+  see https://deeplearning4j.org/glossary.html#contrastivedivergence
+
+  :sparsity (double), see http://ufldl.stanford.edu/wiki/index.php/Autoencoders_and_Sparsity"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out loss-fn hidden-unit visible-unit
+           sparsity]
+    :or {}
+    :as opts}]
+  (builder {:rbm opts}))
+
+(defn graves-bidirectional-lstm-layer-builder
+  "creates a graves-bidirectional-lstm layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :forget-gate-bias-init to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init]
+    :or {}
+    :as opts}]
+  (builder {:graves-bidirectional-lstm opts}))
+
+(defn garves-lstm-layer-builder
+  "creates a graves-lstm layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :forget-gate-bias-init to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init]
+    :or {}
+    :as opts}]
+  (builder {:graves-lstm opts}))
+
+(defn batch-normalization-layer-builder
+  "creates a batch-normalization layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :beta, :decay, :eps, :gamma,
+                    :is-mini-batch, :lock-gamma-beta to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :beta (double), only used when :lock-gamma-beta is true, sets beta, defaults to 0.0
+
+  :decay (double), Decay value to use for global stats calculation (estimation of mean and variance)
+
+  :eps (double), Epsilon value for batch normalization; small floating point value added to variance
+   Default: 1e-5
+
+  :gamma (double), only used when :lock-gamma-beta is true, sets gamma, defaults to 1.0
+
+  :is-mini-batch (boolean), If doing minibatch training or not. Default: true.
+   Under most circumstances, this should be set to true.
+   Affects how globabl mean/variance estimates are calc'd
+
+  :lock-gamma-beta (boolean), true: lock the gamma and beta parameters to the values for each activation,
+   specified by :gamma (double) and :beta (double).
+   Default: false -> learn gamma and beta parameter values during network training."
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out beta decay eps gamma
+           is-mini-batch lock-gamma-beta]
+    :or {}
+    :as opts}]
+  (builder {:batch-normalization opts}))
+
+(defn convolutional-layer-builder
+  "creates a convolutional layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :convolution-type, :cudnn-algo-mode,
+                    :kernel-size, :padding, :stride  to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :convolution-type (keyword), one of :full, :same, :valid
+
+  :cudnn-algo-mode (keyword), either :no-workspace or :prefer-fastest
+   Default: :prefer-fastest but :no-workspace uses less memory
+
+  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+
+  :padding (int), allow us to control the spatial size of the output volumes,
+    pad the input volume with zeros around the border.
+
+  :stride (int), filter movement speed across pixels.
+   see http://cs231n.github.io/convolutional-networks/"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out convolution-type
+           cudnn-algo-mode kernel-size padding stride]
+    :or {}
+    :as opts}]
+  (builder (:convolutional-layer opts)))
+
+(defn dense-layer-builder
+  "creates a dense layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in and :n-out to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out]
+    :or {}
+    :as opts}]
+  (builder {:dense-layer opts}))
+
+(defn embedding-layer-builder
+  "creates an embedding layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in and :n-out to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init n-in n-out]
+    :or {}
+    :as opts}]
+  (builder (:embedding-layer opts)))
+
+(defn local-response-normalization-layer-builder
+  "creates a local-response-normalization layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :alpa, :beta, :k, :n to the param map.
+
+  :alpha (double) LRN scaling constant alpha. Default: 1e-4
+
+  :beta (double) Scaling constant beta. Default: 0.75
+
+  :k (double) LRN scaling constant k. Default: 2
+
+  :n (double) Number of adjacent kernel maps to use when doing LRN. default: 5"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init alpha beta k n]
+    :or {}
+    :as opts}]
+  (builder {:local-response-normalization opts}))
+
+(defn subsampling-layer-builder
+  "creates a subsampling layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :kernel-size, :padding, :pooling-type, :stride to the param map.
+
+  :kernel-size :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+
+  :padding (int) padding in the height and width dimensions
+
+  :pooling-type (keyword) progressively reduces the spatial size of the representation to reduce
+   the amount of features and the computational complexity of the network.
+  one of: :avg, :max, :sum, :pnorm, :none
+
+  :stride (int), filter movement speed across pixels.
+   see http://cs231n.github.io/convolutional-networks/"
+
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 layer-name learning-rate
+           learning-rate-policy learning-rate-schedule momentum momentum-after
+           rho rms-decay updater weight-init kernel-size padding pooling-type stride]
+    :or {}
+    :as opts}]
+  (builder {:subsampling-layer opts}))
+
+
+
+
+
+#_(builder {:graves-lstm {:activation-fn :softmax
+                          :adam-mean-decay 0.3
+                          :adam-var-decay 0.5
+                          :bias-init 0.3
+                          :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
+                          :drop-out 0.01
+                          :gradient-normalization :clip-l2-per-layer
+                          :gradient-normalization-threshold 0.1
+                          :l1 0.02
+                          :l2 0.002
+                          :learning-rate 0.95
+                             :learning-rate-after {1000 0.5}
+                             :learning-rate-score-based-decay-rate 0.001
+                          :momentum 0.9
+                          :momentum-after {10000 1.5}
+                          :layer-name "test"
+                          :rho 0.5
+                          :rms-decay 0.01
+                          :updater :adam
+                          :weight-init :normalized
+                          :n-in 30
+                          :n-out 30
+                          :forget-gate-bias-init 0.12}})
+
+#_(garves-lstm-layer-builder {:activation-fn :softmax
+                            :adam-mean-decay 0.3
+                            :adam-var-decay 0.5
+                            :bias-init 0.3
+                              :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
+                            :drop-out 0.01
+                            :gradient-normalization :clip-l2-per-layer
+                            :gradient-normalization-threshold 0.1
+                            :l1 0.02
+                            :l2 0.002
+                            :learning-rate 0.95
+                            :learning-rate-after {1000 0.5}
+                            :learning-rate-score-based-decay-rate 0.001
+                            :momentum 0.9
+                            :momentum-after {10000 1.5}
+                            :layer-name "test"
+                            :rho 0.5
+                            :rms-decay 0.01
+                            :updater :adam
+                            :weight-init :normalized
+                            :n-in 30
+                            :n-out 30
+                            :forget-gate-bias-init 0.12})
