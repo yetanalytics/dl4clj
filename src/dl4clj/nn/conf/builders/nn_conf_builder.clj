@@ -2,13 +2,8 @@
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
             [dl4clj.nn.conf.builders.builders :as layer-builders]
             [dl4clj.nn.conf.builders.multi-layer-builders :as multi-layer]
-            [dl4clj.nn.conf.gradient-normalization :as g-norm]
-            [dl4clj.nn.conf.learning-rate-policy :as l-rate-p]
-            [dl4clj.nn.conf.activation-fns :as activation-fn]
-            [dl4clj.nn.api.optimization-algorithm :as opt-algo]
             [dl4clj.nn.conf.step-fns :as step-functions]
-            [dl4clj.nn.conf.updater :as updaters]
-            [dl4clj.nn.weights.weight-init :as w-init])
+            [dl4clj.nn.conf.constants :as constants])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder
@@ -146,7 +141,7 @@
     :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
     (if (contains? opts :global-activation-fn)
-      (.activation b (activation-fn/value-of global-activation-fn)) b)
+      (.activation b (constants/value-of {:activation-fn global-activation-fn})) b)
     (if (contains? opts :adam-mean-decay)
       (.adamMeanDecay b adam-mean-decay) b)
     (if (contains? opts :adam-var-decay)
@@ -164,7 +159,7 @@
     (if (contains? opts :gradient-normalization)
       (.gradientNormalization
        b
-       (g-norm/value-of gradient-normalization))
+       (constants/value-of {:gradient-normalization gradient-normalization}))
       b)
     (if (contains? opts :gradient-normalization-threshold)
       (.gradientNormalizationThreshold b gradient-normalization-threshold) b)
@@ -181,7 +176,7 @@
     (if (contains? opts :learning-rate-policy)
       (.learningRateDecayPolicy
        b
-       (l-rate-p/value-of learning-rate-policy)) b)
+       (constants/value-of {:learning-rate-policy learning-rate-policy})) b)
     (if (contains? opts :learning-rate-schedule)
       (.learningRateSchedule b learning-rate-schedule) b)
     (if (contains? opts :learning-rate-score-based-decay-rate)
@@ -203,7 +198,10 @@
     (if (contains? opts :momentum-after)
       (.momentumAfter b momentum-after) b)
     (if (contains? opts :optimization-algo)
-      (.optimizationAlgo b (opt-algo/value-of optimization-algo)) b)
+      (.optimizationAlgo
+       b
+       (constants/value-of {:optimization-algorithm optimization-algo}))
+      b)
     (if (contains? opts :regularization)
       (.regularization b regularization) b)
     (if (contains? opts :rho)
@@ -215,7 +213,7 @@
     (if (contains? opts :step-fn)
       (.stepFunction b (step-functions/step-fn step-fn)) b)
     (if (contains? opts :updater)
-      (.updater b (updaters/value-of updater)) b)
+      (.updater b (constants/value-of {:updater updater})) b)
     (if (contains? opts :use-drop-connect)
       (if (and (true? use-drop-connect) (contains? opts :drop-out))
         (-> (.useDropConnect b use-drop-connect)
@@ -223,7 +221,7 @@
         (.useDropConnect b use-drop-connect))
       b)
     (if (contains? opts :weight-init)
-      (.weightInit b (w-init/value-of weight-init)) b)
+      (.weightInit b (constants/value-of {:weight-init weight-init})) b)
     (if (contains? opts :layer)
       (.layer b (layer-builders/builder layer)) b)
     (if (contains? opts :layers) ;; this needs to be last so all the other config is already done

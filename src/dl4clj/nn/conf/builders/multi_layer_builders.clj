@@ -1,6 +1,7 @@
 (ns dl4clj.nn.conf.builders.multi-layer-builders
   (:require [dl4clj.nn.conf.builders.builders :as bb]
-            [dl4clj.nn.conf.backprop-type :as backprop-t])
+            [dl4clj.nn.conf.backprop-type :as backprop-t]
+            [dl4clj.nn.conf.constants :as constants])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
@@ -28,7 +29,8 @@
    (if (contains? opts :backprop)
      (.backprop multi-layer-config-b backprop) multi-layer-config-b)
    (if (contains? opts :backprop-type)
-     (.backpropType multi-layer-config-b (backprop-t/value-of backprop-type))
+     (.backpropType multi-layer-config-b
+                    (constants/value-of {:backprop-type backprop-type}))
      multi-layer-config-b)
    #_(if (contains? opts :confs)
      (.confs multi-layer-config-b confs) multi-layer-config-b)
