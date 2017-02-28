@@ -6,16 +6,25 @@
            [org.deeplearning4j.nn.conf.layers ConvolutionLayer$AlgoMode
             RBM$VisibleUnit RBM$HiddenUnit ConvolutionLayer$AlgoMode
             SubsamplingLayer$PoolingType]
+           [org.deeplearning4j.nn.api OptimizationAlgorithm]
            [org.deeplearning4j.nn.weights WeightInit]
            [org.nd4j.linalg.activations Activation]
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
            [org.nd4j.linalg.convolution Convolution$Type]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi fn
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn constant-type
   [opts]
   (first (keys opts)))
 
 (defmulti value-of constant-type)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi fn heavy lifting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn constants
   [l-type k & {:keys [activation?
@@ -34,6 +43,10 @@
                   (l-type (s/upper-case val)))
             :else
             (l-type (s/replace (s/upper-case val) "-" "_"))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi fn methods
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod value-of :activation-fn [opts]
   (constants #(Activation/valueOf %) (:activation-fn opts) :activation? true))
@@ -72,3 +85,6 @@
   (if (= (:backprop-type opts) :truncated-bptt)
     (BackpropType/valueOf "TruncatedBPTT")
     (BackpropType/valueOf "Standard")))
+
+(defmethod value-of :optimization-algorithm [opts]
+  (constants #(OptimizationAlgorithm/valueOf %) (:optimization-algorithm opts)))
