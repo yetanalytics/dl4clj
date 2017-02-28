@@ -3,6 +3,8 @@
   (:require [dl4clj.utils :refer (camel-to-dashed)])
   (:import [org.deeplearning4j.nn.conf BackpropType]))
 
+;;deprecated
+;; keep this around till you test constants/value-of for bp type
 (defn value-of [k]
   (let [k (keyword (clojure.string/lower-case (camel-to-dashed (name k))))]
     (condp = k

@@ -3,7 +3,7 @@
   (:require [dl4clj.nn.conf.layers.base-recurrent-layer :as br-layer]
             [dl4clj.nn.conf.layers.layer :refer (layer)])
   (:import [org.deeplearning4j.nn.conf.layers GravesLSTM$Builder]))
-
+;;deprecated
 (defn builder [{:keys [forget-gate-bias-init] ;; (double)
                 :or {}
                 :as opts}]

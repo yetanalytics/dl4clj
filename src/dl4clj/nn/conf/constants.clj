@@ -1,7 +1,8 @@
 (ns dl4clj.nn.conf.constants
   (:require [clojure.string :as s]
             [dl4clj.utils :as u])
-  (:import [org.deeplearning4j.nn.conf GradientNormalization LearningRatePolicy Updater]
+  (:import [org.deeplearning4j.nn.conf GradientNormalization LearningRatePolicy
+            Updater BackpropType]
            [org.deeplearning4j.nn.conf.layers ConvolutionLayer$AlgoMode
             RBM$VisibleUnit RBM$HiddenUnit ConvolutionLayer$AlgoMode
             SubsamplingLayer$PoolingType]
@@ -18,9 +19,11 @@
 
 (defn constants
   [l-type k & {:keys [activation?
-                      camel?]
+                      camel?
+                      ]
                :or {activation? false
-                    camel? false}}]
+                    camel? false
+                     }}]
   (let [val (name k)]
     (if camel?
       (l-type (u/camelize val true))
@@ -64,3 +67,8 @@
 
 (defmethod value-of :pool-type [opts]
   (constants #(SubsamplingLayer$PoolingType/valueOf %) (:pool-type opts)))
+
+(defmethod value-of :backprop-type [opts]
+  (if (= (:backprop-type opts) :truncated-bptt)
+    (BackpropType/valueOf "TruncatedBPTT")
+    (BackpropType/valueOf "Standard")))

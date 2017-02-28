@@ -12,7 +12,7 @@
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration NeuralNetConfiguration$Builder NeuralNetConfiguration$ListBuilder]
            ;; [org.nd4j.linalg.factory Nd4j]
            ))
-
+;;deprecated
 (defn builder [{:keys [activation ;; Activation function / neuron non-linearity Typical values include :relu (rectified linear), :tanh, :sigmoid, :softmax, hardtanh, :leakyrelu, :maxout, :softsign, :softplus
                        activation-function ;; same as activation
                        adam-mean-decay ;; Mean decay rate for Adam updater (double) ;; broken

@@ -5,7 +5,7 @@
             [dl4clj.nn.conf.layers.layer :refer (layer)])
   (:import [org.deeplearning4j.nn.conf.layers RnnOutputLayer RnnOutputLayer$Builder]
            [org.nd4j.linalg.lossfunctions LossFunctions$LossFunction]))
-
+;;deprecated
 (defn builder [^RnnOutputLayer$Builder b opts]
   (base-out-layer/builder b opts))
 

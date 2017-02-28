@@ -3,7 +3,7 @@
   (:require [nd4clj.linalg.lossfunctions.loss-functions :as loss-functions]
             [dl4clj.nn.conf.layers.feed-forward-layer :as ff-layer])
   (:import [org.deeplearning4j.nn.conf.layers BaseOutputLayer BaseOutputLayer$Builder]))
-
+;;deprecated
 (defn builder [^BaseOutputLayer$Builder b {:keys [custom-loss-function ;; (string)
                                                   loss-function        ;; (lossFunction)
                                                   ]

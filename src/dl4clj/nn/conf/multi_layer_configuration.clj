@@ -6,7 +6,7 @@
             [dl4clj.utils :refer (camel-to-dashed)])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$ListBuilder]
            [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]))
-
+;;deprecated
 (defn builder
   ([]
    (builder (MultiLayerConfiguration$Builder.) {}))

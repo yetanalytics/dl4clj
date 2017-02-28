@@ -5,7 +5,7 @@
             [dl4clj.nn.conf.updater :as updater]
             [dl4clj.nn.weights.weight-init :as weight-init])
   (:import [org.deeplearning4j.nn.conf.layers Layer$Builder]))
-
+;;deprecated
 (defn builder [^Layer$Builder builder {:keys [activation ;; Layer activation function (String)
                                               activation-function ;; same as activation
                                               adam-mean-decay ;; Mean decay rate for Adam updater (double)

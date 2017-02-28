@@ -2,7 +2,7 @@
   dl4clj.nn.conf.layers.feed-forward-layer
   (:require [dl4clj.nn.conf.layers.layer :as layer])
   (:import [org.deeplearning4j.nn.conf.layers FeedForwardLayer$Builder]))
-
+;;deprecated
 (defn builder [^FeedForwardLayer$Builder builder {:keys [n-in nout
                                                          n-out nin]
                                                   :or {}
