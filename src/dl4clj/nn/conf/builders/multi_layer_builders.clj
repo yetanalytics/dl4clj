@@ -5,8 +5,21 @@
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
+;; update docs
 
 (defn multi-layer-config-builder
+  "creates a multi layer neural network configuration to be used within a multilayernetwork.
+
+  params are:
+
+  :backprop (boolean) whether to do backprop or not
+
+  :backprop-type (keyword) the type of backprop, one of :standard or :truncated-bptt
+
+  :input-pre-processors [int keyword] ^one layer or {int keyword} ^multiple layers
+  specifies the processors, these are used at each layer for doing things like
+  ormalization and shaping of input.
+"
   ([]
    (multi-layer-config-builder (MultiLayerConfiguration$Builder.) {}))
   ([opts]
