@@ -41,7 +41,7 @@
          height :height
          width :width
          depth :depth
-         size :size} (:input-type (:get-output-type opts))]
+         size :size} opts]
     (cond
       (= typez :convolutional)
       (get-output-type b (InputType/convolutional height width depth))
@@ -70,49 +70,55 @@
       b)
     (if (contains? opts :get-output-type)
       (input-types b opts)
-      b)))
+      b)
+    b))
 
 (defmulti pre-processors
   "constructs nearly any pre-processor and can run its methods
 
   opts should look like:
 
+  {:type-of-preprocessor
   {:input-height int (these first 3 keys are only needed when dealing with cnn preprocessors)
   :input-width int
   :num-channels int
-  :backprop {:output INDarray :mini-batch-size int}} (optional used for call to backprop)
+  :backprop {:output INDarray :mini-batch-size int} (optional used for call to backprop)
   :pre-process {:input INDarray :mini-batch-size int} (optional used for call to pre-process)
-  :get-output-type
-  {:input-type (one of: {:type :convolutional
+  :get-output-type {:input-type (one of:)
+                        {:type :convolutional
                          :height int :width int :depth int}
                         {:type :convolutional-flat
                          :height int :width int :depth in}
                         {:type :feed-forward :size int}
-                        {:type :recurrent :size int})}"
+                        {:type :recurrent :size int}}}"
   pre-process-type)
 
 (defmethod pre-processors :binominal-sampling-pre-processor [opts]
-  (fn-calls (BinomialSamplingPreProcessor.) opts))
+  (fn-calls (BinomialSamplingPreProcessor.)
+            (:binominal-sampling-pre-processor opts)))
 
 (defmethod pre-processors :unit-variance-processor [opts]
-  (fn-calls (UnitVarianceProcessor.) opts))
+  ;; see if you cant find out how to set columnStds, default = null
+  (fn-calls (UnitVarianceProcessor.) (:unit-variance-processor opts)))
 
 (defmethod pre-processors :rnn-to-cnn-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
-         num-channels :num-channels} opts]
-    (fn-calls (RnnToCnnPreProcessor. input-height input-width num-channels) opts)))
+         num-channels :num-channels} (:rnn-to-cnn-pre-processor opts)]
+    (fn-calls (RnnToCnnPreProcessor. input-height input-width num-channels)
+              (:rnn-to-cnn-pre-processor opts))))
 
 (defmethod pre-processors :zero-mean-and-unit-variance-pre-processor [opts]
-  (fn-calls (ZeroMeanAndUnitVariancePreProcessor.) opts))
+  (fn-calls (ZeroMeanAndUnitVariancePreProcessor.)
+            (:zero-mean-and-unit-variance-pre-processor opts)))
 
 (defmethod pre-processors :zero-mean-pre-pre-processor [opts]
-  (fn-calls (ZeroMeanPrePreProcessor.) opts))
+  (fn-calls (ZeroMeanPrePreProcessor.) (:zero-mean-pre-pre-processor opts)))
 
 (defmethod pre-processors :cnn-to-feed-forward-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
-         num-channels :num-channels} opts]
+         num-channels :num-channels} (:cnn-to-feed-forward-pre-processor opts)]
     (fn-calls
      (cond (every? nil? [input-height input-width num-channels])
           (CnnToFeedForwardPreProcessor.)
@@ -120,26 +126,27 @@
           (CnnToFeedForwardPreProcessor. input-height input-width)
           (every? int? [input-height input-width num-channels])
           (CnnToFeedForwardPreProcessor. input-height input-width num-channels))
-     opts)))
+     (:cnn-to-feed-forward-pre-processor opts))))
 
 (defmethod pre-processors :cnn-to-rnn-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
-         num-channels :num-channels} opts]
-    (fn-calls (CnnToRnnPreProcessor. input-height input-width num-channels) opts)))
+         num-channels :num-channels} (:cnn-to-rnn-pre-processor opts)]
+    (fn-calls (CnnToRnnPreProcessor. input-height input-width num-channels)
+              (:cnn-to-rnn-pre-processor opts))))
 
 (defmethod pre-processors :feed-forward-to-cnn-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
-         num-channels :num-channels} opts]
+         num-channels :num-channels} (:feed-forward-to-cnn-pre-processor opts)]
     (fn-calls
      (if (nil? num-channels)
        (FeedForwardToCnnPreProcessor. input-width input-height)
        (FeedForwardToCnnPreProcessor. input-height input-width num-channels))
-              opts)))
+     (:feed-forward-to-cnn-pre-processor opts))))
 
 (defmethod pre-processors :rnn-to-feed-forward-pre-processor [opts]
-  (fn-calls (RnnToFeedForwardPreProcessor.) opts))
+  (fn-calls (RnnToFeedForwardPreProcessor.) (:rnn-to-feed-forward-pre-processor opts)))
 
 (defn binominal-sampling-pre-processor
   "Binomial sampling pre processor"
