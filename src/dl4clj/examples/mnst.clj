@@ -21,7 +21,7 @@
 (def output-num 10)
 (def batchsize 128)
 (def rngseed 123)
-(def numepochs 20)
+(def numepochs 18)
 
 (def train-iterator (MnistDataSetIterator. batchsize true rngseed))
 (def test-iterator (MnistDataSetIterator. batchsize false rngseed))
@@ -64,7 +64,7 @@
             (println "current at epoch:" i)
             (recur (inc i)
                    (.fit mln train-iterator)))
-          (= i (+ 1 numepochs))
+          (= i numepochs)
           (do
             (println "training done")
             mln))))
