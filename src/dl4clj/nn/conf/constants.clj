@@ -29,11 +29,9 @@
 
 (defn constants
   [l-type k & {:keys [activation?
-                      camel?
-                      ]
+                      camel?]
                :or {activation? false
-                    camel? false
-                     }}]
+                    camel? false}}]
   (let [val (name k)]
     (if camel?
       (l-type (u/camelize val true))

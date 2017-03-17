@@ -8,9 +8,9 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 "}
   dl4clj.examples.rnn.graves-lstm-char-modelling-example
   (:require [dl4clj.examples.rnn.tools :refer [sample-characters-from-network]]
-            [dl4clj.examples.example-utils :refer (shakespeare)]
-            [dl4clj.examples.rnn.character-iterator :refer (get-shakespeare-iterator)]
-            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes reset)]
+            [dl4clj.examples.example-utils :refer [shakespeare]]
+            [dl4clj.examples.rnn.character-iterator :refer [get-shakespeare-iterator]]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [input-columns total-outcomes reset]]
             [dl4clj.nn.conf.layers.graves-lstm]
             [dl4clj.nn.conf.layers.rnn-output-layer]
             [dl4clj.nn.conf.distribution.uniform-distribution]

@@ -14,7 +14,7 @@
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
                  [org.deeplearning4j/deeplearning4j-core "0.7.2"]
-                ;; [org.deeplearning4j/deeplearning4j-ui "0.4-rc3.10"]
+                 ;; [org.deeplearning4j/deeplearning4j-ui "0.4-rc3.10"]
                  [org.deeplearning4j/deeplearning4j-nlp "0.7.2"]
                  [commons-io/commons-io "2.5"]
                  [org.nd4j/nd4j-native "0.7.2"]

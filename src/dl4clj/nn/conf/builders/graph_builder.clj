@@ -69,7 +69,7 @@
              layer :layer
              pre-processorz :input-pre-processor
              layer-inputs :layer-inputs} add-layer]
-        (if (nil? pre-processor)
+        (if (nil? pre-processorz)
           (.addLayer b l-name (if (seqable? layer)
                                 (bb/builder layer) layer)
                      (into-array layer-inputs))

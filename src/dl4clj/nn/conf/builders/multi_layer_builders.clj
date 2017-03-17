@@ -55,6 +55,7 @@
      (.backpropType multi-layer-config-b
                     (constants/value-of {:backprop-type backprop-type}))
      multi-layer-config-b)
+   ;; .build automaticaly takes care of this I believe
    #_(if (contains? opts :confs)
      (.confs multi-layer-config-b confs) multi-layer-config-b)
    (if (contains? opts :damping-factor)
@@ -106,6 +107,10 @@
                  (.layer result idx current-layer))))
             (= idx max-idx)
             result))))
+
+(defn multi-layer-network
+  [conf]
+  (MultiLayerNetwork. conf))
 
 (comment
 ;; this is working
