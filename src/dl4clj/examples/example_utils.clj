@@ -2,8 +2,44 @@
   dl4clj.examples.example-utils
   (:import [java.io IOException BufferedInputStream FileInputStream BufferedOutputStream FileOutputStream]
            [org.apache.commons.io FileUtils]
+           [org.deeplearning4j.eval Evaluation]
            [org.apache.commons.compress.archivers.tar TarArchiveEntry TarArchiveInputStream]
-           [org.apache.commons.compress.compressors.gzip GzipCompressorInputStream]))
+           [org.apache.commons.compress.compressors.gzip GzipCompressorInputStream]
+           [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
+
+(defn init [^MultiLayerNetwork mln]
+  (.init mln)
+  mln)
+
+(defn ex-train [^MultiLayerNetwork mln n-epoch iterator]
+  (loop
+      [i 0
+       result {}]
+    (cond (not= i n-epoch)
+          (do
+            (println "current at epoch:" i)
+            (recur (inc i)
+                   (.fit mln iterator)))
+          (= i n-epoch)
+          (do
+            (println "training done")
+            mln))))
+
+(defn new-evaler [output-n]
+  (Evaluation. output-n))
+
+(defn eval-model [mln iterator evaler]
+  (while (true? (.hasNext iterator))
+    (let [nxt (.next iterator)
+          output (.output mln (.getFeatureMatrix nxt))]
+      (do (.eval evaler (.getLabels nxt) output)
+          (println (.stats evaler))))))
+
+(defn reset-iterator
+  [t-iterator]
+  (.reset t-iterator))
+
+
 
 (defn index-map
   "Utility function to make an map from elements in a collection to indices"

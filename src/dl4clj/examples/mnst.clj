@@ -2,12 +2,11 @@
     mnst
   (:require [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
-            [dl4clj.nn.conf.builders.builders :as l])
+            [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.examples.example-utils :as u])
   (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
-           [org.nd4j.linalg.activations.Activations ]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]
            [org.deeplearning4j.eval Evaluation]
-           [org.deeplearning4j.nn.conf Updater]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.nd4j.linalg.api.ndarray INDArray]
@@ -81,14 +80,14 @@
   (.reset t-iterator))
 
 (defn get-feature-matrix
-  [trained t-iterator]
-  (.data (.output trained (.getFeatureMatrix (.next t-iterator)))))
+  [trained-model t-iterator]
+  (.data (.output trained-model (.getFeatureMatrix (.next t-iterator)))))
 
 (defn ex-mnist []
   (let [trained-network (-> conf
                             (mlb/multi-layer-network)
-                            (init)
-                            (ex-train))
+                            (u/init)
+                            (u/ex-train numepochs train-iterator))
         evaled (eval-model trained-network)]
     (reset-iterator test-iterator)))
 
