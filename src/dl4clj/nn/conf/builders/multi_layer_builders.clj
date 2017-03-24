@@ -96,7 +96,7 @@
            result b]
       (cond (not= idx max-idx)
             (let [current-layer (get layers idx)]
-              (if (seqable? current-layer)
+              (if (seq? current-layer)
                 ;; we are dealing with a config map that needs to go through builder multimethod
                 (recur
                  (inc idx)

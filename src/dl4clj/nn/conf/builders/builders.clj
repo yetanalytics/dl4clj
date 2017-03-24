@@ -7,7 +7,9 @@
     OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
     RBM$Builder GravesBidirectionalLSTM$Builder GravesLSTM$Builder
     BatchNormalization$Builder ConvolutionLayer$Builder DenseLayer$Builder
-    EmbeddingLayer$Builder LocalResponseNormalization$Builder SubsamplingLayer$Builder]))
+    EmbeddingLayer$Builder LocalResponseNormalization$Builder SubsamplingLayer$Builder]
+   [org.deeplearning4j.nn.conf.layers.variational VariationalAutoencoder$Builder]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -25,6 +27,8 @@
 ;; multi fn heavy lifting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; implement
+;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/BasePretrainNetwork.Builder.html
 (defn any-layer-builder
   "creates any type of layer given a builder and param map
 
@@ -99,7 +103,17 @@
                         sparsity hidden-unit visible-unit k forget-gate-bias-init
                         beta decay eps gamma is-mini-batch lock-gamma-beta
                         kernel-size stride padding convolution-type cudnn-algo-mode
-                        alpha n pooling-type]
+                        alpha n pooling-type decoder-layer-sizes
+                        encoder-layer-sizes num-samples pzx-activation-function
+
+                        #_pzx-activation-fn
+                        ;; needs to be implemented
+                        reconstruction-distribution
+                        pre-train-iterations
+                        visible-bias-init
+                        l1-bias
+                        l2-bias
+                        ]
                  :or {}
                  :as opts}]
   (if (contains? opts :activation-fn)
@@ -212,6 +226,23 @@
   (if (contains? opts :pooling-type)
     (.poolingType builder-type (constants/value-of {:pool-type pooling-type}))
     builder-type)
+  (if (contains? opts :decoder-layer-sizes)
+    (.decoderLayerSizes builder-type decoder-layer-sizes)
+    builder-type)
+  (if (contains? opts :encoder-layer-sizes)
+    (.encoderLayerSizes builder-type encoder-layer-sizes)
+    builder-type)
+  (if (contains? opts :num-samples)
+    (.numSamples builder-type num-samples)
+    builder-type)
+  #_(if (contains? opts :pzx-activation-fn)
+    (.pzxActivationFn builder-type (constants/value-of {:activation-fn pzx-activation-fn}))
+    builder-type)
+  (if (contains? opts :pzx-activation-function)
+    (.pzxActivationFunction
+     builder-type
+     (constants/value-of {:activation-fn pzx-activation-function}))
+    builder-type)
   (.build builder-type))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -256,6 +287,9 @@
 
 (defmethod builder :subsampling-layer [opts]
   (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer opts)))
+
+(defmethod builder :variational-auto-encoder [opts]
+  (any-layer-builder (VariationalAutoencoder$Builder.) (:variational-auto-encoder opts)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns based on multimethod for documentation purposes
@@ -620,6 +654,28 @@
     :or {}
     :as opts}]
   (builder {:subsampling-layer opts}))
+
+(defn variational-auto-encoder-builder
+  ;; add in this documentation
+  ""
+  [{:keys [decoder-layer-sizes encoder-layer-sizes loss-fn
+           n-out num-samples pzx-activation-function reconstruction-dist
+           n-in pre-train-iterations visible-bias-init activation-fn
+           adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l2 l1-bias l2-bias
+           learning-rate learning-rate-policy learning-rate-schedule momentum momentum-after
+           layer-name rho rms-decay updater weight-init]
+    :or {}
+    :as opts}]
+  (builder {:variational-auto-encoder opts}))
+
+
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; examples

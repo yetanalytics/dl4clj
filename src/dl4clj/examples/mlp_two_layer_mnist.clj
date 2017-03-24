@@ -9,10 +9,7 @@
            [org.deeplearning4j.eval Evaluation]
            [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.nd4j.linalg.api.ndarray INDArray]
-           [org.nd4j.linalg.dataset DataSet]
-           [org.slf4j Logger]
-           [org.slf4j LoggerFactory]
-           ))
+           [org.nd4j.linalg.dataset DataSet]))
 
 (def num-rows 28)
 (def num-cols 28)
