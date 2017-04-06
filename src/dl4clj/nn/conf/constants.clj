@@ -2,10 +2,10 @@
   (:require [clojure.string :as s]
             [dl4clj.utils :as u])
   (:import [org.deeplearning4j.nn.conf GradientNormalization LearningRatePolicy
-            Updater BackpropType]
+            Updater BackpropType ConvolutionMode]
            [org.deeplearning4j.nn.conf.layers ConvolutionLayer$AlgoMode
-            RBM$VisibleUnit RBM$HiddenUnit ConvolutionLayer$AlgoMode
-            SubsamplingLayer$PoolingType]
+            RBM$VisibleUnit RBM$HiddenUnit
+            PoolingType]
            [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.api OptimizationAlgorithm]
            [org.deeplearning4j.nn.weights WeightInit]
@@ -71,14 +71,14 @@
 (defmethod value-of :visible-unit [opts]
   (constants #(RBM$VisibleUnit/valueOf %) (:visible-unit opts)))
 
-(defmethod value-of :convolution-type [opts]
-  (constants #(Convolution$Type/valueOf %) (:convolution-type opts)))
+(defmethod value-of :convolution-mode [opts]
+  (constants #(ConvolutionMode/valueOf %) (:convolution-mode opts) :camel? true))
 
 (defmethod value-of :cudnn-algo-mode [opts]
   (constants #(ConvolutionLayer$AlgoMode/valueOf %) (:cudnn-algo-mode opts)))
 
 (defmethod value-of :pool-type [opts]
-  (constants #(SubsamplingLayer$PoolingType/valueOf %) (:pool-type opts)))
+  (constants #(PoolingType/valueOf %) (:pool-type opts)))
 
 (defmethod value-of :backprop-type [opts]
   (if (= (:backprop-type opts) :truncated-bptt)

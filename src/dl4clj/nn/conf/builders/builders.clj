@@ -1,7 +1,8 @@
 (ns ^{:doc "see https://deeplearning4j.org/glossary for param descriptions"}
     dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
-            [dl4clj.nn.conf.constants :as constants])
+            [dl4clj.nn.conf.constants :as constants]
+            [dl4clj.nn.conf.utils :as u])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
     OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
@@ -72,6 +73,10 @@
 
   :l2 (double) L2 regularization coefficient used when regularization is set to true
 
+  :l1-bias (double) L1 regularization coefficient for the bias. Default: 0.
+
+  :l2-bias (double) L2 regularization coefficient for the bias. Default: 0.
+
   :layer-name (string) Name of the layer
 
   :learning-rate (double) Paramter that controls the learning rate
@@ -105,18 +110,17 @@
                         rms-decay updater weight-init n-in n-out loss-fn corruption-level
                         sparsity hidden-unit visible-unit k forget-gate-bias-init
                         beta decay eps gamma is-mini-batch lock-gamma-beta
-                        kernel-size stride padding convolution-type cudnn-algo-mode
+                        kernel-size stride padding cudnn-algo-mode
                         alpha n pooling-type decoder-layer-sizes
                         encoder-layer-sizes num-samples pzx-activation-function
-
+                        gradient-check lambda collapse-dimensions pnorm
+                        pooling-dimensions eps convolution-mode l1-bias l2-bias
                         #_pzx-activation-fn
                         ;; needs to be implemented
                         reconstruction-distribution
                         pre-train-iterations
                         visible-bias-init
-                        l1-bias
-                        l2-bias
-                        ]
+                        gate-activation-fn]
                  :or {}
                  :as opts}]
   (if (contains? opts :activation-fn)
@@ -135,6 +139,12 @@
     (.dist builder-type (if (map? dist)
                (distribution/distribution dist)
                dist)) builder-type)
+  (if (contains? opts :l1-bias)
+    (.l1Bias builder-type l1-bias)
+    builder-type)
+  (if (contains? opts :l2-bias)
+    (.l2Bias builder-type l2-bias)
+    builder-type)
   (if (contains? opts :drop-out)
     (.dropOut builder-type drop-out) builder-type)
   (if (contains? opts :epsilon)
@@ -145,6 +155,9 @@
     builder-type)
   (if (contains? opts :gradient-normalization-threshold)
     (.gradientNormalizationThreshold builder-type gradient-normalization-threshold)
+    builder-type)
+  (if (contains? opts :eps)
+    (.eps builder-type eps)
     builder-type)
   (if (contains? opts :l1)
     (.l1 builder-type l1) builder-type)
@@ -158,6 +171,9 @@
     (.learningRateDecayPolicy
      builder-type
      (constants/value-of {:learning-rate-policy learning-rate-policy}))
+    builder-type)
+  (if (contains? opts :pooling-dimensions)
+    (.poolingDimensions builder-type pooling-dimensions)
     builder-type)
   (if (contains? opts :learning-rate-schedule)
     (.learningRateSchedule builder-type learning-rate-schedule) builder-type)
@@ -214,13 +230,16 @@
     (.stride builder-type stride) builder-type)
   (if (contains? opts :padding)
     (.padding builder-type padding) builder-type)
-  (if (contains? opts :convolution-type)
-    (.convolutionType
-     builder-type (constants/value-of {:convolution-type convolution-type}))
+  (if (contains? opts :convolution-mode)
+    (.convolutionMode
+     builder-type (constants/value-of {:convolution-mode convolution-type}))
     builder-type)
   (if (contains? opts :cudnn-algo-mode)
     (.cudnnAlgoMode
      builder-type (constants/value-of {:cudnn-algo-mode cudnn-algo-mode}))
+    builder-type)
+  (if (contains? opts :pnorm)
+    (.pnorm builder-type pnorm)
     builder-type)
   (if (contains? opts :alpha)
     (.alpha builder-type alpha) builder-type)
@@ -237,6 +256,15 @@
     builder-type)
   (if (contains? opts :num-samples)
     (.numSamples builder-type num-samples)
+    builder-type)
+  (if (contains? opts :gradient-check)
+    (.gradientCheck builder-type gradient-check)
+    builder-type)
+  (if (contains? opts :lambda)
+    (.lambda builder-type lambda)
+    builder-type)
+  (if (contains? opts :collapse-dimensions)
+    (.collapseDimensions builder-type collapse-dimensions)
     builder-type)
   #_(if (contains? opts :pzx-activation-fn)
     (.pzxActivationFn builder-type (constants/value-of {:activation-fn pzx-activation-fn}))
@@ -314,9 +342,18 @@
 
 (defmethod builder :zero-padding-layer [opts]
   (let [data (:zero-padding-layer opts)
-        {:keys [pad-top pad-bot pad-left pad-right]} data]
-    (any-layer-builder (ZeroPaddingLayer$Builder. pad-top pad-bot pad-left pad-right)
-                       (:zero-padding-layer opts))))
+        {:keys [pad-top pad-bot pad-left pad-right
+                pad-height pad-width padding]} data]
+    (cond
+      (u/contains-many? data :pad-top :pad-bot :pad-left :pad-right)
+      (any-layer-builder (ZeroPaddingLayer$Builder. pad-top pad-bot pad-left pad-right)
+                         (:zero-padding-layer opts))
+      (u/contains-many? data :pad-height :pad-width)
+      (any-layer-builder (ZeroPaddingLayer$Builder. pad-height pad-width)
+                         (:zero-padding-layer opts))
+      :else
+      (any-layer-builder (ZeroPaddingLayer$Builder. padding)
+                         (:zero-padding-layer opts)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns based on multimethod for documentation purposes
@@ -338,13 +375,16 @@
            gradient-normalization gradient-normalization-threshold
            l1 l2 layer-name learning-rate learning-rate-policy
            learning-rate-schedule momentum momentum-after rho
-           rms-decay updater weight-init n-in n-out]
+           rms-decay updater weight-init n-in n-out l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:activation-layer opts}))
 
 (defn output-layer-builder
   "creates an output layer with params supplied in opts map.
+
+  Output layer with different objective co-occurrences for different objectives.
+  This includes classification as well as regression
 
   base case opts can be found in the doc string of any-layer-builder.
 
@@ -366,7 +406,8 @@
            gradient-normalization gradient-normalization-threshold
            l1 l2 layer-name learning-rate learning-rate-policy
            learning-rate-schedule momentum momentum-after rho
-           rms-decay updater weight-init n-in n-out loss-fn]
+           rms-decay updater weight-init n-in n-out loss-fn
+           l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:output-layer opts}))
@@ -393,13 +434,15 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out loss-fn]
+           rho rms-decay updater weight-init n-in n-out loss-fn l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:rnn-output-layer opts}))
 
 (defn auto-encoder-layer-builder
   "creates an autoencoder layer with params supplied in opts map.
+
+  Autoencoder. Add Gaussian noise to input and learn a reconstruction function.
 
   base case opts can be found in the doc string of any-layer-builder.
 
@@ -408,6 +451,10 @@
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer
+
+  :pre-train-iterations (int)
+
+  :visible-bias-init (double)
 
   :loss-fn (keyword) Error measurement at the output layer
    opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
@@ -432,13 +479,19 @@
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
            rho rms-decay updater weight-init n-in n-out loss-fn corruption-level
-           sparsity]
+           sparsity l1-bias l2-bias pre-train-iterations visible-bias-init]
     :or {}
     :as opts}]
   (builder {:auto-encoder opts}))
 
 (defn rbm-layer-builder
   "creates a rbm layer with params supplied in opts map.
+
+  Restricted Boltzmann Machine. Markov chain with gibbs sampling.
+  Supports the following visible units: BINARY GAUSSIAN SOFTMAX LINEAR
+  Supports the following hidden units: RECTIFIED BINARY GAUSSIAN SOFTMAX
+  Based on Hinton et al.'s work Great reference:
+  http://www.iro.umontreal.ca/~lisa/publications2/index.php/publications/show/239
 
   base case opts can be found in the doc string of any-layer-builder.
 
@@ -447,6 +500,10 @@
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer
+
+  :pre-train-iterations (int)
+
+  :visible-bias-init (double)
 
   :loss-fn (keyword) Error measurement at the output layer
    opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
@@ -471,7 +528,7 @@
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
            rho rms-decay updater weight-init n-in n-out loss-fn hidden-unit visible-unit
-           sparsity]
+           sparsity l1-bias l2-bias pre-train-iterations visible-bias-init]
     :or {}
     :as opts}]
   (builder {:rbm opts}))
@@ -479,6 +536,9 @@
 (defn graves-bidirectional-lstm-layer-builder
   "creates a graves-bidirectional-lstm layer with params supplied in opts map.
 
+  LSTM recurrent net, based on Graves: Supervised Sequence Labelling with Recurrent Neural Networks
+   http://www.cs.toronto.edu/~graves/phd.pdf
+
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :n-in, :n-out, :forget-gate-bias-init to the param map.
@@ -487,12 +547,16 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM"
+  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM
+
+  :gate-activation-fn (keyword) activation-fn for the gate in an LSTM neuron.
+   -can take on the same values as activation-fn"
   [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init]
+           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init
+           l1-bias l2-bias gate-activation-fn]
     :or {}
     :as opts}]
   (builder {:graves-bidirectional-lstm opts}))
@@ -500,6 +564,9 @@
 (defn garves-lstm-layer-builder
   "creates a graves-lstm layer with params supplied in opts map.
 
+  LSTM recurrent net, based on Graves: Supervised Sequence Labelling with Recurrent Neural Networks
+  http://www.cs.toronto.edu/~graves/phd.pdf
+
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :n-in, :n-out, :forget-gate-bias-init to the param map.
@@ -508,18 +575,24 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM"
+  :forget-gate-bias-init (double), sets the forget gate bias initializations for LSTM
+
+  :gate-activation-fn (keyword) activation-fn for the gate in an LSTM neuron.
+   -can take on the same values as activation-fn"
   [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init]
+           rho rms-decay updater weight-init n-in n-out forget-gate-bias-init
+           l1-bias l2-bias gate-activation-fn]
     :or {}
     :as opts}]
   (builder {:graves-lstm opts}))
 
 (defn batch-normalization-layer-builder
   "creates a batch-normalization layer with params supplied in opts map.
+
+  Batch normalization configuration
 
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
@@ -552,7 +625,7 @@
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
            rho rms-decay updater weight-init n-in n-out beta decay eps gamma
-           is-mini-batch lock-gamma-beta]
+           is-mini-batch lock-gamma-beta l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:batch-normalization opts}))
@@ -569,7 +642,8 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :convolution-type (keyword), one of :full, :same, :valid
+  :convolution-mode (keyword), one of :strict, :same, :truncate
+   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
 
   :cudnn-algo-mode (keyword), either :no-workspace or :prefer-fastest
    Default: :prefer-fastest but :no-workspace uses less memory
@@ -586,8 +660,8 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out convolution-type
-           cudnn-algo-mode kernel-size padding stride]
+           rho rms-decay updater weight-init n-in n-out convolution-mode
+           cudnn-algo-mode kernel-size padding stride l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder (:convolutional-layer opts)))
@@ -595,6 +669,8 @@
 (defn dense-layer-builder
   "creates a dense layer with params supplied in opts map.
 
+  Dense layer: fully connected feed forward layer trainable by backprop.
+
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :n-in and :n-out to the param map.
@@ -607,7 +683,7 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out]
+           rho rms-decay updater weight-init n-in n-out l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:dense-layer opts}))
@@ -615,6 +691,17 @@
 (defn embedding-layer-builder
   "creates an embedding layer with params supplied in opts map.
 
+  feed-forward layer that expects single integers per example as input
+  (class numbers, in range 0 to numClass-1) as input. This input has shape [numExamples,1]
+  instead of [numExamples,numClasses] for the equivalent one-hot representation.
+
+  Mathematically, EmbeddingLayer is equivalent to using a DenseLayer with a one-hot
+  representation for the input; however, it can be much more efficient with a large
+  number of classes (as a dense layer + one-hot input does a matrix multiply with all but one value being zero).
+   -can only be used as the first layer for a network
+   -For a given example index i, the output is activationFunction(weights.getRow(i) + bias),
+    hence the weight rows can be considered a vector/embedding for each example.
+
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :n-in and :n-out to the param map.
@@ -626,7 +713,7 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out]
+           rho rms-decay updater weight-init n-in n-out l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder (:embedding-layer opts)))
@@ -650,7 +737,7 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init alpha beta k n]
+           rho rms-decay updater weight-init alpha beta k n l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:local-response-normalization opts}))
@@ -658,9 +745,20 @@
 (defn subsampling-layer-builder
   "creates a subsampling layer with params supplied in opts map.
 
+  Subsampling layer also referred to as pooling in convolution neural nets.
+
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :kernel-size, :padding, :pooling-type, :stride to the param map.
+
+  :convolution-mode (keyword), one of :strict, :same, :truncate
+   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+  :eps (double), Epsilon value for batch normalization; small floating point value added to variance
+   Default: 1e-5
+
+  :pnorm (int) P-norm constant
+  -Only used if using PoolingType.PNORM for the pooling type
 
   :kernel-size :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
 
@@ -677,7 +775,8 @@
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init kernel-size padding pooling-type stride]
+           rho rms-decay updater weight-init kernel-size padding pooling-type
+           stride l1-bias l2-bias convolution-mode eps pnorm]
     :or {}
     :as opts}]
   (builder {:subsampling-layer opts}))
@@ -699,57 +798,236 @@
 
 
 (defn loss-layer-builder
-  ":loss-fn (keyword) how to calculate error (loss) at each layer.
+  "creates a loss-layer with params supplied in opts map.
+
+  LossLayer is a flexible output layer that performs a loss function on an input without MLP logic.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :loss-fn, :n-in, :n-out
+
+  :loss-fn (keyword) how to calculate error (loss) at each layer.
    one of: :mse, :l1, :xent, :mcxent, :squared-loss, :reconstruction-corssentropy,
    :negativeloglikelihood, :cosine-proximity, :hinge, :squared-hinge, :kl-divergence
    :mean-absolute-error, :l2, :mean-absolute-percentage-error, :poisson
-   :mean-squared-logarithmic-error
-
-  https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/LossLayer.Builder.html
-"
-  [{:keys []
+   :mean-squared-logarithmic-error"
+  [{:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init]
     :or {}
     :as opts}]
   (builder {:loss-layer opts}))
 
 (defn center-loss-output-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/CenterLossOutputLayer.Builder.html"
-  [{:keys []
+  "creates a center-loss-output layer with params supplied in opts map.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  Center loss is similar to triplet loss except that it enforces intraclass consistency
+  and doesn't require feed forward of multiple examples.
+  Center loss typically converges faster for training ImageNet-based convolutional networks.
+  If example x is in class Y, ensure that embedding(x) is close to average(embedding(y)) for all examples y in Y
+
+  this builder adds :alpha, :gradient-check, :lambda
+
+  :alpha (double)
+
+  :gradient-check (boolean)
+
+  :lambda (double)"
+  [{:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init alpha gradient-check
+           lambda]
     :or {}
     :as opts}]
   (builder {:center-loss-output-layer opts}))
 
 (defn convolution-1d-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Convolution1DLayer.Builder.html"
-  [{:keys []
+  "creates a convolutional layer with params supplied in opts map.
+
+  1D (temporal) convolutional layer. Currently, we just subclass off the ConvolutionLayer
+  and hard code the width dimension to 1. Also, this layer accepts RNN InputTypes
+  instead of CNN InputTypes. This approach treats a multivariate time series with L
+  timesteps and P variables as an L x 1 x P image (L rows high, 1 column wide, P channels deep).
+  The kernel should be H
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  this builder adds :n-in, :n-out, :convolution-type, :cudnn-algo-mode,
+                    :kernel-size, :padding, :stride  to the param map.
+
+  :n-in (int) number of inputs to a given layer
+
+  :n-out (int) number of outputs for the given layer
+
+  :convolution-mode (keyword), one of :strict, :same, :truncate
+   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+  :cudnn-algo-mode (keyword), either :no-workspace or :prefer-fastest
+   Default: :prefer-fastest but :no-workspace uses less memory
+
+  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+
+  :padding (int), allow us to control the spatial size of the output volumes,
+    pad the input volume with zeros around the border.
+
+  :stride (int), filter movement speed across pixels.
+   see http://cs231n.github.io/convolutional-networks/"
+  [{:keys [convolution-mode cudnn-algo-mode kernel-size padding stride
+           n-in n-out activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init]
     :or {}
     :as opts}]
   (builder {:convolution-1d-layer opts}))
 
 (defn dropout-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/DropoutLayer.Builder.html"
-  [{:keys []
+  "creates a drop-out layer with params supplied in opts map.
+
+  see any-layer-builder for param descriptions"
+  [{:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init]
     :or {}
     :as opts}]
   (builder {:dropout-layer opts}))
 
 (defn global-pooling-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/GlobalPoolingLayer.Builder.html"
-  [{:keys []
+  "creates a global pooling layer with params supplied in opts map.
+
+  Global pooling layer - used to do pooling over time for RNNs, and 2d pooling for CNNs.
+
+  Global pooling layer can also handle mask arrays when dealing with variable length inputs.
+  -Mask arrays are assumed to be 2d, and are fed forward through the network during training or post-training forward pass:
+   -Time series: mask arrays are shape [minibatchSize, maxTimeSeriesLength] and contain values 0 or 1 only
+   -CNNs: mask have shape [minibatchSize, height] or [minibatchSize, width].
+    - Important: the current implementation assumes that for CNNs + variable length (masking),
+      the input shape is [minibatchSize, depth, height, 1] or [minibatchSize, depth, 1, width]
+       respectively. This is the case with global pooling in architectures like CNN for sentence classification.
+
+  Behaviour with default settings:
+   -3d (time series) input with shape [minibatchSize, vectorSize, timeSeriesLength] -> 2d output [minibatchSize, vectorSize]
+   -4d (CNN) input with shape [minibatchSize, depth, height, width] -> 2d output [minibatchSize, depth]
+
+  Alternatively, by setting collapseDimensions = false in the configuration,
+  it is possible to retain the reduced dimensions as 1s:
+   -this gives [minibatchSize, vectorSize, 1] for RNN output
+    and [minibatchSize, depth, 1, 1] for CNN output.
+
+  base case opts descriptions can be found in the doc string of any-layer-builder.
+
+  adds :collapse-dimensions, :pnorm, :pooling-dimensions, :pooling-type
+
+  :collapse-dimensions (boolean) Whether to collapse dimensions when pooling or not.
+   -Usually you *do* want to do this. Default: true.
+    -If true:
+      -3d (time series) input with shape [minibatchSize, vectorSize, timeSeriesLength] -> 2d output [minibatchSize, vectorSize]
+      -4d (CNN) input with shape [minibatchSize, depth, height, width] -> 2d output [minibatchSize, depth]
+    -If false:
+      -3d (time series) input with shape [minibatchSize, vectorSize, timeSeriesLength] -> 3d output [minibatchSize, vectorSize, 1]
+      -4d (CNN) input with shape [minibatchSize, depth, height, width] -> 2d output [minibatchSize, depth, 1, 1]
+
+  :pnorm (int) P-norm constant
+  -Only used if using PoolingType.PNORM for the pooling type
+
+  :pooling-dimensions (int) Pooling dimensions
+  -Note: most of the time, this doesn't need to be set, and the defaults can be used.
+   -Default for RNN data: pooling dimension 2 (time).
+   -Default for CNN data: pooling dimensions 2,3 (height and width)
+
+  :pooling-type (keyword) progressively reduces the spatial size of the representation to reduce
+    the amount of features and the computational complexity of the network.
+    one of: :avg, :max, :sum, :pnorm, :none"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init collapse-dimensions
+           pnorm pooling-dimensions pooling-type]
     :or {}
     :as opts}]
   (builder {:global-pooling-layer opts}))
 
 (defn subsampling-1d-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Subsampling1DLayer.Builder.html"
-  [{:keys []
+  "creates a 1d subsampling layer with the params supplied in opts map.
+
+   1D (temporal) subsampling layer. Currently, we just subclass off the SubsamplingLayer and hard
+   code the width dimension to 1. Also, this layer accepts RNN InputTypes instead of CNN InputTypes.
+
+   This approach treats a multivariate time series with L timesteps and P
+    variables as an L x 1 x P image (L rows high, 1 column wide, P channels deep).
+
+   The kernel should be H
+
+  adds :convolution-mode, :eps, :kernel-size, :padding, :pnorm, :pooling-type, :stride
+
+  :convolution-mode (keyword), one of :strict, :same, :truncate
+   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+  :eps (double), Epsilon value for batch normalization; small floating point value added to variance
+   Default: 1e-5
+
+  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+
+  :padding (int), allow us to control the spatial size of the output volumes,
+    pad the input volume with zeros around the border.
+
+  :pnorm (int) P-norm constant
+  -Only used if using PoolingType.PNORM for the pooling type
+
+  :pooling-type (keyword) progressively reduces the spatial size of the representation to reduce
+    the amount of features and the computational complexity of the network.
+    one of: :avg, :max, :sum, :pnorm, :none
+
+  :stride (int), filter movement speed across pixels.
+   see http://cs231n.github.io/convolutional-networks/"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init convolution-mode
+           eps kernel-size padding pnorm pooling-type stride]
     :or {}
     :as opts}]
   (builder {:subsampling-1d-layer opts}))
 
 (defn zero-padding-layer-builder
-  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Subsampling1DLayer.Builder.html"
-  [{:keys []
+  "builds a zero-padding layer with the params supplied in opts map.
+
+  Zero padding layer for convolutional neural networks.
+  -Allows padding to be done separately for top/bottom/left/right
+
+  adds :padding, :pad-height, :pad-width, :pad-top :pad-bot, :pad-left, :pad-right
+
+  :padding (int), allow us to control the spatial size of the output volumes,
+    pad the input volume with zeros around the border.
+
+  :pad-height (int)
+
+  :pad-width (int)
+
+  :pad-top (int)
+
+  :pad-bot (int)
+
+  :pad-left (int)
+
+  :pad-right (int)"
+  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+           bias-learning-rate dist drop-out epsilon gradient-normalization
+           gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
+           learning-rate learning-rate-policy learning-rate-schedule momentum
+           momentum-after rho rms-decay updater weight-init padding pad-height
+           pad-width pad-top pad-bot pad-left pad-right]
     :or {}
     :as opts}]
   (builder {:zero-padding-layer opts}))
