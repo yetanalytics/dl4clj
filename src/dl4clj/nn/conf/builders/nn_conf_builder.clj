@@ -141,101 +141,63 @@
     :or {}
     :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
-    (if (contains? opts :global-activation-fn)
-      (.activation b (constants/value-of {:activation-fn global-activation-fn})) b)
-    (if (contains? opts :adam-mean-decay)
-      (.adamMeanDecay b adam-mean-decay) b)
-    (if (contains? opts :adam-var-decay)
-      (.adamVarDecay b adam-var-decay) b)
-    (if (contains? opts :bias-init)
-      (.biasInit b bias-init) b)
-    (if (contains? opts :bias-learning-rate)
-      (.biasLearningRate b bias-learning-rate) b)
-    (if (contains? opts :dist)
-      (.dist b (if (map? dist)
-               (distribution/distribution dist)
-               dist)) b)
-    (if (contains? opts :drop-out)
-      (.dropOut b drop-out) b)
-    (if (contains? opts :epsilon)
-      (.epsilon b epsilon) b)
-    (if (contains? opts :gradient-normalization)
-      (.gradientNormalization
-       b
-       (constants/value-of {:gradient-normalization gradient-normalization}))
-      b)
-    (if (contains? opts :gradient-normalization-threshold)
-      (.gradientNormalizationThreshold b gradient-normalization-threshold) b)
-    (if (contains? opts :iterations)
-      (.iterations b iterations) b)
-    (if (contains? opts :l1)
-      (.l1 b l1) b)
-    (if (contains? opts :l2)
-      (.l2 b l2) b)
-    (if (contains? opts :leaky-relu-alpha)
-      (.leakyreluAlpha b leaky-relu-alpha) b)
-    (if (contains? opts :learning-rate)
-      (.learningRate b learning-rate) b)
-    (if (contains? opts :learning-rate-policy)
-      (.learningRateDecayPolicy
-       b
-       (constants/value-of {:learning-rate-policy learning-rate-policy})) b)
-    (if (contains? opts :learning-rate-schedule)
-      (.learningRateSchedule b learning-rate-schedule) b)
-    (if (contains? opts :lr-score-based-decay-rate)
-      (.learningRateScoreBasedDecayRate b lr-score-based-decay-rate) b)
-    (if (contains? opts :lr-policy-decay-rate)
-      (.lrPolicyDecayRate b lr-policy-decay-rate) b)
-    (if (contains? opts :lr-policy-power)
-      (.lrPolicyPower b lr-policy-power) b)
-    (if (contains? opts :lr-policy-steps)
-      (.lrPolicySteps b lr-policy-steps) b)
-    (if (contains? opts :max-num-line-search-iterations)
-      (.maxNumLineSearchIterations b max-num-line-search-iterations) b)
-    (if (contains? opts :mini-batch)
-      (.miniBatch b mini-batch) b)
-    (if (contains? opts :minimize)
-      (.minimize b minimize) b)
-    (if (contains? opts :momentum)
-      (.momentum b momentum) b)
-    (if (contains? opts :momentum-after)
-      (.momentumAfter b momentum-after) b)
-    (if (contains? opts :optimization-algo)
-      (.optimizationAlgo
-       b
-       (constants/value-of {:optimization-algorithm optimization-algo}))
-      b)
-    (if (contains? opts :regularization)
-      (.regularization b regularization) b)
-    (if (contains? opts :rho)
-      (.rho b rho) b)
-    (if (contains? opts :rms-decay)
-      (.rmsDecay b rms-decay) b)
-    (if (contains? opts :seed)
-      (.seed b seed) b)
-    (if (contains? opts :step-fn)
-      (.stepFunction b (step-functions/step-fn step-fn)) b)
-    (if (contains? opts :updater)
-      (.updater b (constants/value-of {:updater updater})) b)
-    (if (contains? opts :use-drop-connect)
-      (if (and (true? use-drop-connect) (contains? opts :drop-out))
-        (-> (.useDropConnect b use-drop-connect)
-            (.dropOut drop-out))
-        (.useDropConnect b use-drop-connect))
-      b)
-    (if (contains? opts :weight-init)
-      (.weightInit b (constants/value-of {:weight-init weight-init})) b)
-    (if (contains? opts :layer)
-      (if (seqable? layer)
-        (.layer b (layer-builders/builder layer))
-        (.layer b layer))
-      b)
-    (if (contains? opts :layers) ;; this needs to be last so all the other config is already done
-      (multi-layer/list-builder b layers)
-      b)
-    ;; look into how to use the graph builder
-    ))
-
+    (cond-> b
+      (contains? opts :global-activation-fn) (.activation (constants/value-of
+                                                           {:activation-fn
+                                                            global-activation-fn}))
+      (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
+      (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+      (contains? opts :bias-init) (.biasInit bias-init)
+      (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
+      (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
+                                        dist))
+      (contains? opts :drop-out) (.dropOut drop-out)
+      (contains? opts :epsilon) (.epsilon epsilon)
+      (contains? opts :gradient-normalization) (.gradientNormalization
+                                                (constants/value-of
+                                                 {:gradient-normalization
+                                                  gradient-normalization}))
+      (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
+                                                          gradient-normalization-threshold)
+      (contains? opts :iterations) (.iterations iterations)
+      (contains? opts :l1) (.l1 l1)
+      (contains? opts :l2) (.l2 l2)
+      (contains? opts :leaky-relu-alpha) (.leakyreluAlpha leaky-relu-alpha)
+      (contains? opts :learning-rate) (.learningRate learning-rate)
+      (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+                                              (constants/value-of
+                                               {:learning-rate-policy
+                                                learning-rate-policy}))
+      (contains? opts :learning-rate-schedule) (.learningRateSchedule
+                                                learning-rate-schedule)
+      (contains? opts :lr-score-based-decay-rate) (.learningRateScoreBasedDecayRate
+                                                   lr-score-based-decay-rate)
+      (contains? opts :lr-policy-decay-rate) (.lrPolicyDecayRate lr-policy-decay-rate)
+      (contains? opts :lr-policy-power) (.lrPolicyPower lr-policy-power)
+      (contains? opts :lr-policy-steps) (.lrPolicySteps lr-policy-steps)
+      (contains? opts :max-num-line-search-iterations) (.maxNumLineSearchIterations
+                                                        max-num-line-search-iterations)
+      (contains? opts :mini-batch) (.miniBatch mini-batch)
+      (contains? opts :minimize) (.minimize minimize)
+      (contains? opts :momentum) (.momentum momentum)
+      (contains? opts :momentum-after) (.momentumAfter momentum-after)
+      (contains? opts :optimization-algo) (.optimizationAlgo
+                                           (constants/value-of
+                                            {:optimization-algorithm
+                                             optimization-algo}))
+      (contains? opts :regularization) (.regularization regularization)
+      (contains? opts :rho) (.rho rho)
+      (contains? opts :rms-decay) (.rmsDecay rms-decay)
+      (contains? opts :seed) (.seed seed)
+      (contains? opts :step-fn) (.stepFunction (step-functions/step-fn step-fn))
+      (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
+      (contains? opts :use-drop-connect) (.useDropConnect use-drop-connect)
+      (contains? opts :weight-init) (.weightInit (constants/value-of
+                                                  {:weight-init weight-init}))
+      (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
+      (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
+      (contains? opts :layers) (multi-layer/list-builder layers)
+      )))
 
 
 (comment

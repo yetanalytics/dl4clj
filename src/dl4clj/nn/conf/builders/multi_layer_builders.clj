@@ -49,33 +49,19 @@
      ;; confs is automaticaly set when you .build
      :or {}
      :as opts}]
-   (if (contains? opts :backprop)
-     (.backprop multi-layer-config-b backprop) multi-layer-config-b)
-   (if (contains? opts :backprop-type)
-     (.backpropType multi-layer-config-b
-                    (constants/value-of {:backprop-type backprop-type}))
-     multi-layer-config-b)
-   ;; .build automaticaly takes care of this I believe
-   #_(if (contains? opts :confs)
-     (.confs multi-layer-config-b confs) multi-layer-config-b)
-   (if (contains? opts :damping-factor)
-     (.dampingFactor multi-layer-config-b damping-factor) multi-layer-config-b)
-   (if (contains? opts :input-pre-processors)
-     (.inputPreProcessors multi-layer-config-b
-                          (pre-process/pre-processors input-pre-processors))
-     multi-layer-config-b)
-   (if (contains? opts :input-type)
-     (.setInputType multi-layer-config-b (constants/input-types input-type))
-     multi-layer-config-b)
-   (if (contains? opts :pretrain)
-     (.pretrain multi-layer-config-b pretrain) multi-layer-config-b)
-   (if (contains? opts :tbptt-back-length)
-     (.tBPTTBackwardLength multi-layer-config-b tbptt-back-length)
-     multi-layer-config-b)
-   (if (contains? opts :tbptt-fwd-length)
-     (.tBPTTForwardLength multi-layer-config-b tbptt-fwd-length)
-     multi-layer-config-b)
-   multi-layer-config-b))
+   (cond-> multi-layer-config-b
+     (contains? opts :backprop) (.backprop backprop)
+     (contains? opts :backprop-type) (.backpropType (constants/value-of
+                                                     {:backprop-type
+                                                      backprop-type}))
+     (contains? opts :damping-factor) (.dampingFactor damping-factor)
+     (contains? opts :input-pre-processors) (.inputPreProcessors
+                                             (pre-process/pre-processors
+                                              input-pre-processors))
+     (contains? opts :input-type) (.setInputType (constants/input-types input-type))
+     (contains? opts :pretrain) (.pretrain pretrain)
+     (contains? opts :tbptt-back-length) (.tBPTTBackwardLength tbptt-back-length)
+     (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length))))
 
 (defn list-builder
   "builds a list of layers to be used in a multi-layer configuration
@@ -96,7 +82,7 @@
            result b]
       (cond (not= idx max-idx)
             (let [current-layer (get layers idx)]
-              (if (seq? current-layer)
+              (if (map? current-layer)
                 ;; we are dealing with a config map that needs to go through builder multimethod
                 (recur
                  (inc idx)
@@ -119,6 +105,11 @@
         :backprop true
         :seed 123
         :global-activation-fn "CUBE" ;; wont overwrite the activation fns set at the layer level
+        #_:layer #_{:graves-lstm {:layer-name "first layer"
+                              :n-in 10
+                              :n-out 10
+                              :activation-fn "RELU"
+                              :epsilon 2.0}}
         :layers {0 {:graves-lstm {:layer-name "first layer"
                                   :n-in 10
                                   :n-out 10
