@@ -7,7 +7,10 @@
     OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
     RBM$Builder GravesBidirectionalLSTM$Builder GravesLSTM$Builder
     BatchNormalization$Builder ConvolutionLayer$Builder DenseLayer$Builder
-    EmbeddingLayer$Builder LocalResponseNormalization$Builder SubsamplingLayer$Builder]
+    EmbeddingLayer$Builder LocalResponseNormalization$Builder
+    SubsamplingLayer$Builder LossLayer$Builder CenterLossOutputLayer$Builder
+    Convolution1DLayer$Builder DropoutLayer$Builder GlobalPoolingLayer$Builder
+    Layer$Builder Subsampling1DLayer$Builder ZeroPaddingLayer$Builder]
    [org.deeplearning4j.nn.conf.layers.variational VariationalAutoencoder$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -290,6 +293,30 @@
 
 (defmethod builder :variational-auto-encoder [opts]
   (any-layer-builder (VariationalAutoencoder$Builder.) (:variational-auto-encoder opts)))
+
+(defmethod builder :loss-layer [opts]
+  (any-layer-builder (LossLayer$Builder.) (:loss-layer opts)))
+
+(defmethod builder :center-loss-output-layer [opts]
+  (any-layer-builder (CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
+
+(defmethod builder :convolution-1d-layer [opts]
+  (any-layer-builder (Convolution1DLayer$Builder.) (:convolution-1d-layer opts)))
+
+(defmethod builder :dropout-layer [opts]
+  (any-layer-builder (DropoutLayer$Builder.) (:dropout-layer opts)))
+
+(defmethod builder :global-pooling-layer [opts]
+  (any-layer-builder (GlobalPoolingLayer$Builder.) (:global-pooling-layer opts)))
+
+(defmethod builder :subsampling-1d-layer [opts]
+  (any-layer-builder (Subsampling1DLayer$Builder.) (:subsampling-1d-layer opts)))
+
+(defmethod builder :zero-padding-layer [opts]
+  (let [data (:zero-padding-layer opts)
+        {:keys [pad-top pad-bot pad-left pad-right]} data]
+    (any-layer-builder (ZeroPaddingLayer$Builder. pad-top pad-bot pad-left pad-right)
+                       (:zero-padding-layer opts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns based on multimethod for documentation purposes
@@ -671,11 +698,61 @@
   (builder {:variational-auto-encoder opts}))
 
 
+(defn loss-layer-builder
+  ":loss-fn (keyword) how to calculate error (loss) at each layer.
+   one of: :mse, :l1, :xent, :mcxent, :squared-loss, :reconstruction-corssentropy,
+   :negativeloglikelihood, :cosine-proximity, :hinge, :squared-hinge, :kl-divergence
+   :mean-absolute-error, :l2, :mean-absolute-percentage-error, :poisson
+   :mean-squared-logarithmic-error
 
+  https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/LossLayer.Builder.html
+"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:loss-layer opts}))
 
+(defn center-loss-output-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/CenterLossOutputLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:center-loss-output-layer opts}))
 
+(defn convolution-1d-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Convolution1DLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:convolution-1d-layer opts}))
 
+(defn dropout-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/DropoutLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:dropout-layer opts}))
 
+(defn global-pooling-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/GlobalPoolingLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:global-pooling-layer opts}))
+
+(defn subsampling-1d-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Subsampling1DLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:subsampling-1d-layer opts}))
+
+(defn zero-padding-layer-builder
+  "https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Subsampling1DLayer.Builder.html"
+  [{:keys []
+    :or {}
+    :as opts}]
+  (builder {:zero-padding-layer opts}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; examples

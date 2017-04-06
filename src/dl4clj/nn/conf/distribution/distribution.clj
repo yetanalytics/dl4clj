@@ -6,7 +6,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   dl4clj.nn.conf.distribution.distribution
   (:import [org.deeplearning4j.nn.conf.distribution
             Distribution UniformDistribution NormalDistribution BinomialDistribution]
-           []))
+           ))
 
 (defmulti distribution (fn [opts] (first (keys opts))))
 
