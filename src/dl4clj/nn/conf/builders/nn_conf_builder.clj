@@ -22,6 +22,7 @@
   wont overwrite activation functions specificed in the layer or layers map.
    opts are :cube, :elu, :hard-sigmoid, :hard-tanh, :identity, :leaky-relu
             :relu, :r-relu, :sigmoid, :soft-max, :soft-plus, :soft-sign, :tanh
+            :rational-tanh
 
   :adam-mean-decay (double) Mean decay rate for Adam updater
 
@@ -97,7 +98,7 @@
    also only used when :updater is :nesterovs
 
   :optimization-algo (keyword) Optimization algorithm to use
-   one of: :line-gradient-descent, :conjugate-gradient, :hessian-free,
+   one of: :line-gradient-descent, :conjugate-gradient, :hessian-free (deprecated),
            :lbfgs, :stochastic-gradient-descent
 
   :regularization (boolean) Whether or not to use regularization
@@ -123,8 +124,7 @@
   :weight-init (keyword) Weight initialization scheme
   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size, :normalized
-"
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform"
   [{:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold iterations l1 l2 layer layers

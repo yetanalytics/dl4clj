@@ -7,11 +7,18 @@
             RBM$VisibleUnit RBM$HiddenUnit
             PoolingType]
            [org.deeplearning4j.nn.conf.inputs InputType]
-           [org.deeplearning4j.nn.api OptimizationAlgorithm]
+           [org.deeplearning4j.nn.api OptimizationAlgorithm MaskState
+            Layer$Type Layer$TrainingMode]
            [org.deeplearning4j.nn.weights WeightInit]
            [org.nd4j.linalg.activations Activation]
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
            [org.nd4j.linalg.convolution Convolution$Type]))
+
+;; not used anywhere yet
+;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/MaskState.html
+;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.Type.html
+;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.TrainingMode.html
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
@@ -87,6 +94,16 @@
 
 (defmethod value-of :optimization-algorithm [opts]
   (constants #(OptimizationAlgorithm/valueOf %) (:optimization-algorithm opts)))
+
+(defmethod value-of :mask-state [opts]
+  (constants #(MaskState/valueOf %) (:mask-state opts)))
+
+(defmethod value-of :layer-type [opts]
+  (constants #(Layer$Type/valueOf %) (:layer-type opts)))
+
+(defmethod value-of :layer-training-mode [opts]
+  (constants #(Layer$TrainingMode/valueOf %) (:layer-training-mode opts)))
+
 
 (defn input-types
   [opts]

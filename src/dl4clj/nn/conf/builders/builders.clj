@@ -40,7 +40,7 @@
 
   :activation-fn (keyword) one of: :cube, :elu, :hard-sigmoid, :hard-tanh, :identity,
                                    :leaky-relu :relu, :r-relu, :sigmoid, :soft-max,
-                                   :soft-plus, :soft-sign, :tanh
+                                   :soft-plus, :soft-sign, :tanh, :rational-tanh
 
   :adam-mean-decay (double) Mean decay rate for Adam updater
 
@@ -96,7 +96,7 @@
   :rms-decay (double) Decay rate for RMSProp, only applies if using :updater :RMSPROP
 
   :updater (keyword) Gradient updater,
-   one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :adagrad, :rmsprop, :none, :custom
+   one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :rmsprop, :none, :custom
 
   :weight-init (keyword) Weight initialization scheme
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
@@ -322,11 +322,8 @@
   :n-out (int) number of outputs for the given layer
 
   :loss-fn (keyword) Error measurement at the output layer
-   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
-             :reconstruction-crossentropy, :negativeloglikelihood,
-             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
-             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
-             :mean-squared-logarithmic-error, :poisson"
+   opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
+            :negativeloglikelihood"
 
   [{:keys [activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon
@@ -351,11 +348,8 @@
   :n-out (int) number of outputs for the given layer
 
   :loss-fn (keyword) Error measurement at the output layer
-   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
-             :reconstruction-crossentropy, :negativeloglikelihood,
-             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
-             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
-             :mean-squared-logarithmic-error, :poisson"
+   opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
+            :negativeloglikelihood"
 
   [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
@@ -384,11 +378,8 @@
   :visible-bias-init (double)
 
   :loss-fn (keyword) Error measurement at the output layer
-   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
-             :reconstruction-crossentropy, :negativeloglikelihood,
-             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
-             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
-             :mean-squared-logarithmic-error, :poisson
+   opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
+            :negativeloglikelihood
 
   :corruption-level (double) turns the autoencoder into a denoising autoencoder:
    see http://deeplearning.net/tutorial/dA.html (code examples in python) and
@@ -433,11 +424,8 @@
   :visible-bias-init (double)
 
   :loss-fn (keyword) Error measurement at the output layer
-   opts are: :mse, :l1, :xent, :mcxent, :squared-loss,
-             :reconstruction-crossentropy, :negativeloglikelihood,
-             :cosine-proximity, :hinge, :squared-hinge, :kl-divergence,
-             :mean-absolute-error, :l2, :mean-absolute-percentage-error,
-             :mean-squared-logarithmic-error, :poisson
+   opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
+            :negativeloglikelihood
 
   :hidden-unit (keyword), see https://deeplearning4j.org/restrictedboltzmannmachine
    keyword is one of: :softmax, :binary, :gaussian, :identity, :rectified
@@ -733,11 +721,9 @@
 
   this builder adds :loss-fn, :n-in, :n-out
 
-  :loss-fn (keyword) how to calculate error (loss) at each layer.
-   one of: :mse, :l1, :xent, :mcxent, :squared-loss, :reconstruction-corssentropy,
-   :negativeloglikelihood, :cosine-proximity, :hinge, :squared-hinge, :kl-divergence
-   :mean-absolute-error, :l2, :mean-absolute-percentage-error, :poisson
-   :mean-squared-logarithmic-error"
+  :loss-fn (keyword) Error measurement at the output layer
+   opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
+            :negativeloglikelihood"
   [{:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
@@ -1007,7 +993,7 @@
                              :rho 0.5
                              :rms-decay 0.01
                              :updater :adam
-                             :weight-init :normalized
+                             ;;:weight-init :normalized
                              :n-in 30
                              :n-out 30
                              :forget-gate-bias-init 0.12})
