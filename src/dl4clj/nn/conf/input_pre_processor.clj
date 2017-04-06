@@ -9,7 +9,6 @@
             CnnToFeedForwardPreProcessor CnnToRnnPreProcessor FeedForwardToCnnPreProcessor
             FeedForwardToRnnPreProcessor RnnToFeedForwardPreProcessor]))
 
-
 (defn backprop
   "Reverse the preProcess during backprop."
   [this output mini-batch-size]

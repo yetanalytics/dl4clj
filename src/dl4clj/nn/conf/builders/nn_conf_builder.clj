@@ -65,9 +65,6 @@
   :layers {idx (int) {:layer-type {config-opts vals}}}
    see dl4clj.nn.conf.builders.builders
 
-  :leaky-relu-alpha (double) f(x) = alpha*x for x < 0
-   Special version of a Rectified Linear Unit that allows a small gradient when the unit is not active
-
   :learning-rate (double) Paramter that controls the learning rate
 
   :learning-rate-policy (keyword) How to decay learning rate during training
@@ -124,17 +121,19 @@
   :weight-init (keyword) Weight initialization scheme
   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform"
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform
+
+  :convolution-mode (keyword), one of: :strict, :truncate, :same
+   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html"
   [{:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold iterations l1 l2 layer layers
-           leaky-relu-alpha learning-rate learning-rate-policy
-           learning-rate-schedule lr-score-based-decay-rate
-           lr-policy-decay-rate lr-policy-power lr-policy-steps
-           max-num-line-search-iterations mini-batch minimize
+           learning-rate learning-rate-policy learning-rate-schedule
+           lr-score-based-decay-rate lr-policy-decay-rate lr-policy-power
+           lr-policy-steps max-num-line-search-iterations mini-batch minimize
            momentum momentum-after optimization-algo regularization
            rho rms-decay seed step-fn updater use-drop-connect
-           weight-init
+           weight-init convolution-mode
            ;;graph-builder
            ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
            ]
@@ -147,6 +146,9 @@
                                                             global-activation-fn}))
       (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
       (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+      (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
+                                                            {:convolution-mode
+                                                             convolution-mode}))
       (contains? opts :bias-init) (.biasInit bias-init)
       (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
       (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
@@ -162,7 +164,6 @@
       (contains? opts :iterations) (.iterations iterations)
       (contains? opts :l1) (.l1 l1)
       (contains? opts :l2) (.l2 l2)
-      (contains? opts :leaky-relu-alpha) (.leakyreluAlpha leaky-relu-alpha)
       (contains? opts :learning-rate) (.learningRate learning-rate)
       (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
                                               (constants/value-of
