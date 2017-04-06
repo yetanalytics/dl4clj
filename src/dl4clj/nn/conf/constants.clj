@@ -96,7 +96,7 @@
   (constants #(OptimizationAlgorithm/valueOf %) (:optimization-algorithm opts)))
 
 (defmethod value-of :mask-state [opts]
-  (constants #(MaskState/valueOf %) (:mask-state opts)))
+  (constants #(MaskState/valueOf %) (:mask-state opts) :camel? true))
 
 (defmethod value-of :layer-type [opts]
   (constants #(Layer$Type/valueOf %) (:layer-type opts)))

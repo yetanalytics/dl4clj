@@ -1,5 +1,6 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
-  dl4clj.nn.conf.input-pre-processor
+    dl4clj.nn.conf.input-pre-processor
+  (:require [dl4clj.nn.conf.constants :as constants])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.conf.preprocessor BinomialSamplingPreProcessor
@@ -22,6 +23,10 @@
   "Pre preProcess input/activations for a multi layer network"
   [this input mini-batch-size]
   (.preProcess this input (int mini-batch-size)))
+
+(defn feed-forward-mask-array
+  [this mask-array current-mask-state mini-batch-size]
+  (.feedForwardMaskArray this mask-array current-mask-state (int mini-batch-size)))
 
 (defn get-output-type
   "For a given type of input to this preprocessor, what is the type of the output?
@@ -71,6 +76,14 @@
     (if (contains? opts :get-output-type)
       (input-types b opts)
       b)
+    (if (contains? opts :feed-forward-mask-array)
+      (let [{mask-array :mask-array
+             current-mask-state :current-mask-state
+             mini-batch-size :mini-batch-size} (:feed-forward-mask-array opts)]
+        (feed-forward-mask-array b mask-array
+                                 (constants/value-of {:mask-state current-mask-state})
+                                 mini-batch-size))
+      b)
     b))
 
 (defmulti pre-processors
@@ -90,7 +103,10 @@
                         {:type :convolutional-flat
                          :height int :width int :depth in}
                         {:type :feed-forward :size int}
-                        {:type :recurrent :size int}}}"
+                        {:type :recurrent :size int}}}
+  :feed-forward-mask-array {:mask-array INDArray
+                            :current-mask-state keyword (either :active or :passthrough)
+                            :mini-batch-size int}"
   pre-process-type)
 
 (defmethod pre-processors :binominal-sampling-pre-processor [opts]
