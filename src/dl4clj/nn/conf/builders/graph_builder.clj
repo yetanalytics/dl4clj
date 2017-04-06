@@ -10,6 +10,8 @@
 
 ;;need to make a ComputationGraph fn
 ;; constructor for ComputationGraph = (ComputationGraphConfiguration.)
+;; https://jar-download.com//javaDoc/org.deeplearning4j/deeplearning4j-nn/0.8.0/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.html
+;; https://jar-download.com//javaDoc/org.deeplearning4j/deeplearning4j-nn/0.8.0/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
 
 (defn graph-builder
   "sets up and modifies a graph builder given a param map of options

@@ -5,7 +5,8 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/NormalDist
 http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDistribution.html"}
   dl4clj.nn.conf.distribution.distribution
   (:import [org.deeplearning4j.nn.conf.distribution
-            Distribution UniformDistribution NormalDistribution BinomialDistribution]
+            Distribution UniformDistribution NormalDistribution BinomialDistribution
+            Distributions GaussianDistribution]
            ))
 
 (defmulti distribution (fn [opts] (first (keys opts))))
@@ -20,13 +21,22 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   (BinomialDistribution. number-of-trials probability-of-success))
 
 (defmethod distribution :uniform [opt]
-  (uniform-distribution (:lower (:uniform opt)) (:upper (:uniform opt))))
+  (let [config (:uniform opt)
+        {l :lower
+         u :upper} config]
+   (uniform-distribution l u)))
 
 (defmethod distribution :normal [opt]
-  (normal-distribution (:mean (:normal opt)) (:std (:normal opt))))
+  (let [config (:normal opt)
+        {m :mean
+         std :std} config]
+   (normal-distribution m std)))
 
 (defmethod distribution :binomial [opt]
-  (binomial-distribution (:number-of-trials (:binomial opt)) (:probability-of-success (:binomial opt))))
+  (let [config (:binomial opt)
+        {n-trials :number-of-trials
+         prob-success :probability-of-success} config]
+   (binomial-distribution n-trials prob-success)))
 
 (comment
 
