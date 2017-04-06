@@ -115,166 +115,93 @@
                         encoder-layer-sizes num-samples pzx-activation-function
                         gradient-check lambda collapse-dimensions pnorm
                         pooling-dimensions eps convolution-mode l1-bias l2-bias
+                        pre-train-iterations gate-activation-fn visible-bias-init
                         #_pzx-activation-fn
                         ;; needs to be implemented
                         reconstruction-distribution
-                        pre-train-iterations
-                        visible-bias-init
-                        gate-activation-fn]
+                        ]
                  :or {}
                  :as opts}]
-  (if (contains? opts :activation-fn)
-    (.activation
-     builder-type (constants/value-of {:activation-fn activation-fn}))
-    builder-type)
-  (if (contains? opts :adam-mean-decay)
-    (.adamMeanDecay builder-type adam-mean-decay) builder-type)
-  (if (contains? opts :adam-var-decay)
-    (.adamVarDecay builder-type adam-var-decay) builder-type)
-  (if (contains? opts :bias-init)
-    (.biasInit builder-type bias-init) builder-type)
-  (if (contains? opts :bias-learning-rate)
-    (.biasLearningRate builder-type bias-learning-rate) builder-type)
-  (if (contains? opts :dist)
-    (.dist builder-type (if (map? dist)
-               (distribution/distribution dist)
-               dist)) builder-type)
-  (if (contains? opts :l1-bias)
-    (.l1Bias builder-type l1-bias)
-    builder-type)
-  (if (contains? opts :l2-bias)
-    (.l2Bias builder-type l2-bias)
-    builder-type)
-  (if (contains? opts :drop-out)
-    (.dropOut builder-type drop-out) builder-type)
-  (if (contains? opts :epsilon)
-    (.epsilon builder-type epsilon) builder-type)
-  (if (contains? opts :gradient-normalization)
-    (.gradientNormalization
-     builder-type (constants/value-of {:gradient-normalization gradient-normalization}))
-    builder-type)
-  (if (contains? opts :gradient-normalization-threshold)
-    (.gradientNormalizationThreshold builder-type gradient-normalization-threshold)
-    builder-type)
-  (if (contains? opts :eps)
-    (.eps builder-type eps)
-    builder-type)
-  (if (contains? opts :l1)
-    (.l1 builder-type l1) builder-type)
-  (if (contains? opts :l2)
-    (.l2 builder-type l2) builder-type)
-  (if (contains? opts :layer-name)
-    (.name builder-type layer-name) builder-type)
-  (if (contains? opts :learning-rate)
-    (.learningRate builder-type learning-rate) builder-type)
-  (if (contains? opts :learning-rate-policy)
-    (.learningRateDecayPolicy
-     builder-type
-     (constants/value-of {:learning-rate-policy learning-rate-policy}))
-    builder-type)
-  (if (contains? opts :pooling-dimensions)
-    (.poolingDimensions builder-type pooling-dimensions)
-    builder-type)
-  (if (contains? opts :learning-rate-schedule)
-    (.learningRateSchedule builder-type learning-rate-schedule) builder-type)
-  (if (contains? opts :momentum)
-    (.momentum builder-type momentum) builder-type)
-  (if (contains? opts :momentum-after)
-    (.momentumAfter builder-type momentum-after) builder-type)
-  (if (contains? opts :rho)
-    (.rho builder-type rho) builder-type)
-  (if (contains? opts :rms-decay)
-    (.rmsDecay builder-type rms-decay) builder-type)
-  (if (contains? opts :updater)
-    (.updater builder-type (constants/value-of {:updater updater}))
-    builder-type)
-  (if (contains? opts :weight-init)
-    (.weightInit builder-type (constants/value-of {:weight-init weight-init}))
-    builder-type)
-  (if (contains? opts :n-in)
-    (.nIn builder-type n-in) builder-type)
-  (if (contains? opts :n-out)
-    (.nOut builder-type n-out) builder-type)
-  (if (contains? opts :loss-fn)
-    (.lossFunction builder-type (constants/value-of {:loss-fn loss-fn}))
-    builder-type)
-  (if (contains? opts :corruption-level)
-    (.corruptionLevel builder-type corruption-level) builder-type)
-  (if (contains? opts :sparsity)
-    (.sparsity builder-type sparsity) builder-type)
-  (if (contains? opts :visible-unit)
-    (.visibleUnit builder-type (constants/value-of {:visible-unit visible-unit}))
-    builder-type)
-  (if (contains? opts :hidden-unit)
-    (.hiddenUnit builder-type (constants/value-of {:hidden-unit hidden-unit}))
-    builder-type)
-  (if (contains? opts :k)
-    (.k builder-type k) builder-type)
-  (if (contains? opts :forget-gate-bias-init)
-    (.forgetGateBiasInit builder-type forget-gate-bias-init) builder-type)
-  (if (contains? opts :beta)
-    (.beta builder-type beta) builder-type)
-  (if (contains? opts :decay)
-    (.decay builder-type decay) builder-type)
-  (if (contains? opts :eps)
-    (.eps builder-type eps) builder-type)
-  (if (contains? opts :gamma)
-    (.gamma builder-type gamma) builder-type)
-  (if (and (contains? opts :is-mini-batch) (true? is-mini-batch))
-    (.isMiniBatch builder-type) builder-type)
-  (if (contains? opts :lock-gamma-beta)
-    (.lockGammaBeta builder-type lock-gamma-beta) builder-type)
-  (if (contains? opts :kernel-size)
-    (.kernelSize builder-type kernel-size) builder-type)
-  (if (contains? opts :stride)
-    (.stride builder-type stride) builder-type)
-  (if (contains? opts :padding)
-    (.padding builder-type padding) builder-type)
-  (if (contains? opts :convolution-mode)
-    (.convolutionMode
-     builder-type (constants/value-of {:convolution-mode convolution-type}))
-    builder-type)
-  (if (contains? opts :cudnn-algo-mode)
-    (.cudnnAlgoMode
-     builder-type (constants/value-of {:cudnn-algo-mode cudnn-algo-mode}))
-    builder-type)
-  (if (contains? opts :pnorm)
-    (.pnorm builder-type pnorm)
-    builder-type)
-  (if (contains? opts :alpha)
-    (.alpha builder-type alpha) builder-type)
-  (if (contains? opts :n)
-    (.n builder-type n) builder-type)
-  (if (contains? opts :pooling-type)
-    (.poolingType builder-type (constants/value-of {:pool-type pooling-type}))
-    builder-type)
-  (if (contains? opts :decoder-layer-sizes)
-    (.decoderLayerSizes builder-type decoder-layer-sizes)
-    builder-type)
-  (if (contains? opts :encoder-layer-sizes)
-    (.encoderLayerSizes builder-type encoder-layer-sizes)
-    builder-type)
-  (if (contains? opts :num-samples)
-    (.numSamples builder-type num-samples)
-    builder-type)
-  (if (contains? opts :gradient-check)
-    (.gradientCheck builder-type gradient-check)
-    builder-type)
-  (if (contains? opts :lambda)
-    (.lambda builder-type lambda)
-    builder-type)
-  (if (contains? opts :collapse-dimensions)
-    (.collapseDimensions builder-type collapse-dimensions)
-    builder-type)
-  #_(if (contains? opts :pzx-activation-fn)
-    (.pzxActivationFn builder-type (constants/value-of {:activation-fn pzx-activation-fn}))
-    builder-type)
-  (if (contains? opts :pzx-activation-function)
-    (.pzxActivationFunction
-     builder-type
-     (constants/value-of {:activation-fn pzx-activation-function}))
-    builder-type)
-  (.build builder-type))
+  (.build
+   (cond-> builder-type
+     (contains? opts :activation-fn) (.activation (constants/value-of {:activation-fn activation-fn}))
+     (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
+     (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+     (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
+     (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
+                                                                    {:activation-fn gate-activation-fn}))
+     (contains? opts :bias-init) (.biasInit bias-init)
+     (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
+     (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
+                                       dist))
+     (contains? opts :l1-bias) (.l1Bias l1-bias)
+     (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
+     (contains? opts :l2-bias) (.l2Bias l2-bias)
+     (contains? opts :drop-out) (.dropOut drop-out)
+     (contains? opts :epsilon) (.epsilon epsilon)
+     (contains? opts :gradient-normalization) (.gradientNormalization
+                                               (constants/value-of
+                                                {:gradient-normalization gradient-normalization}))
+     (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
+                                                         gradient-normalization-threshold)
+     (contains? opts :eps) (.eps eps)
+     (contains? opts :l1) (.l1 l1)
+     (contains? opts :l2) (.l2 l2)
+     (contains? opts :layer-name) (.name layer-name)
+     (contains? opts :learning-rate) (.learningRate learning-rate)
+     (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+                                             (constants/value-of
+                                              {:learning-rate-policy
+                                               learning-rate-policy}))
+     (contains? opts :pooling-dimensions) (.poolingDimensions pooling-dimensions)
+     (contains? opts :learning-rate-schedule) (.learningRateSchedule learning-rate-schedule)
+     (contains? opts :momentum) (.momentum momentum)
+     (contains? opts :momentum-after) (.momentumAfter momentum-after)
+     (contains? opts :rho) (.rho rho)
+     (contains? opts :rms-decay) (.rmsDecay rms-decay)
+     (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
+     (contains? opts :weight-init) (.weightInit (constants/value-of
+                                                 {:weight-init weight-init}))
+     (contains? opts :n-in) (.nIn n-in)
+     (contains? opts :n-out) (.nOut n-out)
+     (contains? opts :loss-fn) (.lossFunction (constants/value-of {:loss-fn loss-fn}))
+     (contains? opts :corruption-level) (.corruptionLevel corruption-level)
+     (contains? opts :sparsity) (.sparsity sparsity)
+     (contains? opts :visible-unit) (.visibleUnit (constants/value-of
+                                                   {:visible-unit visible-unit}))
+     (contains? opts :hidden-unit) (.hiddenUnit (constants/value-of
+                                                 {:hidden-unit hidden-unit}))
+     (contains? opts :k) (.k k)
+     (contains? opts :forget-gate-bias-init) (.forgetGateBiasInit forget-gate-bias-init)
+     (contains? opts :beta) (.beta beta)
+     (contains? opts :decay) (.decay decay)
+     (contains? opts :gamma) (.gamma gamma)
+     (contains? opts :is-mini-batch) (.isMiniBatch is-mini-batch)
+     (contains? opts :lock-gamma-beta) (.lockGammaBeta lock-gamma-beta)
+     (contains? opts :kernel-size) (.kernelSize kernel-size)
+     (contains? opts :stride) (.stride stride)
+     (contains? opts :padding) (.padding padding)
+     (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
+                                                           {:convolution-mode
+                                                            convolution-mode}))
+     (contains? opts :cudnn-algo-mode) (.cudnnAlgoMode (constants/value-of
+                                                        {:cudnn-algo-mode
+                                                         cudnn-algo-mode}))
+     (contains? opts :pnorm) (.pnorm pnorm)
+     (contains? opts :alpha) (.alpha alpha)
+     (contains? opts :n) (.n n)
+     (contains? opts :pooling-type) (.poolingType (constants/value-of
+                                                   {:pool-type pooling-type}))
+     (contains? opts :decoder-layer-sizes) (.decoderLayerSizes decoder-layer-sizes)
+     (contains? opts :encoder-layer-sizes) (.encoderLayerSizes encoder-layer-sizes)
+     (contains? opts :num-samples) (.numSamples num-samples)
+     (contains? opts :gradient-check) (.gradientCheck gradient-check)
+     (contains? opts :lambda) (.lambda lambda)
+     (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
+     (contains? opts :pzx-activation-function) (.pzxActivationFunction
+                                                (constants/value-of
+                                                 {:activation-fn pzx-activation-function}))
+     )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods
@@ -1056,7 +983,7 @@
                             :rho 0.5
                             :rms-decay 0.01
                             :updater :adam
-                            :weight-init :normalized
+                           ;; :weight-init :normalized
                             :n-in 30
                             :n-out 30
                             :forget-gate-bias-init 0.12}})
