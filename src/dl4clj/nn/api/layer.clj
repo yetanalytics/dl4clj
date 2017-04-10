@@ -1,43 +1,41 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.html"}
   dl4clj.nn.api.layer
-  (:refer-clojure :exclude [type])
-  (:import [org.deeplearning4j.nn.api Layer]
-           [org.nd4j.linalg.api.ndarray INDArray]))
+  (:import [org.deeplearning4j.nn.api Layer])
+  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]
+            [dl4clj.nn.api.model :refer :all]))
 
-(defmulti activate (fn [this & more] (mapv clojure.core/type more)))
-(defmethod activate []
-  [^Layer this]
-  (.activate this))
-(defmethod activate [java.lang.Boolean]
-  [^Layer this ^java.lang.Boolean training]
-  (.activate this training))
-(defmethod activate [INDArray]
-  [^Layer this ^INDArray input]
-  (.activate this input))
-(defmethod activate [INDArray java.lang.Boolean]
-  [^Layer this ^INDArray input ^Boolean training]
-  (.activate this input training))
-(defmethod activate [INDArray java.lang.Boolean]
-  [^Layer this ^INDArray input training]
-  (.activate this input))
-;; (defmethod activate [Layer.TrainingMode]
-;;   [^Layer this ^Layer.TrainingMode training]
-;;   (.activate this training))
+(defn activate
+  "5 opts for triggering an activation
+  1) supply training? (boolean), trigger with the last specified input
+  2) supply input (INDArray), initialize the layer with the given input and return
+   the activation for this layer given this input
+  3) supply training-mode (keyword), Trigger an activation with the last specified input
+  4) supply input and training?
+  5) supply input and training-mode
+   -both 4 and 5 initialize the layer with the given input and return the activation for this layer given this input"
+  [& {:keys [this training? input training-mode]
+      :as opts}]
+  (cond-> this
+    (contains-many? opts :this :input :training?) (.activate input training?)
+    (contains-many? opts :this :input :training-mode) (.activate input training-mode)
+    (and (contains-many? opts :this :input)
+         (false? (contains-many? opts :training? :training-mode))) (.activate input)
+    (and (contains-many? opts :this :training?)
+         (false? (contains-many? opts :input :training-mode))) (.activate training?)
+    (and (contains-many? opts :this :training-mode)
+         (false? (contains-many? opts :input :training?))) (.activate training-mode)
+    :else
+    .activate))
 
-(defn activation-mean
-  "Calculate the mean representation for the activation for this layer"
-  [^Layer this]
-  (.activationMean this))
+(defn feed-forward-mask-array
+  "Feed forward the input mask array, setting in in the layer as appropriate."
+  [& {:keys [this mask-array mask-state batch-size]}]
+  (.feedForwardMaskArray this mask-array mask-state batch-size))
 
 (defn backprop-gradient
   "Calculate the gradient relative to the error in the next layer"
-  [^Layer this ^INDArray epsilon]
+  [& {:keys [this epsilon]}]
   (.backpropGradient this epsilon))
-
-(defn calc-gradient
-  "Calculate the gradient"
-  [^Layer this layer-error INDArray ind-array]
-  (.calcGradient this layer-error ind-array))
 
 (defn calc-l1
   "Calculate the l1 regularization term. 0.0 if regularization is not used."
@@ -54,16 +52,6 @@
   [^Layer this]
   (.clone this))
 
-(defn derivative-activation
-  "Take the derivative of the given input based on the activation"
-  [^Layer this ^INDArray input]
-  (.derivativeActivation this input))
-
-(defn error
-  "Calculate error with respect to the current layer."
-  [^Layer this ^INDArray input]
-  (.error this input))
-
 (defn get-index
   "Get the layer index."
   [^Layer this]
@@ -79,51 +67,44 @@
   [^Layer this]
   (.getListeners this))
 
-(defn merge
-  "Parameter averaging"
-  [^Layer this ^Layer layer batch-size]
-  (.merge this layer batch-size))
+(defn get-mask-array
+  "get the mask array"
+  [this]
+  (.getMaskArray this))
+
+(defn is-pretrain-layer?
+  "Returns true if the layer can be trained in an unsupervised/pretrain manner (VAE, RBMs etc)"
+  [this]
+  (.isPretrainLayer this))
 
 (defn pre-output
   "Raw activations"
-  ([^Layer this ^INDArray x]
-   (.preOutput this x))
-  ([^Layer this ^INDArray x training]
-   (.preOutput this x (boolean training))))
-
-#_(defn pre-output
-  "Raw activations"
-  [^Layer this ^INDArray x training]
-  (.preOutput this x (boolean training)))
-
-;; (defn preOutput
-;;   "Raw activations"
-;;   [^Layer this ^INDArray x, ^Layer.TrainingMode training]
-;;   (.preOutput this x training))
+  [& {:keys [this x training? training-mode]
+      :as opts}]
+  (cond-> this
+    (contains-many? opts :this :training?) (.preOutput x training?)
+    (contains-many? opts :this :training-mode) (.preOutput x training-mode)
+    :else
+    (.preOutput x)))
 
 (defn set-index
   "Set the layer index."
-  [^Layer this index]
+  [& {:keys [this index]}]
   (.setIndex this (int index)))
 
 (defn set-input
   "Get the layer input."
-  [^Layer this ^INDArray input]
+  [& {:keys [this input]}]
   (.setInput this input))
 
 (defn set-input-mini-batch-size
   "Set current/last input mini-batch size.  Used for score and gradient calculations."
-  [^Layer this size]
+  [& {:keys [this size]}]
   (.setInputMiniBatchSize this (int size)))
-
-(defn set-listeners
-  "Set the iteration listeners for this layer."
-  [^Layer this listeners]
-  (.setListeners this listeners))
 
 (defn set-mask-array
   ""
-  [^Layer this ^INDArray mask-array]
+  [& {:keys [this mask-array]}]
   (.setMaskArray this mask-array))
 
 (defn transpose
@@ -131,14 +112,7 @@
   [^Layer this]
   (.transpose this))
 
-(defn type
+(defn layer-type
   "Returns the layer type"
   [^Layer this]
   (.type this))
-
-(defn update
-  "Update layer weights and biases with gradient change"
-  ([^Layer this gradient]
-   (.update this gradient))
-  ([^Layer this ^INDArray gradient param-type]
-   (.update this gradient param-type)))

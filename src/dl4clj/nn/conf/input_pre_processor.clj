@@ -163,6 +163,10 @@
 (defmethod pre-processors :rnn-to-feed-forward-pre-processor [opts]
   (fn-calls (RnnToFeedForwardPreProcessor.) (:rnn-to-feed-forward-pre-processor opts)))
 
+
+
+
+
 (defn binominal-sampling-pre-processor
   "Binomial sampling pre processor"
   [opts]

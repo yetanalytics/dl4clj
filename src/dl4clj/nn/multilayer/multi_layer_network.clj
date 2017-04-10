@@ -1,27 +1,27 @@
-(ns ^{:doc "See http://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
+#_(ns ^{:doc "See http://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
   dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.nn.conf.multi-layer-configuration :as ml-cfg]
             [dl4clj.nn.conf.neural-net-configuration :as nn-cfg])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]))
 
-(defn multi-layer-network [opts]
+#_(defn multi-layer-network [opts]
   (if (instance? MultiLayerConfiguration opts)
     (MultiLayerNetwork. opts)
     (MultiLayerNetwork. (.build ^MultiLayerConfiguration$Builder
                                 (ml-cfg/builder (update-in opts [:confs] #(map nn-cfg/neural-net-configuration %)))))))
 
-(defn init [^MultiLayerNetwork mln]
+#_(defn init [^MultiLayerNetwork mln]
   (.init mln)
   mln)
 
-(defn rnn-clear-previous-state
+#_(defn rnn-clear-previous-state
   "Clear the previous state of the RNN layers (if any)."
   [^MultiLayerNetwork rnn]
   (.rnnClearPreviousState rnn)
   rnn)
 
-(defn rnn-time-step
+#_(defn rnn-time-step
   "If this MultiLayerNetwork contains one or more RNN layers: conduct forward pass (prediction) but using previous stored state for any RNN layers. The activations for the final step are also stored in the RNN layers for use next time rnnTimeStep() is called.
 This method can be used to generate output one or more steps at a time instead of always having to do forward pass from t=0. Example uses are for streaming data, and for generating samples from network output one step at a time (where samples are then fed back into the network as input)
 If no previous state is present in RNN layers (i.e., initially or after calling rnnClearPreviousState()), the default initialization (usually 0) is used.
@@ -35,8 +35,8 @@ Otherwise output is 3d [miniBatchSize,outputSize,inputTimeSeriesLength] when usi
   [^MultiLayerNetwork rnn input]
   (.rnnTimeStep rnn input))
 
-(defn get-layers [^MultiLayerNetwork mln]
+#_(defn get-layers [^MultiLayerNetwork mln]
   (into [] (.getLayers mln)))
 
-(defn get-layer [^MultiLayerNetwork mln i]
+#_(defn get-layer [^MultiLayerNetwork mln i]
   (.getLayer mln i))

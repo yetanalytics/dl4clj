@@ -1,20 +1,20 @@
-(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelledDocument.html"}
+#_(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelledDocument.html"}
   dl4clj.text.documentiterator.labelled-document
   (:import [org.deeplearning4j.text.documentiterator LabelledDocument]))
 
-(defn set-content [^LabelledDocument d content]
+#_(defn set-content [^LabelledDocument d content]
   (.setContent d content))
 
-(defn set-label [^LabelledDocument d label]
+#_(defn set-label [^LabelledDocument d label]
   (.setLabel d label))
 
-(defn get-content [^LabelledDocument d]
+#_(defn get-content [^LabelledDocument d]
   (.getContent d))
 
-(defn get-label [^LabelledDocument d]
+#_(defn get-label [^LabelledDocument d]
   (.getLabel d))
 
-(defn labelled-document
+#_(defn labelled-document
   ([]
    (LabelledDocument.))
   ([content label]

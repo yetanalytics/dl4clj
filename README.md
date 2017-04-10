@@ -37,7 +37,16 @@ With Maven:
 </dependency>
 ```
 
+# TODO
 
+Implement ComputationGraphs
+<https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html>
+<https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.html>
+<https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/package-frame.html>
+<https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/rnn/package-frame.html>
+
+Finish Variational layers (Autoencoders)
+<https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variational/package-frame.html>
 ## License
 
 Copyright © 2016 Engagor

@@ -1,10 +1,11 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html"}
   dl4clj.nn.api.model
-  (:import [org.deeplearning4j.nn.api Model]))
+  (:import [org.deeplearning4j.nn.api Model])
+  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
 (defn accumulate-score
   "Sets a rolling tally for the score."
-  [^Model this accum]
+  [& {:keys [this accum]}]
   (.accumulateScore this (double accum)))
 
 (defn apply-learning-rate-score-decay
@@ -34,10 +35,12 @@
 
 (defn fit
   "All models have a fit method"
-  ([^Model this]
-   (.fit this))
-  ([^Model this data]
-   (.fit this data)))
+  [& {:keys [this data]
+      :as opts}]
+  (cond-> this
+    (contains? opts :data) (.fit data)
+    :else
+    .fit))
 
 (defn get-optimizer
   "Returns this models optimizer"
@@ -46,12 +49,12 @@
 
 (defn get-param
   "Get the parameter"
-  [^Model this param]
+  [& {:keys [this param]}]
   (.getParam this (name param)))
 
 (defn gradient
   "Calculate a gradient"
-  [^Model this param]
+  [^Model this]
   (.gradient this))
 
 (defn gradient-and-score
@@ -59,27 +62,28 @@
   [^Model this]
   (.gradientAndScore this))
 
-(defn init-params
-  "Initialize the parameters"
+(defn init
   [^Model this]
-  (.initParams this))
+  (.init this))
 
 (defn input
   "The input/feature matrix for the model"
   [^Model this]
   (.input this))
 
-(defn iterate
+(defn iterate-once
   "Run one iteration"
-  [^Model this input]
+  [& {:keys [this input]}]
   (.iterate this input))
 
 (defn num-params
   "the number of parameters for the model"
-  ([^Model this]
-   (.numParams this))
-  ([^Model this backwards?]
-   (.numParams this (boolean backwards?))))
+  [& {:keys [this backwards?]
+      :as opts}]
+  (cond-> this
+    (contains? opts :backwards?) (.numParams backwards?)
+    :else
+    .numParams))
 
 (defn params
   "Parameters of the model (if any)"
@@ -88,40 +92,59 @@
 
 (defn param-table
   "The param table"
-  [^Model this]
-  (.paramTable this))
+  [& {:keys [this backprop-params-only?]
+      :as opts}]
+  (cond-> this
+    (contains? opts :backprop-params-only?) (.paramTable backprop-params-only?)
+    :else
+    .paramTable))
 
 (defn score
   "The score for the model"
   [^Model this]
   (.score this))
 
+(defn set-backprop-gradients-vew-array
+  "Set the gradients array as a view of the full (backprop) network parameters
+   NOTE: this is intended to be used internally in MultiLayerNetwork and ComputationGraph, not by users."
+  [& {:keys [this gradients]}]
+  (.setBackpropGradientsViewArray this gradients))
+
 (defn set-conf
   "Setter for the configuration"
   [^Model this]
   (.setConf this conf))
 
+(defn set-listeners
+  "set the iteration listeners for the computational graph"
+  [& {:keys [this listeners]}]
+  (.setListeners this listeners))
+
 (defn set-param
   "Set the parameter with a new ndarray"
-  [^Model this key val]
-  (.setParam this (name key) val))
+  [& {:keys [this k v]}]
+  (.setParam this k v))
 
-(defn setParams
+(defn set-params
   "Set the parameters for this model."
-  [^Model this params]
+  [& {:keys [this params]}]
   (.setParams this params))
+
+(defn set-params-view-array
+  "Set the initial parameters array as a view of the full (backprop) network parameters
+   NOTE: this is intended to be used internally in MultiLayerNetwork and ComputationGraph, not by users."
+  [& {:keys [this params]}]
+  (.setParamsViewArray this params))
 
 (defn set-param-table
   "Setter for the param table"
-  [^Model this param-table]
+  [& {:keys [this param-table]}]
   (.setParamTable this param-table))
 
-(defn update
+(defn updatez
   "Perform one update applying the gradient"
-  [^Model this gradient param-type]
-  (.update this gradient (name param-type)))
-
-(defn validateInput
-  "Validate the input"
-  [^Model this]
-  (.validateInput this))
+  [& {:keys [this gradient param-type]
+      :as opts}]
+  (if (contains? opts :param-type)
+    (.update this gradient param-type)
+    (.update this gradient)))
