@@ -25,8 +25,11 @@
             (println "training done")
             mln))))
 
-(defn new-evaler [output-n]
-  (Evaluation. output-n))
+(defn new-evaler
+  ([]
+   (Evaluation.))
+  ([output-n]
+  (Evaluation. output-n)))
 
 (defn eval-model [mln iterator evaler]
   (while (true? (.hasNext iterator))

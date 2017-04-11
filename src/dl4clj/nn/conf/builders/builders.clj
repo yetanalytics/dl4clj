@@ -974,7 +974,7 @@
                             :n-out 30
                             :forget-gate-bias-init 0.12}})
 
- (garves-lstm-layer-builder {:activation-fn :softmax
+ (type (garves-lstm-layer-builder {:activation-fn :softmax
                              :adam-mean-decay 0.3
                              :adam-var-decay 0.5
                              :bias-init 0.3
@@ -996,5 +996,5 @@
                              ;;:weight-init :normalized
                              :n-in 30
                              :n-out 30
-                             :forget-gate-bias-init 0.12})
+                             :forget-gate-bias-init 0.12}))
 )

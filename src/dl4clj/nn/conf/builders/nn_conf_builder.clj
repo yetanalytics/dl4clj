@@ -204,7 +204,8 @@
 (comment
   (println
    (str
-    (.build
+    (type
+     (.build
      (nn-conf-builder {:global-activation-fn "RELU"
                        :step-fn :negative-gradient-step-fn
                        :updater :none
@@ -212,13 +213,13 @@
                        :drop-out 0.2
                        :weight-init :xavier-uniform
                        :gradient-normalization :renormalize-l2-per-layer
-                       #_:layer #_(dl4clj.nn.conf.builders.builders/garves-lstm-layer-builder
-                               {:n-in 100
-                                :n-out 1000
-                                :layer-name "single layer"
-                                :activation-fn :softmax
-                                :gradient-normalization :none })
-                       :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                       :layer (dl4clj.nn.conf.builders.builders/garves-lstm-layer-builder
+                                   {:n-in 100
+                                    :n-out 1000
+                                    :layer-name "single layer"
+                                    :activation-fn :softmax
+                                    :gradient-normalization :none })
+                       #_:layers #_{0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                    {:n-in 100
                                     :n-out 1000
                                     :layer-name "first layer"
@@ -232,4 +233,4 @@
                                 1 {:output-layer {:layer-name "second layer"
                                                   :n-in 1000
                                                   :n-out 10
-                                                  }}}})))))
+                                                  }}}}))))))

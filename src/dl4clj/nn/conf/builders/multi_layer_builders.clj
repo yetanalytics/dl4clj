@@ -1,6 +1,5 @@
 (ns dl4clj.nn.conf.builders.multi-layer-builders
   (:require [dl4clj.nn.conf.builders.builders :as bb]
-            [dl4clj.nn.conf.backprop-type :as backprop-t]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
             [dl4clj.nn.conf.constants :as constants])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder
@@ -77,7 +76,7 @@
   see the builders ns for layer opts"
   [nn-conf-builder layers]
   (let [b (.list nn-conf-builder)
-        max-idx (+ 1 (last (map first layers)))]
+        max-idx (+ 1 (last (sort (map first layers))))]
     (loop [idx 0
            result b]
       (cond (not= idx max-idx)
@@ -130,6 +129,7 @@
                                    :tbptt-fwd-length 30
                                    :pretrain false})
       (.build)
+      type
       )
   ;; will need to add checks to make sure the ovlapping config maps for nn-conf and multi layer are the same
   ;; need error handling which determines if there are :layer and :layers keys and warns that :layer will be lost
