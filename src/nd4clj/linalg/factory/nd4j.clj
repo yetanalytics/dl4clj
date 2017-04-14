@@ -7,7 +7,7 @@
            [org.nd4j.linalg.api.rng Random]))
 ;; (remove-ns 'nd4clj.linalg.factory.nd4j)
 
-(defn zeros 
+(defn zeros
   ([shape]
    (Nd4j/zeros (int-array shape)))
   ([rows columns]
@@ -21,6 +21,7 @@
 
 (defn eye [n]
   (Nd4j/eye (int n)))
+(create-from-data [1 2 3 4] [2 2])
 
 (defmulti create-from-data (fn [data & more] (mapv type more)))
 (defmethod create-from-data []
@@ -47,7 +48,7 @@
 (defmethod create-from-data [clojure.lang.IPersistentCollection Number java.lang.Character]
   [data shape offset ordering]
   (Nd4j/create (double-array data) (int-array shape) (int offset) ^java.lang.Character ordering))
-(defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number]  
+(defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number]
   [data rows columns stride offset]
   (Nd4j/create (double-array data) (int rows) (int columns) (int-array stride) (int offset)))
 (defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number java.lang.Character]
@@ -138,7 +139,7 @@
 (defmethod randn [Number Number Random] [rows columns rng]
   (Nd4j/randn (int rows) (int columns) ^Random rng))
 
-(defn max 
+(defn max
   ([^INDArray a]
    (Nd4j/max a))
   ([^INDArray a dimension]
@@ -149,7 +150,7 @@
   (Nd4j/create (double-array data)))
 
 (defn column-vector [data]
-  (.transpose 
+  (.transpose
    (Nd4j/create (double-array data))))
 
 ;; (defn create [data shape]
@@ -160,5 +161,3 @@
 
 (defn set-enforce-numerical-stability! [^Boolean value]
   (set! (Nd4j/ENFORCE_NUMERICAL_STABILITY) value))
-
-

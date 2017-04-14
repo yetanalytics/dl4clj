@@ -6,7 +6,7 @@
 
 ;;https://deeplearning4j.org/datavecdoc/org/datavec/api/conf/Configuration.html
 ;;https://deeplearning4j.org/datavecdoc/org/datavec/api/conf/Configured.html
-(SerializationFactory. (Configuration.))
+#_(SerializationFactory. (Configuration.))
 ;;https://deeplearning4j.org/datavecdoc/org/datavec/api/io/serializers/SerializationFactory.html
 ;; constructor takes a configuration as the only arg
 
@@ -25,11 +25,11 @@
   (if (contains? opts :conf)
     (Configured. conf)
     (Configured.)))
-;; has these methods: getConf, setConf
 
-(defn serialization-factory [conf]
+(defn serialization-factory
+  "conf should be from new-config"
+  [conf]
   (SerializationFactory. conf))
-;;3 methods: getDeserializer, getSerialization, getSerializer
 
 (defn integer-ranges
   "This fn constructs the string Integerranges constructor is expecting,
