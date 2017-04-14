@@ -12,14 +12,18 @@
            [org.deeplearning4j.nn.weights WeightInit]
            [org.nd4j.linalg.activations Activation]
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
-           [org.nd4j.linalg.convolution Convolution$Type]))
+           [org.nd4j.linalg.convolution Convolution$Type]
+           [org.deeplearning4j.datasets.datavec RecordReaderMultiDataSetIterator$AlignmentMode
+            SequenceRecordReaderDataSetIterator$AlignmentMode]))
 
 ;; not used anywhere yet
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/MaskState.html
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.Type.html
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.TrainingMode.html
 
-
+;; datasets constants
+;;https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.AlignmentMode.html
+;;https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.AlignmentMode.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

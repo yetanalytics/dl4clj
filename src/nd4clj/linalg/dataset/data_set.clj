@@ -4,7 +4,7 @@
   (:import [org.nd4j.linalg.dataset DataSet]
            [org.nd4j.linalg.api.ndarray INDArray]))
 
-(defn data-set 
+(defn data-set
   ([] (DataSet.))
   ([^INDArray input ^INDArray output]
    (DataSet. input output)))
