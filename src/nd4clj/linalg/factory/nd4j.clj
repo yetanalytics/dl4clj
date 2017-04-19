@@ -21,7 +21,7 @@
 
 (defn eye [n]
   (Nd4j/eye (int n)))
-(create-from-data [1 2 3 4] [2 2])
+
 
 (defmulti create-from-data (fn [data & more] (mapv type more)))
 (defmethod create-from-data []
