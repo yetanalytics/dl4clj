@@ -49,9 +49,9 @@
         {skip-lines :skip-num-lines
          delim :delimiter
          n-lines-per-seq :n-lines-per-seq} config]
-   (cond (and (true? skip-lines) (true? delim) (true? n-lines-per-seq))
+   (cond (and (integer? skip-lines) (string? delim) (integer? n-lines-per-seq))
          (CSVNLinesSequenceRecordReader. n-lines-per-seq skip-lines delim)
-         (true? n-lines-per-seq)
+         (integer? n-lines-per-seq)
          (CSVNLinesSequenceRecordReader. n-lines-per-seq)
          :else
          (CSVNLinesSequenceRecordReader. ))))
@@ -62,11 +62,11 @@
         {skip-lines :skip-num-lines
          delim :delimiter
          strip-quotes :strip-quotes} config]
-   (cond (and (true? skip-lines) (true? delim) (true? strip-quotes))
+   (cond (and (integer? skip-lines) (string? delim) (string? strip-quotes))
         (CSVRecordReader. skip-lines delim strip-quotes)
-        (and (true? skip-lines) (true? delim))
+        (and (integer? skip-lines) (string? delim))
         (CSVRecordReader. skip-lines delim)
-        (true? skip-lines)
+        (integer? skip-lines)
         (CSVRecordReader. skip-lines)
         :else
         (CSVRecordReader. ))))
@@ -76,9 +76,9 @@
   (let [config (:csv-seq-rr opts)
         {skip-lines :skip-num-lines
          delim :delimiter} config]
-    (cond (and (true? skip-lines) (true? delim))
+    (cond (and (integer? skip-lines) (string? delim))
           (CSVSequenceRecordReader. skip-lines delim)
-          (true? skip-lines)
+          (integer? skip-lines)
           (CSVSequenceRecordReader. skip-lines)
           :else
           (CSVSequenceRecordReader. ))))
@@ -161,13 +161,11 @@
   (.nextSequence rr))
 
 (defn sequence-record
-  [rr & {:keys [uri data-in-stream]}]
-  (if (and (true? uri) (true? data-in-stream))
+  [rr & {:keys [uri data-in-stream]
+         :as opts}]
+  (if (and (contains? opts :uri) (contains? opts :data-in-stream))
     (.sequenceRecord rr uri data-in-stream)
     (.sequenceRecord rr)))
-
-
-(record-reader :csv-rr)
 
 (comment
 ;; will implement when needed

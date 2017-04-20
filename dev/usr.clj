@@ -6,8 +6,7 @@
             [clj-time.format :as tf]
             [dl4clj.datavec.api.split :as f]
             [dl4clj.datavec.api.records.readers :as rr])
-  (:import [org.datavec.api.records.reader RecordReader]
-           [org.deeplearning4j.datasets.datavec RecordReaderDataSetIterator]
+  (:import [org.deeplearning4j.datasets.datavec RecordReaderDataSetIterator]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
            [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.deeplearning4j.eval Evaluation]
