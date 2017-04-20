@@ -2,12 +2,11 @@
   (:require [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
             [dl4clj.nn.conf.builders.builders :as l]
-            [clojure.java.io :as io]
             [clj-time.core :as t]
-            [clj-time.format :as tf])
-  (:import [org.datavec.api.split FileSplit]
-           [org.datavec.api.records.reader RecordReader]
-           [org.datavec.api.records.reader.impl.csv CSVRecordReader]
+            [clj-time.format :as tf]
+            [dl4clj.datavec.api.split :as f]
+            [dl4clj.datavec.api.records.readers :as rr])
+  (:import [org.datavec.api.records.reader RecordReader]
            [org.deeplearning4j.datasets.datavec RecordReaderDataSetIterator]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
            [org.deeplearning4j.optimize.listeners ScoreIterationListener]
@@ -19,6 +18,8 @@
            [org.datavec.spark.transform SparkTransformExecutor]
            [org.datavec.spark.transform.misc StringToWritablesFunction]
            [java.util.List]))
+
+;;TODO
 
 ;;testing data https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-testing.data
 ;;training data https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-training-true.data
@@ -52,7 +53,7 @@
 (defn initialize-record-reader
   [record-reader file-path]
   (doto record-reader
-    (.initialize (FileSplit. (io/as-file file-path)))))
+    (.initialize  (f/new-filesplit {:root-dir file-path}))))
 
 (defn set-up-data-set-iterator
   [record-reader batch-size label-idx num-diff-labels]
@@ -62,13 +63,13 @@
 ;; import the data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def fresh-rr (CSVRecordReader.))
+(def fresh-csv-rr (rr/record-reader :csv-rr))
 
 (def initialized-training-rr
-  (initialize-record-reader fresh-rr "resources/poker-hand-training.csv"))
+  (initialize-record-reader fresh-csv-rr "resources/poker/poker-hand-training.csv"))
 
 (def initialized-testing-rr
-  (initialize-record-reader fresh-rr "resources/poker-hand-testing.csv"))
+  (initialize-record-reader fresh-csv-rr "resources/poker/poker-hand-testing.csv"))
 
 (def training-iter
   (set-up-data-set-iterator initialized-training-rr 25 10 10))
@@ -76,9 +77,83 @@
 (def testing-iter
   (set-up-data-set-iterator initialized-testing-rr 25 10 10))
 
-;; this does not work well, lets try setting up a schema for our csv's
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set up network
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; fields of a custom record-reader
+(def conf
+  (->
+   (.build
+    (nn-conf/nn-conf-builder {:seed 123
+                              :optimization-algo :stochastic-gradient-descent
+                              :iterations 1
+                              :learning-rate 0.006
+                              :updater :nesterovs
+                              :momentum 0.9
+                              :pre-train false
+                              :backprop true
+                              :layers {0 {:dense-layer {:n-in 10
+                                                        :n-out 30
+                                                        :weight-init :xavier
+                                                        :activation-fn :relu}}
+                                       1 {:output-layer {:n-in 30
+                                                         :loss-fn :negativeloglikelihood
+                                                         :weight-init :xavier
+                                                         :activation-fn :soft-max
+                                                         :n-out 10}}}}))
+   (mlb/multi-layer-config-builder {})))
+
+(def model (mlb/multi-layer-network conf))
+
+(defn init [mln]
+  (doto mln
+    .init))
+
+(def init-model (init model))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; train-model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def numepochs 10)
+
+(defn ex-train [mln]
+  (loop
+      [i 0
+       result {}]
+    (cond (not= i numepochs)
+          (do
+            (println "current at epoch:" i)
+            (recur (inc i)
+                   (.fit mln training-iter)))
+          (= i numepochs)
+          (do
+            (println "training done")
+            mln))))
+
+(def trained-model (ex-train init-model))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; evaluate model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def e (Evaluation. 10))
+
+(defn eval-model [mln]
+  (while (true? (.hasNext testing-iter))
+    (let [nxt (.next testing-iter)
+          output (.output mln (.getFeatureMatrix nxt))]
+      (do (.eval e (.getLabels nxt) output)
+          (println (.stats e))))))
+
+(def evaled-model (eval-model trained-model))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; graveyard
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 (comment
   (def num-lines-to-skip 0)
   (def delim ",")
@@ -156,7 +231,7 @@
       (.map writeable-fn)))
   (.map  lines (StringToWritablesFunction. (CSVRecordReader.)))
   ( poker-hands)
-  (type (StringToWritablesFunction. (CSVRecordReader.)))
+  (type (Strun-ringToWritablesFunction. (CSVRecordReader.)))
   (type poker-hands)
   (type data-transform)
 
@@ -174,74 +249,3 @@
                              (.addColumnCategorical "suit-c1" '("1" "2" "3" "4"))))
                            (into-array String (list "suit-c1")))))
   (.executeToSequence poker-hands data-transform))
-;; implement data transform
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; set up network
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def conf
-  (->
-   (.build
-    (nn-conf/nn-conf-builder {:seed 123
-                              :optimization-algo :stochastic-gradient-descent
-                              :iterations 1
-                              :learning-rate 0.006
-                              :updater :nesterovs
-                              :momentum 0.9
-                              :pre-train false
-                              :backprop true
-                              :layers {0 {:dense-layer {:n-in 10
-                                                        :n-out 30
-                                                        :weight-init :xavier
-                                                        :activation-fn :relu}}
-                                       1 {:output-layer {:n-in 30
-                                                         :loss-fn :negativeloglikelihood
-                                                         :weight-init :xavier
-                                                         :activation-fn :soft-max
-                                                         :n-out 10}}}}))
-   (mlb/multi-layer-config-builder {})))
-
-(def model (mlb/multi-layer-network conf))
-
-(defn init [mln]
-  (doto mln
-    .init))
-
-(def init-model (init model))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; train-model
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def numepochs 10)
-
-(defn ex-train [mln]
-  (loop
-      [i 0
-       result {}]
-    (cond (not= i numepochs)
-          (do
-            (println "current at epoch:" i)
-            (recur (inc i)
-                   (.fit mln training-iter)))
-          (= i numepochs)
-          (do
-            (println "training done")
-            mln))))
-
-(def trained-model (ex-train init-model))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; evaluate model
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def e (Evaluation. 10))
-
-(defn eval-model [mln]
-  (while (true? (.hasNext testing-iter))
-    (let [nxt (.next testing-iter)
-          output (.output mln (.getFeatureMatrix nxt))]
-      (do (.eval e (.getLabels nxt) output)
-          (println (.stats e))))))
-
-(def evaled-model (eval-model trained-model))
