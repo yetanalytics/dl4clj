@@ -5,10 +5,9 @@
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [dl4clj.datavec.api.split :as f]
-            [dl4clj.datavec.api.records.readers :as rr])
-  (:import [org.deeplearning4j.datasets.datavec RecordReaderDataSetIterator]
-           [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
-           [org.deeplearning4j.optimize.listeners ScoreIterationListener]
+            [dl4clj.datavec.api.records.readers :as rr]
+            [dl4clj.datasets.datavec :as ds])
+  (:import [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.deeplearning4j.eval Evaluation]
            [org.datavec.api.transform.schema Schema Schema$Builder]
            [org.datavec.api.transform TransformProcess$Builder TransformProcess]
@@ -56,13 +55,16 @@
 
 (defn set-up-data-set-iterator
   [record-reader batch-size label-idx num-diff-labels]
-  (RecordReaderDataSetIterator. record-reader batch-size label-idx num-diff-labels))
+  (ds/iterator {:rr-dataset-iter {:record-reader record-reader
+                                  :batch-size batch-size
+                                  :label-idx label-idx
+                                  :n-possible-labels num-diff-labels}}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; import the data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def fresh-csv-rr (rr/record-reader :csv-rr))
+(def fresh-csv-rr (rr/record-reader {:csv-rr {}}))
 
 (def initialized-training-rr
   (initialize-record-reader fresh-csv-rr "resources/poker/poker-hand-training.csv"))
@@ -136,6 +138,7 @@
 ;; evaluate model
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; next dls to write
 (def e (Evaluation. 10))
 
 (defn eval-model [mln]

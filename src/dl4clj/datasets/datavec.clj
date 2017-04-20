@@ -1,5 +1,4 @@
 (ns dl4clj.datasets.datavec
-  (:require [dl4clj.datavec.api.records.readers :as rr])
   (:import [org.deeplearning4j.datasets DataSets]
            [org.deeplearning4j.datasets.datavec RecordReaderDataSetIterator
             RecordReaderMultiDataSetIterator$Builder RecordReaderMultiDataSetIterator

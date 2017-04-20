@@ -8,3 +8,4 @@
   ([] (DataSet.))
   ([^INDArray input ^INDArray output]
    (DataSet. input output)))
+;; update http://nd4j.org/doc/index.html?org/nd4j/linalg/dataset/api/iterator/DataSetIterator.html
