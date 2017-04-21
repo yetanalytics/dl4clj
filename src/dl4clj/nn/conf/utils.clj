@@ -1,5 +1,4 @@
-(ns dl4clj.nn.conf.utils
-  (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil]))
+(ns dl4clj.nn.conf.utils)
 
 ;;"https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/InputTypeUtil.html"
 ;;"https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/LayerValidation.html"

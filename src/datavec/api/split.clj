@@ -1,4 +1,4 @@
-(ns dl4clj.datavec.api.split
+(ns datavec.api.split
   (:import [org.datavec.api.split FileSplit])
   (:require [clojure.java.io :as io]
             [dl4clj.nn.conf.utils :refer [contains-many?]]))

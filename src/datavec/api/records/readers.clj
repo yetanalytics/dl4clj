@@ -1,5 +1,5 @@
 (ns ^{:doc "see https://deeplearning4j.org/etl-userguide"}
-    dl4clj.datavec.api.records.readers
+    datavec.api.records.readers
   (:import [org.datavec.api.records.reader
             BaseRecordReader
             RecordReader

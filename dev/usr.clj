@@ -4,11 +4,11 @@
             [dl4clj.nn.conf.builders.builders :as l]
             [clj-time.core :as t]
             [clj-time.format :as tf]
-            [dl4clj.datavec.api.split :as f]
-            [dl4clj.datavec.api.records.readers :as rr]
-            [dl4clj.datasets.datavec :as ds])
+            [datavec.api.split :as f]
+            [datavec.api.records.readers :as rr]
+            [dl4clj.datasets.datavec :as ds]
+            [dl4clj.eval.evaluation :as e])
   (:import [org.deeplearning4j.optimize.listeners ScoreIterationListener]
-           [org.deeplearning4j.eval Evaluation]
            [org.datavec.api.transform.schema Schema Schema$Builder]
            [org.datavec.api.transform TransformProcess$Builder TransformProcess]
            [org.apache.spark SparkConf]
@@ -27,18 +27,6 @@
 ;; last value is class of poker hand
 ;; 0-9
 
-;; need to set up the scema for the csv data
-;; experiment with normalization
-;; not 0-1, its 1-4 and 1-13, 0-9
-
-;; need to define labels
-
-;; create a record reader
-
-;; use that to put shit into a ds
-
-;; create the iterator for that ds
-
 ;; set up the evaluator
 
 (defn timestamp-now
@@ -51,7 +39,7 @@
 (defn initialize-record-reader
   [record-reader file-path]
   (doto record-reader
-    (.initialize  (f/new-filesplit {:root-dir file-path}))))
+    (rr/initialize  (f/new-filesplit {:root-dir file-path}))))
 
 (defn set-up-data-set-iterator
   [record-reader batch-size label-idx num-diff-labels]
@@ -139,7 +127,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; next dls to write
-(def e (Evaluation. 10))
+(def evaler (e/new-evaluator {:n-classes 10}))
 
 (defn eval-model [mln]
   (while (true? (.hasNext testing-iter))
