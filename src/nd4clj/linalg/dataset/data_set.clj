@@ -4,6 +4,10 @@
   (:import [org.nd4j.linalg.dataset DataSet]
            [org.nd4j.linalg.api.ndarray INDArray]))
 
+;; TODO
+;; expand this ns
+;; add docs
+
 (defn data-set
   ([] (DataSet.))
   ([^INDArray input ^INDArray output]

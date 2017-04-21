@@ -3,6 +3,9 @@
   (:refer-clojure :exclude [min max])
   (:import [org.nd4j.linalg.api.ndarray INDArray]))
 
+;;TODO
+;; Double check these fns, I did't write them
+
 ;;; Matrix manipulation
 ;;; -------------------
 

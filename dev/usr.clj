@@ -7,6 +7,7 @@
             [datavec.api.split :as f]
             [datavec.api.records.readers :as rr]
             [dl4clj.datasets.datavec :as ds]
+            [nd4clj.linalg.dataset.api.data-set :as d]
             [dl4clj.eval.evaluation :as e])
   (:import [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.datavec.api.transform.schema Schema Schema$Builder]
@@ -39,7 +40,7 @@
 (defn initialize-record-reader
   [record-reader file-path]
   (doto record-reader
-    (rr/initialize  (f/new-filesplit {:root-dir file-path}))))
+    (rr/initialize (f/new-filesplit {:root-dir file-path}))))
 
 (defn set-up-data-set-iterator
   [record-reader batch-size label-idx num-diff-labels]
@@ -71,6 +72,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def conf
+  ;; play around with regularization (L1, L2, dropout ...)
   (->
    (.build
     (nn-conf/nn-conf-builder {:seed 123
@@ -95,6 +97,7 @@
 (def model (mlb/multi-layer-network conf))
 
 (defn init [mln]
+  ;;.init is going to be implemented in dl4clj.nn.multilayer.multi-layer-network
   (doto mln
     .init))
 
@@ -115,6 +118,7 @@
             (println "current at epoch:" i)
             (recur (inc i)
                    (.fit mln training-iter)))
+          ;;.fit is going to be implemented in dl4clj.nn.multilayer.multi-layer-network
           (= i numepochs)
           (do
             (println "training done")
@@ -126,8 +130,7 @@
 ;; evaluate model
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; next dls to write
-(def evaler (e/new-evaluator {:n-classes 10}))
+(def evaler-c (e/new-evaluator {:n-classes 10}))
 
 (defn eval-model [mln]
   (while (true? (.hasNext testing-iter))
@@ -135,6 +138,19 @@
           output (.output mln (.getFeatureMatrix nxt))]
       (do (.eval e (.getLabels nxt) output)
           (println (.stats e))))))
+
+#_(defn eval-model-classification
+  [mln testing-iter evaler]
+  (while (true? (rr/has-next? testing-iter))
+    (let [next (rr/next-data-record testing-iter)
+          output (.output mln (d/get-feature-matrix nxt))]
+      ;;.output is going to be implemented in dl4clj.nn.multilayer.multi-layer-network
+      (do (e/eval-classification
+           evaler
+           (rr/get-labels next)
+           output)
+          (println (e/get-stats evaler))))
+    ))
 
 (def evaled-model (eval-model trained-model))
 

@@ -10,6 +10,12 @@
 ;; classification evaluation
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html
 
+
+;; TODO
+;; implement binar evaluators
+;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
+;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROCMultiClass.html
+
 (defn new-evaluator
   "creates an evaluation object for evaling a trained network.
 

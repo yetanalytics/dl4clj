@@ -3,6 +3,9 @@
   (:require [clojure.java.io :as io]
             [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
+;; TODO
+;; add doc-strings
+
 (defn new-filesplit
   "File input split. Splits up a root directory in to files."
   [{:keys [root-dir rng-seed allow-format

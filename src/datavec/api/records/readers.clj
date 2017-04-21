@@ -32,7 +32,9 @@
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader]))
 
+;; TODO
 ;; build in the ability to make an arbritary record reader using gen-class
+;; add documentation
 
 (defn record-type
   "dispatch fn for record-reader"

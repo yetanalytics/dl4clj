@@ -5,6 +5,9 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [com.google.common.base Function]))
 
+;;TODO
+;; double check these fns
+;; fill out doc strings
 
 (defn add-feature-vector
   "With two arguments: Adds a feature for each example on to the current feature vector.
@@ -88,7 +91,7 @@
   "Gets a copy of example i"
   [^DataSet this i & more]
   (.get this (int-array (conj more i))))
- 
+
 (defn get-column-names
   "Optional column names of the data transform, this is mainly used for interpeting what columns are in the dataset"
   [^DataSet this]
@@ -96,7 +99,7 @@
 
 (defn get-feature-matrix
   "Get the feature matrix (inputs for the data)"
-  [^DataSet this]
+  [this]
   (.getFeatureMatrix this))
 
 (defn get-features
@@ -183,7 +186,7 @@
   [^DataSet this]
   (.scale this))
 
-(defn scale-min-and-max  
+(defn scale-min-and-max
   [^DataSet this]
   (.scaleMinAndMax this (double min) (double max)))
 

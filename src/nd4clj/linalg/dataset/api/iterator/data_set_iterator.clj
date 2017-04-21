@@ -4,6 +4,10 @@
   (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
            [org.nd4j.linalg.dataset.api DataSetPreProcessor])) ;; must have changed
 
+;; TODO
+;; double check these fns are up to date
+
+
 (defn batch
   "Batch size"
   [^DataSetIterator this]

@@ -4,6 +4,9 @@
   (:import [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction])
   (:require [clojure.string :as s]))
 
+;; TODO
+;; I believe it is safe to delete this ns but double check
+
 
 (defn value-of [k]
   (if (string? k)

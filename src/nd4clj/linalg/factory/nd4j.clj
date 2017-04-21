@@ -7,6 +7,9 @@
            [org.nd4j.linalg.api.rng Random]))
 ;; (remove-ns 'nd4clj.linalg.factory.nd4j)
 
+;; TODO
+;; make sure these work
+
 (defn zeros
   ([shape]
    (Nd4j/zeros (int-array shape)))

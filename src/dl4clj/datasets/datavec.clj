@@ -5,6 +5,9 @@
             SequenceRecordReaderDataSetIterator
             SequenceRecordReaderDataSetIterator$AlignmentMode]))
 
+;; TODO
+;; add documentation
+
 (def iris-ds (DataSets/iris))
 
 (def mnist-ds (DataSets/mnist))
