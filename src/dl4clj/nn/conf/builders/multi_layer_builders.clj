@@ -93,9 +93,6 @@
             (= idx max-idx)
             result))))
 
-(defn multi-layer-network
-  [conf]
-  (MultiLayerNetwork. conf))
 
 (comment
 ;; this is working

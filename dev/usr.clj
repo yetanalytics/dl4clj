@@ -8,7 +8,8 @@
             [datavec.api.records.readers :as rr]
             [dl4clj.datasets.datavec :as ds]
             [nd4clj.linalg.dataset.api.data-set :as d]
-            [dl4clj.eval.evaluation :as e])
+            [dl4clj.eval.evaluation :as e]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln])
   (:import [org.deeplearning4j.optimize.listeners ScoreIterationListener]
            [org.datavec.api.transform.schema Schema Schema$Builder]
            [org.datavec.api.transform TransformProcess$Builder TransformProcess]
@@ -94,7 +95,7 @@
                                                          :n-out 10}}}}))
    (mlb/multi-layer-config-builder {})))
 
-(def model (mlb/multi-layer-network conf))
+(def model (mln/multi-layer-network conf))
 
 (defn init [mln]
   ;;.init is going to be implemented in dl4clj.nn.multilayer.multi-layer-network

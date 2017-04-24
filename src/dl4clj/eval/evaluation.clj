@@ -12,7 +12,7 @@
 
 
 ;; TODO
-;; implement binar evaluators
+;; implement binary evaluators
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROCMultiClass.html
 
@@ -94,22 +94,23 @@
                     record-meta-data mln
                     predicted-idx actual-idx]
              :as opts}]
-  (doto evaler
-    (cond (contains-many? opts :true-labels
-                          :in :comp-graph)
-          (.eval true-labels in comp-graph)
-          (contains-many? opts :true-labels
-                          :in :mln)
-          (.eval true-labels in mln)
-          (contains-many? opts :real-outcomes
-                          :guesses :record-meta-data)
-          (.eval real-outcomes guesses record-meta-data)
-          (contains-many? opts :real-outcomes
-                          :guesses)
-          (.eval real-outcomes guesses)
-          (contains-many? opts :predicted-idx :actual-idx)
-          (.eval predicted-idx actual-idx)
-          :else)))
+  (cond (contains-many? opts :true-labels
+                        :in :comp-graph)
+        (.eval evaler true-labels in comp-graph)
+        (contains-many? opts :true-labels
+                        :in :mln)
+        (.eval evaler true-labels in mln)
+        (contains-many? opts :real-outcomes
+                        :guesses :record-meta-data)
+        (.eval evaler real-outcomes guesses record-meta-data)
+        (contains-many? opts :real-outcomes
+                        :guesses)
+        (.eval evaler real-outcomes guesses)
+        (contains-many? opts :predicted-idx :actual-idx)
+        (.eval predicted-idx actual-idx)
+        :else
+        (assert false "you must supply the evaler one of the set of opts described in the doc string"))
+  evaler)
 
 (defn eval-time-series
   "evalatues a time series given labels and predictions.
@@ -117,12 +118,13 @@
   labels-mask is optional and only applies when there is a mask"
   [evaler & {:keys [labels predicted labels-mask]
              :as opts}]
-  (doto evaler
-    (cond (contains? opts :labels-mask)
-          (.evalTimeSeries labels predicted labels-mask)
-          (false? (contains? opts :labels-mask))
-          (.evalTimeSeries labels predicted)
-          :else)))
+  (cond (contains? opts :labels-mask)
+        (.evalTimeSeries evaler labels predicted labels-mask)
+        (false? (contains? opts :labels-mask))
+        (.evalTimeSeries evaler labels predicted)
+        :else
+        (assert false "you must supply labels-mask and/or labels and predicted values"))
+  evaler)
 
 
 (defn get-accuracy
