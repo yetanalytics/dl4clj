@@ -1,20 +1,29 @@
-(ns dl4clj.nn.layers.activation-layer
+(ns ^{:doc "Activation Layer Used to apply activation on input and corresponding derivative on epsilon.
+ Decouples activation from the layer type and ideal for cases when applying BatchNormLayer.
+ For example, use "identity" activation on the layer prior to BatchNorm and apply this layer after the BatchNorm.
+Implementation of the class ActivationLayer in dl4j.
+An activation-layer can be used when a fn requires either a layer or a base-layer as an arg.
+see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/ActivationLayer.html"}
+    dl4clj.nn.layers.activation-layer
   (:import [org.deeplearning4j.nn.layers ActivationLayer])
-  (:require [dl4clj.nn.api.layer :as l]
-            [dl4clj.nn.conf.utils :as u]))
+  (:require [dl4clj.nn.api.layer :refer :all]
+            [dl4clj.nn.api.model :refer :all]
+            [dl4clj.nn.layers.base-layer :refer :all]))
 
-;; figure out how this is going to fit into the larger picture
+(defn new-activation-layer
+  "creates a new activation-layer by calling the ActivationLayer constructor.
 
-(defn constructor
-  [& {:keys [conf input]}]
-  (if input
+  :conf is a neural network configuration
+  :input is an INDArray of input values"
+  [& {:keys [conf input]
+      :as opts}]
+  (assert (contains? opts :conf) "you must supply a neural network configuration")
+  (if (contains? opts :input)
     (ActivationLayer. conf input)
     (ActivationLayer. conf)))
 
-(defn activate
-  [this training?]
-  (l/activate :this this :training? training?))
 
-(defn back-prop-gradient
-  [this epsilon]
-  (l/backprop-gradient :this this :epsilon epsilon))
+;; see nn.api.layer, nn.api.model and nn.layers.base-layer
+;; for a list of other interaction fns that activation-layer supports
+
+;; an activation-layer can take the place of a base-layer in refered fns
