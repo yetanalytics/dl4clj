@@ -1,4 +1,6 @@
-(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html"}
+(ns ^{:doc "A Model is meant for predicting something from data.
+ Note that this is not like supervised learning where there are labels attached to the examples.
+ see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html"}
   dl4clj.nn.api.model
   (:import [org.deeplearning4j.nn.api Model])
   (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))

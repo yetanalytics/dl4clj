@@ -1,5 +1,5 @@
 (ns dl4clj.utils
-  (:import [org.deeplearning4j.nn.api Model]))
+  (:import [org.deeplearning4j.nn.api Model Layer]))
 
 
 (defn camelize
@@ -32,6 +32,7 @@
 (defn indexed [col]
   (map vector col (range)))
 
+;; make this a multi method
 (defn type-checking
   [t]
   t)
@@ -42,3 +43,7 @@
 ;; model
 ;; NeuralNetConfiguration
 ;; IterationListener
+;; Layer.TrainingMode
+;; MaskState
+;; array
+;; collection
