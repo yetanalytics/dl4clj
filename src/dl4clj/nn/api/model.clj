@@ -40,7 +40,9 @@
   (.conf model))
 
 (defn fit-model!
-  "All models have a fit method"
+  "All models have a fit method
+
+  data is an INDarray of the data you want to fit the model to"
   [& {:keys [model data]
       :as opts}]
   (cond
@@ -91,10 +93,9 @@
   "the number of parameters for the model"
   [& {:keys [model backwards?]
       :as opts}]
-  (cond-> model
-    (contains? opts :backwards?) (.numParams backwards?)
-    :else
-    .numParams))
+  (cond (contains? opts :backwards?) (.numParams model backwards?)
+        :else
+        (.numParams model)))
 
 (defn params
   "Parameters of the model (if any)"
@@ -105,10 +106,10 @@
   "The param table"
   [& {:keys [model backprop-params-only?]
       :as opts}]
-  (cond-> model
-    (contains? opts :backprop-params-only?) (.paramTable backprop-params-only?)
-    :else
-    .paramTable))
+  (cond (contains? opts :backprop-params-only?)
+        (.paramTable model backprop-params-only?)
+        :else
+        (.paramTable model)))
 
 (defn score
   "The score for the model"
@@ -153,6 +154,8 @@
    -Perform one update applying the gradient"
   [& {:keys [model gradient param-type]
       :as opts}]
+  (assert (contains-many? opts :model :gradient)
+          "you must supply a model and a gradient")
   (if (contains? opts :param-type)
-    (.update this gradient param-type)
-    (.update this gradient)))
+    (.update model gradient param-type)
+    (.update model gradient)))
