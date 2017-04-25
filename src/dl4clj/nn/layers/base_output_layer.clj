@@ -1,7 +1,6 @@
 (ns ^{:doc "Output layer with different objective in co-occurrences for different objectives.
  This includes classification as well as prediction.  Implementation of the class BaseOutputLayer in dl4j.
-A base-output-layer can be used when a fn requires either a layer or a base-layer as an arg.
-A base-output-layer can also be used when a fn requires a model as an arg
+all refered fns support base-output-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/BaseOutputLayer.html"}
     dl4clj.nn.layers.base-output-layer
   (:require [dl4clj.nn.api.classifier :refer :all]

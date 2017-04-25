@@ -1,4 +1,5 @@
 (ns ^{:doc "A layer with a bias and activation function, implementation of the class BaseLayer in dl4j.
+all refered fns support base-layer as the first arg
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/BaseLayer.html"}
     dl4clj.nn.layers.base-layer
   (:require [dl4clj.nn.api.layer :refer :all]

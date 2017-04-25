@@ -1,8 +1,8 @@
 (ns ^{:doc "Activation Layer Used to apply activation on input and corresponding derivative on epsilon.
  Decouples activation from the layer type and ideal for cases when applying BatchNormLayer.
- For example, use "identity" activation on the layer prior to BatchNorm and apply this layer after the BatchNorm.
+ For example, use identity activation on the layer prior to BatchNorm and apply this layer after the BatchNorm.
 Implementation of the class ActivationLayer in dl4j.
-An activation-layer can be used when a fn requires either a layer or a base-layer as an arg.
+all refered fns support activation-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/ActivationLayer.html"}
     dl4clj.nn.layers.activation-layer
   (:import [org.deeplearning4j.nn.layers ActivationLayer])
