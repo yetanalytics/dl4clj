@@ -45,6 +45,7 @@
   data is an INDarray of the data you want to fit the model to"
   [& {:keys [model data]
       :as opts}]
+  (assert (contains? opts :model) "you must supply a model to fit")
   (cond
     (contains? opts :data)
     (doto model
@@ -76,7 +77,7 @@
 (defn init!
   [model]
   (doto model
-    (.init )))
+    (.init)))
 
 (defn input
   "The input/feature matrix for the model"
@@ -93,7 +94,9 @@
   "the number of parameters for the model"
   [& {:keys [model backwards?]
       :as opts}]
-  (cond (contains? opts :backwards?) (.numParams model backwards?)
+  (assert (contains? opts :model) "you must supply a model")
+  (cond (contains? opts :backwards?)
+        (.numParams model backwards?)
         :else
         (.numParams model)))
 
@@ -106,6 +109,7 @@
   "The param table"
   [& {:keys [model backprop-params-only?]
       :as opts}]
+  (assert (contains? opts :model) "you must supply a model")
   (cond (contains? opts :backprop-params-only?)
         (.paramTable model backprop-params-only?)
         :else
