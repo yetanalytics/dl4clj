@@ -1,6 +1,5 @@
-(ns ^{:doc "
-"}
-  dl4clj.utils)
+(ns dl4clj.utils
+  (:import [org.deeplearning4j.nn.api Model]))
 
 
 (defn camelize
@@ -32,3 +31,14 @@
 
 (defn indexed [col]
   (map vector col (range)))
+
+(defn type-checking
+  [t]
+  t)
+;; INDArray
+;; Layer
+;; gradient
+;; nn's
+;; model
+;; NeuralNetConfiguration
+;; IterationListener

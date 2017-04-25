@@ -3,147 +3,153 @@
   (:import [org.deeplearning4j.nn.api Model])
   (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
-(defn accumulate-score
+(defn accumulate-score!
   "Sets a rolling tally for the score."
-  [& {:keys [this accum]}]
-  (.accumulateScore this (double accum)))
+  [& {:keys [model accum]}]
+  (doto model
+    (.accumulateScore (double accum))))
 
-(defn apply-learning-rate-score-decay
+(defn apply-learning-rate-score-decay!
   "Update learningRate using for this model."
-  [^Model this]
-  (.applyLearningRateScoreDecay this))
+  [model]
+  (doto model
+    (.applyLearningRateScoreDecay)))
 
 (defn batch-size
   "The current inputs batch size"
-  [^Model this]
-  (.batchSize this))
+  [model]
+  (.batchSize model))
 
-(defn clear
+(defn clear!
   "Clear input"
-  [^Model this]
-  (.clear this))
+  [model]
+  (doto model
+      (.clear)))
 
-(defn compute-gradient-and-score
+(defn compute-gradient-and-score!
   "Update the score"
-  [^Model this]
-  (.computeGradientAndScore this))
+  [model]
+  (doto model
+    (.computeGradientAndScore)))
 
 (defn conf
   "The configuration for the neural network"
-  [^Model this]
-  (.conf this))
+  [model]
+  (.conf model))
 
-(defn fit
+(defn fit-model!
   "All models have a fit method"
-  [& {:keys [this data]
+  [& {:keys [model data]
       :as opts}]
-  (cond-> this
-    (contains? opts :data) (.fit data)
+  (cond
+    (contains? opts :data)
+    (doto model
+      (.fit data))
     :else
-    .fit))
+    (doto model
+     (.fit))))
 
 (defn get-optimizer
   "Returns this models optimizer"
-  [^Model this]
-  (.getOptimizer this))
+  [model]
+  (.getOptimizer model))
 
 (defn get-param
   "Get the parameter"
-  [& {:keys [this param]}]
-  (.getParam this (name param)))
+  [& {:keys [model param]}]
+  (.getParam model (name param)))
 
 (defn gradient
   "Calculate a gradient"
-  [^Model this]
-  (.gradient this))
+  [model]
+  (.gradient model))
 
 (defn gradient-and-score
   "Get the gradient and score"
-  [^Model this]
-  (.gradientAndScore this))
+  [model]
+  (.gradientAndScore model))
 
-(defn init
-  [^Model this]
-  (.init this))
+(defn init!
+  [model]
+  (doto model
+    (.init )))
 
 (defn input
   "The input/feature matrix for the model"
-  [^Model this]
-  (.input this))
+  [model]
+  (.input model))
 
-(defn iterate-once
+(defn iterate-once!
   "Run one iteration"
-  [& {:keys [this input]}]
-  (.iterate this input))
+  [& {:keys [model input]}]
+  (doto model
+    (.iterate input)))
 
 (defn num-params
   "the number of parameters for the model"
-  [& {:keys [this backwards?]
+  [& {:keys [model backwards?]
       :as opts}]
-  (cond-> this
+  (cond-> model
     (contains? opts :backwards?) (.numParams backwards?)
     :else
     .numParams))
 
 (defn params
   "Parameters of the model (if any)"
-  [^Model this]
-  (.params this))
+  [model]
+  (.params model))
 
 (defn param-table
   "The param table"
-  [& {:keys [this backprop-params-only?]
+  [& {:keys [model backprop-params-only?]
       :as opts}]
-  (cond-> this
+  (cond-> model
     (contains? opts :backprop-params-only?) (.paramTable backprop-params-only?)
     :else
     .paramTable))
 
 (defn score
   "The score for the model"
-  [^Model this]
-  (.score this))
+  [model]
+  (.score model))
 
-(defn set-backprop-gradients-vew-array
-  "Set the gradients array as a view of the full (backprop) network parameters
-   NOTE: this is intended to be used internally in MultiLayerNetwork and ComputationGraph, not by users."
-  [& {:keys [this gradients]}]
-  (.setBackpropGradientsViewArray this gradients))
-
-(defn set-conf
+(defn set-conf!
   "Setter for the configuration"
-  [^Model this]
-  (.setConf this conf))
+  [model]
+  (doto model
+    (.setConf conf)))
 
-(defn set-listeners
+(defn set-listeners!
   "set the iteration listeners for the computational graph"
-  [& {:keys [this listeners]}]
-  (.setListeners this listeners))
+  [& {:keys [model listeners]}]
+  (doto model
+    (.setListeners listeners)))
 
-(defn set-param
+(defn set-param!
   "Set the parameter with a new ndarray"
-  [& {:keys [this k v]}]
-  (.setParam this k v))
+  [& {:keys [model k v]
+      :as opts}]
+  (doto model
+    (.setParam k v)))
 
-(defn set-params
+(defn set-params!
   "Set the parameters for this model."
-  [& {:keys [this params]}]
-  (.setParams this params))
+  [& {:keys [model params]}]
+  (doto model
+    (.setParams params)))
 
-(defn set-params-view-array
-  "Set the initial parameters array as a view of the full (backprop) network parameters
-   NOTE: this is intended to be used internally in MultiLayerNetwork and ComputationGraph, not by users."
-  [& {:keys [this params]}]
-  (.setParamsViewArray this params))
-
-(defn set-param-table
+(defn set-param-table!
   "Setter for the param table"
-  [& {:keys [this param-table]}]
-  (.setParamTable this param-table))
+  [& {:keys [model param-table-map]}]
+  (doto model (.setParamTable param-table-map)))
 
-(defn updatez
-  "Perform one update applying the gradient"
-  [& {:keys [this gradient param-type]
+(defn update!
+  "if gradient comes from deafult-gradient-implementation:
+   - Update layer weights and biases with gradient change
+
+  if gradient is an INDArray and param-type is supplied:
+   -Perform one update applying the gradient"
+  [& {:keys [model gradient param-type]
       :as opts}]
   (if (contains? opts :param-type)
     (.update this gradient param-type)
