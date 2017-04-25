@@ -47,3 +47,4 @@
 ;; MaskState
 ;; array
 ;; collection
+;; all the layer types
