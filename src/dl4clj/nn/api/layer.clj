@@ -1,4 +1,4 @@
-(ns ^{:doc " fns from the dl4j Interface for a layer of a neural network.
+(ns ^{:doc "fns from the dl4j Interface for a layer of a neural network.
  This has an activation function, an input and output size, weights, and a bias
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.html"}
   dl4clj.nn.api.layer
