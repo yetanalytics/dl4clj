@@ -1,6 +1,7 @@
 (ns dl4clj.utils
   (:import [org.deeplearning4j.nn.api Model Layer]))
 
+;; move contains-many? here and change all of the breaking changes that ensue
 
 (defn camelize
   "Turn a symbol or keyword or string to a camel-case verion, e.g. (camelize :foo-bar) => :FooBar"
@@ -51,3 +52,4 @@
 ;; dataset
 ;; dataset Iterator
 ;; Updater
+;; Tree
