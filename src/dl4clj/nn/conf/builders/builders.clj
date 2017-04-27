@@ -100,7 +100,7 @@
 
   :weight-init (keyword) Weight initialization scheme
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size, :normalized"
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size"
 
   [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
@@ -200,8 +200,7 @@
      (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
      (contains? opts :pzx-activation-function) (.pzxActivationFunction
                                                 (constants/value-of
-                                                 {:activation-fn pzx-activation-function}))
-     )))
+                                                 {:activation-fn pzx-activation-function})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods

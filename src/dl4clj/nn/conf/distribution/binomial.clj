@@ -8,4 +8,4 @@
   (.getProbabilityOfSuccess this))
 
 (defn set-prob-of-success [this prob]
-  (.setProbabilityOfSuccess this (double prob)))
+  (.setProbabilityOfSuccess this prob))

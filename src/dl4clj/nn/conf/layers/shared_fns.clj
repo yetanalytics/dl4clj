@@ -7,6 +7,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 
 ;; top level layer interaction fns
 ;; from the Layer class
+;; double check for when you need to use doto for methods that return nil
 (defn clone [& {:keys [this]}]
   (.clone this))
 

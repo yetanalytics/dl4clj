@@ -197,9 +197,7 @@
                                                   {:weight-init weight-init}))
       (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
       (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
-      (contains? opts :layers) (multi-layer/list-builder layers)
-      )))
-
+      (contains? opts :layers) (multi-layer/list-builder layers))))
 
 (comment
   (println

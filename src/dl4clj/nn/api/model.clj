@@ -9,7 +9,7 @@
   "Sets a rolling tally for the score."
   [& {:keys [model accum]}]
   (doto model
-    (.accumulateScore (double accum))))
+    (.accumulateScore accum)))
 
 (defn apply-learning-rate-score-decay!
   "Update learningRate using for this model."
@@ -62,7 +62,7 @@
 (defn get-param
   "Get the parameter"
   [& {:keys [model param]}]
-  (.getParam model (name param)))
+  (.getParam model param))
 
 (defn gradient
   "Calculate a gradient"

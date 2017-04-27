@@ -8,7 +8,7 @@
   (.getStd this))
 
 (defn set-mean [this m]
-  (.setMean this (double m)))
+  (.setMean this m))
 
 (defn set-std [this std]
-  (.setStd this (double std)))
+  (.setStd this std))

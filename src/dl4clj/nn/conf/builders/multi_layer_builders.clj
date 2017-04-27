@@ -40,7 +40,7 @@
    (multi-layer-config-builder (MultiLayerConfiguration$Builder.) {}))
   ([opts]
    (multi-layer-config-builder (MultiLayerConfiguration$Builder.) opts))
-  ([^MultiLayerConfiguration$Builder multi-layer-config-b
+  ([multi-layer-config-b
     {:keys [backprop backprop-type damping-factor
             input-pre-processors input-type pretrain
             tbptt-back-length tbptt-fwd-length]
@@ -81,6 +81,8 @@
            result b]
       (cond (not= idx max-idx)
             (let [current-layer (get layers idx)]
+              ;; guarantees layers are built in the order specified by the idxs
+              ;; maps are not inherently ordered
               (if (map? current-layer)
                 ;; we are dealing with a config map that needs to go through builder multimethod
                 (recur

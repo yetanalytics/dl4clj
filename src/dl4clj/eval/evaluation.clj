@@ -15,6 +15,7 @@
 ;; implement binary evaluators
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROCMultiClass.html
+;; turn positional args into keyword args
 
 (defn new-evaluator
   "creates an evaluation object for evaling a trained network.
@@ -36,12 +37,12 @@
   -- :n-columns (int): number of columns in the dataset
   -- :precision (int): specified precision to be returned when you call stats
   -- :column-names (coll of strings): names of the columns"
-  [{:keys [classifcation? n-classes labels
+  [{:keys [classification? n-classes labels
            top-n label-to-idx-map n-columns
            precision column-names]
-    :or {classifcation? true}
+    :or {classification? true}
     :as opts}]
-  (if (true? classifcation?)
+  (if (true? classification?)
     (cond (and (contains-many? opts :labels :top-n)
                (list? labels)
                (integer? top-n))

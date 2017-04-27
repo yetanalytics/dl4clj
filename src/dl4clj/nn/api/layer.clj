@@ -132,7 +132,7 @@
   Used for score and gradient calculations."
   [& {:keys [layer size]}]
   (doto layer
-      (.setInputMiniBatchSize (int size))))
+    (.setInputMiniBatchSize size)))
 
 (defn set-layer-listeners!
   "Set the iteration listeners for the supplied layer and returns the layer.

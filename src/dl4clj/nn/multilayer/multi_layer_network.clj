@@ -240,20 +240,24 @@
           :as opts}]
   (cond (contains-many? opts :features :labels :features-mask
                         :labels-mask)
-        (.fit mln features labels features-mask labels-mask)
+        (doto mln
+          (.fit features labels features-mask labels-mask))
         (contains-many? opts :examples :label-idxs)
-        (.fit mln examples label-idxs)
+        (doto mln
+          (.fit examples label-idxs))
         (contains-many? opts :data :labels)
-        (.fit mln data labels)
+        (doto mln
+          (.fit data labels))
         (contains? opts :data)
-        (.fit mln data)
+        (doto mln
+          (.fit data))
         (contains? opts :iterator)
-        (.fit mln iterator)
+        (doto mln
+          (.fit iterator))
         (contains? opts :ds)
-        (.fit mln ds)
+        (doto mln (.fit ds))
         :else
-        (.fit mln))
-  mln)
+        (doto mln (.fit))))
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"

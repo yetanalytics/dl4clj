@@ -57,7 +57,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defmethod value-of :activation-fn [opts]
   (constants #(Activation/valueOf %) (:activation-fn opts) :activation? true))
 
@@ -107,7 +106,6 @@
 
 (defmethod value-of :layer-training-mode [opts]
   (constants #(Layer$TrainingMode/valueOf %) (:layer-training-mode opts)))
-
 
 (defn input-types
   [opts]

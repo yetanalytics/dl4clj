@@ -12,7 +12,7 @@
 (defn backprop
   "Reverse the preProcess during backprop."
   [this output mini-batch-size]
-  (.backprop this output (int mini-batch-size)))
+  (.backprop this output mini-batch-size))
 
 (defn clone
   [this]
@@ -21,11 +21,11 @@
 (defn pre-process
   "Pre preProcess input/activations for a multi layer network"
   [this input mini-batch-size]
-  (.preProcess this input (int mini-batch-size)))
+  (.preProcess this input mini-batch-size))
 
 (defn feed-forward-mask-array
   [this mask-array current-mask-state mini-batch-size]
-  (.feedForwardMaskArray this mask-array current-mask-state (int mini-batch-size)))
+  (.feedForwardMaskArray this mask-array current-mask-state mini-batch-size))
 
 (defn get-output-type
   "For a given type of input to this preprocessor, what is the type of the output?
@@ -58,6 +58,8 @@
       :else b)))
 
 (defn fn-calls
+  ;; do I want to keep this?
+  ;; leaning towards no
   "determines what functions to call based on opts map
   and makes the method call with appropriate params"
   [builder opts]
@@ -162,9 +164,6 @@
 
 (defmethod pre-processors :rnn-to-feed-forward-pre-processor [opts]
   (fn-calls (RnnToFeedForwardPreProcessor.) (:rnn-to-feed-forward-pre-processor opts)))
-
-
-
 
 
 (defn binominal-sampling-pre-processor

@@ -8,7 +8,7 @@
   (.getUpper this))
 
 (defn set-lower [this l]
-  (.setLower this (double l)))
+  (.setLower this l))
 
 (defn set-upper [this u]
-  (.setUpper this (double u)))
+  (.setUpper this u))
