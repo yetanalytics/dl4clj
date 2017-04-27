@@ -1,13 +1,4 @@
-(ns dl4clj.utils
-  (:import [org.deeplearning4j.nn.api Model Layer]
-           [org.nd4j.linalg.api.ndarray INDArray]
-           [org.deeplearning4j.datasets DataSets]
-           [org.deeplearning4j.datasets.datavec
-            RecordReaderDataSetIterator
-            RecordReaderMultiDataSetIterator$Builder
-            RecordReaderMultiDataSetIterator
-            SequenceRecordReaderDataSetIterator
-            SequenceRecordReaderDataSetIterator$AlignmentMode]))
+(ns dl4clj.utils)
 
 ;; move contains-many? here and change all of the breaking changes that ensue
 (defn contains-many? [m & ks]
@@ -102,6 +93,7 @@
 ;; dl4j types
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; add in all layer types
+;; add in clustering types
 (defmethod type-checking :INDArray [opts]
   (let [data (:INDArray opts)]
     (if (= org.nd4j.linalg.cpu.nativecpu.NDArray (type data))

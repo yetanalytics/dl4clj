@@ -99,7 +99,6 @@
   ;; for initialization, only accepts a ListStringInputSplit
   (ListStringRecordReader.))
 
-
 (defn close [rr]
   (doto rr
     (.close)))
