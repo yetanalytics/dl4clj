@@ -36,8 +36,7 @@
   [tree]
   (.getCenterOfMass tree))
 
-(defn get-cum-size
-  ;; find a better name for this function...
+(defn get-cumulative-size
   [tree]
   (.getCumSize tree))
 
@@ -87,7 +86,7 @@
   [tree center-of-mass]
   (doto tree (.setCenterOfMass center-of-mass)))
 
-(defn set-cum-size!
+(defn set-cumulative-size!
   ;; again need to find a new name...
   [tree size]
   (doto tree (.setCumSize size)))

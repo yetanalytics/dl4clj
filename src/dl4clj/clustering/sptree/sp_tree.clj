@@ -8,9 +8,74 @@
   (assert (contains? opts :data) "you must provide data to create the tree with")
   (cond (contains-many? opts :parent :corner :width :indices :similarity-fn)
         (SpTree. parent data corner width indices similarity-fn)
+        (contains-many? opts :parent :data :corner :width :indices)
+        (SpTree. parent data corner width indices)
+        (contains-many? opts :indices :similarity-fn)
+        (SpTree. data indices similarity-fn)
+        (contains? opts :indices)
+        (SpTree. data indices)
+        :else
+        (SpTree. data)))
 
+(defn compute-edge-forces!
+  "Compute edge forces using barns hut"
+  [sp-tree row-p col-p val-p n pos-f]
+  (doto sp-tree (.computeEdgeForces row-p col-p val-p n pos-f)))
 
+(defn compute-non-edge-forces!
+  "Compute non edge forces using barnes hut"
+  [sp-tree point-idx theta negative-force sum-q]
+  (doto sp-tree (.computeNonEdgeForces point-idx theta negative-force sum-q)))
 
-        )
+(defn depth
+  [sp-tree]
+  (.depth sp-tree))
 
-  )
+(defn get-boundary
+  [sp-tree]
+  (.getBoundary sp-tree))
+
+(defn get-center-of-mass
+  [sp-tree]
+  (.getCenterOfMass sp-tree))
+
+(defn get-children
+  [sp-tree]
+  (.getChildren sp-tree))
+
+(defn get-cumulative-size
+  [sp-tree]
+  (.getCumSize sp-tree))
+
+(defn get-d
+  [sp-tree]
+  (.getD sp-tree))
+
+(defn get-idx
+  [sp-tree]
+  (.getIndex sp-tree))
+
+(defn get-num-children
+  [sp-tree]
+  (.getNumChildren sp-tree))
+
+(defn correct-structure?
+  "Verifies the structure of the tree (does bounds checking on each node)"
+  [sp-tree]
+  (.isCorrect sp-tree))
+
+(defn is-leaf?
+  [sp-tree]
+  (.isLeaf sp-tree))
+
+(defn set-cummulative-size!
+  [sp-tree size]
+  (doto sp-tree (.setCumSize size)))
+
+(defn set-num-children!
+  [sp-tree n]
+  (doto sp-tree (.setNumChildren n)))
+
+(defn sub-divide!
+  [sp-tree]
+  (doto sp-tree (.subDivide)))
