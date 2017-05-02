@@ -5,6 +5,17 @@
 
 ;; TODO
 ;; add doc-strings
+;; implement these classes
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/BaseInputSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/CollectionInputSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html
+
+;; basically classes that implement this interface:
+;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputSplit.html
 
 (defn new-filesplit
   "File input split. Splits up a root directory in to files."
