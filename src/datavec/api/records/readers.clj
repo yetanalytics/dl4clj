@@ -126,18 +126,24 @@
 
    args are:
    :skip-num-lines (int) number of lines to skip
-   :delimiter (str), the delimiter seperating values"
+   :delimiter (str), the delimiter seperating values
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVSequenceRecordReader.html"
   [& {:keys [skip-num-lines delimiter]
       :as opts}]
   (record-reader {:csv-seq-rr opts}))
 
 (defn new-file-record-reader
-  "File reader/writer, no args required"
+  "File reader/writer, no args required
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/FileRecordReader.html"
   []
   (record-reader {:file-rr {}}))
 
 (defn new-line-record-reader
-  "Reads files line by line, no args required"
+  "Reads files line by line, no args required
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/LineRecordReader.html"
   []
   (record-reader {:line-rr {}}))
 
@@ -145,7 +151,9 @@
   "Iterates through a list of strings return a record.
   Only accepts a list-string-input-split as input during initialization
 
-  no args needed to call the constructor"
+  no args needed to call the constructor
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/collection/ListStringRecordReader.html"
   []
   (record-reader {:list-string-rr {}}))
 
