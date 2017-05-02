@@ -12,7 +12,7 @@
   :url "https://github.com/engagor/dl4clj"
   :license {:name "BSD C2"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
-  :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha16"]
                  [org.deeplearning4j/deeplearning4j-core "0.8.0"]
                  [org.nd4j/nd4j-native-platform "0.8.0"]
                  [org.datavec/datavec-api "0.8.0"]
