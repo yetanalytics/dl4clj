@@ -11,7 +11,7 @@
   (.getIterationCount iteration-history))
 
 (defn get-iteration-info
-  [iteration-history iteration-idx]
+  [& {:keys [iteration-history iteration-idx]}]
   (.getIterationInfo iteration-history iteration-idx))
 
 (defn get-iteration-infos
@@ -28,5 +28,5 @@
   (.getMostRecentIterationInfo iteration-history))
 
 (defn set-iteration-infos!
-  [iteration-history iterations-infos]
+  [& {:keys [iteration-history iterations-infos]}]
   (doto iteration-history (.setIterationsInfos iterations-infos)))

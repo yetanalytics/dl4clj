@@ -16,12 +16,12 @@
         (QuadTree. boundary)))
 
 (defn compute-edge-forces!
-  [tree row-p col-p val-p n pos-f]
+  [& {:keys [tree row-p col-p val-p n pos-f]}]
   (doto tree (.computeEdgeForces row-p col-p val-p n pos-f)))
 
 (defn compute-non-edge-forces!
   "Compute non edge forces using barnes hut"
-  [tree point-idx theta negative-force sum-q]
+  [& {:keys [tree point-idx theta negative-force sum-q]}]
   (doto tree (.computeNonEdgeForces point-idx theta negative-force sum-q)))
 
 (defn get-depth
@@ -66,7 +66,7 @@
 
 (defn insert-at-idx
   ;; this returns a boolean???
-  [tree idx]
+  [& {:keys [tree idx]}]
   (.insert tree idx))
 
 (defn is-correct?
@@ -79,43 +79,43 @@
   (.isLeaf tree))
 
 (defn set-boundary!
-  [tree boundary]
+  [& {:keys [tree boundary]}]
   (doto tree (.setBoundary boundary)))
 
 (defn set-center-of-mass!
-  [tree center-of-mass]
+  [& {:keys [tree center-of-mass]}]
   (doto tree (.setCenterOfMass center-of-mass)))
 
 (defn set-cumulative-size!
-  [tree size]
+  [& {:keys [tree size]}]
   (doto tree (.setCumSize size)))
 
 (defn set-leaf!
-  [tree leaf?]
+  [& {:keys [tree leaf?]}]
   (doto tree (.setLeaf leaf?)))
 
 (defn set-north-east!
-  [tree other-tree]
+  [& {:keys [tree other-tree]}]
   (doto tree (.setNorthEast other-tree)))
 
 (defn set-north-west!
-  [tree other-tree]
+  [& {:keys [tree other-tree]}]
   (doto tree (.setNorthWest other-tree)))
 
 (defn set-parent!
-  [tree parent-tree]
+  [& {:keys [tree parent-tree]}]
   (doto tree (.setParent parent-tree)))
 
 (defn set-size!
-  [tree size]
+  [& {:keys [tree size]}]
   (doto tree (.setSize size)))
 
 (defn set-south-east!
-  [tree other-tree]
+  [& {:keys [tree other-tree]}]
   (doto tree (.setSouthEast other-tree)))
 
 (defn set-south-west!
-  [tree other-tree]
+  [& {:keys [tree other-tree]}]
   (doto tree (.setSouthWest other-tree)))
 
 (defn sub-divide!

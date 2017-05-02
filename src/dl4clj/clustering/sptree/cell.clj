@@ -7,7 +7,7 @@
   (Cell. dimension))
 
 (defn contains-point?
-  [cell point]
+  [& {:keys [cell point]}]
   (.contains cell point))
 
 (defn corner

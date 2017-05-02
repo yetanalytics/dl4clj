@@ -2,11 +2,11 @@
   (:import [org.deeplearning4j.clustering.sptree HeapItem]))
 
 (defn new-heap-item
-  [idx distance]
+  [& {:keys [idx distance]}]
   (HeapItem. idx distance))
 
 (defn compare-to
-  [item-1 item-2]
+  [& {:keys [item-1 item-2]}]
   (.compareTo item-1 item-2))
 
 (defn get-distance
@@ -18,9 +18,9 @@
   (.getIndex item))
 
 (defn set-distance!
-  [item distance]
+  [& {:keys [item distance]}]
   (doto item (.setDistance distance)))
 
 (defn set-idx!
-  [item idx]
+  [& {:keys [item idx]}]
   (doto item (.setIndex idx)))

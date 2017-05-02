@@ -21,7 +21,7 @@
     (assert false "you must supply a valid optimization-type")))
 
 (defn new-clustering-optimization
-  [optimization-type value]
+  [& {:keys [optimization-type value]}]
   (ClusteringOptimization. (value-of optimization-type)
                            value))
 
@@ -34,9 +34,9 @@
   (.getValue clustering-optimization))
 
 (defn set-type!
-  [clustering-optimization optimization-type]
+  [& {:keys [clustering-optimization optimization-type]}]
   (doto clustering-optimization (.setType (value-of optimization-type))))
 
 (defn set-value!
-  [clustering-optimization value]
+  [& {:keys [clustering-optimization value]}]
   (doto clustering-optimization (.setValue value)))

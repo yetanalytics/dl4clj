@@ -10,7 +10,7 @@
     (ClusterSet.)))
 
 (defn add-new-cluster-with-center
-  [cluster-set center-point]
+  [& {:keys [cluster-set center-point]}]
   (.addNewClusterWithCenter cluster-set center-point))
 
 (defn classify-point
@@ -36,15 +36,15 @@
   (.getAccumulation cluster-set))
 
 (defn get-cluster-center
-  [cluster-set cluster-id]
+  [& {:keys [cluster-set cluster-id]}]
   (.getClusterCenter cluster-set cluster-id))
 
 (defn get-cluster
-  [cluster-set cluster-id]
+  [& {:keys [cluster-set cluster-id]}]
   (.getCluster cluster-set cluster-id))
 
 (defn get-cluster-center-id
-  [cluster-set cluster-id]
+  [& {:keys [cluster-set cluster-id]}]
   (.getClusterCenterId cluster-set cluster-id))
 
 (defn get-cluster-count
@@ -56,15 +56,15 @@
   (.getClusters cluster-set))
 
 (defn get-distance
-  [cluster-set point-1 point-2]
+  [& {:keys [cluster-set point-1 point-2]}]
   (.getDistance cluster-set point-1 point-2))
 
 (defn get-distance-from-nearest-cluster
-  [cluster-set point]
+  [& {:keys [cluster-set point]}]
   (.getDistanceFromNearestCluster cluster-set point))
 
 (defn get-most-populated-clusters
-  [cluster-set n]
+  [& {:keys [cluster-set n]}]
   (.getMostPopulatedClusters cluster-set n))
 
 (defn get-point-distribution
@@ -72,7 +72,7 @@
   (.getPointDistribution cluster-set))
 
 (defn nerest-cluster-to-point
-  [cluster-set point]
+  [& {:keys [cluster-set point]}]
   (.nearestCluster cluster-set point))
 
 (defn remove-empty-clusters!
@@ -84,13 +84,13 @@
   (doto cluster-set (.removePoints)))
 
 (defn set-accumulation!
-  [cluster-set distance-fn]
+  [& {:keys [cluster-set distance-fn]}]
   (doto cluster-set (.setAccumulation distance-fn)))
 
 (defn set-clusters!
-  [cluster-set clusters]
+  [& {:keys [cluster-set clusters]}]
   (doto cluster-set (.setClusters clusters)))
 
 (defn set-point-distribution!
-  [cluster-set point-dists]
+  [& {:keys [cluster-set point-dists]}]
   (doto cluster-set (.setPointDistribution point-dists)))

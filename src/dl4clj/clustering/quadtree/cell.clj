@@ -2,11 +2,11 @@
   (:import [org.deeplearning4j.clustering.quadtree Cell]))
 
 (defn new-cell
-  [x y hw hh]
+  [& {:keys [x y hw hh]}]
   (Cell. x y hw hh))
 
 (defn contains-point?
-  [cell point]
+  [& {:keys [cell point]}]
   (.containsPoint cell point))
 
 (defn get-hh
@@ -26,17 +26,17 @@
   (.getY cell))
 
 (defn set-hh!
-  [cell hh]
+  [& {:keys [cell hh]}]
   (doto cell (.setHh hh)))
 
 (defn set-hw!
-  [cell hw]
+  [& {:keys [cell hw]}]
   (doto cell (.setHw hw)))
 
 (defn set-x!
-  [cell x]
+  [& {:keys [cell x]}]
   (doto cell (.setX x)))
 
 (defn set-y!
-  [cell y]
+  [& {:keys [cell y]}]
   (doto cell (.setY y)))

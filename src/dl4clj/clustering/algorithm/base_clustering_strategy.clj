@@ -3,15 +3,15 @@
   (:require [dl4clj.clustering.algorithm.clustering-strategy :refer :all]))
 
 (defn set-initial-cluster-count!
-  [cluster-strat cluster-count]
+  [& {:keys [cluster-strat cluster-count]}]
   (doto cluster-strat (.setInitialClusterCount cluster-count)))
 
 (defn set-distance-fn!
-  [clustering-strat distance-fn]
+  [& {:keys [clustering-strat distance-fn]}]
   (doto clustering-strat (.setDistanceFunction distance-fn)))
 
 (defn set-allow-empty-clusters!
-  [clustering-strat allow?]
+  [& {:keys [clustering-strat allow?]}]
   (doto clustering-strat (.setAllowEmptyClusters allow?)))
 
 (defn get-optimization-phase-condition

@@ -16,7 +16,7 @@
         (DataPoint. idx point)))
 
 (defn get-euclidean-distance
-  [point-1 point-2]
+  [& {:keys [point-1 point-2]}]
   (.distance point-1 point-2))
 
 (defn get-d
@@ -32,13 +32,13 @@
   (.getPoint data-point))
 
 (defn set-d!
-  [data-point d]
+  [& {:keys [data-point d]}]
   (doto data-point (.setD d)))
 
 (defn set-idx!
-  [data-point idx]
+  [& {:keys [data-point idx]}]
   (doto data-point (.setIndex idx)))
 
 (defn set-point!
-  [data-point point]
+  [& {:keys [data-point point]}]
   (doto data-point (.setPoint point)))

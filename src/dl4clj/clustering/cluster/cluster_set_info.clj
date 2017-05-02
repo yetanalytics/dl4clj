@@ -9,7 +9,7 @@
     (ClusterSetInfo.)))
 
 (defn add-cluster-info
-  [info cluster-id]
+  [& {:keys [info cluster-id]}]
   (.addClusterInfo info cluster-id))
 
 (defn get-avg-point-distance-from-cluster-center
@@ -17,7 +17,7 @@
   (.getAveragePointDistanceFromClusterCenter cluster-set-info))
 
 (defn get-cluster-info
-  [cluster-set-info cluster-id]
+  [& {:keys [cluster-set-info cluster-id]}]
   (.getClusterInfo cluster-set-info cluster-id))
 
 (defn get-clusters-info
@@ -41,23 +41,23 @@
   (.getPointsCount cluster-set-info))
 
 (defn initialize
-  [cluster-set thread-safe?]
+  [& {:keys [cluster-set thread-safe?]}]
   (.initialize cluster-set thread-safe?))
 
 (defn remove-cluster-infos!
-  [cluster-set-info clusters]
+  [& {:keys [cluster-set-info clusters]}]
   ;; check which obj should be in the doto with testing
   (doto cluster-set-info (.removeClusterInfos clusters)))
 
 (defn set-clusters-info!
-  [cluster-set-info clusters-infos]
+  [& {:keys [cluster-set-info clusters-infos]}]
   (doto cluster-set-info (.setClustersInfos clusters-infos)))
 
 (defn set-distance-between-clusters-centers!
-  [cluster-set-info inter-cluster-distances]
+  [& {:keys [cluster-set-info inter-cluster-distances]}]
   (doto cluster-set-info (.setDistancesBetweenClustersCenters cluster-set-info
                                                               inter-cluster-distances)))
 
 (defn set-point-location-change!
-  [cluster-set-info point-location-change]
+  [& {:keys [cluster-set-info point-location-change]}]
   (doto cluster-set-info (.setPointLocationChange point-location-change)))

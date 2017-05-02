@@ -22,13 +22,13 @@
   (.isStrategyApplied cluster-set))
 
 (defn set-cluster-set-info!
-  [cluster-set cluster-set-info]
+  [& {:keys [cluster-set cluster-set-info]}]
   (doto cluster-set (.setClusterSetInfo cluster-set-info)))
 
 (defn set-index!
-  [cluster-set idx]
+  [& {:keys [cluster-set idx]}]
   (doto cluster-set (.setIndex idx)))
 
 (defn set-strategy-applied!
-  [cluster-set optimization-applied?]
+  [& {:keys [cluster-set optimization-applied?]}]
   (doto cluster-set (.setStrategyApplied optimization-applied?)))

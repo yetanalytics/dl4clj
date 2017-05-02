@@ -19,12 +19,12 @@
 
 (defn compute-edge-forces!
   "Compute edge forces using barns hut"
-  [sp-tree row-p col-p val-p n pos-f]
+  [& {:keys [sp-tree row-p col-p val-p n pos-f]}]
   (doto sp-tree (.computeEdgeForces row-p col-p val-p n pos-f)))
 
 (defn compute-non-edge-forces!
   "Compute non edge forces using barnes hut"
-  [sp-tree point-idx theta negative-force sum-q]
+  [& {:keys [sp-tree point-idx theta negative-force sum-q]}]
   (doto sp-tree (.computeNonEdgeForces point-idx theta negative-force sum-q)))
 
 (defn depth
@@ -70,11 +70,11 @@
   (.isLeaf sp-tree))
 
 (defn set-cummulative-size!
-  [sp-tree size]
+  [& {:keys [sp-tree size]}]
   (doto sp-tree (.setCumSize size)))
 
 (defn set-num-children!
-  [sp-tree n]
+  [& {:keys [sp-tree n]}]
   (doto sp-tree (.setNumChildren n)))
 
 (defn sub-divide!

@@ -5,7 +5,7 @@
 ;; apply type-checking to the fns here
 (defn apply-to
   "applies a clustering algorithm to a collection of points"
-  [cluster-algo points]
+  [& {:keys [cluster-algo points]}]
   (.applyTo cluster-algo points))
 
 (defn set-up

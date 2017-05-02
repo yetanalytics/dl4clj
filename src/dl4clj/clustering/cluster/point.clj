@@ -29,15 +29,15 @@
   (.getLabel point))
 
 (defn set-data!
-  [point data]
+  [& {:keys [point data]}]
   (doto point (.setArray data)))
 
 (defn set-id!
-  [point id]
+  [& {:keys [point id]}]
   (doto point (.setId id)))
 
 (defn set-label!
-  [point label]
+  [& {:keys [point label]}]
   (doto point (.setLabel label)))
 
 (defn to-points

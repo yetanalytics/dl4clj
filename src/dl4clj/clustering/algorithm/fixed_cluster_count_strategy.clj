@@ -4,5 +4,5 @@
             [dl4clj.clustering.algorithm.clustering-strategy :refer :all]))
 
 (defn set-up
-  [cluster-count distance-fn]
+  [& {:keys [cluster-count distance-fn]}]
   (.setup cluster-count distance-fn))

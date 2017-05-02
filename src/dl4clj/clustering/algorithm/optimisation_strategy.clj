@@ -8,11 +8,11 @@
   (.getClusteringOptimizationValue clustering-optim))
 
 (defn clustering-optimization-type?
-  [clustering-optim optim-type]
-  (.isClusteringOptimizationType clustering-optim optim-type))
+  [& {:keys [clustering-optim optim-type]}]
+   (.isClusteringOptimizationType clustering-optim optim-type))
 
 (defn is-optimization-applicable-now?
-  [clustering-optim iteration-history]
+  [& {:keys [clustering-optim iteration-history]}]
   (.isOptimizationApplicableNow clustering-optim iteration-history))
 
 (defn is-optimization-defined?
@@ -20,17 +20,17 @@
   (.isOptimizationDefined clustering-optim))
 
 (defn optimize
-  [clustering-optim optim-type value]
+  [& {:keys [clustering-optim optim-type value]}]
   (.optimize clustering-optim optim-type value))
 
 (defn optimize-when-iteration-count-multiple-of
-  [clustering-optim multiple]
+  [& {:keys [clustering-optim multiple]}]
   (.optimizeWhenIterationCountMultipleOf clustering-optim multiple))
 
 (defn optimize-when-point-dist-variation-rate-less-than
-  [clustering-optim rate]
+  [& {:keys [clustering-optim rate]}]
   (.optimizeWhenPointDistributionVariationRateLessThan clustering-optim rate))
 
 (defn setup
-  [initial-cluster-count distance-fn]
+  [& {:keys [initial-cluster-count distance-fn]}]
   (.setup initial-cluster-count distance-fn))

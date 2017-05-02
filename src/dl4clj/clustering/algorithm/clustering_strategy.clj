@@ -4,11 +4,11 @@
             ClusteringStrategyType]))
 
 (defn end-when-dist-variation-rate-less-than
-  [clustering-strategy rate]
+  [& {:keys [clustering-strategy rate]}]
   (.endWhenDistributionVariationRateLessThan clustering-strategy rate))
 
 (defn end-when-iteration-count-equals
-  [clustering-strategy max-iterations]
+  [& {:keys [clustering-strategy max-iterations]}]
   (.endWhenIterationCountEquals clustering-strategy max-iterations))
 
 (defn get-distance-fn
@@ -32,7 +32,7 @@
   (.isAllowEmptyClusters clustering-strategy))
 
 (defn optimization-applicable-now?
-  [clustering-strategy iteration-history]
+  [& {:keys [clustering-strategy iteration-history]}]
   (.isOptimizationApplicableNow clustering-strategy iteration-history))
 
 (defn optimization-defined?
@@ -40,7 +40,7 @@
   (.isOptimizationDefined clustering-strategy))
 
 (defn strategy-of-this-type?
-  [clustering-strategy strategy-type]
+  [& {:keys [clustering-strategy strategy-type]}]
   (.isStrategyOfType clustering-strategy strategy-type))
 
 (defn value-of

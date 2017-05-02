@@ -7,7 +7,7 @@
   [& {:keys [n-clusters distance-fn min-distribution-variation-rate
              allow-empty-clusters? max-iterations]
       :as opts}]
-  (assert (contains-many? opts :n-clusters :distance-fn))
+  (assert (contains-many? opts :n-clusters :distance-fn) "you must supply the number of clusters and a distance function")
   (if (contains? opts :max-iteration-count)
     (.setup n-clusters max-iterations distance-fn)
     (.setup n-clusters min-distribution-variation-rate

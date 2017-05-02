@@ -20,7 +20,7 @@
   (.getCenter cluster))
 
 (defn get-distance-to-center
-  [cluster point]
+  [& {:keys [cluster point]}]
   (.getDistanceToCenter cluster point))
 
 (defn get-id
@@ -32,7 +32,7 @@
   (.getLabel cluster))
 
 (defn get-point
-  [cluster point-id]
+  [& {:keys [cluster point-id]}]
   (.getPoint cluster point-id))
 
 (defn get-points
@@ -44,25 +44,25 @@
   (.isEmpty cluster))
 
 (defn remove-point!
-  [cluster point-id]
-  (.removePoint cluster point-id))
+  [& {:keys [cluster point-id]}]
+  (doto cluster (.removePoint point-id)))
 
 (defn remove-points!
   [cluster]
   (doto cluster (.removePoints)))
 
 (defn set-center!
-  [cluster point]
+  [& {:keys [cluster point]}]
   (doto cluster (.setCenter point)))
 
 (defn set-id!
-  [cluster id]
+  [& {:keys [cluster id]}]
   (doto cluster (.setId id)))
 
 (defn set-label!
-  [cluster label]
+  [& {:keys [cluster label]}]
   (doto cluster (.setLabel label)))
 
 (defn set-points!
-  [cluster points]
+  [& {:keys [cluster points]}]
   (doto cluster (.setPoints points)))
