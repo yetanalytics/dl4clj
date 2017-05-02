@@ -28,6 +28,7 @@
   (doto sp-tree (.computeNonEdgeForces point-idx theta negative-force sum-q)))
 
 (defn depth
+  "The depth of the node"
   [sp-tree]
   (.depth sp-tree))
 

@@ -87,7 +87,6 @@
   (doto tree (.setCenterOfMass center-of-mass)))
 
 (defn set-cumulative-size!
-  ;; again need to find a new name...
   [tree size]
   (doto tree (.setCumSize size)))
 
