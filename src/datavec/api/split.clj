@@ -1,22 +1,16 @@
 (ns datavec.api.split
   (:import [org.datavec.api.split FileSplit BaseInputSplit CollectionInputSplit
-            InputStreamInputSplit])
+            InputStreamInputSplit ListStringSplit NumberedFileInputSplit
+            StringSplit TransformSplit TransformSplit$URITransform]
+           [org.datavec.api.io.filters BalancedPathFilter RandomPathFilter]
+           [org.datavec.api.io.labels PathLabelGenerator ParentPathLabelGenerator
+            PatternPathLabelGenerator])
   (:require [clojure.java.io :as io]
             [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
-;; TODO
-;; add doc-strings
-;; implement these classes
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/BaseInputSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/CollectionInputSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html
-
-;; basically classes that implement this interface:
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputSplit.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input split multimethod
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn split-type
   "dispatch fn for input-split"
@@ -50,10 +44,6 @@
     (CollectionInputSplit. coll-of-uris)))
 
 (defmethod input-split :input-stream-input-split [opts]
-  ;; file-path can be a file, a string, or a uri
-  ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html
-  ;; "Input stream input split. The normal pattern is reading the whole input stream and turning that in to a record. This is meant for streaming raw data rather than normal mini batch pre processing."
-  ;; Instantiate with the given file as a uri
   (let [config (:input-stream-input-split opts)
         {is :in-stream
          path :file-path} config]
@@ -61,21 +51,203 @@
       (InputStreamInputSplit. is path)
       (InputStreamInputSplit. is))))
 
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html
+(defmethod input-split :list-string-split [opts]
+  (let [config (:list-string-split opts)
+        d (:data config)]
+    (ListStringSplit. d)))
 
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html
+(defmethod input-split :numbered-file-input-split [opts]
+  (let [config (:numbered-file-input-split opts)
+        {base-str :base-string
+         min-idx :inclusive-min-idx
+         max-idx :inclusive-max-idx} config]
+    (NumberedFileInputSplit. base-str min-idx max-idx)))
 
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html
+(defmethod input-split :string-split [opts]
+  (let [config (:string-split opts)
+        d (:data config)]
+    (StringSplit. d)))
 
-;; https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html
+(defmethod input-split :transform-split [opts]
+  (let [config (:transform-split opts)
+        {src-split :source-split
+         t :transform
+         u :uri} config]
+    (TransformSplit. src-split (.apply t u))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; label generators
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn new-parent-path-label-generator
+  "Returns as label the base name of the parent file of the path (the directory).
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/ParentPathLabelGenerator.html"
+  []
+  (ParentPathLabelGenerator.))
+
+(defn new-pattern-path-label-generator
+  "Returns a label derived from the base name of the path.
+  Splits the base name of the path with the given regex pattern,
+  and returns the patternPosition'th element of the array.
+
+  :pattern (str), a string regex
+  :pattern-position (int), where to expect the patern within the file-path
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/PatternPathLabelGenerator.html"
+  [& {:keys [pattern pattern-position]
+      :as opts}]
+  (assert (contains? opts :pattern) "you must supply a regex patern to use this label generator")
+  (if (contains? opts :pattern-position)
+    (PatternPathLabelGenerator. pattern pattern-position)
+    (PatternPathLabelGenerator. pattern)))
+
+(defn get-label-for-path
+  "used to infer the label of a file directly from the path of a file
+
+  :label-generator (label-generator), call either new-parent-path-label-generator or
+   new-pattern-path-label-generator
+  :path (string or uri), the file path
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/PathLabelGenerator.html"
+  [& {:keys [label-generator path]}]
+  (.getLabelForPath label-generator path))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; path-filter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn new-balanced-path-filter
+  "Randomizes the order of paths in an array and removes paths randomly to
+  have the same number of paths for each label. Further interlaces the paths
+  on output based on their labels, to obtain easily optimal batches for training.
+
+  :rng (java.util.Random), a randomly generated number
+  :extensions (array of strings), files to keep
+  :label-generator (label-generator), call either new-parent-path-label-generator
+   or new-pattern-path-label-generator
+  :max-paths (int), max number of paths to return (0 = unlimited)
+  :max-labels (int), max number of labels to return (0 = unlimited)
+  :min-paths-per-label (int), min number of paths per labels to return
+  :max-paths-per-label (int), max number of paths per labels to return
+   - (0 = unlimited)
+  :labels (collection of strings), file-paths you want to keep
+   - empty collection = keep all paths
+
+   If min-paths-per-label > 0, it might return an unbalanced set if the value is
+  larger than the number of examples available for the label with the minimum amount.
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/BalancedPathFilter.html"
+  [& {:keys [rng extensions label-generator max-paths max-labels
+             min-paths-per-label max-paths-per-label labels]
+      :or {extensions nil
+           max-paths 0
+           max-labels 0
+           min-paths-per-label 0
+           max-paths-per-label 0}}]
+  (BalancedPathFilter. rng extensions label-generator max-paths max-labels
+                       min-paths-per-label max-paths-per-label labels))
+
+(defn new-random-path-filter
+  "Randomizes the order of paths in an array.
+
+  :rng (java.util.Random), a randomly generated number
+  :extensions (collection of strings), files to keep
+  :max-paths (int), max number of paths to return
+    - 0 = unlimited
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/RandomPathFilter.html"
+  [& {:keys [rng extensions max-paths]
+      :or {max-paths 0}}]
+  (RandomPathFilter. rng extensions max-paths))
+
+(defn filter-paths
+  ":path-filter (map), config opts for either balanced-path-filter or random-path-filter
+  :paths (array of URIs), uri paths to be filtered"
+  [& {:keys [path-filter paths]}]
+  (.filter path-filter paths))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input split user facing fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-filesplit
   "File input split. Splits up a root directory in to files.
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/FileSplit.html"
-  [{:keys [root-dir rng-seed allow-format recursive?]
+  [& {:keys [root-dir rng-seed allow-format recursive?]
       :as opts}]
   (input-split {:file-split opts}))
+
+(defn new-input-stream-input-split
+  "Input stream input split.
+  The normal pattern is reading the whole input stream and turning that in to a record.
+  This is meant for streaming raw data rather than normal mini batch pre processing.
+
+  :file-path can be a file, a string, or a uri
+  :in-stream, is the input stream
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html"
+  [& {:keys [in-stream file-path]
+      :as opts}]
+  (input-split {:input-stream-input-split opts}))
+
+(defn new-list-string-split
+  "An input split that already has delimited data of some kind.
+
+  :data should be a list of lists of strings
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html"
+  [& {:keys [data]
+      :as opts}]
+  (input-split {:list-string-split opts}))
+
+(defn new-numbered-file-input-split
+  "InputSplit for sequences of numbered files.
+
+  ex. Suppose files are sequenced according to my_file_100.txt, my_file_101.txt,
+      ..., my_file_200.txt  then use new-numbered-file-input-split as such:
+      (new-numbered-file-input-split
+       {:base-string my_file_%d.txt :inclusive-min-idx 100 :inclusive-max-idx 200})
+
+  :base-string (str) regex for file names
+  :inclusive-min-idx (int) starting index of files
+  :inclusive-max-idx (int) end index of ffiles
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html"
+  [& {:keys [base-string inclusive-min-idx inclusive-max-idx]
+      :as opts}]
+  (input-split {:numbered-file-input-split opts}))
+
+(defn new-string-split
+  "String split used for single line inputs
+
+  :data (str), a string to be used as data
+
+   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html"
+  [& {:keys [data]
+      :as opts}]
+  (input-split {:string-split opts}))
+
+(defn new-transform-split
+  "input-split implementation that maps the URIs of a given BaseInputSplit to new URIs.
+  Useful when features and labels are in different files sharing a common naming scheme,
+  and the name of the output file can be determined given the name of the input file.
+   -Apply a given transformation to the raw URI objects
+
+  :source-split (map), some form of input-split, ie. new-string-split, new-file-split ... (I believe)
+   - java docs say base-input-split but its constructor is funky
+  :transform (not sure), transform to apply to the uri, not sure of its type/form, will need testing
+  :uri (java.net.URI), the uri to perform the transform on
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html"
+  [& {:keys [source-split transform]
+      :as opts}]
+  (input-split {:transform-split opts}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input split api fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-root-dir
   [split]
@@ -119,7 +291,7 @@
 
 (defn read-fields!
   "Deserialize the fields of this object from in."
-  [split in]
+  [& {:keys [split in]}]
   (doto split (.readFields in)))
 
 (defn reset!
@@ -129,7 +301,7 @@
 
 (defn write!
   "Serialize the fields of this object to out."
-  [split out-put-path]
+  [& {:keys [split out-put-path]}]
   (doto split (.write out-put-path)))
 
 (defn sample
@@ -138,10 +310,9 @@
   with sizes proportional to the weights.
 
   args are:
-  :path-filter (map) to modify the locations in some way (null == as is)
+  :path-filter (path-filter), call either new-balanced-path-filter or new-random-path-filter
+   -to modify the locations (file paths) in some way (null == as is)
   :weights (double array) to split the locations into multiple InputSplit"
-  ;; write multimethods for the path-filter config map
-  ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/PathFilter.html
   [& {:keys [split path-filter weights-array]}]
   (.sample split path-filter weights-array))
 
