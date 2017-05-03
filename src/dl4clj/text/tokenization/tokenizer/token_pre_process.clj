@@ -1,6 +1,6 @@
-#_(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/tokenization/tokenizer/TokenPreProcess.html"}
+(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/tokenization/tokenizer/TokenPreProcess.html"}
   dl4clj.text.tokenization.tokenizer.token-pre-process
-  (:import [org.deeplearning4j.text.tokenization.tokenizer TokenPreProcess]))
+  #_(:import [org.deeplearning4j.text.tokenization.tokenizer TokenPreProcess]))
 
 #_(defn pre-process
   "Pre process a token"

@@ -1,6 +1,6 @@
-#_(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelsSource.html"}
+(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelsSource.html"}
   dl4clj.text.documentiterator.labels-source
-  (:import [org.deeplearning4j.text.documentiterator LabelsSource]))
+  #_(:import [org.deeplearning4j.text.documentiterator LabelsSource]))
 
 #_(defn labels-source
   "Build LabelsSource, optionally using externally defined list of string labels."

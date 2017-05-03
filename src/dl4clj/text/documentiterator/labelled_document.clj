@@ -1,6 +1,6 @@
-#_(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelledDocument.html"}
+(ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/text/documentiterator/LabelledDocument.html"}
   dl4clj.text.documentiterator.labelled-document
-  (:import [org.deeplearning4j.text.documentiterator LabelledDocument]))
+  #_(:import [org.deeplearning4j.text.documentiterator LabelledDocument]))
 
 #_(defn set-content [^LabelledDocument d content]
   (.setContent d content))

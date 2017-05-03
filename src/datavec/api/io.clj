@@ -6,6 +6,7 @@
 ;;https://deeplearning4j.org/datavecdoc/org/datavec/api/io/WritableConverter.html
 ;; users should never have to directly create these ^
 ;; if I am wrong, come back and implement
+;; I do need these for dl4clj.datasets.datavec.clj
 
 (defn new-data-input-buffer
   "A reusable DataInput implementation that reads from an in-memory buffer.

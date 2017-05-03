@@ -10,7 +10,7 @@
 (defn default-step-function []
   (DefaultStepFunction.))
 
-(defn step
+#_(defn step
   ([sf]
    (.step sf))
   ([sf x line]

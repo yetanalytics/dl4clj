@@ -1,9 +1,9 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/plot/BarnesHutTsne.html"}
   dl4clj.plot.barnes-hut-tsne
-  (:import [org.deeplearning4j.plot BarnesHutTsne BarnesHutTsne$Builder]
+  #_(:import [org.deeplearning4j.plot BarnesHutTsne BarnesHutTsne$Builder]
            [org.nd4j.linalg.api.ndarray INDArray]))
 
-(defn builder [{:keys [invert-distance-metric        ;; (boolean)
+#_(defn builder [{:keys [invert-distance-metric        ;; (boolean)
                        learning-rate                 ;; (double)
                        min-gain                      ;; (double)
                        normalize                     ;; (boolean)
@@ -62,7 +62,7 @@
 
 
 ;; broken
-(defn barnes-hut-tsne
+#_(defn barnes-hut-tsne
   ([opts]
    (.build ^BarnesHutTsne$Builder (builder opts)))
   ([^INDArray x

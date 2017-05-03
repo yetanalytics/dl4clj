@@ -7,6 +7,7 @@
 ;; TODO
 ;; double check these fns are up to date
 
+
 (defn batch
   "Batch size"
   [^DataSetIterator this]
