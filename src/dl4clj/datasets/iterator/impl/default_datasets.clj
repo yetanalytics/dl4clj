@@ -1,4 +1,4 @@
-(ns dl4clj.datasets.iterator.impl.default-datasets.clj
+(ns dl4clj.datasets.iterator.impl.default-datasets
   (:import [org.deeplearning4j.datasets.iterator.impl
             CifarDataSetIterator IrisDataSetIterator LFWDataSetIterator
             MnistDataSetIterator RawMnistDataSetIterator])
@@ -192,3 +192,10 @@
 (defn train!
   [iter]
   (doto iter (.train)))
+
+(defn set-pre-processor
+  "sets a preprocessor for a dataset iterator.
+
+  assumes that the pre-processor is selected/configured and then passed here"
+  [& {:keys [iter pre-processor]}]
+  (doto iter (.setPreProcessor pre-processor)))
