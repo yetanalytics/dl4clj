@@ -48,45 +48,45 @@
       (cond (contains-many? config :batch-size :label-idx-from :label-idx-to
                             :n-possible-labels :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
-             (record-reader rr)
+             rr
              converter ;; write mmethod for making these
              batch-size l-idx-from l-idx-to n-labels
              max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels
                             :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
-             (record-reader rr)
+             rr
              converter ;; write mmethod for making these
              batch-size label-idx n-labels max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels :regression?)
             (RecordReaderDataSetIterator.
-             (record-reader rr)
+             rr
              converter ;; write mmethod for making these
              batch-size label-idx n-labels regression?)
             (contains-many? :batch-size :label-idx :n-possible-labels)
             (RecordReaderDataSetIterator.
-             (record-reader rr)
+             rr
              converter ;; write mmethod for making these
              batch-size label-idx n-labels)
             (contains? config :batch-size)
             (RecordReaderDataSetIterator.
-             (record-reader rr)
+             rr
              converter ;; write mmethod for making these
              batch-size)
             :else
             (assert false "you must provide a record reader, writeable converter and a batch size"))
       (cond (contains-many? config :batch-size :label-idx :n-possible-labels :max-num-batches)
             (RecordReaderDataSetIterator.
-             (record-reader rr) batch-size label-idx n-labels max-n-batches)
+             rr batch-size label-idx n-labels max-n-batches)
             (contains-many? config :batch-size :label-idx-from :label-idx-to :regression?)
             (RecordReaderDataSetIterator.
-             (record-reader rr) batch-size l-idx-from l-idx-to regression?)
-            (contains-many? :batch-size :label-idx :n-possible-labels)
+             rr batch-size l-idx-from l-idx-to regression?)
+            (contains-many? config :batch-size :label-idx :n-possible-labels)
             (RecordReaderDataSetIterator.
-             (record-reader rr) batch-size label-idx n-labels)
-            (contains? config batch-size)
+             rr batch-size label-idx n-labels)
+            (contains? config :batch-size)
             (RecordReaderDataSetIterator.
-             (record-reader rr) batch-size)
+            rr batch-size)
             :else
             (assert false "you must supply a record reader and a batch size")))))
 
@@ -108,16 +108,16 @@
       (cond (contains-many? config :mini-batch-size :n-possible-labels
                             :regression? :alignment-mode)
             (SequenceRecordReaderDataSetIterator.
-             (record-reader features-reader) (record-reader labels-reader)
+             features-reader labels-reader
              m-batch-size n-labels regression?
              (value-of {:seq-alignment-mode alignment}))
             (contains-many? config :mini-batch-size :n-possible-labels :regression?)
             (SequenceRecordReaderDataSetIterator.
-             (record-reader features-reader) (record-reader labels-reader)
+             features-reader labels-reader
              m-batch-size n-labels regression?)
             (contains-many? config :mini-batch-size :n-possible-labels)
             (SequenceRecordReaderDataSetIterator.
-             (record-reader features-reader) (record-reader labels-reader)
+             features-reader labels-reader
              m-batch-size n-labels)
             :else
             (assert false "if youre supplying seperate labels and features readers,
@@ -125,10 +125,10 @@ you must supply atleast a batch size and the number of possible labels"))
       (cond (contains-many? :mini-batch-size :n-possible-labels :label-idx
                             :regression?)
             (SequenceRecordReaderDataSetIterator.
-             (record-reader rr) m-batch-size n-labels label-idx regression?)
+             rr m-batch-size n-labels label-idx regression?)
             (contains-many? :mini-batch-size :n-possible-labels :label-idx)
             (SequenceRecordReaderDataSetIterator.
-             (record-reader rr) m-batch-size n-labels label-idx)
+             rr m-batch-size n-labels label-idx)
             :else
             (assert false "if you're supplying a single record reader for the features and the labels,
 you need to suply atleast the mini batch size, number of possible labels and the column index of the labels")))))
@@ -180,10 +180,10 @@ you need to suply atleast the mini batch size, number of possible labels and the
                                       hot-output-n-classes))
             (and (contains? config :add-reader)
                  (contains-many? add-reader :reader-name :record-reader))
-            (doto b (.addReader record-reader-name (record-reader rr)))
+            (doto b (.addReader record-reader-name rr))
             (and (contains? config :add-seq-reader)
                  (contains-many? add-seq-reader :reader-name :record-reader))
-            (doto b (.addSequenceReader seq-reader-name (record-reader seq-rr)))
+            (doto b (.addSequenceReader seq-reader-name seq-rr))
             (contains? config :alignment-mode)
             (doto b (.sequenceAlignmentMode (value-of {:multi-alignment-mode alignment}))))))))
 
@@ -196,7 +196,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   "creates a new record reader dataset iterator by calling its constructor
   with the supplied args.  args are:
 
-  :record-reader (map) a record reader config, see datavec.api.records.readers for options
+  :record-reader (record-reader) a record reader, see datavec.api.records.readers
   :batch-size (int) the batch size
   :label-idx (int) the index of the labels in a dataset
   :n-possible-labels (int) the number of possible labels
@@ -218,13 +218,13 @@ you need to suply atleast the mini batch size, number of possible labels and the
   "creates a new sequence record reader dataset iterator by calling its constructor
   with the supplied args.  args are:
 
-  :record-reader (map) a record reader config, see datavec.api.records.readers for options
+  :record-reader (record-reader) a record reader, see datavec.api.records.readers
   :mini-batch-size (int) the mini batch size
   :n-possible-labels (int) the number of possible labels
   :label-idx (int) the index of the labels in a dataset
   :regression? (boolean) are we dealing with a regression or classification problem
-  :labels-reader (map) a record reader config, see datavec.api.records.readers for options
-  :features-reader (map) a record reader config, see datavec.api.records.readers for options
+  :labels-reader (record-reader) a record reader specificaly for labels, see datavec.api.records.readers
+  :features-reader (record-reader) a record reader specificaly for features, see datavec.api.records.readers
   :alignment-mode (keyword), one of :equal-length, :align-start, :align-end
    -see https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.AlignmentMode.html
 
@@ -242,9 +242,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
   :alignment-mode (keyword),  one of :equal-length, :align-start, :align-end
    -see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.AlignmentMode.html
   :batch-size (int), size of the batchs the iterator uses for a single run
-  :add-seq-reader (map), a configuration map for a sequence record reader
+  :add-seq-reader (record-reader), a sequence record reader
    -see: datavec.api.records.readers
-  :add-reader (map), a configuration map for a record reader
+  :add-reader (record-reader), a record reader
    -see: datavec.api.records.readers
   :add-output-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}
   :add-input-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}

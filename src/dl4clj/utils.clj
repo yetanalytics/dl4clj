@@ -4,6 +4,10 @@
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
 
+(defn generic-dispatching-fn
+  [opts]
+  (first (keys opts)))
+
 (defn camelize
   "Turn a symbol or keyword or string to a camel-case verion, e.g. (camelize :foo-bar) => :FooBar"
   [x & capitalize?]

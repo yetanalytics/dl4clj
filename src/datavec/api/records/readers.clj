@@ -19,8 +19,7 @@
            [org.datavec.api.records.reader.impl.csv CSVSequenceRecordReader]
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader])
-  (:require [dl4clj.utils :refer [contains-many?]]
-            [datavec.api.split :refer [new-filesplit]]))
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 ;; TODO
 ;; implement other readers
@@ -196,7 +195,8 @@
   ;; refactor once datavec.api.split is refactored (:input-split)
   "will need to be updated when other rr's are implemented
 
-  :input-split (map) the split that defines the range of records to read
+  :input-split (input split) the split that defines the range of records to read
+   -see datavec.api.split
   :conf (map) a configuration for initialization
 
   this is how data actually gets into the record reader"

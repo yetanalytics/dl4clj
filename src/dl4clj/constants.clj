@@ -15,7 +15,9 @@
            [org.nd4j.linalg.convolution Convolution$Type]
            [org.deeplearning4j.datasets.datavec RecordReaderMultiDataSetIterator$AlignmentMode
             SequenceRecordReaderDataSetIterator$AlignmentMode]
-           [org.deeplearning4j.datasets.rearrange LocalUnstructuredDataFormatter$LabelingType]))
+           [org.deeplearning4j.datasets.rearrange LocalUnstructuredDataFormatter$LabelingType]
+           [org.deeplearning4j.earlystopping EarlyStoppingResult$TerminationReason]
+           [java.util.concurrent TimeUnit]))
 
 ;; not used anywhere yet
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/MaskState.html
@@ -121,6 +123,20 @@
 (defmethod value-of :labeling-type [opts]
   (constants #(LocalUnstructuredDataFormatter$LabelingType/valueOf %)
              (:labeling-type opts)))
+
+(defmethod value-of :termination-condition [opts]
+  (constants #(EarlyStoppingResult$TerminationReason/valueOf %)
+             (:termination-condition opts)
+             :camel? true))
+
+(defmethod value-of :time-unit [opts]
+  (constants #(TimeUnit/valueOf %)
+             (:time-unit opts)))
+
+
+
+
+
 
 
 (comment
