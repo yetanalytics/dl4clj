@@ -144,42 +144,35 @@
           :else
           (assert false "you must atleast provide a dataset iterator"))))
 
-;; refactor to take something like this
-#_{:combined-pre-processor {:idx 0 :pre-processor pre-processor-1}}
 (defmethod iterators :combined-pre-processor [opts]
   (let [config (:combined-pre-processor opts)
         {pre-processor :pre-processor
          idx :idx
          b :builder} config]
-    (assert (contains-many? config :pre-processor :builder)
-            "you must supply a dataset pre-processor and a builder")
-    (if (contains? config :idx)
-      (doto b (.addPreProcessor idx pre-processor))
-      (doto b (.addPreProcessor pre-processor)))))
+    (doto b (.addPreProcessor idx pre-processor))))
 
 (defn new-combined-pre-processor
   ;; going to need to test this
   "This is special preProcessor, that allows to combine multiple prerpocessors,
   and apply them to data sequentially.
 
-  :pre-processors (ordered list of pre-processor), preprocessors to use on a dataset
-   - the builder has the pre-processors added to it in the order they were supplied to this fn
+  :pre-processors {map}, preprocessors to use on a dataset
+  {{:idx (int) :pre-processor (pre-processor)}
+   {:idx (int) :pre-processor (pre-processor)}}
+   - the builder has the pre-processors added to it in the order specified by the idx key
    - once all preprocessors have been added, it builds the builder and returns the result
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
   [& {:keys [pre-processors]}]
-  (let [n-pps (count pre-processors)]
-    (loop [b (CombinedPreProcessor$Builder.)
-           counter 0]
-      (cond (not= n-pps counter)
-            (recur (iterators {:combined-pre-processor {:builder b
-                                                        :idx counter
-                                                        :pre-processor (nth
-                                                                        pre-processors
-                                                                        counter)}})
-                   (inc counter))
-            (= counter n-pps)
-            (.build b)))))
+  (let [b (CombinedPreProcessor$Builder.)]
+    (.build
+     (for [each pre-processors
+          pp each
+          :let [{pre-processor :pre-processor
+                 idx :idx} pp]]
+      (iterators {:combined-pre-processor {:idx idx
+                                           :pre-processor pre-processor
+                                           :builder b}})))))
 
 (defn new-async-dataset-iterator
   "AsyncDataSetIterator takes an existing DataSetIterator and loads one or more
