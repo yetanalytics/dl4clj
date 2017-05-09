@@ -12,12 +12,24 @@
 
 
 ;; TODO
+
+;; add prediction ns
+;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/meta/Prediction.html
+
+;; add eval tools ns
+;; https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTools.html
+
 ;; implement binary evaluators
+;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/EvaluationBinary.html
+
+;; make a seperate ns for the ROC evaluators
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROCMultiClass.html
-;; turn positional args into keyword args
+;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/package-summary.html
 
 (defn new-evaluator
+
+  ;; refactor
   "creates an evaluation object for evaling a trained network.
 
   args:
