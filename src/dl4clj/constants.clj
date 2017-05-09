@@ -14,7 +14,8 @@
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
            [org.nd4j.linalg.convolution Convolution$Type]
            [org.deeplearning4j.datasets.datavec RecordReaderMultiDataSetIterator$AlignmentMode
-            SequenceRecordReaderDataSetIterator$AlignmentMode]))
+            SequenceRecordReaderDataSetIterator$AlignmentMode]
+           [org.deeplearning4j.datasets.rearrange LocalUnstructuredDataFormatter$LabelingType]))
 
 ;; not used anywhere yet
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/MaskState.html
@@ -116,6 +117,11 @@
   (constants #(RecordReaderMultiDataSetIterator$AlignmentMode/valueOf %)
              (:multi-alignment-mode opts)
              :activation true))
+
+(defmethod value-of :labeling-type [opts]
+  (constants #(LocalUnstructuredDataFormatter$LabelingType/valueOf %)
+             (:labeling-type opts)))
+
 
 (comment
   " for seq alignment mode

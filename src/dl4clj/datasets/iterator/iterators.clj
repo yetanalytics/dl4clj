@@ -8,10 +8,9 @@
             ExistingDataSetIterator])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
-;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html
-;; -- has builder
-;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.Builder.html
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi method heavy lifting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn iterator-type
   "dispatching fn for multimethod iterators"
@@ -150,6 +149,10 @@
          idx :idx
          b :builder} config]
     (doto b (.addPreProcessor idx pre-processor))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; user facing functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-combined-pre-processor
   ;; going to need to test this
@@ -345,8 +348,13 @@
       :as opts}]
   (iterators {:curves-dataset-iterator opts}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; api calls
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pre-process!
   "Pre process a dataset sequentially"
   [& {:keys [dataset-iter dataset]}]
   (doto dataset-iter (.preProcess dataset)))
+
+;; suppors the java.util.Iterator methods
