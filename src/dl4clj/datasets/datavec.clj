@@ -8,7 +8,7 @@
             ;; write mmethod for making writeable converters and require it here
             ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/io/package-summary.html
             ;; they are going to be in datavec.api.io
-            [datavec.api.records.readers :refer [record-reader]]))
+            ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; build in datasets
