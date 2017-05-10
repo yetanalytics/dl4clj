@@ -1,14 +1,9 @@
-(ns dl4clj.eval.evaluation
+(ns ^{:doc "implementation of the eval class in dl4j.  Used to get performance metrics for a model
+see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html and
+https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html"}
+    dl4clj.eval.evaluation
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
   (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
-
-
-;; regression evaluation
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
-
-
-;; classification evaluation
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html
 
 
 ;; TODO
@@ -18,9 +13,6 @@
 
 ;; add eval tools ns
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTools.html
-
-;; implement binary evaluators
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/EvaluationBinary.html
 
 ;; make a seperate ns for the ROC evaluators
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
