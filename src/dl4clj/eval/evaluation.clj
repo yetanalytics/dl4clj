@@ -1,5 +1,5 @@
 (ns dl4clj.eval.evaluation
-  (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation])
+  (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
   (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
 
@@ -28,8 +28,6 @@
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/package-summary.html
 
 (defn new-evaluator
-
-  ;; refactor
   "creates an evaluation object for evaling a trained network.
 
   args:
@@ -55,42 +53,30 @@
     :or {classification? true}
     :as opts}]
   (if (true? classification?)
-    (cond (and (contains-many? opts :labels :top-n)
-               (list? labels)
-               (integer? top-n))
+    (cond (contains-many? opts :labels :top-n)
           (Evaluation. labels top-n)
-          (and (contains? opts :labels)
-               (list? labels))
+          (contains? opts :labels)
           (Evaluation. labels)
-          (and (contains? opts :label-to-idx-map)
-               (map? label-to-idx-map))
+          (contains? opts :label-to-idx-map)
           (Evaluation. label-to-idx-map)
-          (and (contains? opts :n-classes)
-               (integer? n-classes))
+          (contains? opts :n-classes)
           (Evaluation. n-classes)
           :else
           (Evaluation.))
-    (cond (and (contains-many? opts :column-names :precision)
-               (list? column-names)
-               (integer? precision))
+    (cond (contains-many? opts :column-names :precision)
           (RegressionEvaluation. column-names precision)
-          (and (contains-many? opts :n-columns :precision)
-               (integer? n-columns)
-               (integer? precision))
+          (contains-many? opts :n-columns :precision)
           (RegressionEvaluation. n-columns precision)
-          (and (contains? opts :column-names)
-               (or (list? column-names)
-                   (> (count column-names) 1)))
+          (contains? opts :column-names)
           (RegressionEvaluation. column-names)
-          (and (contains? opts :n-columns)
-               (integer? n-columns))
+          (contains? opts :n-columns)
           (RegressionEvaluation. n-columns)
           :else
           (assert
            false
            "you must supply either the number of columns or their names for regression evaluation"))))
 
-(defn eval-classification
+(defn eval-classification!
   "depending on args supplied in opts map, does one of:
 
   - Collects statistics on the real outcomes vs the guesses.
@@ -102,43 +88,41 @@
   2) is accomplished by supplying :true-labels, :in and :comp-graph or :mln
   3) is accomplished by supplying :real-outcomes, :guesses and :record-meta-data
   4) is accomplished by supplying :predicted-idx and :actual-idx"
-  [evaler & {:keys [real-outcomes guesses
-                    true-labels in comp-graph
-                    record-meta-data mln
-                    predicted-idx actual-idx]
-             :as opts}]
+  [& {:keys [real-outcomes guesses
+             true-labels in comp-graph
+             record-meta-data mln
+             predicted-idx actual-idx evaler]
+      :as opts}]
+  (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
   (cond (contains-many? opts :true-labels
                         :in :comp-graph)
-        (.eval evaler true-labels in comp-graph)
+        (doto evaler (.eval true-labels in comp-graph))
         (contains-many? opts :true-labels
                         :in :mln)
-        (.eval evaler true-labels in mln)
+        (doto evaler (.eval true-labels in mln))
         (contains-many? opts :real-outcomes
                         :guesses :record-meta-data)
-        (.eval evaler real-outcomes guesses record-meta-data)
+        (doto evaler (.eval real-outcomes guesses record-meta-data))
         (contains-many? opts :real-outcomes
                         :guesses)
-        (.eval evaler real-outcomes guesses)
+        (doto evaler (.eval real-outcomes guesses))
         (contains-many? opts :predicted-idx :actual-idx)
-        (.eval predicted-idx actual-idx)
+        (doto evaler (.eval predicted-idx actual-idx))
         :else
-        (assert false "you must supply the evaler one of the set of opts described in the doc string"))
-  evaler)
+        (assert false "you must supply the evaler one of the set of opts described in the doc string")))
 
-(defn eval-time-series
+(defn eval-time-series!
   "evalatues a time series given labels and predictions.
 
   labels-mask is optional and only applies when there is a mask"
-  [evaler & {:keys [labels predicted labels-mask]
-             :as opts}]
+  [& {:keys [labels predicted labels-mask evaler]
+      :as opts}]
   (cond (contains? opts :labels-mask)
-        (.evalTimeSeries evaler labels predicted labels-mask)
+        (doto evaler (.evalTimeSeries labels predicted labels-mask))
         (false? (contains? opts :labels-mask))
-        (.evalTimeSeries evaler labels predicted)
+        (doto evaler (.evalTimeSeries labels predicted))
         :else
-        (assert false "you must supply labels-mask and/or labels and predicted values"))
-  evaler)
-
+        (assert false "you must supply labels-mask and/or labels and predicted values")))
 
 (defn get-accuracy
   "Accuracy: (TP + TN) / (P + N)"
@@ -147,16 +131,14 @@
 
 (defn add-to-confusion
   "Adds to the confusion matrix"
-  [evaler real-value guess-value]
+  [& {:keys [evaler real-value guess-value]}]
   (doto evaler
     (.addToConfusion real-value guess-value)))
 
 (defn class-count
   "Returns the number of times the given label has actually occurred"
-  [evaler class-label]
-  (assert (integer? class-label)
-          "class-label needs to be the index (integer) of the label")
-  (.classCount evaler class-label))
+  [& {:keys [evaler class-label-idx]}]
+  (.classCount evaler class-label-idx))
 
 (defn confusion-to-string
   "Get a String representation of the confusion matrix"
@@ -169,10 +151,11 @@
 
   the calculation will only be done for a single class if that classes idx is supplied
    -here class refers to the labels the network was trained on"
-  ([evaler]
-   (.f1 evaler))
-  ([evaler class-label-idx]
-   (.f1 evaler class-label-idx)))
+  [& {:keys [evaler class-label-idx]
+      :as opts}]
+  (if (contains? opts :class-label-idx)
+    (.f1 evaler class-label-idx)
+    (.f1 evaler)))
 
 (defn false-alarm-rate
   "False Alarm Rate (FAR) reflects rate of misclassified to classified records"
@@ -184,12 +167,16 @@
   and outputs average fnr across all of them
 
   can be scoped down to a single class if class-label-idx supplied"
-  ([evaler]
-   (.falseNegativeRate evaler))
-  ([evaler class-label-idx]
-   (.falseNegativeRate evaler class-label-idx))
-  ([evaler class-label-idx edge-case]
-   (.falseNegativeRate evaler class-label-idx edge-case)))
+  [& {:keys [evaler class-label-idx edge-case]
+      :as opts}]
+  (cond (contains-many? opts :class-label-idx :edge-case :evaler)
+        (.falseNegativeRate evaler class-label-idx edge-case)
+        (contains-many? opts :evaler :class-label-idx)
+        (.falseNegativeRate evaler class-label-idx)
+        (contains? opts :evaler)
+        (.falseNegativeRate evaler)
+        :else
+        (assert false "you must atleast provide an evaler to get the false negative rate of the model being evaluated")))
 
 (defn false-negatives
   "False negatives: correctly rejected"
@@ -201,12 +188,16 @@
   and outputs average fpr across all of them
 
   can be scoped down to a single class if class-label-idx supplied"
-  ([evaler]
-   (.falsePositiveRate evaler))
-  ([evaler class-label-idx]
-   (.falsePositiveRate evaler class-label-idx))
-  ([evaler class-label-idx edge-case]
-   (.falsePositiveRate evaler class-label-idx edge-case)))
+  [& {:keys [evaler class-label-idx edge-case]
+      :as opts}]
+  (cond (contains-many? opts :class-label-idx :edge-case :evaler)
+        (.falsePositiveRate evaler class-label-idx edge-case)
+        (contains-many? opts :evaler :class-label-idx)
+        (.falsePositiveRate evaler class-label-idx)
+        (contains? opts :evaler)
+        (.falsePositiveRate evaler)
+        :else
+        (assert false "you must atleast provide an evaler to get the false positive rate of the model being evaluated")))
 
 (defn false-positives
   "False positive: wrong guess"
@@ -215,7 +206,7 @@
 
 (defn get-class-label
   "get the class a label is associated with given an idx"
-  [evaler label-idx]
+  [& {:keys [evaler label-idx]}]
   (.getClassLabel evaler label-idx))
 
 (defn get-confusion-matrix
@@ -230,7 +221,7 @@
 (defn get-prediction-by-predicted-class
   "Get a list of predictions, for all data with the specified predicted class,
   regardless of the actual data class."
-  [evaler idx-of-predicted-class]
+  [& {:keys [evaler idx-of-predicted-class]}]
   (.getPredictionByPredictedClass evaler idx-of-predicted-class))
 
 (defn get-prediction-errors
@@ -241,13 +232,13 @@
 (defn get-predictions
   "Get a list of predictions in the specified confusion matrix entry
   (i.e., for the given actua/predicted class pair)"
-  [evaler actual-class-idx predicted-class-idx]
+  [& {:keys [evaler actual-class-idx predicted-class-idx]}]
   (.getPredictions evaler actual-class-idx predicted-class-idx))
 
 (defn get-predictions-by-actual-class
   "Get a list of predictions, for all data with the specified actual class,
   regardless of the predicted class."
-  [evaler actual-class-idx]
+  [& {:keys [evaler actual-class-idx]}]
   (.getPredictionsByActualClass evaler actual-class-idx))
 
 (defn get-top-n-correct-count
@@ -260,29 +251,29 @@
   [evaler]
   (.getTopNTotalCount evaler))
 
-(defn increment-false-negatives
-  [evaler class-label-idx]
+(defn increment-false-negatives!
+  [& {:keys [evaler class-label-idx]}]
   (doto evaler
     (.incrementFalseNegatives class-label-idx)))
 
-(defn increment-false-positives
-  [evaler class-label-idx]
+(defn increment-false-positives!
+  [& {:keys [evaler class-label-idx]}]
   (doto evaler
     (.incrementFalsePositives class-label-idx)))
 
-(defn increment-true-negatives
-  [evaler class-label-idx]
+(defn increment-true-negatives!
+  [& {:keys [evaler class-label-idx]}]
   (doto evaler
     (.incrementTrueNegatives class-label-idx)))
 
-(defn increment-true-positives
-  [evaler class-label-idx]
+(defn increment-true-positives!
+  [& {:keys [evaler class-label-idx]}]
   (doto evaler
     (.incrementTruePositives class-label-idx)))
 
-(defn merge-evals
+(defn merge-evals!
   "Merge the other evaluation object into evaler"
-  [evaler other-evaler]
+  [& {:keys [evaler other-evaler]}]
   (doto evaler
     (.merge other-evaler)))
 
@@ -301,31 +292,40 @@
   outputs average precision across all of them.
 
   can be scoped to a label given its idx"
-  ([evaler]
-   (.precision evaler))
-  ([evaler class-label-idx]
-   (.precision evaler class-label-idx))
-  ([evaler class-label-idx edge-case]
-   (.precision evaler class-label-idx edge-case)))
+  [& {:keys [evaler class-label-idx edge-case]
+      :as opts}]
+  (cond (contains-many? opts :class-label-idx :edge-case :evaler)
+        (.precision evaler class-label-idx edge-case)
+        (contains-many? opts :evaler :class-label-idx)
+        (.precision evaler class-label-idx)
+        (contains? opts :evaler)
+        (.precision evaler)
+        :else
+        (assert false "you must atleast provide an evaler to get the precision of the model being evaluated")))
 
 (defn recall
   "Recall based on guesses so far Takes into account all known classes
   and outputs average recall across all of them
 
   can be scoped to a label given its idx"
-  ([evaler]
-   (.recall evaler))
-  ([evaler class-label-idx]
-   (.recall evaler class-label-idx))
-  ([evaler class-label-idx edge-case]
-   (.recall evaler class-label-idx edge-case)))
+  [& {:keys [evaler class-label-idx edge-case]
+      :as opts}]
+  (cond (contains-many? opts :class-label-idx :edge-case :evaler)
+        (.recall evaler class-label-idx edge-case)
+        (contains-many? opts :evaler :class-label-idx)
+        (.recall evaler class-label-idx)
+        (contains? opts :evaler)
+        (.recall evaler)
+        :else
+        (assert false "you must atleast provide an evaler to get the recall of the model being evaluated")))
 
 (defn get-stats
   "Method to obtain the classification report as a String"
-  ([evaler]
-   (.stats evaler))
-  ([evaler suppress-warnings?]
-   (.stats evaler suppress-warnings?)))
+  [& {:keys [evaler suppress-warnings?]
+      :as opts}]
+  (if (contains? opts :suppress-warnings?)
+    (.stats evaler suppress-warnings?)
+    (.stats evaler)))
 
 (defn top-n-accuracy
   "Top N accuracy of the predictions so far."
@@ -344,25 +344,25 @@
 
 (defn get-mean-squared-error
   "returns the MSE"
-  [regression-evaler column-idx]
+  [& {:keys [regression-evaler column-idx]}]
   (.meanSquaredError regression-evaler column-idx))
 
 (defn get-mean-absolute-error
   "returns MAE"
-  [regression-evaler column-idx]
+  [& {:keys [regression-evaler column-idx]}]
   (.meanAbsoluteError regression-evaler column-idx))
 
 (defn get-root-mean-squared-error
   "returns rMSE"
-  [regression-evaler column-idx]
+  [& {:keys [regression-evaler column-idx]}]
   (.rootMeanSquaredError regression-evaler column-idx))
 
 (defn get-correlation-r2
   "return the R2 correlation"
-  [regression-evaler column-idx]
+  [& {:keys [regression-evaler column-idx]}]
   (.correlationR2 regression-evaler column-idx))
 
 (defn get-relative-squared-error
   "return relative squared error"
-  [regression-evaler column-idx]
+  [& {:keys [regression-evaler column-idx]}]
   (.relativeSquaredError regression-evaler column-idx))
