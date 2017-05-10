@@ -5,19 +5,9 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
   (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
 
-
-;; TODO
-
-;; add prediction ns
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/meta/Prediction.html
-
-;; add eval tools ns
-;; https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTools.html
-
-;; make a seperate ns for the ROC evaluators
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROC.html
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/ROCMultiClass.html
-;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/package-summary.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; create a classification or regression evaluator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-evaluator
   "creates an evaluation object for evaling a trained network.
@@ -67,6 +57,10 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
           (assert
            false
            "you must supply either the number of columns or their names for regression evaluation"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; use the evaler created above
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn eval-classification!
   "depending on args supplied in opts map, does one of:
