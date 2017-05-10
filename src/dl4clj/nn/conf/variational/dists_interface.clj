@@ -1,5 +1,8 @@
-(ns dl4clj.nn.conf.variational.dists
-  (:import [org.deeplearning4j.nn.conf.layers.variational ReconstructionDistribution]))
+(ns ^{:doc "fucntions from the Reconstruction Distribution class in dl4j.
+see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variational/ReconstructionDistribution.html"}
+    dl4clj.nn.conf.variational.dists-interface
+  (:import [org.deeplearning4j.nn.conf.layers.variational ReconstructionDistribution
+            CompositeReconstructionDistribution]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shared fns from the ReconstructionDistribution interface
@@ -71,3 +74,13 @@
   :average? (boolean), Whether the log probability should be averaged over the minibatch, or simply summed."
   [& {:keys [dist features pre-out-dist-params average?]}]
   (.negLogProbability dist features pre-out-dist-params average?))
+
+(defn compute-loss-fn-score-array
+  "computes the loss function score.
+  only works with composite reconstruction distributions
+
+  :composite-dist (distribution), a composite distribution with a loss fn
+  :features (INDArray), the input data
+  :reconstruction (INDArray), the output of a variational model"
+  [& {:keys [composite-dist features reconstruction]}]
+  (.computeLossFunctionScoreArray composite-dist features reconstruction))
