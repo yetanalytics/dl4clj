@@ -1,4 +1,6 @@
-(ns ^{:doc ""}
+(ns ^{:doc "implementation of the LayerUpdater class from dl4j.  Updates a layer
+
+see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.html"}
     dl4clj.nn.updater.layer-updater
   (:import [org.deeplearning4j.nn.updater LayerUpdater])
   (:require [dl4clj.constants :as enum]))
