@@ -2,7 +2,8 @@
     dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
             [dl4clj.nn.conf.constants :as constants]
-            [dl4clj.nn.conf.utils :as u])
+            [dl4clj.nn.conf.utils :as u]
+            [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
     OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
@@ -116,10 +117,7 @@
                         gradient-check lambda collapse-dimensions pnorm
                         pooling-dimensions eps convolution-mode l1-bias l2-bias
                         pre-train-iterations gate-activation-fn visible-bias-init
-                        #_pzx-activation-fn
-                        ;; needs to be implemented
-                        reconstruction-distribution
-                        ]
+                        reconstruction-distribution vae-loss-fn]
                  :or {}
                  :as opts}]
   (.build
@@ -195,9 +193,15 @@
      (contains? opts :decoder-layer-sizes) (.decoderLayerSizes decoder-layer-sizes)
      (contains? opts :encoder-layer-sizes) (.encoderLayerSizes encoder-layer-sizes)
      (contains? opts :num-samples) (.numSamples num-samples)
+     (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of {:activation-fn
+                                                                       (:output-activation-fn vae-loss-fn)})
+                                                  (constants/value-of {:loss-fn (:loss-fn vae-loss-fn)}))
      (contains? opts :gradient-check) (.gradientCheck gradient-check)
      (contains? opts :lambda) (.lambda lambda)
      (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
+     (contains? opts :reconstruction-distribution) (.reconstructionDistribution
+                                                    (reconstruction-dist/distributions
+                                                     reconstruction-distribution))
      (contains? opts :pzx-activation-function) (.pzxActivationFunction
                                                 (constants/value-of
                                                  {:activation-fn pzx-activation-function})))))
@@ -944,6 +948,61 @@
     :as opts}]
   (builder {:zero-padding-layer opts}))
 
+(defn variational-autoencoder-builder
+  "builds a Variational Autoencoder layer
+   -See: Kingma & Welling, 2013: Auto-Encoding Variational Bayes - https://arxiv.org/abs/1312.6114
+
+  This implementation allows multiple encoder and decoder layers,
+  the number and sizes of which can be set independently.
+
+  A note on scores during pretraining: This implementation minimizes the negative of
+  the variational lower bound objective as described in Kingma & Welling;
+  the mathematics in that paper is based on maximization of the variational lower bound instead.
+  Thus, scores reported during pretraining in DL4J are the negative of the variational
+  lower bound equation in the paper. The backpropagation and learning
+  procedure is otherwise as described there.
+
+  Args that are unique to VAEs
+
+  :decoder-layer-sizes (int...), a collection of ints setting the size of the decoder layers
+   - Each decoder layer is functionally equivalent to a DenseLayer.
+   - Typically the number and size of the decoder layers is similar to the encoder layers.
+
+  :encoder-layer-sizes (int...), a collection of ints setting the size of the encoder layers
+   - Each encoder layer is functionally equivalent to a DenseLayer.
+
+  :vae-loss-fn {:activation-fn (keyword) :loss-fn (keyword)}, a map of activation-fn and loss-fn keywords
+   - Configure the VAE to use the specified loss function for the reconstruction,
+     instead of a ReconstructionDistribution.
+
+  :pzx-activation-function (keyword), Activation function for the input
+   - Care should be taken with this, as some activation functions (relu, etc) are not suitable
+
+  :reconstruction-distribution (map) {:dist-type (keyword) {dist-opts}}
+   - The reconstruction distribution for the data given the hidden state
+   - Distributions should be selected based on the type of data being modeled
+     - :gaussian w/ identity or tanh for real valued (Gaussian) data
+     - :bernoulli w/ sigmoid for binary valued data
+     - The above to keywords are examples for the value of :dist-type
+     - see dl4clj.nn.conf.variational.dist-builders
+
+  :num-samples (int), Set the number of samples per data point
+   (from VAE state Z) used when doing pretraining.
+
+  all other options have been described elsewhere in this namespace"
+  [{:keys [vae-loss-fn visible-bias-init pre-train-iterations
+           n-in n-out activation-fn adam-mean-decay adam-var-decay
+           bias-init bias-learning-rate dist drop-out epsilon
+           gradient-normalization gradient-normalization-threshold
+           l1 l1-bias l2 l2-bias layer-name learning-rate
+           learning-rate-policy momentum momentum-after rho
+           rms-decay updater weight-init encoder-layer-size
+           decoder-layer-size pzx-activation-function
+           reconstruction-distribution num-samples
+           learning-rate-schedule]
+    :or {}
+    :as opts}]
+  (builder {:variational-auto-encoder opts}))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; examples
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
