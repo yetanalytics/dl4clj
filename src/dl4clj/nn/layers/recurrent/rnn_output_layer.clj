@@ -8,7 +8,8 @@ Input and output activations are same as other RNN layers:
 Implementation of the class RnnOutputLayer in dl4j
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/RnnOutputLayer.html"}
     dl4clj.nn.layers.recurrent.rnn-output-layer
-  (:import [org.deeplearning4j.nn.layers.recurrent RnnOutputLayer])
+  (:import [org.deeplearning4j.nn.layers.recurrent RnnOutputLayer
+            FwdPassReturn])
   (:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.api.classifier :refer :all]
@@ -32,3 +33,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/RnnOu
   (if (contains? opts :input)
     (RnnOutputLayer. conf input)
     (RnnOutputLayer. conf)))
+
+(defn new-foward-pass-return
+  "not sure how to use this but has fields for
+  recurrent neural net internal values"
+  []
+  (FwdPassReturn.))
