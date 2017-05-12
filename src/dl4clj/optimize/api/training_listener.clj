@@ -56,5 +56,5 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
   :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
 
   returns the listener"
-  [listener model]
+  [& {:keys [listener model]}]
   (doto listener (.onGradientCalculation model)))
