@@ -6,10 +6,7 @@
             NegativeDefaultStepFunction
             NegativeGradientStepFunction]))
 
-(defn step-fn-type [opts]
-  opts)
-
-(defmulti step-fn step-fn-type)
+(defmulti step-fn identity)
 
 (defmethod step-fn :default-step-fn [opts]
   (DefaultStepFunction.))

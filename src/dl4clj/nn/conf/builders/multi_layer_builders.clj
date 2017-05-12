@@ -1,4 +1,4 @@
-(ns dl4clj.nn.conf.builders.multi-layer-builders
+(ns bdl4clj.nn.conf.builders.multi-layer-builders
   (:require [dl4clj.nn.conf.builders.builders :as bb]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
             [dl4clj.nn.conf.constants :as constants])
