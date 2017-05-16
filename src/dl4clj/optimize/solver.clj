@@ -3,10 +3,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html"}
     dl4clj.optimize.solver
   (:import [org.deeplearning4j.optimize Solver Solver$Builder]))
 
-
-;; zero arg constructor works
-(Solver.)
-
 (defn build-solver
   "creates a solver for a given model with a nn-configuration and listeners.
 
