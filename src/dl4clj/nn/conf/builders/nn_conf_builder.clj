@@ -124,7 +124,9 @@
           :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform
 
   :convolution-mode (keyword), one of: :strict, :truncate, :same
-   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html"
+   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+  :build? (boolean), defaults to true, builds the nn-conf"
   [{:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold iterations l1 l2 layer layers
@@ -133,11 +135,11 @@
            lr-policy-steps max-num-line-search-iterations mini-batch minimize
            momentum momentum-after optimization-algo regularization
            rho rms-decay seed step-fn updater use-drop-connect
-           weight-init convolution-mode
+           weight-init convolution-mode build?
            ;;graph-builder
            ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
            ]
-    :or {}
+    :or {build? true}
     :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
     (cond-> b
@@ -197,7 +199,8 @@
                                                   {:weight-init weight-init}))
       (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
       (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
-      (contains? opts :layers) (multi-layer/list-builder layers))))
+      (contains? opts :layers) (multi-layer/list-builder layers)
+      (true? build?) (.build))))
 
 (comment
   (println

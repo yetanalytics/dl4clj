@@ -7,9 +7,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
             NegativeDefaultStepFunction
             GradientStepFunction
             StepFunctions
-            DefaultStepFunction])
+            DefaultStepFunction]
+           [org.deeplearning4j.optimize.api StepFunction])
   (:require [dl4clj.nn.conf.step-fns :refer [step-fn]]
-            [dl4clj.utils :refer [contains-many?]]))
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Multi method for calling the step function constructors
@@ -29,11 +30,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
 (defmethod step-fns :negative-gradient [opts]
   (NegativeGradientStepFunction.))
 
-(defmethod step-fns :create-from-nn-conf-step-fn [opts]
-  (let [conf (:create-from-nn-conf-step-fn opts)
-        fn (step-fn (:step-fn conf))]
-    (.createStepFunction fn)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns for creating step fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -44,8 +40,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
   :step-fn (keyword), the step function
    - one of: :default-step-fn, :gradient-step-fn, :negative-default-step-fn
              :negative-gradient-step-fn"
-  [& {:keys [step-fn]}]
-  (step-fns {:create-from-nn-conf-step-fn (step-fn step-fn)}))
+  [& {:keys [nn-conf-step-fn]}]
+  (StepFunctions/createStepFunction (step-fn nn-conf-step-fn)))
 
 (defn new-default-step-fn
   "creates a new default step function instance"

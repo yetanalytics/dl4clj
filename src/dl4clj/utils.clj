@@ -37,3 +37,12 @@
 
 (defn indexed [col]
   (map vector col (range)))
+
+(defn array-of
+  "takes in a data structure and a java class type.
+
+  puts the data structure into an array with the java class as the type"
+  [& {:keys [data-structure java-type]}]
+  (if (seq? data-structure)
+    (into-array java-type data-structure)
+    (into-array java-type [data-structure])))

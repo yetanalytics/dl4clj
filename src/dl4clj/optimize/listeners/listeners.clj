@@ -7,8 +7,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
             ScoreIterationListener
             PerformanceListener
             PerformanceListener$Builder
-            CollectScoresIterationListener])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+            CollectScoresIterationListener]
+           [org.deeplearning4j.optimize.api IterationListener])
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn
+                                  array-of]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method that sets up the constructor/builder
@@ -114,7 +116,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
            report-time? true
            frequency 1}
       :as opts}]
-  (listeners {:performance opts}))
+  (array-of :data-structure (listeners {:performance opts})
+            :java-type IterationListener))
 
 (defn new-score-iteration-listener
   "Score iteration listener
@@ -123,7 +126,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   [& {:keys [print-every-n]
       :or {print-every-n 10}
       :as opts}]
-  (listeners {:score-iteration opts}))
+  (array-of :data-structure (listeners {:score-iteration opts})
+            :java-type IterationListener))
 
 (defn new-composable-iteration-listener
   "A group of listeners
@@ -131,7 +135,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   listeners (collection or array) multiple listeners to compose together"
   [& {:keys [listeners]
       :as opts}]
-  (listeners {:composable opts}))
+  (array-of :data-structure (listeners {:composable opts})
+            :java-type IterationListener))
 
 (defn new-collection-scores-iteration-listener
   "CollectScoresIterationListener simply stores the model scores internally
@@ -141,7 +146,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   :frequency (int), how often scores are stored"
   [& {:keys [frequency]
       :as opts}]
-  (listeners {:collection-scores opts}))
+  (array-of :data-structure (listeners {:collection-scores opts})
+            :java-type IterationListener))
 
 (defn new-param-and-gradient-iteration-listener
   "An iteration listener that provides details on parameters and gradients at
@@ -188,7 +194,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
            file nil
            delimiter ","}
       :as opts}]
-  (listeners {:param-and-gradient opts}))
+  (array-of :data-structure (listeners {:param-and-gradient opts})
+            :java-type IterationListener))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Collection scores iteration listener specific fns
