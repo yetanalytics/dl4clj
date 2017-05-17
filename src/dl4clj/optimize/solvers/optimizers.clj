@@ -16,17 +16,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
 
 (defmulti optimizers generic-dispatching-fn)
 
-(defmethod optimizers :base [opts]
-  (let [conf (:base opts)
-        {nn-conf :nn-conf
-         step-fn :step-fn
-         listeners :listeners
-         term-cond :termination-condition
-         model :model} conf]
-    (if (contains-many? conf :nn-conf :step-fn :listeners :termination-condition :model)
-      (BaseOptimizer. nn-conf step-fn listeners term-cond model)
-      (BaseOptimizer. nn-conf step-fn listeners model))))
-
 (defmethod optimizers :conjugate-geradient [opts]
   (let [conf (:conjugate-geradient opts)
         {nn-conf :nn-conf
@@ -84,28 +73,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns with arg descriptions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn new-base-optimizer
-  "creates a base optimizer
-
-  :nn-conf (nn-conf), a neural network configuration
-   - see: dl4clj.nn.conf.builders.nn-conf-builder
-
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string
-
-  :listeners (coll), collection of iteration listeners
-   - see: dl4clj.optimize.listeners.listeners
-
-  :termination-condition (keyword), reason to stop optimization
-   - one of :esp, :norm2, :zero-direction
-   - need to deal with the collection part of this********
-
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders"
-  [& {:keys [nn-conf step-fn listeners termination-condition model]
-      :as opts}]
-  (optimizers {:base opts}))
 
 (defn new-conjugate-gradient-optimizer
   "creates a conjugate gradient optimizer

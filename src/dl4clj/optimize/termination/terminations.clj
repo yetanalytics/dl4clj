@@ -75,5 +75,5 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/pac
   :old-cost (double), the old value of the cost fn
 
   :other-params (java.lang.Object), other params...not sure what they are or should be"
-  [terminate-condition cost old-cost other-params]
+  [& {:keys [terminate-condition cost old-cost other-params]}]
   (.terminate terminate-condition cost old-cost other-params))

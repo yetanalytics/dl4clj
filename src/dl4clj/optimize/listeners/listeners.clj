@@ -93,61 +93,101 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   "Simple IterationListener that tracks time spend on training per iteration.
 
   :report-batch (boolean), if batches/sec should be reported together with other data
+   - defaults to true
 
   :report-iteration? (boolean), if iteration number should be reported together with other data
+   - defaults to true
 
   :report-sample? (boolean), if samples/sec should be reported together with other data
+   - defaults to true
 
   :report-score? (boolean),  if score should be reported together with other data
+   - defaults to true
 
   :report-time? (boolean), if time per iteration should be reported together with other data
+   - defaults to true
 
   :frequency (int), Desired IterationListener activation frequency
+   - defaults to 1
 
   :build? (boolean), if you want to build the builder
-   - defaults to true"
+   - defaults to true
+
+  :array? (boolean), if you want to return the object in an array of type IterationListener
+   - defaults to false
+
+  defaults are only used if no kw args are supplied"
   [& {:keys [report-batch? report-iteration? report-sample?
-             report-score? report-time? build? frequency]
-      :or {build? true
-           report-batch? true
-           report-iteration? true
-           report-sample? true
-           report-score? true
-           report-time? true
-           frequency 1}
+             report-score? report-time? build? frequency array?]
+      :or {array? false}
       :as opts}]
-  (array-of :data-structure (listeners {:performance opts})
-            :java-type IterationListener))
+  (let [conf (if (nil? opts)
+               {:build? true
+                :report-batch? true
+                :report-iteration? true
+                :report-sample? true
+                :report-score? true
+                :report-time? true
+                :frequency 1}
+               opts)]
+    (if (true? array?)
+    (array-of :data-structure (listeners {:performance conf})
+              :java-type IterationListener)
+    (listeners {:performance conf}))))
 
 (defn new-score-iteration-listener
   "Score iteration listener
 
-  :print-every-n (int), print every n iterations"
-  [& {:keys [print-every-n]
-      :or {print-every-n 10}
+  :print-every-n (int), print every n iterations
+   - defaults to 10
+
+  :array? (boolean), if you want to return the object in an array of type IterationListener
+   - defaults to false"
+  [& {:keys [print-every-n array?]
+      :or {array? false}
       :as opts}]
-  (array-of :data-structure (listeners {:score-iteration opts})
-            :java-type IterationListener))
+  (let [conf (if (nil? opts)
+               {:print-every-n 10}
+               opts)]
+    (if (true? array?)
+      (array-of :data-structure (listeners {:score-iteration conf})
+                :java-type IterationListener)
+      (listeners {:score-iteration conf}))))
 
 (defn new-composable-iteration-listener
   "A group of listeners
 
-  listeners (collection or array) multiple listeners to compose together"
-  [& {:keys [listeners]
+  listeners (collection or array) multiple listeners to compose together
+
+  :array? (boolean), if you want to return the object in an array of type IterationListener
+   - defaults to false"
+  [& {:keys [coll-of-listeners array?]
+      :or {array? false}
       :as opts}]
-  (array-of :data-structure (listeners {:composable opts})
-            :java-type IterationListener))
+  (if (true? array?)
+    (array-of :data-structure (listeners {:composable opts})
+             :java-type IterationListener)
+    (listeners {:composable opts})))
 
 (defn new-collection-scores-iteration-listener
   "CollectScoresIterationListener simply stores the model scores internally
   (along with the iteration) every 1 or N iterations (this is configurable).
   These scores can then be obtained or exported.
 
-  :frequency (int), how often scores are stored"
-  [& {:keys [frequency]
+  :frequency (int), how often scores are stored
+   - defaults to 1
+  :array? (boolean), if you want to return the object in an array of type IterationListener
+   - defaults to false"
+  [& {:keys [frequency array?]
+      :or {array? false}
       :as opts}]
-  (array-of :data-structure (listeners {:collection-scores opts})
-            :java-type IterationListener))
+  (let [conf (if (nil? opts)
+               {:frequency 1}
+               opts)]
+   (if (true? array?)
+      (array-of :data-structure (listeners {:collection-scores conf})
+                :java-type IterationListener)
+      (listeners {:collection-scores conf}))))
 
 (defn new-param-and-gradient-iteration-listener
   "An iteration listener that provides details on parameters and gradients at
@@ -161,41 +201,61 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   at each iteration.
 
   :iterations (int), frequency to calculate and report values
+   - defaults to 1
 
   :print-header? (boolean), Whether to output a header row (i.e., names for each column)
+   - defaults to true
 
   :print-mean? (boolean), Calculate and display the mean of parameters and gradients
+   - defaults to true
 
   :print-min-max? (boolean), Calculate and display the min/max of the parameters and gradients
+   - defaults to true
 
   :print-mean-abs-value? (boolean), Calculate and display the mean absolute value
+   - defaults to true
 
   :output-to-console? (boolean), If true, display the values to the console
+   - defaults to true
 
   :output-to-file? (boolean), If true, write the values to a file, one per line
+   - defaults to false
 
   :output-to-logger? (boolean), If true, log the values
+   - defaults to true
 
   :file (java.io.File), File to write values to. May be null
    - not used if :output-to-file? = false
+   - defaults to nil
 
-  :delimiter (str), the delimiter for the output file."
+  :delimiter (str), the delimiter for the output file.
+   - defaults to ,
+
+  :array? (boolean), if you want to return the object in an array of type IterationListener
+   - defaults to false
+
+  defaults are only used if no kw args are supplied"
   [& {:keys [iterations print-header? print-mean? print-min-max?
              print-mean-abs-value? output-to-console? output-to-file?
-             output-to-logger? file delimiter]
-      :or {iterations 1
-           print-header? true
-           print-mean? true
-           print-min-max? true
-           print-mean-abs-value? true
-           output-to-console? true
-           output-to-file? false
-           output-to-logger? true
-           file nil
-           delimiter ","}
+             output-to-logger? file delimiter array?]
+      :or {array? false}
       :as opts}]
-  (array-of :data-structure (listeners {:param-and-gradient opts})
-            :java-type IterationListener))
+  (let [conf (if (nil? opts)
+               {:iterations 1
+                :print-header? true
+                :print-mean? true
+                :print-min-max? true
+                :print-mean-abs-value? true
+                :output-to-console? true
+                :output-to-file? false
+                :output-to-logger? true
+                :file nil
+                :delimiter ","}
+               opts)]
+   (if (true? array?)
+    (array-of :data-structure (listeners {:param-and-gradient conf})
+              :java-type IterationListener)
+    (listeners {:param-and-gradient conf}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Collection scores iteration listener specific fns

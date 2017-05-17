@@ -190,8 +190,8 @@
      (contains? opts :n) (.n n)
      (contains? opts :pooling-type) (.poolingType (constants/value-of
                                                    {:pool-type pooling-type}))
-     (contains? opts :decoder-layer-sizes) (.decoderLayerSizes decoder-layer-sizes)
-     (contains? opts :encoder-layer-sizes) (.encoderLayerSizes encoder-layer-sizes)
+     (contains? opts :decoder-layer-sizes) (.decoderLayerSizes (int-array decoder-layer-sizes))
+     (contains? opts :encoder-layer-sizes) (.encoderLayerSizes (int-array encoder-layer-sizes))
      (contains? opts :num-samples) (.numSamples num-samples)
      (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of {:activation-fn
                                                                        (:output-activation-fn vae-loss-fn)})

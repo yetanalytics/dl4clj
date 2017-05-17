@@ -1,7 +1,7 @@
 (ns ^{:doc "Based on Graves: Supervised Sequence Labelling with Recurrent Neural Networks
 Implementation of the GravesLSTM class in dl4j
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/GravesLSTM.html"}
-    dl4clj.nn.layers.recurrent.graves-lstm.clj
+    dl4clj.nn.layers.recurrent.graves-lstm
   (:import [org.deeplearning4j.nn.layers.recurrent GravesLSTM])
   (:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]

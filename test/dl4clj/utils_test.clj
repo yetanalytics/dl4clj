@@ -1,10 +1,10 @@
-(ns dl4clj.util-test
+(ns dl4clj.utils-test
   (:require [clojure.test :refer :all]
             [dl4clj.utils :refer :all]))
 
 (deftest util-tests
   (testing "the fns in utils"
-    (is (= :foobar (camelize :foo-bar )))
+    (is (= :fooBar (camelize :foo-bar )))
     (is (= :FooBar (camelize :foo-bar true)))
     (is (= "fooBar" (camelize "foo-bar")))
     (is (= "fooBar" (camelize "foo bar")))

@@ -89,5 +89,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
         (doto step-fn (.step features line step))
         (contains-many? opts :features :line)
         (doto step-fn (.step features line))
+        (contains? opts :step-fn)
+        (doto step-fn (.step))
         :else
-        (doto step-fn (.step))))
+        (assert false "you must supply atleast a step function")))

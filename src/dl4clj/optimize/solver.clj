@@ -38,13 +38,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html"}
   "returns the optimizer associated with the solver"
   [solver]
   (.getOptimizer solver))
-
-(defn optimize!
-  "optimizes using a solver and returns the solver"
-  [solver]
-  (doto solver (.optimize)))
-
-(defn set-listeners!
-  "attach listeners to a solver and returns the solver"
-  [& {:keys [solver listeners]}]
-  (doto solver (.setListeners listeners)))

@@ -45,11 +45,11 @@
 
 (defmethod input-split :input-stream-input-split [opts]
   (let [config (:input-stream-input-split opts)
-        {is :in-stream
+        {in :in-stream
          path :file-path} config]
     (if (contains? config :file-path)
-      (InputStreamInputSplit. is path)
-      (InputStreamInputSplit. is))))
+      (InputStreamInputSplit. in path)
+      (InputStreamInputSplit. in))))
 
 (defmethod input-split :list-string-split [opts]
   (let [config (:list-string-split opts)

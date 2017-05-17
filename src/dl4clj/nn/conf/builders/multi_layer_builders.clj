@@ -43,7 +43,7 @@
   ([multi-layer-config-b
     {:keys [backprop backprop-type damping-factor
             input-pre-processors input-type pretrain
-            tbptt-back-length tbptt-fwd-length]
+            tbptt-back-length tbptt-fwd-length confs]
      ;; confs java.util.List<NeuralNetConfiguration>
      ;; confs is automaticaly set when you .build
      :or {}
@@ -53,6 +53,7 @@
      (contains? opts :backprop-type) (.backpropType (constants/value-of
                                                      {:backprop-type
                                                       backprop-type}))
+     (contains? opts :confs) (.confs (list confs))
      (contains? opts :damping-factor) (.dampingFactor damping-factor)
      (contains? opts :input-pre-processors) (.inputPreProcessors
                                              (pre-process/pre-processors
@@ -60,7 +61,8 @@
      (contains? opts :input-type) (.setInputType (constants/input-types input-type))
      (contains? opts :pretrain) (.pretrain pretrain)
      (contains? opts :tbptt-back-length) (.tBPTTBackwardLength tbptt-back-length)
-     (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length))))
+     (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length)))
+  )
 
 (defn list-builder
   "builds a list of layers to be used in a multi-layer configuration

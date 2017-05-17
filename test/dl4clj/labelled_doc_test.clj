@@ -1,12 +1,12 @@
-(ns dl4clj.labelled-doc-test
+#_(ns dl4clj.labelled-doc-test
   (:require [clojure.test :refer :all]
             [dl4clj.text.documentiterator.labelled-document :refer :all])
   (:import [org.deeplearning4j.text.documentiterator LabelledDocument]))
 
-(def empty-doc (labelled-document))
-(def non-empty-doc (labelled-document "this is content" "this is a label"))
+#_(def empty-doc (labelled-document))
+#_(def non-empty-doc (labelled-document "this is content" "this is a label"))
 
-(deftest label-test
+#_(deftest label-test
   (testing "the fns dealing with docs and their labels"
     (is (= "LabelledDocument(content=null, labels=[])" (str (labelled-document))))
     (is (= "LabelledDocument(content=null, labels=[])"  (str empty-doc)))
