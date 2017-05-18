@@ -12,7 +12,9 @@
             [dl4clj.optimize.termination.terminations :refer :all]
             [dl4clj.nn.layers.recurrent.graves-lstm :refer [new-graves-lstm-layer]]
             [nd4clj.linalg.factory.nd4j :refer :all]
-            [dl4clj.nn.layers.variational-autoencoder :refer [new-variational-autoencoder]])
+            [dl4clj.nn.layers.variational-autoencoder :refer [new-variational-autoencoder]]
+            [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
+            [dl4clj.nn.gradient.default-gradient :refer [constructor]])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
 
@@ -342,7 +344,13 @@
                                           {:nn-conf nn-conf
                                            :step-fn (step-fns :gradient)
                                            :listeners multiple-listeners
-                                           :model model}})))))))
+                                           :model model}})))))
+
+    (is (= org.deeplearning4j.optimize.solvers.StochasticGradientDescent
+           (type (get-optimizer (build-solver
+                                 :nn-conf nn-conf
+                                 :model model
+                                 :single-listener single-listener)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API return type testing
@@ -467,14 +475,74 @@
       (is (= (type line-grad-optim)  (type (pre-process-line! line-grad-optim))))
       (is (= (type stoch-grad-optim)  (type (pre-process-line! stoch-grad-optim))))
 
+      ;; get the score from the model
+      (is (= java.lang.Double (type (get-score conj-grad-optim))))
+      (is (= java.lang.Double (type (get-score lbfgs-optim))))
+      (is (= java.lang.Double (type (get-score line-grad-optim))))
+      (is (= java.lang.Double (type (get-score stoch-grad-optim))))
 
-      )
-    ))
+      ;; testing setting the batch size
+      (is (= 5 (get-batch-size (set-batch-size! :optim conj-grad-optim
+                                                :batch-size 5))))
+      (is (= 5 (get-batch-size (set-batch-size! :optim lbfgs-optim
+                                                :batch-size 5))))
+      (is (= 5 (get-batch-size (set-batch-size! :optim line-grad-optim
+                                                :batch-size 5))))
+      (is (= 5 (get-batch-size (set-batch-size! :optim stoch-grad-optim
+                                                :batch-size 5))))
 
-;; unique to optimize.Solver
-;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html
-#_(is (= org.deeplearning4j.optimize.solvers.StochasticGradientDescent
-       (type (get-optimizer (build-solver
-                             :nn-conf nn-conf
-                             :model model
-                             :single-listener single-listener)))))
+      ;; ensuring the optimizer is returned after setting the listeners
+      (is (= (type conj-grad-optim)
+             (type (set-listeners! :optim conj-grad-optim
+                                   :listeners multiple-listeners))))
+      (is (= (type lbfgs-optim)
+             (type (set-listeners! :optim lbfgs-optim
+                                   :listeners multiple-listeners))))
+      (is (= (type line-grad-optim)
+             (type (set-listeners! :optim line-grad-optim
+                                   :listeners multiple-listeners))))
+      (is (= (type stoch-grad-optim)
+             (type (set-listeners! :optim stoch-grad-optim
+                                   :listeners multiple-listeners))))
+
+      ;; making sure we get back a layer updater after setting it
+      (is (= (type (new-layer-updater))
+             (type (get-updater (set-updater! :optim conj-grad-optim
+                                              :updater (new-layer-updater))))))
+      (is (= (type (new-layer-updater))
+             (type (get-updater (set-updater! :optim lbfgs-optim
+                                              :updater (new-layer-updater))))))
+      (is (= (type (new-layer-updater))
+             (type (get-updater (set-updater! :optim line-grad-optim
+                                              :updater (new-layer-updater))))))
+      (is (= (type (new-layer-updater))
+             (type (get-updater (set-updater! :optim stoch-grad-optim
+                                              :updater (new-layer-updater))))))
+
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;; come back to set-up-search-state!, need to implement the berkeley pairs
+      ;; but need to test anyways
+      #_(is (= "" (set-up-search-state! :optim conj-grad-optim
+                                      :gradient (constructor)
+                                      :score 10)))
+      ;; ensure the optimizer is returned
+      (is (= (type conj-grad-optim)
+             (type (update-gradient-according-to-params! :optim conj-grad-optim
+                                                         :gradient (constructor)
+                                                         :model model
+                                                         :batch-size 5))))
+      (is (= (type lbfgs-optim)
+             (type (update-gradient-according-to-params! :optim lbfgs-optim
+                                                         :gradient (constructor)
+                                                         :model model
+                                                         :batch-size 5))))
+      (is (= (type line-grad-optim)
+             (type (update-gradient-according-to-params! :optim line-grad-optim
+                                                         :gradient (constructor)
+                                                         :model model
+                                                         :batch-size 5))))
+      (is (= (type stoch-grad-optim)
+             (type (update-gradient-according-to-params! :optim stoch-grad-optim
+                                                         :gradient (constructor)
+                                                         :model model
+                                                         :batch-size 5)))))))
