@@ -1,6 +1,6 @@
 (ns dl4clj.earlystopping.early-stopping-config
   (:import [org.deeplearning4j.earlystopping EarlyStoppingConfiguration$Builder]
-           [org.deeplearning4j.earlystopping.termination
+           #_[org.deeplearning4j.earlystopping.termination
             InvalidScoreIterationTerminationCondition
             MaxScoreIterationTerminationCondition
             MaxTimeIterationTerminationCondition
@@ -28,44 +28,45 @@
 ;; multimethods for setting up an early stopping configuration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti termination-condition generic-dispatching-fn)
+#_(
+  (defmulti termination-condition generic-dispatching-fn)
 
-(defmethod termination-condition :invalid-score-iteration [opts]
-  (InvalidScoreIterationTerminationCondition.))
+  (defmethod termination-condition :invalid-score-iteration [opts]
+    (InvalidScoreIterationTerminationCondition.))
 
-(defmethod termination-condition :max-score-iteration [opts]
-  (let [conf (:max-score-iteration opts)
-        max-score (:max-score conf)]
-    (MaxScoreIterationTerminationCondition. max-score)))
+  (defmethod termination-condition :max-score-iteration [opts]
+    (let [conf (:max-score-iteration opts)
+          max-score (:max-score conf)]
+      (MaxScoreIterationTerminationCondition. max-score)))
 
-(defmethod termination-condition :max-time-iteration [opts]
-  (let [conf (:max-time-iteration opts)
-        {max-time :max-time
-         time-unit :time-unit} conf]
-    (MaxTimeIterationTerminationCondition. max-time (enum/value-of
-                                                     {:time-unit
-                                                      time-unit}))))
+  (defmethod termination-condition :max-time-iteration [opts]
+    (let [conf (:max-time-iteration opts)
+          {max-time :max-time
+           time-unit :time-unit} conf]
+      (MaxTimeIterationTerminationCondition. max-time (enum/value-of
+                                                       {:time-unit
+                                                        time-unit}))))
 
-(defmethod termination-condition :score-improvement-epoch [opts]
-  (let [conf (:score-improvement-epoch opts)
-        {max-no-improve :max-epochs-with-no-improvement
-         min-improve :min-improvement} conf]
-    (if (contains? conf :min-improvement)
-      (ScoreImprovementEpochTerminationCondition. max-no-improve min-improve)
-      (ScoreImprovementEpochTerminationCondition. max-no-improve))))
+  (defmethod termination-condition :score-improvement-epoch [opts]
+    (let [conf (:score-improvement-epoch opts)
+          {max-no-improve :max-epochs-with-no-improvement
+           min-improve :min-improvement} conf]
+      (if (contains? conf :min-improvement)
+        (ScoreImprovementEpochTerminationCondition. max-no-improve min-improve)
+        (ScoreImprovementEpochTerminationCondition. max-no-improve))))
 
-(defmethod termination-condition :best-score-epoch [opts]
-  (let [conf (:best-score-epoch opts)
-        {best-expected :best-expected-score
-         lesser-better :is-less-better?} conf]
-    (if (contains? conf :is-less-better?)
-      (BestScoreEpochTerminationCondition. best-expected lesser-better)
-      (BestScoreEpochTerminationCondition. best-expected))))
+  (defmethod termination-condition :best-score-epoch [opts]
+    (let [conf (:best-score-epoch opts)
+          {best-expected :best-expected-score
+           lesser-better :is-less-better?} conf]
+      (if (contains? conf :is-less-better?)
+        (BestScoreEpochTerminationCondition. best-expected lesser-better)
+        (BestScoreEpochTerminationCondition. best-expected))))
 
-(defmethod termination-condition :max-epochs [opts]
-  (let [conf (:max-epochs opts)
-        max-es (:max conf)]
-    (MaxEpochsTerminationCondition. max-es)))
+  (defmethod termination-condition :max-epochs [opts]
+    (let [conf (:max-epochs opts)
+          max-es (:max conf)]
+      (MaxEpochsTerminationCondition. max-es))))
 
 (defmulti model-saver-type generic-dispatching-fn)
 
@@ -113,8 +114,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns for the main builder fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; wont need these, just make sure in the config doc string you say that you
+;; need a collection (>= 1) of termination conditions
+;; just put em in a vector
 
-(defn epoch-term-cond
+#_(defn epoch-term-cond
   [conds]
   (let [{score-improvement :score-improvement-epoch
          best-score :best-score-epoch
@@ -128,7 +132,7 @@
         cond-coll (filterv #(not (nil? %)) (list score-term-cond best-score-cond max-n-cond))]
     (array-of :java-class EpochTerminationCondition :data-structure cond-coll)))
 
-(defn iteration-term-cond
+#_(defn iteration-term-cond
   [conds]
   (let [{invalid-score :invalid-score-iteration
          max-score :max-score-iteration
@@ -180,18 +184,21 @@
 
   :score-calculator (map), {:dataset-iterator (dataset-iterator) :average? (boolean)}
    - see dl4clj.datasets.datavec for how to create a dataset-iterator"
+  ;; ^ rewrite this doc string after done refactoring
   [{:keys [epoch-termination-conditions n-epochs
            iteration-termination-conditions model-saver
            save-last-model? score-calculator]
       :as opts}]
   (.build
    (cond-> (EarlyStoppingConfiguration$Builder.)
-     (contains? opts :epoch-termination-conditions)
-     (.epochTerminationConditions (epoch-term-cond epoch-termination-conditions))
+     #_(contains? opts :epoch-termination-conditions)
+     #_(.epochTerminationConditions (epoch-term-cond epoch-termination-conditions))
+     ;; ^ this is now in a new ns, replace the call to epoch-term-cond with array-of
      (contains? opts :n-epochs)
      (.evaluateEveryNEpochs n-epochs)
-     (contains? opts :iteration-termination-conditions)
-     (.iterationTerminationConditions (iteration-term-cond iteration-termination-conditions))
+     #_(contains? opts :iteration-termination-conditions)
+     #_(.iterationTerminationConditions (iteration-term-cond iteration-termination-conditions))
+     ;; ^ this is now in a new ns, replace the call to iteration-term-cond with array-of
      (contains? opts :n-epochs)
      (.evaluateEveryNEpochs n-epochs)
      (contains? opts :model-saver)
