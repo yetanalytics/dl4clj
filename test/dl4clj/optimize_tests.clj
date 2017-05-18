@@ -1,4 +1,5 @@
 (ns dl4clj.optimize-tests
+  (:refer-clojure :exclude [rand max])
   (:require [dl4clj.optimize.solver :refer :all]
             [dl4clj.optimize.solvers.optimizers :refer :all]
             [dl4clj.optimize.step-functions.step-fns :refer :all]
@@ -17,6 +18,7 @@
             [dl4clj.nn.gradient.default-gradient :refer [constructor]]
             [dl4clj.optimize.api.line-optimizer :refer :all]
             [dl4clj.optimize.api.step-fn :refer :all]
+            [dl4clj.optimize.api.termination-condition :refer :all]
             [dl4clj.optimize.api.iteration-listener :refer :all])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
@@ -598,7 +600,29 @@
       (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step
                                                    :features (rand [2 2])
                                                    :line (rand [2 2])
-                                                   :step 1.0))))
-      )
+                                                   :step 1.0)))))))
 
-    ))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; termination condition api return type testing
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TerminationCondition.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest termination-cond-test
+  (testing "the return type of terminate from the termation condition interface"
+    (let [eps (termination-condition {:eps {:eps 2.0 :tolerance 5.0}})
+          norm-2 (termination-condition {:norm-2 {:gradient-tolerance 5.0}})
+          zero-dir (termination-condition {:zero-direction {}})
+          param (array-of :java-type java.lang.Object
+                          :data-structure (rand [1]))]
+      (is (= java.lang.Boolean (type (terminate? :term-cond eps
+                                                 :cost 2.0
+                                                 :old-cost 5.0
+                                                 :other-params param))))
+      (is (= java.lang.Boolean (type (terminate? :term-cond norm-2
+                                                 :cost 2.0
+                                                 :old-cost 5.0
+                                                 :other-params param))))
+      (is (= java.lang.Boolean (type (terminate? :term-cond zero-dir
+                                                 :cost 2.0
+                                                 :old-cost 5.0
+                                                 :other-params param)))))))

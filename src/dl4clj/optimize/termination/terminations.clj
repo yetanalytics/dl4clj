@@ -60,20 +60,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/pac
   "terminates when the absolute magnitude of gradient is 0"
   []
   (termination-condition {:zero-direction {}}))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; api, also specified else where (termination-condition interface/api)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn time-to-terminate?
-  "Whether to terminate based on the given meta data
-
-  :termination-condition (termination-condition), created in this ns
-
-  :cost (double), the current value of the cost fn
-
-  :old-cost (double), the old value of the cost fn
-
-  :other-params (java.lang.Object), other params...not sure what they are or should be"
-  [& {:keys [terminate-condition cost old-cost other-params]}]
-  (.terminate terminate-condition cost old-cost other-params))
