@@ -1,7 +1,7 @@
 (ns ^{:doc "Interface for termination conditions to be evaluated once per iteration (i.e., once per minibatch). Used for example to more quickly terminate training, instead of waiting for an epoch to complete before checking termination conditions.
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/IterationTerminationCondition.html"}
-    dl4clj.earlystopping.iteration-termination-condition
+    dl4clj.earlystopping.interfaces.iteration-termination-condition
   (:import [org.deeplearning4j.earlystopping.termination IterationTerminationCondition]))
 
 (defn initialize-iteration!
