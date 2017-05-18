@@ -15,6 +15,8 @@
             [dl4clj.nn.layers.variational-autoencoder :refer [new-variational-autoencoder]]
             [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
             [dl4clj.nn.gradient.default-gradient :refer [constructor]]
+            [dl4clj.optimize.api.line-optimizer :refer :all]
+            [dl4clj.optimize.api.step-fn :refer :all]
             [dl4clj.optimize.api.iteration-listener :refer :all])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
@@ -566,3 +568,37 @@
       (is (= java.lang.Boolean (type (invoked? composed))))
       (is (= java.lang.Boolean (type (invoked? score-iter))))
       (is (= java.lang.Boolean (type (invoked? perf)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step Function api return type testing
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/StepFunction.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest step-api
+  (testing "the step api"
+    (let [gradient-step (step-fns :gradient)
+          neg-gradient-step (step-fns :negative-gradient)]
+      ;; only supplying the step fn
+      (is (= (type gradient-step) (type (step! :step-fn gradient-step))))
+      (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step))))
+
+      ;; supplying the step fn, features and the line
+      (is (= (type gradient-step) (type (step! :step-fn gradient-step
+                                               :features (rand [2 2])
+                                               :line (rand [2 2])))))
+      (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step
+                                               :features (rand [2 2])
+                                               :line (rand [2 2])))))
+
+      ;; supplying the step fn, features, line and step value
+      (is (= (type gradient-step) (type (step! :step-fn gradient-step
+                                               :features (rand [2 2])
+                                               :line (rand [2 2])
+                                               :step 1.0))))
+      (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step
+                                                   :features (rand [2 2])
+                                                   :line (rand [2 2])
+                                                   :step 1.0))))
+      )
+
+    ))

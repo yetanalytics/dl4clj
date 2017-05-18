@@ -7,8 +7,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
             NegativeDefaultStepFunction
             GradientStepFunction
             StepFunctions
-            DefaultStepFunction]
-           [org.deeplearning4j.optimize.api StepFunction])
+            DefaultStepFunction])
   (:require [dl4clj.nn.conf.step-fns :refer [step-fn]]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
 
@@ -62,34 +61,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
   "creates a new negative gradient step function instance"
   []
   (step-fns :negative-gradient))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; step from the step-function interface
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn step!
-  "makes a step with the given params, the step-fn is returned
-
-  :step-fn (step-fn), a step fn created by the fns in this ns
-
-  :features (INDArray), the input data
-
-  :lines (INDArray), the line.... need to figure out what this does
-
-  :step (double), the size of the step to make
-
-  :params (INDArray), the params...need to figure out exactly what this is
-
-  :search-direction (INDArray), the line to step"
-  [& {:keys [step-fn features line step params search-direction]
-      :as opts}]
-  (cond (contains-many? opts :params :search-direction :step)
-        (doto step-fn (.step params search-direction step))
-        (contains-many? opts :features :line :step)
-        (doto step-fn (.step features line step))
-        (contains-many? opts :features :line)
-        (doto step-fn (.step features line))
-        (contains? opts :step-fn)
-        (doto step-fn (.step))
-        :else
-        (assert false "you must supply atleast a step function")))

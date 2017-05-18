@@ -3,7 +3,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/LineOptimize
     dl4clj.optimize.api.line-optimizer
   (:import [org.deeplearning4j.optimize.api LineOptimizer]))
 
-(defn optimize
+;; need to figure out how to properly call this fn
+;; maybe wont ever need to
+(defn line-optimize
   "line optimizer
 
   :params (INDArray), the parameters to optimize
