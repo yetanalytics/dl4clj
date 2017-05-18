@@ -7,7 +7,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/StepFunction
 (defn step!
   "makes a step with the given params, the step-fn is returned
 
-  :step-fn (step-fn), a step fn created by the fns in this ns
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns
 
   :features (INDArray), the input data
 
@@ -24,25 +27,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/StepFunction
         (doto step-fn (.step))
         :else
         (assert false "you must supply atleast a step function")))
-
-
-
-
-#_(defn step!
-  "makes a step in the gradient direction
-
-  :features (INDArray), the input to the model
-
-  :line (INDArray), the line to step, (direction of the gradient??)
-
-  :step (double), the size of the step
-
-  returns the step-fn"
-  [& {:keys [step-fn features line step]
-      :as opts}]
-  (cond (contains-many? opts :features :line :step)
-        (doto step-fn (.step features line step))
-        (contains-many? opts :features :line)
-        (doto step-fn (.step features line))
-        :else
-        (doto step-fn (.step))))

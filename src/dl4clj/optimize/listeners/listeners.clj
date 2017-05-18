@@ -176,6 +176,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
 
   :frequency (int), how often scores are stored
    - defaults to 1
+
   :array? (boolean), if you want to return the object in an array of type IterationListener
    - defaults to false"
   [& {:keys [frequency array?]
@@ -286,5 +287,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
         (assert false "you must supply alteast a file or output stream to export to")))
 
 (defn get-scores-vs-iter
+  "currently results in a stack over flow error,
+
+  will need to look more into this but I have a feeling
+
+  this is not a user facing method"
   [listener]
   (.getScoreVsIter listener))

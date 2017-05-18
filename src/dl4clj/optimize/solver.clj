@@ -9,14 +9,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html"}
   :nn-conf (conf), a neural network configuration.
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :single-listener (array), array of listener objects.
-   - see: ...
+  :single-listener (array), a listener object in an array.
+   - see: dl4clj.optimize.listeners.listeners
 
   :multiple-listeners (collection), collection of listener objects
-   - see: ...
+   - see: dl4clj.optimize.listeners.listeners
 
-  :model (model), a configured neural network.
-   - see: dl4clj.nn.conf.builders.multi-layer-builders
+   - clojure data structures can be used
+
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   :build? (boolean), wether the builder should be built.
    - defaults to true

@@ -19,8 +19,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/IterationLis
   ;; not sure how to properly use this method
   "Event listener for each iteration
 
-  :model (model), a built neural network
-   - see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   :iteration (int), the iteration
 

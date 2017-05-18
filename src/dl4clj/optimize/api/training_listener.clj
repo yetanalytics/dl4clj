@@ -10,7 +10,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
   "Called once per iteration, after gradients have been calculated and updated gradients
   can be returned by calling (gradient model)
 
-  :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   returns the listener"
   [& {:keys [listener model]}]
@@ -19,7 +20,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
 (defn on-epoch-end!
   "Called once at the end of each epoch, when fitting a model
 
-  :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   returns the listener"
   [& {:keys [listener model]}]
@@ -28,7 +30,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
 (defn on-epoch-start!
   "Called once at the start of each epochm when fitting a model
 
-  :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   returns the listener"
   [& {:keys [listener model]}]
@@ -37,7 +40,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
 (defn on-forward-pass!
   "called once per iteration, for activations during training time
 
-  :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   :activations (list (INDArray)) the activation values
 
@@ -53,7 +57,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
 
   get the gradients by passing the model to (gradient)
 
-  :model (model), see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   returns the listener"
   [& {:keys [listener model]}]

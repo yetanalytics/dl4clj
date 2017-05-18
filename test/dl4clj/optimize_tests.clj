@@ -19,7 +19,8 @@
             [dl4clj.optimize.api.line-optimizer :refer :all]
             [dl4clj.optimize.api.step-fn :refer :all]
             [dl4clj.optimize.api.termination-condition :refer :all]
-            [dl4clj.optimize.api.iteration-listener :refer :all])
+            [dl4clj.optimize.api.iteration-listener :refer :all]
+            [clojure.java.io :as io])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
 
@@ -344,13 +345,7 @@
                                           {:nn-conf nn-conf
                                            :step-fn (step-fns :gradient)
                                            :listeners multiple-listeners
-                                           :model model}})))))
-
-    (is (= org.deeplearning4j.optimize.solvers.StochasticGradientDescent
-           (type (get-optimizer (build-solver
-                                 :nn-conf nn-conf
-                                 :model model
-                                 :single-listener single-listener)))))))
+                                           :model model}})))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API return type testing
@@ -631,4 +626,120 @@
 ;; training listener interface, implementing classes not wrapped yet (ui)
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingListener.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; making a note for future dev
+;; making a note for future me
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc fns that are not from a class instead of an interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest misc-methods
+  (testing "the methods defined within classes instead of interfaces"
+    (let [l (new-collection-scores-iteration-listener :frequency 5)
+          csv (io/as-file "resources/test.csv")
+          tabs (io/as-file "resources/secondtest.txt")
+          back-track (new-back-track-line-search-optimizer
+                      :model model
+                      :optimizer (optimizers {:stochastic-gradient-descent
+                                              {:nn-conf nn-conf
+                                               :step-fn (step-fns :gradient)
+                                               :listeners multiple-listeners
+                                               :model model}}))]
+      ;; export-scores! to a file
+      ;; found in dl4clj.optimize.listeners.listeners
+      (is (= org.deeplearning4j.optimize.listeners.CollectScoresIterationListener
+             (type (export-scores! :listener l
+                                   :file csv
+                                   :delim ","))))
+      (is (= "Iteration,Score" (slurp "resources/test.csv")))
+      (is (= org.deeplearning4j.optimize.listeners.CollectScoresIterationListener
+             (type (export-scores! :listener l
+                                   :file tabs))))
+      (is (= "Iteration\tScore" (slurp "resources/secondtest.txt")))
+
+      ;; export-scores! to an output stream
+      ;; found in dl4clj.optimize.listeners.listeners
+      (with-open [o (io/output-stream "resources/output-stream.csv")
+                  o-no-delim (io/output-stream "resources/output-s.txt")]
+        (is (= org.deeplearning4j.optimize.listeners.CollectScoresIterationListener
+               (type (export-scores! :listener l
+                                     :output-stream o
+                                     :delim ","))))
+        (is (= org.deeplearning4j.optimize.listeners.CollectScoresIterationListener
+               (type (export-scores! :listener l
+                                     :output-stream o-no-delim)))))
+      (is (= "Iteration,Score" (slurp "resources/output-stream.csv")))
+      (is (= "Iteration\tScore" (slurp "resources/output-s.txt")))
+
+      ;; get-optimizer found in dl4clj.optimize.solver
+      (is (= org.deeplearning4j.optimize.solvers.StochasticGradientDescent
+             (type (get-optimizer (build-solver
+                                   :nn-conf nn-conf
+                                   :model model
+                                   :single-listener single-listener)))))
+
+      ;; get-default-step-fn-for-optimizer in  dl4clj.optimize.solvers.optimizers
+      (is (= org.deeplearning4j.optimize.stepfunctions.NegativeDefaultStepFunction
+             (type (get-default-step-fn-for-optimizer
+                    (type (new-conjugate-gradient-optimizer
+                           :nn-conf nn-conf
+                           :step-fn (step-fns :gradient)
+                           :listeners multiple-listeners
+                           :termination-condition [(new-zero-direction-termination-condition)]
+                           :model model))))))
+      (is (= org.deeplearning4j.optimize.stepfunctions.NegativeDefaultStepFunction
+             (type (get-default-step-fn-for-optimizer
+                    (type (new-lbfgs-optimizer
+                           :nn-conf nn-conf
+                           :step-fn (step-fns :gradient)
+                           :listeners multiple-listeners
+                           :termination-condition [(new-zero-direction-termination-condition)]
+                           :model model))))))
+      (is (= org.deeplearning4j.optimize.stepfunctions.NegativeDefaultStepFunction
+             (type (get-default-step-fn-for-optimizer
+                    (type (new-line-gradient-descent-optimizer
+                           :nn-conf nn-conf
+                           :step-fn (step-fns :gradient)
+                           :listeners multiple-listeners
+                           :termination-condition [(new-zero-direction-termination-condition)]
+                           :model model))))))
+      (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
+             (type (get-default-step-fn-for-optimizer
+                    (type (new-stochastic-gradient-descent-optimizer
+                           :nn-conf nn-conf
+                           :step-fn (step-fns :gradient)
+                           :listeners multiple-listeners
+                           :termination-condition [(new-zero-direction-termination-condition)]
+                           :model model))))))
+
+      ;; get-iteration-count in dl4clj.optimize.solvers.optimizers
+      (is (= java.lang.Integer (type (get-iteration-count model))))
+
+      ;; increment-iteration-count! in dl4clj.optimize.solvers.optimizers
+      ;; look at the model itself to see that the iteration count has increased
+      (is (= (type model) (type (increment-iteration-count! :model model
+                                                            :increment-by 1))))
+
+      ;; back track line search optimizer methods
+      ;; see the bottom of dl4clj.optimize.solvers.optimizers
+      (is (= java.lang.Integer (type (get-max-iterations back-track))))
+      (is (= java.lang.Double (type (get-step-max back-track))))
+      (is (= (type back-track) (type
+                                (set-abs-tolerance! :back-track back-track
+                                                    :tolerance 0.2))))
+      (is (= (type back-track) (type
+                                (set-max-iterations! :back-track back-track
+                                                     :max-iterations 120))))
+      (is (= (type back-track) (type
+                                (set-relative-tolerance! :back-track back-track
+                                                         :tolerance 0.1))))
+      ;; need to figure out what to pass when methods wants params as an INDArray
+      ;; I always get this error: Unable to set parameters: must be of length 0
+      ;; I think I need to make an empty INDArray but cant with the current
+      ;; ND4j INDArray-creation ns
+      #_(is (= (type back-track) (type
+                                (set-score-for! :back-track back-track
+                                                :params (zeros 1)))))
+      (is (= (type back-track) (type
+                                (set-step-max! :back-track back-track
+                                               :step-max 1.0)))))))

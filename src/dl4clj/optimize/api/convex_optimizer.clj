@@ -41,7 +41,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (.gradientAndScore optim))
 
 (defn optimize
-  "calls optimize!  returns a boolean"
+  "calls optimize! returns a boolean"
   [optim]
   (.optimize optim))
 
@@ -79,6 +79,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   "sets the listeners for the supplied optimizer
 
   :listeners (collection), a collection of listeners
+   - clojure data structures can be used
 
   returns the optimizer"
   [& {:keys [optim listeners]}]
@@ -112,8 +113,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 
   :gradient (gradient), see: dl4clj.nn.gradient.default-gradient
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.nn-conf-builder
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   :batch-size (int), the batch size
 

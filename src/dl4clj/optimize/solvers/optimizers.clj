@@ -80,18 +80,25 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
   :nn-conf (nn-conf), a neural network configuration
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns
 
   :listeners (coll), collection of iteration listeners
    - see: dl4clj.optimize.listeners.listeners
 
-  :termination-condition (keyword), reason to stop optimization
-   - one of :esp, :norm2, :zero-direction
-   - need to deal with the collection part of this********
+   - clojure data structures can be used here
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders"
+  :termination-condition (coll), reason to stop optimization
+   - one of :esp, :norm2, :zero-direction
+
+   - for creating termination-conditions see: dl4clj.optimize.termination.terminations
+
+   - clojure data structures can be used here
+
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network"
   [& {:keys [nn-conf step-fn listeners termination-condition model]
       :as opts}]
   (optimizers {:conjugate-geradient opts}))
@@ -102,18 +109,25 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
   :nn-conf (nn-conf), a neural network configuration
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns
 
   :listeners (coll), collection of iteration listeners
    - see: dl4clj.optimize.listeners.listeners
 
-  :termination-condition (keyword), reason to stop optimization
-   - one of :esp, :norm2, :zero-direction
-   - need to deal with the collection part of this********
+   - clojure data structures can be used here
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders"
+  :termination-condition (coll), reason to stop optimization
+   - one of :esp, :norm2, :zero-direction
+
+   - for creating termination-conditions see: dl4clj.optimize.termination.terminations
+
+   - clojure data structures can be used here
+
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network"
   [& {:keys [nn-conf step-fn listeners termination-condition model]
       :as opts}]
   (optimizers {:lbfgs opts}))
@@ -124,18 +138,25 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
   :nn-conf (nn-conf), a neural network configuration
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns
 
   :listeners (coll), collection of iteration listeners
    - see: dl4clj.optimize.listeners.listeners
 
-  :termination-condition (keyword), reason to stop optimization
-   - one of :esp, :norm2, :zero-direction
-   - need to deal with the collection part of this********
+   - clojure data structures can be used here
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders"
+  :termination-condition (coll), reason to stop optimization
+   - one of :esp, :norm2, :zero-direction
+
+   - for creating termination-conditions see: dl4clj.optimize.termination.terminations
+
+   - clojure data structures can be used here
+
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network"
   [& {:keys [nn-conf step-fn listeners termination-condition model]
       :as opts}]
   (optimizers {:line-gradient-descent opts}))
@@ -146,18 +167,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
   :nn-conf (nn-conf), a neural network configuration
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns
 
   :listeners (coll), collection of iteration listeners
    - see: dl4clj.optimize.listeners.listeners
 
-  :termination-condition (keyword), reason to stop optimization
+  :termination-condition (coll), reason to stop optimization
    - one of :esp, :norm2, :zero-direction
-   - need to deal with the collection part of this********
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders"
+   - for creating termination-conditions see: dl4clj.optimize.termination.terminations
+
+   - clojure data structures can be used here
+
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network"
   [& {:keys [nn-conf step-fn listeners termination-condition model]
       :as opts}]
   (optimizers {:stochastic-gradient-descent opts}))
@@ -165,16 +191,18 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
 (defn new-back-track-line-search-optimizer
   "creates a new back track line search optimizer
 
-  :model (model), a neural network model
-   - see: dl4clj.nn.conf.builders.multi-layer-builders
+  :model (model), A Model is meant for predicting something from data.
+   - either a nn-layer or a multi-layer-network
 
   :layer (layer), a layer within a neural network
    - see: dl4clj.nn.conf.builders.builders
 
   :optimizer (ConvexOptimizer) an existing optimizer that implements ConvexOptimizer
 
-  :step-fn (step-fn), the step function to use
-   - see: ... not yet fully implemented at time of writing this doc string"
+  :step-fn (step-fn), the step function
+   - one of: :default, :gradient, :negative-default
+             :negative-gradient
+   - for creating step-fns, see: dl4clj.optimize.step-functions.step-fns"
   [& {:keys [model layer optimizer step-fn]
       :as opts}]
   (optimizers {:back-track-line-search opts}))
@@ -186,13 +214,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
 (defn get-default-step-fn-for-optimizer
   "returns the default step fn for a type of optimizer"
   [convex-optimizer-class]
-  (.getDefaultStepFunctionForOptimizer convex-optimizer-class))
+  (BaseOptimizer/getDefaultStepFunctionForOptimizer convex-optimizer-class))
 
 (defn get-iteration-count
   "get the number of iterations the model has been through
   -- I think, will need to test this assertion"
   [model]
-  (.getIterationCount model))
+  (BaseOptimizer/getIterationCount model))
 
 (defn increment-iteration-count!
   "increments the iteration count for a model by the specified amount
@@ -200,8 +228,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-
   :increment-by (int), the specified amount
 
   returns the mutated model"
-  [model increment-by]
-  (doto model (.incrementIterationCount increment-by)))
+  [& {:keys [model increment-by]}]
+  (doto model (BaseOptimizer/incrementIterationCount increment-by)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Back track line search methods
