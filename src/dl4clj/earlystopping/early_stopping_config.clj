@@ -16,10 +16,13 @@
            [org.deeplearning4j.earlystopping EarlyStoppingModelSaver]
            [org.deeplearning4j.earlystopping.scorecalc ScoreCalculator
             DataSetLossCalculator DataSetLossCalculatorCG]
-           [java.nio.charset Charset]
-           )
+           [java.nio.charset Charset])
   (:require [dl4clj.constants :as enum]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn array-of]]))
+
+;; refactor this, don't need all of these multimethods here
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethods for setting up an early stopping configuration
@@ -122,8 +125,8 @@
                           (termination-condition {:best-score-epoch best-score}))
         max-n-cond (if (false? (nil? max-n))
                      (termination-condition {:max-epochs max-n}))
-        conds (filterv #(not (nil? %)) (list score-term-cond best-score-cond max-n-cond))]
-    (into-array EpochTerminationCondition conds)))
+        cond-coll (filterv #(not (nil? %)) (list score-term-cond best-score-cond max-n-cond))]
+    (array-of :java-class EpochTerminationCondition :data-structure cond-coll)))
 
 (defn iteration-term-cond
   [conds]
@@ -136,8 +139,8 @@
                          (termination-condition {:max-score-iteration max-score}))
         max-time-cond (if (false? (nil? max-time))
                         (termination-condition {:max-time-iteration max-time}))
-        conds (filterv #(not (nil? %)) (list invalid-score-cond max-score-cond max-time-cond))]
-    (into-array IterationTerminationCondition conds)))
+        cond-coll (filterv #(not (nil? %)) (list invalid-score-cond max-score-cond max-time-cond))]
+    (array-of :java-class IterationTerminationCondition :data-structure cond-coll)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the builder
