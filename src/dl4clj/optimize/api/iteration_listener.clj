@@ -16,6 +16,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/IterationLis
   (.invoked listener))
 
 (defn iteration-done!
+  ;; not sure how to properly use this method
   "Event listener for each iteration
 
   :model (model), a built neural network
