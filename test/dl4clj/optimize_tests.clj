@@ -22,6 +22,7 @@
             [dl4clj.optimize.api.iteration-listener :refer :all])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,11 +75,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of generic solvers
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/package-summary.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest generic-solvers
   ;; still need to write a good test for optimize!
-  ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/package-summary.html
   (testing "the creation of solvers and unit tests for their methods"
     (is (= org.deeplearning4j.optimize.Solver (type (build-solver
                                                      :nn-conf nn-conf))))
@@ -107,11 +108,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of step fns
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/package-summary.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest step-functions
   (testing "the creation of step functions and that the fns implement the step function interface"
-    ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/package-summary.html
     (is (= org.deeplearning4j.optimize.stepfunctions.DefaultStepFunction
            (type (step-fns :default))))
     (is (= org.deeplearning4j.optimize.stepfunctions.DefaultStepFunction
@@ -130,20 +131,15 @@
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
            (type (step-fns :negative-gradient))))
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
-           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :negative-gradient-step-fn))))
-
-    (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
-           (type (step! :step-fn (step-fns :negative-gradient)))))
-    ;; will need to expand step! test to include the INDArray args
-    ))
+           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :negative-gradient-step-fn))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of listeners
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/package-summary.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest listeners-test
   (testing "the creation of iteration listeners"
-    ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/package-summary.html
     (is (= org.deeplearning4j.optimize.listeners.ParamAndGradientIterationListener
            (type (listeners {:param-and-gradient {}}))))
     (is (= org.deeplearning4j.optimize.listeners.ParamAndGradientIterationListener
@@ -179,11 +175,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of termination conditions
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/package-summary.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest terminations
   (testing "the creation of termination conditions"
-    ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/package-summary.html
     (is (= org.deeplearning4j.optimize.terminations.EpsTermination
            (type (termination-condition {:eps {}}))))
     (is (= org.deeplearning4j.optimize.terminations.EpsTermination
@@ -208,11 +204,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of optimizers
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-summary.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest various-optimizers
   (testing "the creation of optimizers"
-    ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/solvers/package-summary.html
     (is (= org.deeplearning4j.optimize.solvers.ConjugateGradient
            (type (optimizers {:conjugate-geradient
                               {:nn-conf nn-conf
@@ -360,9 +356,13 @@
 ;; API return type testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; convex optimizer api
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimizer.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest convex-optimizer-api
   (testing "the return type of the convex optimizer interace fns"
-    ;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimizer.html
     (let [conj-grad-optim (new-conjugate-gradient-optimizer
                            :nn-conf nn-conf
                            :step-fn (step-fns :gradient)
@@ -612,7 +612,7 @@
     (let [eps (termination-condition {:eps {:eps 2.0 :tolerance 5.0}})
           norm-2 (termination-condition {:norm-2 {:gradient-tolerance 5.0}})
           zero-dir (termination-condition {:zero-direction {}})
-          param (array-of :java-type java.lang.Object
+          param  (array-of :java-type java.lang.Object
                           :data-structure (rand [1]))]
       (is (= java.lang.Boolean (type (terminate? :term-cond eps
                                                  :cost 2.0
@@ -626,3 +626,9 @@
                                                  :cost 2.0
                                                  :old-cost 5.0
                                                  :other-params param)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; training listener interface, implementing classes not wrapped yet (ui)
+;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingListener.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; making a note for future dev
