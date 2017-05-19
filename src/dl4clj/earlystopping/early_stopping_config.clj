@@ -202,7 +202,9 @@
      (contains? opts :n-epochs)
      (.evaluateEveryNEpochs n-epochs)
      (contains? opts :model-saver)
-     (.modelSaver (first (into-array EarlyStoppingModelSaver [(model-saver-type model-saver)])))
+     ;; this should work but obviously test it
+     (.modelSaver (first (array-of :java-class EarlyStoppingModelSaver
+                                   :data-structure [(model-saver-type model-saver)])))
      (contains? opts :save-last-model?)
      (.saveLastModel save-last-model?)
      (contains? opts :score-calculator)
