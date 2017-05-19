@@ -1,5 +1,5 @@
 (ns dl4clj.optimize-tests
-  (:refer-clojure :exclude [rand max])
+  #_(:refer-clojure :exclude [rand max])
   (:require [dl4clj.optimize.solver :refer :all]
             [dl4clj.optimize.solvers.optimizers :refer :all]
             [dl4clj.optimize.step-functions.step-fns :refer :all]
@@ -608,7 +608,7 @@
           norm-2 (termination-condition {:norm-2 {:gradient-tolerance 5.0}})
           zero-dir (termination-condition {:zero-direction {}})
           param  (array-of :java-type java.lang.Object
-                          :data-structure (rand [1]))]
+                           :data (rand [1]))]
       (is (= java.lang.Boolean (type (terminate? :term-cond eps
                                                  :cost 2.0
                                                  :old-cost 5.0

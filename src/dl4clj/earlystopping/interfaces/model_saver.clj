@@ -35,7 +35,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
   [& {:keys [saver net score]}]
   (doto saver (.saveBestModel net score)))
 
-(defn save-latest-model
+(defn save-latest-model!
   "Save the latest (most recent) model learned during early stopping
 
   :saver (es saver) one of: :in-memory-model-saver, :local-file-model-saver

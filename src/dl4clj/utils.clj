@@ -42,7 +42,7 @@
   "takes in a data structure and a java class type.
 
   puts the data structure into an array with the java class as the type"
-  [& {:keys [data-structure java-type]}]
-  (if (seq? data-structure)
-    (into-array java-type data-structure)
-    (into-array java-type [data-structure])))
+  [& {:keys [data java-type]}]
+  (if (seq? data)
+    (into-array java-type data)
+    (into-array java-type [data])))

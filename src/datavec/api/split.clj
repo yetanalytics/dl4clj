@@ -1,4 +1,5 @@
 (ns datavec.api.split
+  (:refer-clojure :exclude [reset!])
   (:import [org.datavec.api.split FileSplit BaseInputSplit CollectionInputSplit
             InputStreamInputSplit ListStringSplit NumberedFileInputSplit
             StringSplit TransformSplit TransformSplit$URITransform]

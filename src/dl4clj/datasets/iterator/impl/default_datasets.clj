@@ -1,4 +1,5 @@
 (ns dl4clj.datasets.iterator.impl.default-datasets
+  (:refer-clojure :exclude [reset!])
   (:import [org.deeplearning4j.datasets.iterator.impl
             CifarDataSetIterator IrisDataSetIterator LFWDataSetIterator
             MnistDataSetIterator RawMnistDataSetIterator])

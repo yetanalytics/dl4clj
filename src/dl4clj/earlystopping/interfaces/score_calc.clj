@@ -7,7 +7,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
 (defn calculate-score
   "Calculate the score for the given MultiLayerNetwork
 
-  :calc (calculator), the object that does the calculations
+  :score-calc (calculator), the object that does the calculations
    - one of: :data-set-loss-calc, :spark-data-set-loss-calc (not implemented)
 
    - see: TBD
@@ -16,6 +16,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
    - a multi-layer-network
 
    - see: dl4clj.nn.conf.builders.multi-layer-builders"
-  [& {:keys [calc model]}]
+  [& {:keys [score-calc model]}]
   ;; this also works for computation graphs but they have not been implemented yet
-  (.calculateScore calc model))
+  (.calculateScore score-calc model))

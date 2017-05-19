@@ -18,10 +18,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination
   return true if training should be terminated immediately, or false otherwise
 
   :iter-term-cond (iteration termination condition)
-   - see TBD
-   - one of :invalid-score-iteration-termination-condition (or whatever it is actually going to be),
-            :max-score-iteration-termination-condition (or whatever it is actually going to be),
-            :max-time-iteration-termination-condition (or whatever it is actually going to be)
+   - see dl4clj.earlystopping.termination-conditions
+   - one of invalid-score-iteration-termination-condition
+            max-score-iteration-termination-condition
+            max-time-iteration-termination-condition
 
   :last-mini-batch-score (double), Score of the last minibatch"
   [& {:keys [iter-term-cond last-mini-batch-score]}]

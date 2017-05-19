@@ -1,6 +1,8 @@
 (ns ^{:doc "EarlyStoppingListener is a listener interface for conducting early stopping training.
  It provides onStart, onEpoch, and onCompletion methods, which are called as appropriate
 
+requires you to create the listener via gen-class...
+ - see: https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-core/src/test/java/org/deeplearning4j/earlystopping/TestEarlyStopping.java
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/listener/EarlyStoppingListener.html"}
     dl4clj.earlystopping.interfaces.listener
   (:import [org.deeplearning4j.earlystopping.listener EarlyStoppingListener]))
@@ -12,8 +14,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/listener/Ea
    - The early stopping result. Provides details of why early stopping training was terminated, etc
 
    - see: TBD"
-  [& {:keys [listener early-stopping-result]}]
-  (doto listener (.onCompletion early-stopping-result)))
+  [& {:keys [mln early-stopping-result]}]
+  (doto mln (.onCompletion early-stopping-result)))
 
 (defn on-epoch!
   "Method that is called at the end of each epoch completed during early stopping training

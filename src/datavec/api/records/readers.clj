@@ -170,28 +170,7 @@
   [& {:keys [rr where-to-save]}]
   (.create rr where-to-save))
 
-(defn close
-  "Closes this stream and releases any system resources associated with it."
-  [rr]
-  (doto rr
-    (.close)))
-
-(defn get-conf
-  "Return the configuration used by this record reader"
-  [rr]
-  (.getConf rr))
-
-(defn get-labels
-  "List of label strings"
-  [rr]
-  (.getLabels rr))
-
-(defn has-next?
-  "Check whether there are anymore records"
-  [rr]
-  (.hasNext rr))
-
-(defn initialize
+(defn initialize-rr!
   ;; refactor once datavec.api.split is refactored (:input-split)
   "will need to be updated when other rr's are implemented
 
@@ -206,80 +185,116 @@
   (if (contains? opts conf)
     (.initialize rr conf input-split)
     (.initialize rr input-split)))
+(comment (defn close
+           "Closes this stream and releases any system resources associated with it."
+           [rr]
+           (doto rr
+             (.close)))
 
-(defn load-from-meta-data
-  "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)
+         (defn get-conf
+           "Return the configuration used by this record reader"
+           [rr]
+           (.getConf rr))
+
+         (defn get-labels-reader
+           "List of label strings"
+           [rr]
+           (.getLabels rr))
+
+         (defn has-next?
+           "Check whether there are anymore records"
+           [rr]
+           (.hasNext rr))
+
+         (defn initialize-rr!
+           ;; refactor once datavec.api.split is refactored (:input-split)
+           "will need to be updated when other rr's are implemented
+
+  :input-split (input split) the split that defines the range of records to read
+   -see datavec.api.split
+  :conf (map) a configuration for initialization
+
+  this is how data actually gets into the record reader"
+           [& {:keys [rr input-split conf]
+               :as opts}]
+           (assert (contains-many? opts :rr :input-split))
+           (if (contains? opts conf)
+             (.initialize rr conf input-split)
+             (.initialize rr input-split)))
+
+         (defn load-from-meta-data
+           "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)
    -see TBD for record meta data
   https://deeplearning4j.org/datavecdoc/org/datavec/api/records/metadata/RecordMetaData.html"
-  [& {:keys [rr record-meta-data]}]
-  (.loadFromMetaData rr record-meta-data))
+           [& {:keys [rr record-meta-data]}]
+           (.loadFromMetaData rr record-meta-data))
 
-(defn load-seq-from-meta-data
-  "Load multiple (or single) sequence record(s) from the given list of record meta data instances
+         (defn load-seq-from-meta-data
+           "Load multiple (or single) sequence record(s) from the given list of record meta data instances
 
   number of sequences is determined by how record meta data is passed
    - as a list of instances, multiple
    - a single instance, single seq"
-  [& {:keys [rr record-meta-data]}]
-  (.loadSequenceFromMetaData rr record-meta-data))
+           [& {:keys [rr record-meta-data]}]
+           (.loadSequenceFromMetaData rr record-meta-data))
 
-(defn next!
-  "Get the next record"
-  [rr]
-  (.next rr))
+         (defn next!
+           "Get the next record"
+           [rr]
+           (.next rr))
 
-(defn next-record
-  "Similar to next!, but returns a record reader,
+         (defn next-record
+           "Similar to next!, but returns a record reader,
   that may include metadata such as the source of the data"
-  [rr]
-  (.nextRecord rr))
+           [rr]
+           (.nextRecord rr))
 
-(defn record
-  "Load the record from the given data-in-stream
+         (defn record
+           "Load the record from the given data-in-stream
   Unlike next!, the internal state of the record-reader is not modified
   Implementations of this method should not close the DataInputStream"
-  [& {:keys [rr uri data-in-stream]}]
-  (.record rr uri data-in-stream ))
+           [& {:keys [rr uri data-in-stream]}]
+           (.record rr uri data-in-stream ))
 
-(defn reset
-  "Reset record reader iterator"
-  [rr]
-  (doto rr
-    (.reset)))
+         (defn reset
+           "Reset record reader iterator"
+           [rr]
+           (doto rr
+             (.reset)))
 
-(defn set-conf
-  "Set the configuration to be used by this record reader."
-  [& {:keys [rr conf]}]
-  (doto rr
-    (.setConf conf)))
+         (defn set-conf
+           "Set the configuration to be used by this record reader."
+           [& {:keys [rr conf]}]
+           (doto rr
+             (.setConf conf)))
 
-(defn get-listeners
-  "Get the record listeners for this record reader."
-  [rr]
-  (.getListeners rr))
+         (defn get-listeners
+           "Get the record listeners for this record reader."
+           [rr]
+           (.getListeners rr))
 
-(defn set-listeners
-  "Set the record listeners for this record reader."
-  [& {:keys [rr listeners]}]
-  (doto rr
-    (.setListeners listeners)))
+         (defn set-listeners
+           "Set the record listeners for this record reader."
+           [& {:keys [rr listeners]}]
+           (doto rr
+             (.setListeners listeners)))
 
-(defn next-seq
-  "Similar to sequence-record, but returns a Record object,
+         (defn next-seq
+           "Similar to sequence-record, but returns a Record object,
   that may include metadata such as the source of the data"
-  [rr]
-  (.nextSequence rr))
+           [rr]
+           (.nextSequence rr))
 
-(defn sequence-record
-  "Load a sequence record from the given data-in-stream
+         (defn sequence-record
+           "Load a sequence record from the given data-in-stream
   Unlike next-data-record the internal state of the record-reader is not modified
   Implementations of this method should not close the data-in-stream"
-  [& {:keys [rr uri data-in-stream]
-         :as opts}]
-  (if (contains-many? opts :uri :data-in-stream)
-    (.sequenceRecord rr uri data-in-stream)
-    (.sequenceRecord rr)))
-
+           [& {:keys [rr uri data-in-stream]
+               :as opts}]
+           (if (contains-many? opts :uri :data-in-stream)
+             (.sequenceRecord rr uri data-in-stream)
+             (.sequenceRecord rr)))
+         )
 (comment
 ;; will implement when needed
 (ImageRecordReader. )

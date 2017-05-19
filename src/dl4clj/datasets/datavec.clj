@@ -188,7 +188,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
             (doto b (.sequenceAlignmentMode (value-of {:multi-alignment-mode alignment}))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; user facing fns which have documentation for properly calling multimethod
+;; user facing fns which hae documentation for properly calling multimethod
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-record-reader-dataset-iterator
@@ -260,76 +260,77 @@ you need to suply atleast the mini batch size, number of possible labels and the
 ;; record reader interaction fns for only record reader and seq record reader
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn current-batch
-  "return index of the current batch"
-  [iter]
-  (.batch iter))
+(comment (defn current-batch
+           "return index of the current batch"
+           [iter]
+           (.batch iter))
 
-(defn current-cursor
-  [iter]
-  (.cursor iter))
+         (defn current-cursor
+           [iter]
+           (.cursor iter))
 
-(defn get-labels
-  [iter]
-  (.getLabels iter))
+         (defn get-labels-from-iter
+           [iter]
+           (.getLabels iter))
 
-(defn n-input-columns
-  [iter]
-  (.inputColumns iter))
+         (defn n-input-columns
+           [iter]
+           (.inputColumns iter))
 
-(defn n-examples
-  [iter]
-  (.numExamples iter))
+         (defn n-examples
+           [iter]
+           (.numExamples iter))
 
-(defn total-examples
-  [iter]
-  (.totalExamples iter))
+         (defn total-examples
+           [iter]
+           (.totalExamples iter))
 
-(defn total-outcomes
-  [iter]
-  (.totalOutcomes iter))
+         (defn total-outcomes
+           [iter]
+           (.totalOutcomes iter))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; record reader interaction fns shared by all types
+         ;; record reader interaction fns shared by all types
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn async-supported?
-  "is async supported?"
-  [iter]
-  (.asyncSupported iter))
+         (defn async-supported?
+           "is async supported?"
+           [iter]
+           (.asyncSupported iter))
 
-(defn has-next?
-  [iter]
-  (.hasNext iter))
+         (defn has-next?
+           [iter]
+           (.hasNext iter))
 
-(defn load-from-meta-data
-  [iter meta-data]
-  (.loadFromMetaData iter meta-data))
+         (defn load-from-meta-data
+           [iter meta-data]
+           (.loadFromMetaData iter meta-data))
 
-(defn get-next
-  [& {:keys [iter n]
-      :as opts}]
-  (if (contains? opts :n)
-    (.next iter n)
-    (.next iter)))
+         (defn get-next
+           [& {:keys [iter n]
+               :as opts}]
+           (if (contains? opts :n)
+             (.next iter n)
+             (.next iter)))
 
-(defn remove-data
-  [iter]
-  (doto iter
-    (.remove)))
+         (defn remove-data
+           [iter]
+           (doto iter
+             (.remove)))
 
-(defn reset-iter
-  [iter]
-  (doto iter
-    (.reset)))
+         (defn reset-iter
+           [iter]
+           (doto iter
+             (.reset)))
 
-(defn reset-supported?
-  [iter]
-  (.resetSupported iter))
+         (defn reset-supported?
+           [iter]
+           (.resetSupported iter))
 
-(defn set-pre-processor
-  [& {:keys [iter pre-processor]}]
-  ;; need to write the wrapper of nd4j.lingalg.dataset.api.preprocessor...
-  ;; http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/package-summary.html
-  (doto iter
-    (.setPreProcessor pre-processor)))
+         (defn set-pre-processor
+           [& {:keys [iter pre-processor]}]
+           ;; need to write the wrapper of nd4j.lingalg.dataset.api.preprocessor...
+           ;; http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/package-summary.html
+           (doto iter
+             (.setPreProcessor pre-processor)))
+         )

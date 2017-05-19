@@ -18,10 +18,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination
   Returns true if training should terminated, or false otherwise
 
   :epoch-term-cond (epoch termination condition)
-   - see TBD
-   - one of :best-score-epoch-term-cond (or whatever it is actually going to be),
-            :max-epochs-termination-condition (or whatever it is actually going to be),
-            :score-improvement-Epoch-termination-condition (or whatever it is actually going to be)
+   - see dl4clj.earlystopping.termination-conditions
+   - one of best-score-epoch-term-cond
+            max-epochs-termination-condition
+            score-improvement-epoch-termination-condition
 
   :epoch-n (int), Number of the last completed epoch (starting at 0)
 

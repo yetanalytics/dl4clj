@@ -588,10 +588,13 @@ a map of the desired state")))
 
   mln, dataset and training? supplied: Calculate the score (loss function)
   of the prediction with respect to the true labels"
-  [mln & {:keys [dataset training?]
+  [mln & {:keys [dataset training? return-model?]
+          :or {return-model? false}
           :as opts}]
   (cond (contains-many? opts :dataset :training?)
         (.score mln dataset training?)
+        (true? return-model?)
+        (doto mln (.score dataset))
         (contains? opts :dataset)
         (.score mln dataset)
         :else

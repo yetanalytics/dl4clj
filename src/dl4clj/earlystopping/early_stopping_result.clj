@@ -1,4 +1,7 @@
-(ns dl4clj.earlystopping.early-stopping-result
+(ns ^{:doc "contains the results of the early stopping training
+
+see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.html"}
+    dl4clj.earlystopping.early-stopping-result
   (:import [org.deeplearning4j.earlystopping EarlyStoppingResult])
   (:require [dl4clj.constants :as enum]))
 
@@ -27,3 +30,8 @@
   (EarlyStoppingResult. (enum/value-of {:termination-condition termination-reason})
                         termination-details score-vs-epoch best-model-epoch
                         best-model-score total-epochs best-model))
+
+(defn get-best-model-from-result
+  "returns the model within the early stopping result"
+  [early-stopping-result]
+  (.getBestModel early-stopping-result))

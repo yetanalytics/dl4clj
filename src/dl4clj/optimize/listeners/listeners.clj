@@ -131,7 +131,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                 :frequency 1}
                opts)]
     (if (true? array?)
-    (array-of :data-structure (listeners {:performance conf})
+    (array-of :data (listeners {:performance conf})
               :java-type IterationListener)
     (listeners {:performance conf}))))
 
@@ -150,7 +150,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                {:print-every-n 10}
                opts)]
     (if (true? array?)
-      (array-of :data-structure (listeners {:score-iteration conf})
+      (array-of :data (listeners {:score-iteration conf})
                 :java-type IterationListener)
       (listeners {:score-iteration conf}))))
 
@@ -165,7 +165,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
       :or {array? false}
       :as opts}]
   (if (true? array?)
-    (array-of :data-structure (listeners {:composable opts})
+    (array-of :data (listeners {:composable opts})
              :java-type IterationListener)
     (listeners {:composable opts})))
 
@@ -186,7 +186,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                {:frequency 1}
                opts)]
    (if (true? array?)
-      (array-of :data-structure (listeners {:collection-scores conf})
+      (array-of :data (listeners {:collection-scores conf})
                 :java-type IterationListener)
       (listeners {:collection-scores conf}))))
 
@@ -254,7 +254,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                 :delimiter ","}
                opts)]
    (if (true? array?)
-    (array-of :data-structure (listeners {:param-and-gradient conf})
+    (array-of :data (listeners {:param-and-gradient conf})
               :java-type IterationListener)
     (listeners {:param-and-gradient conf}))))
 

@@ -9,7 +9,7 @@
             MaxEpochsTerminationCondition
             IterationTerminationCondition
             EpochTerminationCondition])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn array-of]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
             [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -78,7 +78,7 @@
 (defn new-max-time-iteration-termination-condition
   "Terminate training based on max time.
 
-  :max-time-val (long), what is the max amount of time allowed?
+  :max-time-val (number), what is the max amount of time allowed?
 
   :max-time-unit (keyword), the unit of :max-time-val
    - one of: :days, :hours, :minutes, :seconds, :microseconds, :milliseconds
