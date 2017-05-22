@@ -39,7 +39,7 @@
   (.getClasses confusion-matrix))
 
 (defn get-count
-  "Gives the count of the number of times the predicted class was predicted for the "actual" class."
+  "Gives the count of the number of times the predicted class was predicted for the actual class."
   [& {:keys [confusion-matrix actual predicted]}]
   (.getCount confusion-matrix actual predicted))
 
