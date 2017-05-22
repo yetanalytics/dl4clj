@@ -29,7 +29,7 @@ all fns in dl4clj.eval.interface.i-evaluation work with ROCs"}
 ;; user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn new-roc
+(defn new-binary-roc
   "creates a new ROC instance.
 
   This implementation currently uses fixed
@@ -40,7 +40,7 @@ all fns in dl4clj.eval.interface.i-evaluation work with ROCs"}
       :as opts}]
   (rocs {:binary opts}))
 
-(defn new-roc-multiclass
+(defn new-multiclass-roc
   "creates a new ROC for multi-class classifiers
 
   This implementation currently uses fixed

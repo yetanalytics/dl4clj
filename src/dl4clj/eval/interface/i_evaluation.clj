@@ -2,7 +2,8 @@
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/IEvaluation.html"}
     dl4clj.eval.interface.i-evaluation
-  (:import [org.deeplearning4j.eval IEvaluation]))
+  (:import [org.deeplearning4j.eval IEvaluation])
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn merge!
   "merges objects that implemented the IEvaluation interface
