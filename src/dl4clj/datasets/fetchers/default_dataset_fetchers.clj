@@ -7,7 +7,7 @@
   "gets the Curves dataset.
 
   currently getten an EOF error on initialization
-   -need to look into this"
+   -seems to be an issue with macs"
   []
   (CurvesDataFetcher.))
 
