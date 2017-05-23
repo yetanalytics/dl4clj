@@ -118,7 +118,11 @@
 
     ;; ROC evaluation
     (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2))))
-    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2))))))
+    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2))))
+
+    ;; eval utils
+    (is (= org.deeplearning4j.eval.EvaluationUtils (type (new-evaluation-utils))))
+    ))
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
@@ -286,8 +290,10 @@
 ;; left to test
 ;; time-series classification
 ;; time-series regression
+;; eval utils (timeseries)
 ;; binary roc
 ;; multi-class roc
+;; eval-tools (roc)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #_(deftest rocs-test
