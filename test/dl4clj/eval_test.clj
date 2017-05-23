@@ -247,22 +247,27 @@
                                                  :mln es-trained :labels labels)
           confusion (get-confusion-matrix evaler-with-data)
           other-confusion (new-confusion-matrix :existing-confusion-matrix confusion)]
-      (is (= (type confusion) (type (new-confusion-matrix
-                                     :existing-confusion-matrix confusion))))
-      (is (= (type confusion) (type (new-confusion-matrix
-                                     :classes [java.lang.Double java.lang.Double]))))
-      (is (= (type confusion) (type
-                               (add! :base-confusion-matrix confusion
-                                     :other-confusion-matrix other-confusion))))
-      (is (= (type confusion) (type
-                               (add! :base-confusion-matrix confusion
-                                     :actual 2.0
-                                     :predicted 1.0))))
-      (is (= (type confusion) (type
-                               (add! :base-confusion-matrix confusion
-                                     :actual 2.0
-                                     :predicted 1.0
-                                     :n 2))))
+      (is (= org.deeplearning4j.eval.ConfusionMatrix
+             (type (new-confusion-matrix
+                    :existing-confusion-matrix confusion))))
+      (is (= org.deeplearning4j.eval.ConfusionMatrix
+             (type (new-confusion-matrix
+                    :classes [java.lang.Double java.lang.Double]))))
+      (is (= org.deeplearning4j.eval.ConfusionMatrix
+             (type
+              (add! :base-confusion-matrix confusion
+                    :other-confusion-matrix other-confusion))))
+      (is (= org.deeplearning4j.eval.ConfusionMatrix
+             (type
+              (add! :base-confusion-matrix confusion
+                    :actual 2.0
+                    :predicted 1.0))))
+      (is (= org.deeplearning4j.eval.ConfusionMatrix
+             (type
+              (add! :base-confusion-matrix confusion
+                    :actual 2.0
+                    :predicted 1.0
+                    :n 2))))
       (is (= java.lang.Integer (type
                                 (get-actual-total :confusion-matrix confusion
                                                   :actual 1))))
