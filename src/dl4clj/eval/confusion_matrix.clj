@@ -7,6 +7,11 @@
 ;;https://deeplearning4j.org/doc/org/deeplearning4j/eval/ConfusionMatrix.html
 
 (defn new-confusion-matrix
+  "Creates a new confusion matrix.
+
+  :existing-confusion-matrix (obj), an existing confusion matrix
+
+  :classes (coll), a collection of java classes which extend java.lang.Comparable"
   [& {:keys [existing-confusion-matrix classes]
       :as opts}]
   (cond (contains? opts :classes)
@@ -17,6 +22,16 @@
         (assert false "you must provide a list of classes or an existing confusion matrix to create a new one")))
 
 (defn add!
+  "adds things to a confusion matrix
+
+  :other-confusion-matrix (obj), a confusion matrix whose entries will be added to
+   the base confusion matrix
+
+  :actual (comparable), specifies an entry in the confusion matrix
+
+  :predicted (compareable), specifies an entry in the confusion matrix
+
+  :n (int), the amount to increment actual and predicted by, defaults to 1"
   [& {:keys [base-confusion-matrix other-confusion-matrix actual predicted n]
       :as opts}]
   (cond (contains-many? opts :base-confusion-matrix :actual :predicted :n)
