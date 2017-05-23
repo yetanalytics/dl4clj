@@ -3,56 +3,43 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html and
 https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html"}
     dl4clj.eval.evaluation
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; create a classification or regression evaluator
+;; multimethod for creating the evaluation java object
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn new-evaluator
-  ;; turn this into a multimethod for consistency
-  "creates an evaluation object for evaling a trained network.
+(defmulti evaler generic-dispatching-fn)
 
-  args:
-
-  :classification? (boolean, default true): determines if a classification or regression
-   evaler is created
-
-  :classification? = true args
-
-  -- :n-classes (int): number of classes to account for in the evaluation
-  -- :labels (list of strings): the labels to include with the evaluation
-  -- :top-n (int): when looking for the top N accuracy of a model
-  -- :label-to-idx-map {label-idx (int) label-value (string)}, replaces the use of :labels
-
-  :classification? = false args
-
-  -- :n-columns (int): number of columns in the dataset
-  -- :precision (int): specified precision to be returned when you call stats
-  -- :column-names (coll of strings): names of the columns"
-  [{:keys [classification? n-classes labels
-           top-n label-to-idx-map n-columns
-           precision column-names]
-    :or {classification? true}
-    :as opts}]
-  (if (true? classification?)
-    (cond (contains-many? opts :labels :top-n)
+(defmethod evaler :classification [opts]
+  (let [conf (:classification opts)
+        {labels :labels
+         top-n :top-n
+         l-to-i-map :label-to-idx
+         n-classes :n-classes} conf]
+    (cond (contains-many? conf :labels :top-n)
           (Evaluation. labels top-n)
-          (contains? opts :labels)
+          (contains? conf :labels)
           (Evaluation. labels)
-          (contains? opts :label-to-idx-map)
-          (Evaluation. label-to-idx-map)
-          (contains? opts :n-classes)
+          (contains? conf :label-to-idx-map)
+          (Evaluation. l-to-i-map)
+          (contains? conf :n-classes)
           (Evaluation. n-classes)
           :else
-          (Evaluation.))
-    (cond (contains-many? opts :column-names :precision)
+          (Evaluation.))))
+
+(defmethod evaler :regression [opts]
+  (let [conf (:regression opts)
+        {column-names :column-names
+         precision :precision
+         n-columns :n-columns} conf]
+    (cond (contains-many? conf :column-names :precision)
           (RegressionEvaluation. column-names precision)
-          (contains-many? opts :n-columns :precision)
+          (contains-many? conf :n-columns :precision)
           (RegressionEvaluation. n-columns precision)
-          (contains? opts :column-names)
+          (contains? conf :column-names)
           (RegressionEvaluation. column-names)
-          (contains? opts :n-columns)
+          (contains? conf :n-columns)
           (RegressionEvaluation. n-columns)
           :else
           (assert
@@ -60,7 +47,42 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
            "you must supply either the number of columns or their names for regression evaluation"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; interact with the evaler created above
+;; user facing fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn new-classification-evaler
+  "Creates an instance of an evaluation object which reports precision, recall, f1
+
+   :labels (coll), a collection of string labels to use for the output
+
+   :top-n (int), value to use for the top N accuracy calc.
+     - An example is considered correct if the probability for the true class
+       is one of the highest n values
+
+   :n-classes (int), the number of classes to account for in the evaluation
+
+   :label-to-idx (map), {column-idx (int) label (str)}
+    - another way to set the labels for the classification"
+  [& {:keys [labels top-n label-to-idx n-classes]
+      :as opts}]
+  (evaler {:classification opts}))
+
+(defn new-regression-evaler
+  "Evaluation method for the evaluation of regression algorithms.
+
+   provides MSE, MAE, RMSE, RSE, correlation coefficient for each column
+
+   :column-names (coll), a collection of string naming the columns
+
+   :precision (int), specified precision to be used
+
+   :n-columns (int), the number of columns in the dataset"
+  [& {:keys [column-names precision n-columns]
+      :as opts}]
+  (evaler {:regression opts}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; classification evaluator interaction fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-accuracy
@@ -274,6 +296,10 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   "True positives: correctly rejected"
   [evaler]
   (.truePositives evaler))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; interact with a regression evaluator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-mean-squared-error
   "returns the MSE"
