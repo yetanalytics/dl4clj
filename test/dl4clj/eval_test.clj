@@ -168,6 +168,8 @@
       ;; will need to import a trained network and test this theory
       ;; could also be nill because of aproblem creating the prediction objects
       ;; https://deeplearning4j.org/doc/org/deeplearning4j/eval/meta/Prediction.html
+      ;; could also be because the threshold was set too high
+      ;; try changing this and see if these are no longer nil
       #_(is (= java.util.List (type (get-prediction-by-predicted-class
                                    :evaler evaler-with-data
                                    :idx-of-predicted-class 2))))
@@ -235,7 +237,53 @@
       )
     ))
 
+(deftest confusion-matrix-test
+  (testing "the creation and manipulation of confusion matrices"
+    (let [data (next-data-point :iter (reset-iter! mnist-test))
+          features (get-feature-matrix data)
+          evalr (new-classification-evaler)
+          labels (get-labels data)
+          evaler-with-data (eval-classification! :evaler evalr :features features
+                                                 :mln es-trained :labels labels)
+          confusion (get-confusion-matrix evaler-with-data)
+          other-confusion (new-confusion-matrix :existing-confusion-matrix confusion)]
+      (is (= (type confusion) (type (new-confusion-matrix
+                                     :existing-confusion-matrix confusion))))
+      (is (= (type confusion) (type (new-confusion-matrix
+                                     :classes [java.lang.Double java.lang.Double]))))
+      (is (= (type confusion) (type
+                               (add! :base-confusion-matrix confusion
+                                     :other-confusion-matrix other-confusion))))
+      (is (= (type confusion) (type
+                               (add! :base-confusion-matrix confusion
+                                     :actual 2.0
+                                     :predicted 1.0))))
+      (is (= (type confusion) (type
+                               (add! :base-confusion-matrix confusion
+                                     :actual 2.0
+                                     :predicted 1.0
+                                     :n 2))))
+      (is (= java.lang.Integer (type
+                                (get-actual-total :confusion-matrix confusion
+                                                  :actual 1))))
+      (is (= java.util.ArrayList (type (get-classes confusion))))
+      (is (= java.lang.Integer (type
+                                (get-count :confusion-matrix confusion
+                                           :actual 1 :predicted 2))))
+      (is (= java.lang.Integer (type
+                                (get-predicted-total :confusion-matrix confusion
+                                                     :predicted 1))))
+      (is (= java.lang.String (type (to-csv confusion))))
+      (is (= java.lang.String (type (to-html confusion)))))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; left to test
+;; time-series classification
+;; time-series regression
+;; binary roc
+;; multi-class roc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #_(deftest rocs-test
   (testing "the creation and interaction with binary and multi-class rocs"
