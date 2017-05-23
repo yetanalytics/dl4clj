@@ -25,37 +25,27 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/IEvaluation.html"}
         :else
         (assert false "you must supply labels-mask and/or labels and predicted values")))
 
-(defn eval-classification!
-  "depending on args supplied in opts map, does one of:
+(defn eval!
+  "evaluate the output of a network.
 
-  - Collects statistics on the real outcomes vs the guesses.
-  - Evaluate the output using the given true labels, the input to the multi layer network and the multi layer network to use for evaluation
-  - Evaluate the network, with optional metadata
-  - Evaluate a single prediction (one prediction at a time)
+  :labels (INDArray), the actual labels of the data (target labels)
 
-  1) is accomplished by supplying :real-outcomes and :guesses
-  2) is accomplished by supplying :true-labels, :in and :comp-graph or :mln
-  3) is accomplished by supplying :real-outcomes, :guesses and :record-meta-data
-  4) is accomplished by supplying :predicted-idx and :actual-idx"
-  [& {:keys [real-outcomes guesses
-             true-labels in comp-graph
-             record-meta-data mln
-             predicted-idx actual-idx evaler]
+  :network-predictions (INDArray), the output of the network
+
+  :mask-array (INDArray), the mask array for the data if there is one
+
+  :record-meta-data (coll) meta data that extends java.io.Serializable
+
+  NOTE: for evaluating classification problems, use eval-classification! in
+   dl4clj.eval.evaluation, (when the evaler is created by new-classification-evaler)"
+  [& {:keys [labels network-predictions mask-array record-meta-data evaler]
       :as opts}]
   (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
-  (cond (contains-many? opts :true-labels
-                        :in :comp-graph)
-        (doto evaler (.eval true-labels in comp-graph))
-        (contains-many? opts :true-labels
-                        :in :mln)
-        (doto evaler (.eval true-labels in mln))
-        (contains-many? opts :real-outcomes
-                        :guesses :record-meta-data)
-        (doto evaler (.eval real-outcomes guesses record-meta-data))
-        (contains-many? opts :real-outcomes
-                        :guesses)
-        (doto evaler (.eval real-outcomes guesses))
-        (contains-many? opts :predicted-idx :actual-idx)
-        (doto evaler (.eval predicted-idx actual-idx))
+  (cond (contains-many? opts :labels :network-predictions :record-meta-data)
+        (doto evaler (.eval labels network-predictions (into '() record-meta-data)))
+        (contains-many? opts :labels :network-predictions :mask-array)
+        (doto evaler (.eval labels network-predictions mask-array))
+        (contains-many? opts :labels :network-predictions)
+        (doto evaler (.eval labels network-predictions))
         :else
-        (assert false "you must supply the evaler one of the set of opts described in the doc string")))
+        (assert false "you must supply an evaler, the correct labels and the network predicted labels")))

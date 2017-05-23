@@ -20,8 +20,8 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
     (cond (contains-many? conf :labels :top-n)
           (Evaluation. labels top-n)
           (contains? conf :labels)
-          (Evaluation. labels)
-          (contains? conf :label-to-idx-map)
+          (Evaluation. (into '() labels))
+          (contains? conf :label-to-idx)
           (Evaluation. l-to-i-map)
           (contains? conf :n-classes)
           (Evaluation. n-classes)
@@ -32,13 +32,14 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   (let [conf (:regression opts)
         {column-names :column-names
          precision :precision
-         n-columns :n-columns} conf]
+         n-columns :n-columns} conf
+        c-names (into '() column-names)]
     (cond (contains-many? conf :column-names :precision)
-          (RegressionEvaluation. column-names precision)
+          (RegressionEvaluation. c-names precision)
           (contains-many? conf :n-columns :precision)
           (RegressionEvaluation. n-columns precision)
           (contains? conf :column-names)
-          (RegressionEvaluation. column-names)
+          (RegressionEvaluation. c-names)
           (contains? conf :n-columns)
           (RegressionEvaluation. n-columns)
           :else
@@ -94,12 +95,12 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   "Adds to the confusion matrix"
   [& {:keys [evaler real-value guess-value]}]
   (doto evaler
-    (.addToConfusion real-value guess-value)))
+    (.addToConfusion (int real-value) (int guess-value))))
 
 (defn class-count
   "Returns the number of times the given label has actually occurred"
   [& {:keys [evaler class-label-idx]}]
-  (.classCount evaler class-label-idx))
+  (.classCount evaler (int class-label-idx)))
 
 (defn confusion-to-string
   "Get a String representation of the confusion matrix"
@@ -115,7 +116,7 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [evaler class-label-idx]
       :as opts}]
   (if (contains? opts :class-label-idx)
-    (.f1 evaler class-label-idx)
+    (.f1 evaler (int class-label-idx))
     (.f1 evaler)))
 
 (defn false-alarm-rate
@@ -131,9 +132,9 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [evaler class-label-idx edge-case]
       :as opts}]
   (cond (contains-many? opts :class-label-idx :edge-case :evaler)
-        (.falseNegativeRate evaler class-label-idx edge-case)
+        (.falseNegativeRate evaler (int class-label-idx) edge-case)
         (contains-many? opts :evaler :class-label-idx)
-        (.falseNegativeRate evaler class-label-idx)
+        (.falseNegativeRate evaler (int class-label-idx))
         (contains? opts :evaler)
         (.falseNegativeRate evaler)
         :else
@@ -152,9 +153,9 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [evaler class-label-idx edge-case]
       :as opts}]
   (cond (contains-many? opts :class-label-idx :edge-case :evaler)
-        (.falsePositiveRate evaler class-label-idx edge-case)
+        (.falsePositiveRate evaler (int class-label-idx) edge-case)
         (contains-many? opts :evaler :class-label-idx)
-        (.falsePositiveRate evaler class-label-idx)
+        (.falsePositiveRate evaler (int class-label-idx))
         (contains? opts :evaler)
         (.falsePositiveRate evaler)
         :else
@@ -168,7 +169,7 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
 (defn get-class-label
   "get the class a label is associated with given an idx"
   [& {:keys [evaler label-idx]}]
-  (.getClassLabel evaler label-idx))
+  (.getClassLabel evaler (int label-idx)))
 
 (defn get-confusion-matrix
   "Returns the confusion matrix variable"
@@ -183,7 +184,7 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   "Get a list of predictions, for all data with the specified predicted class,
   regardless of the actual data class."
   [& {:keys [evaler idx-of-predicted-class]}]
-  (.getPredictionByPredictedClass evaler idx-of-predicted-class))
+  (.getPredictionByPredictedClass evaler (int idx-of-predicted-class)))
 
 (defn get-prediction-errors
   "Get a list of prediction errors, on a per-record basis"
@@ -215,22 +216,22 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
 (defn increment-false-negatives!
   [& {:keys [evaler class-label-idx]}]
   (doto evaler
-    (.incrementFalseNegatives class-label-idx)))
+    (.incrementFalseNegatives (int class-label-idx))))
 
 (defn increment-false-positives!
   [& {:keys [evaler class-label-idx]}]
   (doto evaler
-    (.incrementFalsePositives class-label-idx)))
+    (.incrementFalsePositives (int class-label-idx))))
 
 (defn increment-true-negatives!
   [& {:keys [evaler class-label-idx]}]
   (doto evaler
-    (.incrementTrueNegatives class-label-idx)))
+    (.incrementTrueNegatives (int class-label-idx))))
 
 (defn increment-true-positives!
   [& {:keys [evaler class-label-idx]}]
   (doto evaler
-    (.incrementTruePositives class-label-idx)))
+    (.incrementTruePositives (int class-label-idx))))
 
 (defn total-negatives
   "Total negatives true negatives + false negatives"
@@ -250,9 +251,9 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [evaler class-label-idx edge-case]
       :as opts}]
   (cond (contains-many? opts :class-label-idx :edge-case :evaler)
-        (.precision evaler class-label-idx edge-case)
+        (.precision evaler (int class-label-idx) edge-case)
         (contains-many? opts :evaler :class-label-idx)
-        (.precision evaler class-label-idx)
+        (.precision evaler (int class-label-idx))
         (contains? opts :evaler)
         (.precision evaler)
         :else
@@ -266,9 +267,9 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [evaler class-label-idx edge-case]
       :as opts}]
   (cond (contains-many? opts :class-label-idx :edge-case :evaler)
-        (.recall evaler class-label-idx edge-case)
+        (.recall evaler (int class-label-idx) edge-case)
         (contains-many? opts :evaler :class-label-idx)
-        (.recall evaler class-label-idx)
+        (.recall evaler (int class-label-idx))
         (contains? opts :evaler)
         (.recall evaler)
         :else
@@ -296,6 +297,25 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   "True positives: correctly rejected"
   [evaler]
   (.truePositives evaler))
+
+
+(defn eval-classification!
+  [& {:keys [labels network-predictions mask-array record-meta-data evaler
+             mln features predicted-idx actual-idx]
+      :as opts}]
+  (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
+  (cond (contains-many? opts :labels :network-predictions :record-meta-data)
+        (doto evaler (.eval labels network-predictions (into '() record-meta-data)))
+        (contains-many? opts :labels :network-predictions :mask-array)
+        (doto evaler (.eval labels network-predictions mask-array))
+        (contains-many? opts :labels :features :mln)
+        (doto evaler (.eval labels features mln))
+        (contains-many? opts :labels :network-predictions)
+        (doto evaler (.eval labels network-predictions))
+        (contains-many? opts :predicted-idx :actual-idx)
+        (doto evaler (.eval predicted-idx actual-idx))
+        :else
+        (assert false "you must supply an evaler, the correct labels and the network predicted labels")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interact with a regression evaluator

@@ -441,8 +441,8 @@
 (defn output
   "label the probabilities of the input or if masks are supplied,
   calculate the output of the network with masking arrays"
-  [mln & {:keys [iterator train? input features-mask labels-mask
-                 training-mode]
+  [& {:keys [iterator train? input features-mask labels-mask
+                 training-mode mln]
           :as opts}]
   (cond (contains-many? opts :input :train?
                         :features-mask :labels-mask)

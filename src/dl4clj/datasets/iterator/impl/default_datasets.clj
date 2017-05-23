@@ -165,7 +165,7 @@
 
 (defn reset-iter!
   [iter]
-  (doto iter (.reset iter)))
+  (doto iter (.reset)))
 
 (defn next-data-point
   [& {:keys [iter batch-size]
@@ -200,3 +200,7 @@
   assumes that the pre-processor is selected/configured and then passed here"
   [& {:keys [iter pre-processor]}]
   (doto iter (.setPreProcessor pre-processor)))
+
+(defn get-feature-matrix
+  [data-from-iter]
+  (.getFeatureMatrix data-from-iter))
