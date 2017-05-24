@@ -39,14 +39,15 @@ With Maven:
 ```
 
 ## Features
-- not all of these are fully tested and are most likely going to undergo breaking changes
 
-Clustering
-Datasets
-Early Stopping
-Eval/Evaluation
-Neural Networks DSL
-Optimize
+Not all of these are fully tested and are most likely going to undergo breaking changes
+
+- Clustering
+- Datasets
+- Early Stopping
+- Eval/Evaluation
+- Neural Networks DSL
+- Optimize
 
 ## TODO
 
