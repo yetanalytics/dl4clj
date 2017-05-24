@@ -1,4 +1,5 @@
 (ns dl4clj.datasets-test
+  (:refer-clojure :exclude [reset!])
   (:require [clojure.test :refer :all]
             [dl4clj.datasets.datavec :refer :all]
             [dl4clj.datasets.rearrange :refer :all]
