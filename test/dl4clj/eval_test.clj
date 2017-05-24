@@ -9,9 +9,8 @@
             ;; requireing early stopping ns for minimal training
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator
                                                                     next-data-point
-                                                                    get-labels
-                                                                    reset-iter!
                                                                     get-feature-matrix]]
+            [nd4clj.linalg.api.ds-iter :refer [get-labels reset-iter!]]
             [dl4clj.earlystopping.early-stopping-trainer :refer :all]
             [dl4clj.earlystopping.termination-conditions :refer :all]
             [dl4clj.earlystopping.early-stopping-config :refer :all]
