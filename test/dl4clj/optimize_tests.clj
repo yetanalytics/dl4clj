@@ -1,5 +1,5 @@
 (ns dl4clj.optimize-tests
-  #_(:refer-clojure :exclude [rand max])
+  (:refer-clojure :exclude [rand max])
   (:require [dl4clj.optimize.solver :refer :all]
             [dl4clj.optimize.solvers.optimizers :refer :all]
             [dl4clj.optimize.step-functions.step-fns :refer :all]
