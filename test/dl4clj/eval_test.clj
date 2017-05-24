@@ -125,7 +125,7 @@
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
-    (let [data (next-data-point :iter (reset-iter! mnist-test))
+    (let [data (next-data-point (reset-iter! mnist-test))
           features (get-feature-matrix data)
           mln-output (ml/output :mln es-trained :input features)
           evalr (new-classification-evaler)
@@ -242,7 +242,7 @@
 
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
-    (let [data (next-data-point :iter (reset-iter! mnist-test))
+    (let [data (next-data-point (reset-iter! mnist-test))
           features (get-feature-matrix data)
           evalr (new-classification-evaler)
           labels (get-labels data)
