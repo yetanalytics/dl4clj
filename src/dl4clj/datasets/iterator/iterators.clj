@@ -6,20 +6,16 @@
             IteratorMultiDataSetIterator MovingWindowBaseDataSetIterator
             MultipleEpochsIterator ReconstructionDataSetIterator SamplingDataSetIterator
             ExistingDataSetIterator])
-  (:require [dl4clj.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method heavy lifting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn iterator-type
-  "dispatching fn for multimethod iterators"
-  [opts]
-  (first (keys opts)))
 
 (defmulti iterators
   "multimethod for creating iterators"
-  iterator-type)
+  generic-dispatching-fn)
 
 (defmethod iterators :doubles-dataset-iterator [opts]
   (let [config (:doubles-dataset-iterator opts)

@@ -32,10 +32,6 @@
         :else
         (MnistDataFetcher.)))
 
-;; shared methods
-;; fetch, hasMore, next
-;; all the methods from base data fetcher
-
 ;; underlying mnist dataset stuff
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/mnist/package-summary.html
-;; don't think necessary to implement but come back to this
+;; don't think necessary to implement but here for refrence

@@ -4,7 +4,7 @@
             RecordReaderMultiDataSetIterator$Builder RecordReaderMultiDataSetIterator
             SequenceRecordReaderDataSetIterator])
   (:require [dl4clj.constants :refer [value-of]]
-            [dl4clj.utils :refer [contains-many?]]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             ;; write mmethod for making writeable converters and require it here
             ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/io/package-summary.html
             ;; they are going to be in datavec.api.io
@@ -22,14 +22,9 @@
 ;; iterator multimethod
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn iterator-type
-  "dispatch fn for iterator"
-  [opts]
-  (first (keys opts)))
-
 (defmulti iterator
   "Multimethod that builds a dataset iterator based on the supplied type and opts"
-  iterator-type)
+  generic-dispatching-fn)
 
 (defmethod iterator :rr-dataset-iter [opts]
   (let [config (:rr-dataset-iter opts)

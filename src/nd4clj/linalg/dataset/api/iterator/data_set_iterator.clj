@@ -6,7 +6,7 @@
 
 ;; TODO
 ;; double check these fns are up to date
-
+;; THIS CAN BE DELTED
 
 (defn batch
   "Batch size"
