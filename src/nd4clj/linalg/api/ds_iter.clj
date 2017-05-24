@@ -59,7 +59,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
 (defn set-pre-processor!
   "Set a pre processor"
   [& {:keys [iter pre-processor]}]
-  (.setPreProcessor iter pre-processor))
+  (doto iter (.setPreProcessor pre-processor)))
 
 (defn get-total-examples
   "Total examples in the iterator"

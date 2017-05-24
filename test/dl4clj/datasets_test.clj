@@ -7,6 +7,7 @@
             [dl4clj.datasets.iterator.iterators :refer :all]
             [dl4clj.datasets.iterator.impl.default-datasets :refer :all]
             [datavec.api.split :refer :all]
+            [nd4clj.linalg.dataset.api.pre-processors :refer :all]
             [nd4clj.linalg.api.ds-iter :refer :all])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
@@ -124,19 +125,38 @@
                                                    :use-subset? true :rng 123
                                                    :label-generator (new-parent-path-label-generator)
                                                    :img-transform (ColorConversionTransform.))
-          iter-w-pp (new-cifar-data-set-iterator :batch-size 3 :n-examples 100
-                                                 :train? true :img-dims [3 3 3]
-                                                 :use-special-pre-process-cifar? true)]
+          cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)]
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
       (is (= java.lang.Integer (type (get-current-cursor iter))))
       (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
-
-      (is (= "" (type (get-pre-processor iter-w-pp))))
+      (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
+             (type (set-pre-processor! :iter iter
+                                       :pre-processor (new-min-max-normalization-ds-preprocessor)))))
+      (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
+             (type (new-min-max-normalization-ds-preprocessor))
+             (type (get-pre-processor iter))))
+      (is (= java.lang.Integer (type (get-input-columns iter))))
+      (is (= org.nd4j.linalg.dataset.DataSet
+             (type (next-n-examples :iter iter-w-labels :n 2))))
+      (is (= java.lang.Integer (type (get-num-examples iter))))
+      (is (= (type iter-w-labels) (type (reset-iter! iter-w-labels))))
+      (is (= java.lang.Boolean (type (reset-supported? iter-w-labels))))
+      (is (= java.lang.Integer (type (get-total-examples iter))))
+      (is (= java.lang.Integer (type (get-total-outcomes iter))))
       (is (= java.lang.Boolean (type (has-next? iter))))
-      )
-
-    ))
+      (is (= org.nd4j.linalg.dataset.DataSet (type (next-data-point iter-w-labels))))
+      ;; this is going to fail when this is running in an enviro with gpus or spark I think
+      ;; will need to see if that is the case in some way
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (get-feature-matrix (next-data-point (reset-iter! iter-w-labels))))))
+      (is (= (type cifar-iter) (type (train-cifar-iter! cifar-iter))))
+      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter))))
+      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter
+                                                       :n-examples 100))))
+      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter
+                                                       :n-examples 100
+                                                       :batch-size 5)))))))
 
 (deftest rr-ds-iterator-creation-test
   (testing "the creation of record readers dataset iterators"

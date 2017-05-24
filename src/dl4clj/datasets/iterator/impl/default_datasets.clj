@@ -164,7 +164,7 @@
   [iter]
   (.next iter))
 
-(defn test!
+(defn test-cifar-iter!
   [& {:keys [iter n-examples batch-size]
       :as opts}]
   (cond (contains-many? opts :iter :n-examples :batch-size)
@@ -174,9 +174,9 @@
         (contains? opts :iter)
         (doto iter (.test))
         :else
-        (assert false "you must provide atleast an iterator")))
+        (assert false "you must provide a cifar iterator")))
 
-(defn train!
+(defn train-cifar-iter!
   [iter]
   (doto iter (.train)))
 
