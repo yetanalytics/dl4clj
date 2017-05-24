@@ -348,6 +348,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pre-process!
+  ;; for combined pre-processors
   "Pre process a dataset sequentially"
   [& {:keys [dataset-iter dataset]}]
   (doto dataset-iter (.preProcess dataset)))

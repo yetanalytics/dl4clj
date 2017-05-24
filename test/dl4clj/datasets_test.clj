@@ -7,6 +7,10 @@
             [dl4clj.datasets.fetchers.base-data-fetcher :refer :all]
             [dl4clj.datasets.iterator.iterators :refer :all]
             [dl4clj.datasets.iterator.impl.default-datasets :refer :all]
+            [dl4clj.datasets.iterator.impl.list-data-set-iterator :refer :all]
+            [dl4clj.datasets.iterator.impl.move-window-data-set-fetcher :refer :all]
+            [dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter :refer :all]
+            [dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator :refer :all]
             [datavec.api.split :refer :all]
             [nd4clj.linalg.dataset.api.pre-processors :refer :all]
             [nd4clj.linalg.api.ds-iter :refer :all])
@@ -16,6 +20,7 @@
 
 (deftest dataset-fetchers-test
   (testing "dataset fetchers"
+    ;; dl4clj.datasets.fetchers.default-dataset-fetchers
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher (type (iris-fetcher))))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher (type (mnist-fetcher))))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
@@ -23,6 +28,7 @@
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type
             (mnist-fetcher :binarize? true :train? true :shuffle? true :rng-seed 123))))
+    ;; dl4clj.datasets.fetchers.base-data-fetcher
     (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
     (is (= java.lang.Integer (type (input-column-length (iris-fetcher)))))
@@ -33,6 +39,7 @@
 
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
+    ;; dl4clj.datasets.iterator.impl.default-datasets
     ;; cifar dataset
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100))))
@@ -115,7 +122,43 @@
 
     ;; raw mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator
-           (type (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100))))))
+           (type (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100))))
+
+    ;; dl4clj.datasets.iterator.impl.list-data-set-iterator
+    (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
+           (type (new-list-data-set-iterator
+                  :data-set [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]))))
+    (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
+           (type (new-list-data-set-iterator
+                  :data-set [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
+                  :batch 6))))
+
+    ;; dl4clj.datasets.iterator.impl.move-window-data-set-fetcher
+    ;; figure out what  Only rotating matrices means
+    #_(is (= "" (type (new-moving-window-data-set-fetcher
+                     :data-set (next-data-point (reset-fetcher! (new-mnist-data-set-iterator :batch 5 :n-examples 100)))
+                     :window-rows 1
+                     :window-columns 1))))
+    #_(is (= "" (type (fetch! :ds-fetcher "" :n-examples 10))))
+
+    ;; dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter
+    (is (= org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter
+           (type (new-multi-data-set-iterator-adapter
+                  (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))
+
+    ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
+    (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
+           (type (new-singleton-multi-data-set-iterator
+                  (next-data-point
+                   (reset-fetcher!
+                    (new-multi-data-set-iterator-adapter
+                     (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
+
+(deftest ds-iterators-test
+  (testing "the creation of various dataset iterators"
+
+
+    ))
 
 (deftest ds-iteration-interaction-fns-test
   (testing "the api fns for ds iterators"
@@ -127,6 +170,7 @@
                                                    :label-generator (new-parent-path-label-generator)
                                                    :img-transform (ColorConversionTransform.))
           cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)]
+      ;; nd4clj.linalg.api.ds-iter
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
       (is (= java.lang.Integer (type (get-current-cursor iter))))
@@ -145,6 +189,8 @@
       (is (= java.lang.Boolean (type (reset-supported? iter-w-labels))))
       (is (= java.lang.Integer (type (get-total-examples iter))))
       (is (= java.lang.Integer (type (get-total-outcomes iter))))
+
+      ;; dl4clj.datasets.iterator.impl.default-datasets
       (is (= java.lang.Boolean (type (has-next? iter))))
       (is (= org.nd4j.linalg.dataset.DataSet (type (next-data-point iter-w-labels))))
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
