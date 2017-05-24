@@ -165,39 +165,9 @@
     ))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (deftest rearrange-test
   (testing "the rearrange ns"
     ;; currently can't accurately test without the unstructed dataset these fns want
-
     #_(let [formatter (new-unstructured-formatter
                        :destination-root-dir (str "resources/tmp/rearrange/"
                                                   (java.util.UUID/randomUUID))
