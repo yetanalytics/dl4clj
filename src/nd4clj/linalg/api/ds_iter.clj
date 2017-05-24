@@ -20,7 +20,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [iter]
   (.cursor iter))
 
-(defn get-labels
+(defn get-labels-rr
   "Get dataset iterator record reader labels"
   [iter]
   (.getLabels iter))

@@ -1,7 +1,7 @@
 (ns dl4clj.datasets.fetchers.base-data-fetcher
   (:import [org.deeplearning4j.datasets.fetchers BaseDataFetcher]))
 
-(defn cursor
+(defn fetcher-cursor
   "Direct access to a number represenative of iterating through a dataset"
   [fetcher]
   (.cursor fetcher))

@@ -22,7 +22,7 @@
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type
             (mnist-fetcher :binarize? true :train? true :shuffle? true :rng-seed 123))))
-    (is (= java.lang.Integer (type (cursor (iris-fetcher)))))
+    (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
     (is (= java.lang.Integer (type (input-column-length (iris-fetcher)))))
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher
@@ -129,7 +129,7 @@
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
       (is (= java.lang.Integer (type (get-current-cursor iter))))
-      (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
+      (is (= java.util.ArrayList (type (get-labels-rr iter-w-labels))))
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
              (type (set-pre-processor! :iter iter
                                        :pre-processor (new-min-max-normalization-ds-preprocessor)))))
