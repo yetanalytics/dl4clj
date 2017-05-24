@@ -12,7 +12,6 @@
 ;; multi method heavy lifting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defmulti iterators
   "multimethod for creating iterators"
   generic-dispatching-fn)
