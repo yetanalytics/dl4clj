@@ -14,6 +14,7 @@
             [datavec.api.split :refer :all]
             [nd4clj.linalg.dataset.api.pre-processors :refer :all]
             [nd4clj.linalg.api.ds-iter :refer :all]
+            [datavec.api.writeable :refer :all]
             [dl4clj.utils :refer [array-of]])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
@@ -243,11 +244,115 @@
 
 (deftest file-split-testing
   (testing "base level io stuffs"
+    ;; file split
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :root-dir "resources/poker"))))
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :root-dir "resources/poker"
+                                :rng-seed (new java.util.Random)))))
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :root-dir "resources/poker"
+                                :allow-format ".csv"))))
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :root-dir "resources/poker"
+                                :allow-format ".csv"
+                                :recursive? true))))
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :root-dir "resources/poker"
+                                :allow-format ".csv"
+                                :rng-seed (new java.util.Random)))))
+    (is (= java.io.File (type (get-root-dir (new-filesplit :root-dir "resources/poker")))))
 
+    ;; collection input split
+    (is (= org.datavec.api.split.CollectionInputSplit
+           (type (new-collection-input-split :coll [(new java.net.URI "foo")
+                                                    (new java.net.URI "baz")]))))
 
+    ;; input stream input split
+    (with-open [data (clojure.java.io/input-stream "resources/poker/poker-hand-testing.csv")
+                other-data (clojure.java.io/input-stream "resources/poker/poker-hand-training.csv")]
+      (is (= org.datavec.api.split.InputStreamInputSplit
+             (type (new-input-stream-input-split
+                    :in-stream data
+                    :file-path "resources/poker/poker-hand-testing.csv"))))
+      (is (= org.datavec.api.split.InputStreamInputSplit
+             (type (new-input-stream-input-split
+                    :in-stream data))))
 
+      (is (= java.io.BufferedInputStream
+             (type (get-is (new-input-stream-input-split
+                            :in-stream data)))))
+      (= org.datavec.api.split.InputStreamInputSplit
+         (type (set-is! :input-stream-input-split (new-input-stream-input-split
+                                                   :in-stream data)
+                        :is other-data))))
 
-    ))
+    ;; list string input split
+    (is (= org.datavec.api.split.ListStringSplit
+           (type (new-list-string-split :data (list "foo" "baz")))))
+    (is (= (list "foo" "baz")
+           (get-list-string-split-data
+            (new-list-string-split :data (list "foo" "baz")))))
+
+    ;; numbered file input split
+    (is (= org.datavec.api.split.NumberedFileInputSplit
+           (type
+            (new-numbered-file-input-split :base-string "f_%d.txt"
+                                           :inclusive-min-idx 0
+                                           :inclusive-max-idx 10))))
+
+    ;; string split
+    (is (= org.datavec.api.split.StringSplit
+           (type (new-string-split :data "foo baz bar"))))
+    (is (= "foo baz bar" (get-list-string-split-data
+                          (new-string-split :data "foo baz bar"))))
+
+    ;; transform split
+    (is (= org.datavec.api.split.TransformSplit
+           (type
+            (new-transform-split :base-input-split (new-collection-input-split
+                                                    :coll [(new java.net.URI "foo")
+                                                           (new java.net.URI "baz")])
+                                 :to-be-replaced "foo"
+                                 :replaced-with "oof"))))
+
+    ;; sample
+    (is (= (type (new-collection-input-split
+                  :coll [(new java.net.URI "foo")
+                         (new java.net.URI "baz")]))
+           (type (first (sample :split (new-collection-input-split
+                                        :coll [(new java.net.URI "foo")
+                                               (new java.net.URI "baz")])
+                                :weights [50 50]
+
+                                :path-filter (new-random-path-filter
+                                              :rng (new java.util.Random)
+                                              :extensions [".txt"]
+                                              :max-paths 2))))))
+    (is (= (type (new-collection-input-split
+                  :coll [(new java.net.URI "foo")
+                         (new java.net.URI "baz")]))
+           (type (first (sample :split (new-collection-input-split
+                                        :coll [(new java.net.URI "foo")
+                                               (new java.net.URI "baz")])
+                                :weights [50 50])))))
+    (is (= 2 (count (sample :split (new-collection-input-split
+                                    :coll [(new java.net.URI "foo")
+                                           (new java.net.URI "baz")])
+                            :weights [50 50]))))))
+
+(deftest input-split-interface-testing
+  (testing "the interfaces used by input splits"
+    ;; datavec.api.writeable
+    (let [f-split (new-filesplit :root-dir "resources/poker")]
+
+      (is (= java.lang.Long (type (length f-split))))
+      (is (= java.net.URI (type (first (locations f-split)))))
+      (is (= org.datavec.api.util.files.UriFromPathIterator
+             (type (locations-iterator f-split))))
+      (is (= org.nd4j.linalg.collection.CompactHeapStringList$CompactHeapStringListIterator
+             (type (locations-path-iterator f-split))))
+      (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
 (deftest rr-ds-iterator-creation-test
   (testing "the creation of record readers dataset iterators"
