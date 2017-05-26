@@ -15,6 +15,7 @@
             [nd4clj.linalg.dataset.api.pre-processors :refer :all]
             [nd4clj.linalg.api.ds-iter :refer :all]
             [datavec.api.writeable :refer :all]
+            [datavec.api.records.readers :refer :all]
             [dl4clj.utils :refer [array-of]])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
@@ -354,9 +355,23 @@
              (type (locations-path-iterator f-split))))
       (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
+(deftest record-readers-test
+  (testing "the creation of record readers"
+    ;; datavec.api.records.readers
+
+
+    ))
+
+(deftest pre-processors-test
+  (testing "testing the creation of pre-processors"
+    ;; nd4clj.linalg.dataset.api.pre-processors
+
+    ))
+
 (deftest rr-ds-iterator-creation-test
   (testing "the creation of record readers dataset iterators"
     ;; lets test bottom level first then work up to this
+    ;; nd4clj.linalg.api.ds-iter
     ))
 
 (deftest ds-iterators-test
