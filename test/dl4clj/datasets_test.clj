@@ -13,7 +13,8 @@
             [dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator :refer :all]
             [datavec.api.split :refer :all]
             [nd4clj.linalg.dataset.api.pre-processors :refer :all]
-            [nd4clj.linalg.api.ds-iter :refer :all])
+            [nd4clj.linalg.api.ds-iter :refer :all]
+            [dl4clj.utils :refer [array-of]])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
@@ -154,12 +155,6 @@
                     (new-multi-data-set-iterator-adapter
                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
 
-(deftest ds-iterators-test
-  (testing "the creation of various dataset iterators"
-
-
-    ))
-
 (deftest ds-iteration-interaction-fns-test
   (testing "the api fns for ds iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
@@ -205,11 +200,65 @@
                                                        :n-examples 100
                                                        :batch-size 5)))))))
 
+(deftest label-generators-test
+  (testing "the creation of label generators and their functionality"
+    (is (= org.datavec.api.io.labels.ParentPathLabelGenerator
+           (type (new-parent-path-label-generator))))
+    (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
+           (type (new-pattern-path-label-generator :pattern "."))))
+    (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
+           (type (new-pattern-path-label-generator :pattern "." :pattern-position 0))))
+    (is (= org.datavec.api.writable.Text
+           (type
+            (get-label-for-path :label-generator (new-parent-path-label-generator)
+                                :path "resources/paravec/labeled/finance"))))))
+
+(deftest path-filter-tests
+  (testing "the creation of path filters and their functionality"
+    (is (= org.datavec.api.io.filters.BalancedPathFilter
+           (type
+            (new-balanced-path-filter :rng (new java.util.Random)
+                                      :extensions [".txt"]
+                                      :label-generator (new-parent-path-label-generator)
+                                      :max-paths 1
+                                      :max-labels 3
+                                      :min-paths-per-label 1
+                                      :max-paths-per-label 1
+                                      :labels []))))
+    (is (= org.datavec.api.io.filters.RandomPathFilter
+           (type
+            (new-random-path-filter :rng (new java.util.Random)
+                                    :extensions [".txt"]
+                                    :max-paths 2))))
+    (is (= (type
+            (array-of :data [(java.net.URI/create "foo")]
+                      :java-type java.net.URI))
+           (type
+            (filter-paths :path-filter (new-random-path-filter :rng (new java.util.Random)
+                                                               :extensions [".txt"]
+                                                               :max-paths 2)
+                          :paths [(java.net.URI/create "foo")]))))))
+
+
+
+(deftest file-split-testing
+  (testing "base level io stuffs"
+
+
+
+
+    ))
+
 (deftest rr-ds-iterator-creation-test
   (testing "the creation of record readers dataset iterators"
     ;; lets test bottom level first then work up to this
     ))
 
+(deftest ds-iterators-test
+  (testing "the creation of various dataset iterators"
+    ;; dl4clj.datasets.iterator.iterators
+
+    ))
 
 (deftest rearrange-test
   (testing "the rearrange ns"

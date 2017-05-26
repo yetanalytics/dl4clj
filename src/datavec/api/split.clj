@@ -7,7 +7,7 @@
            [org.datavec.api.io.labels PathLabelGenerator ParentPathLabelGenerator
             PatternPathLabelGenerator])
   (:require [clojure.java.io :as io]
-            [dl4clj.nn.conf.utils :refer [contains-many?]]))
+            [dl4clj.utils :refer [contains-many? array-of]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split multimethod
@@ -124,7 +124,7 @@
   on output based on their labels, to obtain easily optimal batches for training.
 
   :rng (java.util.Random), a randomly generated number
-  :extensions (array of strings), files to keep
+  :extensions (collection of string(s)), files to keep
   :label-generator (label-generator), call either new-parent-path-label-generator
    or new-pattern-path-label-generator
   :max-paths (int), max number of paths to return (0 = unlimited)
@@ -146,27 +146,33 @@
            max-labels 0
            min-paths-per-label 0
            max-paths-per-label 0}}]
-  (BalancedPathFilter. rng extensions label-generator max-paths max-labels
-                       min-paths-per-label max-paths-per-label labels))
+  (BalancedPathFilter. rng (array-of :data extensions
+                                     :java-type java.lang.String)
+                       label-generator max-paths max-labels
+                       min-paths-per-label max-paths-per-label
+                       (array-of :data labels
+                                 :java-type java.lang.String)))
 
 (defn new-random-path-filter
   "Randomizes the order of paths in an array.
 
   :rng (java.util.Random), a randomly generated number
-  :extensions (collection of strings), files to keep
+  :extensions (collection of strings), file types to keep
   :max-paths (int), max number of paths to return
     - 0 = unlimited
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/RandomPathFilter.html"
   [& {:keys [rng extensions max-paths]
       :or {max-paths 0}}]
-  (RandomPathFilter. rng extensions max-paths))
+  (RandomPathFilter. rng (array-of :data extensions
+                                   :java-type java.lang.String) max-paths))
 
 (defn filter-paths
-  ":path-filter (map), config opts for either balanced-path-filter or random-path-filter
-  :paths (array of URIs), uri paths to be filtered"
+  ":path-filter (obj), a path filter object
+  :paths (collection of URIs), uri paths to be filtered"
   [& {:keys [path-filter paths]}]
-  (.filter path-filter paths))
+  (.filter path-filter (array-of :data paths
+                                 :java-type java.net.URI)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split user facing fns

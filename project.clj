@@ -16,7 +16,6 @@
                  [org.deeplearning4j/deeplearning4j-core "0.8.0"]
                  [org.nd4j/nd4j-native-platform "0.8.0"]
                  [org.datavec/datavec-api "0.8.0"]
-                 [clj-time "0.13.0"]
                  [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"]
                  [org.apache.spark/spark-core_2.11 "2.1.0"]
                  [org.clojure/data.json "0.2.6"]])

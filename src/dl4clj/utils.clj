@@ -43,6 +43,6 @@
 
   puts the data structure into an array with the java class as the type"
   [& {:keys [data java-type]}]
-  (if (seq? data)
+  (if (or (seq? data) (vector? data))
     (into-array java-type data)
     (into-array java-type [data])))
