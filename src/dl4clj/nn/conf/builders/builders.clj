@@ -12,7 +12,8 @@
     EmbeddingLayer$Builder LocalResponseNormalization$Builder
     SubsamplingLayer$Builder LossLayer$Builder CenterLossOutputLayer$Builder
     Convolution1DLayer$Builder DropoutLayer$Builder GlobalPoolingLayer$Builder
-    Layer$Builder Subsampling1DLayer$Builder ZeroPaddingLayer$Builder]
+    Layer$Builder Subsampling1DLayer$Builder ZeroPaddingLayer$Builder
+    SubsamplingLayer$BaseSubsamplingBuilder]
    [org.deeplearning4j.nn.conf.layers.variational VariationalAutoencoder$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -101,34 +102,29 @@
   [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
                         gradient-normalization gradient-normalization-threshold
-                        l1 l2 layer-name learning-rate learning-rate-policy
+                        l1 l1-bias l2 l2-bias layer-name learning-rate learning-rate-policy
                         learning-rate-schedule momentum momentum-after rho
-                        rms-decay updater weight-init n-in n-out loss-fn corruption-level
+                        rms-decay updater weight-init n-in n-out loss-fn
+                        visible-bias-init pre-train-iterations
+                        beta gamma eps decay lock-gamma-beta? mini-batch?
+                        gradient-check? alpha lambda corruption-level
                         sparsity hidden-unit visible-unit k forget-gate-bias-init
-                        beta decay eps gamma is-mini-batch lock-gamma-beta
-                        kernel-size stride padding cudnn-algo-mode
-                        alpha n pooling-type decoder-layer-sizes
+                        eps n pooling-type decoder-layer-sizes
                         encoder-layer-sizes num-samples pzx-activation-function
-                        gradient-check lambda collapse-dimensions pnorm
-                        pooling-dimensions eps convolution-mode l1-bias l2-bias
-                        pre-train-iterations gate-activation-fn visible-bias-init
-                        reconstruction-distribution vae-loss-fn build?]
+                        collapse-dimensions pnorm pooling-dimensions eps
+                        gate-activation-fn reconstruction-distribution
+                        vae-loss-fn build?]
                  :or {build? true}
                  :as opts}]
   (cond-> builder-type
+    ;; all layers
     (contains? opts :activation-fn) (.activation (constants/value-of {:activation-fn activation-fn}))
     (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
     (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
-    (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
-    (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
-                                                                   {:activation-fn gate-activation-fn}))
     (contains? opts :bias-init) (.biasInit bias-init)
     (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
     (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
                                       dist))
-    (contains? opts :l1-bias) (.l1Bias l1-bias)
-    (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
-    (contains? opts :l2-bias) (.l2Bias l2-bias)
     (contains? opts :drop-out) (.dropOut drop-out)
     (contains? opts :epsilon) (.epsilon epsilon)
     (contains? opts :gradient-normalization) (.gradientNormalization
@@ -136,16 +132,16 @@
                                                {:gradient-normalization gradient-normalization}))
     (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
                                                         gradient-normalization-threshold)
-    (contains? opts :eps) (.eps eps)
     (contains? opts :l1) (.l1 l1)
+    (contains? opts :l1-bias) (.l1Bias l1-bias)
     (contains? opts :l2) (.l2 l2)
+    (contains? opts :l2-bias) (.l2Bias l2-bias)
     (contains? opts :layer-name) (.name layer-name)
     (contains? opts :learning-rate) (.learningRate learning-rate)
     (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
                                             (constants/value-of
                                              {:learning-rate-policy
                                               learning-rate-policy}))
-    (contains? opts :pooling-dimensions) (.poolingDimensions pooling-dimensions)
     (contains? opts :learning-rate-schedule) (.learningRateSchedule learning-rate-schedule)
     (contains? opts :momentum) (.momentum momentum)
     (contains? opts :momentum-after) (.momentumAfter momentum-after)
@@ -154,45 +150,65 @@
     (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
     (contains? opts :weight-init) (.weightInit (constants/value-of
                                                 {:weight-init weight-init}))
+    ;; added by feed forward layers
     (contains? opts :n-in) (.nIn n-in)
     (contains? opts :n-out) (.nOut n-out)
+
+    ;; added by output layers
     (contains? opts :loss-fn) (.lossFunction (constants/value-of {:loss-fn loss-fn}))
+
+    ;; added by base pretrain network
+    (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
+    (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
+
+    ;; added by batch normilization
+    (contains? opts :beta) (.beta beta)
+    (contains? opts :decay) (.decay decay)
+    (contains? opts :eps) (.eps eps)
+    (contains? opts :gamma) (.gamma gamma)
+    (contains? opts :lock-gamma-beta?) (.lockGammaBeta lock-gamma-beta?)
+    (contains? opts :mini-batch?) (.minibatch mini-batch?)
+
+    ;; added by global pooling layers
+    (contains? opts :pooling-dimensions) (.poolingDimensions pooling-dimensions)
+    (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
+    (contains? opts :pnorm) (.pnorm pnorm)
+
+    ;; center-loss adds these
+    (contains? opts :alpha) (.alpha alpha)
+    (contains? opts :gradient-check?) (.gradientCheck gradient-check?)
+    (contains? opts :lambda) (.lambda lambda)
+
+    ;; autoencoders add these
+    ;; set when the constructor is first being called
     (contains? opts :corruption-level) (.corruptionLevel corruption-level)
     (contains? opts :sparsity) (.sparsity sparsity)
+
+    ;; RBMs add these
+    ;; also use sparsity
     (contains? opts :visible-unit) (.visibleUnit (constants/value-of
                                                   {:visible-unit visible-unit}))
     (contains? opts :hidden-unit) (.hiddenUnit (constants/value-of
                                                 {:hidden-unit hidden-unit}))
     (contains? opts :k) (.k k)
+
+    ;; Graves LSTM add these
     (contains? opts :forget-gate-bias-init) (.forgetGateBiasInit forget-gate-bias-init)
-    (contains? opts :beta) (.beta beta)
-    (contains? opts :decay) (.decay decay)
-    (contains? opts :gamma) (.gamma gamma)
-    (contains? opts :is-mini-batch) (.isMiniBatch is-mini-batch)
-    (contains? opts :lock-gamma-beta) (.lockGammaBeta lock-gamma-beta)
-    (contains? opts :kernel-size) (.kernelSize kernel-size)
-    (contains? opts :stride) (.stride stride)
-    (contains? opts :padding) (.padding padding)
-    (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
-                                                          {:convolution-mode
-                                                           convolution-mode}))
-    (contains? opts :cudnn-algo-mode) (.cudnnAlgoMode (constants/value-of
-                                                       {:cudnn-algo-mode
-                                                        cudnn-algo-mode}))
-    (contains? opts :pnorm) (.pnorm pnorm)
-    (contains? opts :alpha) (.alpha alpha)
+    (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
+                                                                   {:activation-fn gate-activation-fn}))
+
+    ;; added by local response normalization
+    ;; also uses k, beta, alpha
     (contains? opts :n) (.n n)
-    (contains? opts :pooling-type) (.poolingType (constants/value-of
-                                                  {:pool-type pooling-type}))
+
+    ;; added by VAEs
     (contains? opts :decoder-layer-sizes) (.decoderLayerSizes (int-array decoder-layer-sizes))
     (contains? opts :encoder-layer-sizes) (.encoderLayerSizes (int-array encoder-layer-sizes))
     (contains? opts :num-samples) (.numSamples num-samples)
     (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of {:activation-fn
                                                                       (:output-activation-fn vae-loss-fn)})
                                                  (constants/value-of {:loss-fn (:loss-fn vae-loss-fn)}))
-    (contains? opts :gradient-check) (.gradientCheck gradient-check)
-    (contains? opts :lambda) (.lambda lambda)
-    (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
+
     (contains? opts :reconstruction-distribution) (.reconstructionDistribution
                                                    (reconstruction-dist/distributions
                                                     reconstruction-distribution))
@@ -207,6 +223,9 @@
 
 (defmethod builder :activation-layer [opts]
   (any-layer-builder (ActivationLayer$Builder.) (:activation-layer opts)))
+
+(defmethod builder :center-loss-output-layer [opts]
+  (any-layer-builder (CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
 
 (defmethod builder :output-layer [opts]
   (any-layer-builder (OutputLayer$Builder.) (:output-layer opts)))
@@ -230,7 +249,40 @@
   (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization opts)))
 
 (defmethod builder :convolutional-layer [opts]
-  (any-layer-builder (ConvolutionLayer$Builder.) (:convolutional-layer opts)))
+  (let [conf (:convolutional-layer opts)
+        {kernel-size :kernel-size
+         stride :stride
+         padding :padding} conf
+        b (cond (contains-many? conf :padding :stride :kernel-size)
+                (ConvolutionLayer$Builder. (int-array kernel-size)
+                                           (int-array stride)
+                                           (int-array padding))
+                (contains-many? conf :kernel-size :stride)
+                (ConvolutionLayer$Builder. (int-array kernel-size)
+                                           (int-array stride))
+                (contains? conf :kernel-size)
+                (ConvolutionLayer$Builder. (int-array kernel-size))
+                :else
+                (ConvolutionLayer$Builder.))]
+    (any-layer-builder b (:convolutional-layer opts))))
+
+(defmethod builder :convolution-1d-layer [opts]
+  (let [conf (:convolution-1d-layer opts)
+        {kernel-size :kernel-size
+         stride :stride
+         padding :padding} conf
+        b (cond (contains-many? conf :padding :stride :kernel-size)
+                (Convolution1DLayer$Builder.  kernel-size
+                                              stride
+                                              padding)
+                (contains-many? conf :kernel-size :stride)
+                (Convolution1DLayer$Builder.  kernel-size
+                                              stride)
+                (contains? conf :kernel-size)
+                (Convolution1DLayer$Builder.  kernel-size)
+                :else
+                (Convolution1DLayer$Builder.))]
+    (any-layer-builder b (:convolution-1d-layer opts))))
 
 (defmethod builder :dense-layer [opts]
   (any-layer-builder (DenseLayer$Builder.) (:dense-layer opts)))
@@ -242,7 +294,36 @@
   (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization opts)))
 
 (defmethod builder :subsampling-layer [opts]
-  (any-layer-builder (SubsamplingLayer$Builder.) (:subsampling-layer opts)))
+  (let [conf (:subsampling-layer opts)
+        {kernel-size :kernel-size
+         stride :stride
+         padding :padding
+         pooling-type :pooling-type} conf
+        k-s (int-array kernel-size)
+        s (int-array stride)
+        p (int-array padding)
+        pt (if (keyword? pooling-type)
+             (constants/value-of {:pool-type pooling-type}))
+        b (cond (contains-many? conf :pooling-type :padding :stride :kernel-size)
+                (SubsamplingLayer$Builder. pt k-s s p)
+                (contains-many? conf :padding :stride :kernel-size)
+                (SubsamplingLayer$Builder. k-s s p)
+                (contains-many? conf :pooling-type :kernel-size :stride)
+                (SubsamplingLayer$Builder. pt k-s s)
+                (contains-many? conf :kernel-size :stride)
+                (SubsamplingLayer$Builder. k-s s)
+                (contains-many? conf :kernel-size :pooling-type)
+                (SubsamplingLayer$Builder. pt k-s)
+                (contains? conf :kernel-size)
+                (SubsamplingLayer$Builder. k-s)
+                (contains? conf :pooling-type)
+                (SubsamplingLayer$Builder. pt)
+                :else
+                (SubsamplingLayer$Builder.))]
+    (any-layer-builder b (:subsampling-layer opts))))
+
+(defmethod builder :subsampling-1d-layer [opts]
+  (any-layer-builder (Subsampling1DLayer$Builder.) (:subsampling-1d-layer opts)))
 
 (defmethod builder :variational-auto-encoder [opts]
   (any-layer-builder (VariationalAutoencoder$Builder.) (:variational-auto-encoder opts)))
@@ -250,20 +331,12 @@
 (defmethod builder :loss-layer [opts]
   (any-layer-builder (LossLayer$Builder.) (:loss-layer opts)))
 
-(defmethod builder :center-loss-output-layer [opts]
-  (any-layer-builder (CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
-
-(defmethod builder :convolution-1d-layer [opts]
-  (any-layer-builder (Convolution1DLayer$Builder.) (:convolution-1d-layer opts)))
-
 (defmethod builder :dropout-layer [opts]
-  (any-layer-builder (DropoutLayer$Builder.) (:dropout-layer opts)))
+  (let [d-out (:drop-out (:dropout-layer opts))]
+   (any-layer-builder (DropoutLayer$Builder. d-out) (:dropout-layer opts))))
 
 (defmethod builder :global-pooling-layer [opts]
   (any-layer-builder (GlobalPoolingLayer$Builder.) (:global-pooling-layer opts)))
-
-(defmethod builder :subsampling-1d-layer [opts]
-  (any-layer-builder (Subsampling1DLayer$Builder.) (:subsampling-1d-layer opts)))
 
 (defmethod builder :zero-padding-layer [opts]
   (let [data (:zero-padding-layer opts)
@@ -296,13 +369,13 @@
 
   :n-out (int) number of outputs for the given layer"
   [& {:keys [activation-fn adam-mean-decay adam-var-decay
-           bias-init bias-learning-rate dist drop-out epsilon
-           gradient-normalization gradient-normalization-threshold
-           l1 l2 layer-name learning-rate learning-rate-policy
-           learning-rate-schedule momentum momentum-after rho
-           rms-decay updater weight-init n-in n-out l1-bias l2-bias]
-    :or {}
-    :as opts}]
+             bias-init bias-learning-rate dist drop-out epsilon
+             gradient-normalization gradient-normalization-threshold
+             l1 l2 layer-name learning-rate learning-rate-policy
+             learning-rate-schedule momentum momentum-after rho
+             rms-decay updater weight-init n-in n-out l1-bias l2-bias]
+      :or {}
+      :as opts}]
   (builder {:activation-layer opts}))
 
 (defn output-layer-builder
@@ -324,12 +397,12 @@
             :negativeloglikelihood"
 
   [& {:keys [activation-fn adam-mean-decay adam-var-decay
-           bias-init bias-learning-rate dist drop-out epsilon
-           gradient-normalization gradient-normalization-threshold
-           l1 l2 layer-name learning-rate learning-rate-policy
-           learning-rate-schedule momentum momentum-after rho
-           rms-decay updater weight-init n-in n-out loss-fn
-           l1-bias l2-bias]
+             bias-init bias-learning-rate dist drop-out epsilon
+             gradient-normalization gradient-normalization-threshold
+             l1 l2 layer-name learning-rate learning-rate-policy
+             learning-rate-schedule momentum momentum-after rho
+             rms-decay updater weight-init n-in n-out loss-fn
+             l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:output-layer opts}))
@@ -474,7 +547,7 @@
     :as opts}]
   (builder {:graves-bidirectional-lstm opts}))
 
-(defn garves-lstm-layer-builder
+(defn graves-lstm-layer-builder
   "creates a graves-lstm layer with params supplied in opts map.
 
   LSTM recurrent net, based on Graves: Supervised Sequence Labelling with Recurrent Neural Networks
@@ -555,29 +628,24 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :convolution-mode (keyword), one of :strict, :same, :truncate
-   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
-
-  :cudnn-algo-mode (keyword), either :no-workspace or :prefer-fastest
-   Default: :prefer-fastest but :no-workspace uses less memory
-
-  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+  :kernel-size (vec), Size of the convolution rows/columns (height and width of the kernel)
+   - this should be a vector describing the dims
 
   :padding (int), allow us to control the spatial size of the output volumes,
     pad the input volume with zeros around the border.
 
   :stride (int), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
-
+  ;; need to write better descs for padding and stride
   [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
-           bias-learning-rate dist drop-out epsilon gradient-normalization
-           gradient-normalization-threshold l1 l2 layer-name learning-rate
-           learning-rate-policy learning-rate-schedule momentum momentum-after
-           rho rms-decay updater weight-init n-in n-out convolution-mode
-           cudnn-algo-mode kernel-size padding stride l1-bias l2-bias]
+             bias-learning-rate dist drop-out epsilon gradient-normalization
+             gradient-normalization-threshold l1 l2 layer-name learning-rate
+             learning-rate-policy learning-rate-schedule momentum momentum-after
+             rho rms-decay updater weight-init n-in n-out kernel-size padding
+             stride l1-bias l2-bias]
     :or {}
     :as opts}]
-  (builder (:convolutional-layer opts)))
+  (builder {:convolutional-layer opts}))
 
 (defn dense-layer-builder
   "creates a dense layer with params supplied in opts map.
@@ -629,7 +697,7 @@
            rho rms-decay updater weight-init n-in n-out l1-bias l2-bias]
     :or {}
     :as opts}]
-  (builder (:embedding-layer opts)))
+  (builder {:embedding-layer opts}))
 
 (defn local-response-normalization-layer-builder
   "creates a local-response-normalization layer with params supplied in opts map.
@@ -664,24 +732,15 @@
 
   this builder adds :kernel-size, :padding, :pooling-type, :stride to the param map.
 
-  :convolution-mode (keyword), one of :strict, :same, :truncate
-   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+  :kernel-size (vec), Size of the convolution rows/columns (height and width of the kernel)
 
-  :eps (double), Epsilon value for batch normalization; small floating point value added to variance
-   Default: 1e-5
-
-  :pnorm (int) P-norm constant
-  -Only used if using PoolingType.PNORM for the pooling type
-
-  :kernel-size :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
-
-  :padding (int) padding in the height and width dimensions
+  :padding (vec) padding in the height and width dimensions
 
   :pooling-type (keyword) progressively reduces the spatial size of the representation to reduce
    the amount of features and the computational complexity of the network.
-  one of: :avg, :max, :sum, :pnorm, :none
+  one of: :avg, :max, :sum, :none
 
-  :stride (int), filter movement speed across pixels.
+  :stride (vec), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
 
   [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
@@ -689,7 +748,7 @@
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
            rho rms-decay updater weight-init kernel-size padding pooling-type
-           stride l1-bias l2-bias convolution-mode eps pnorm]
+           stride l1-bias l2-bias]
     :or {}
     :as opts}]
   (builder {:subsampling-layer opts}))
