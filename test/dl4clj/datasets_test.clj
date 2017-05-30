@@ -365,7 +365,45 @@
 (deftest pre-processors-test
   (testing "testing the creation of pre-processors"
     ;; nd4clj.linalg.dataset.api.pre-processors
+    ;; csv-nlines-seq-rr
+    (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
+           (type (new-csv-nlines-seq-record-reader))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
+           (type (new-csv-nlines-seq-record-reader :n-lines-per-seq 5))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
+           (type (new-csv-nlines-seq-record-reader :n-lines-per-seq 5
+                                                   :delimiter "," :skip-num-lines 1))))
 
+    ;; csv-rr
+    (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
+           (type (new-csv-record-reader))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
+           (type (new-csv-record-reader :skip-lines 1))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
+           (type (new-csv-record-reader :skip-lines 1 :delimiter ","))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
+           (type (new-csv-record-reader :skip-lines 1 :delimiter ","
+                                        :strip-quotes nil))))
+
+    ;; csv-seq-rr
+    (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
+           (type (new-csv-seq-record-reader))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
+           (type (new-csv-seq-record-reader :skip-num-lines 1))))
+    (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
+           (type (new-csv-seq-record-reader :skip-num-lines 1 :delimiter ","))))
+
+    ;; file-rr
+    (is (= org.datavec.api.records.reader.impl.FileRecordReader
+           (type (new-file-record-reader))))
+
+    ;; line-rr
+    (is (= org.datavec.api.records.reader.impl.LineRecordReader
+           (type (new-line-record-reader))))
+
+    ;; list-string-rr
+    (is (= org.datavec.api.records.reader.impl.collection.ListStringRecordReader
+           (type (new-list-string-record-reader))))
     ))
 
 (deftest rr-ds-iterator-creation-test
