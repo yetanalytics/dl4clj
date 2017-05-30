@@ -2,7 +2,7 @@
     dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
             [dl4clj.nn.conf.constants :as constants]
-            [dl4clj.nn.conf.utils :as u]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
@@ -19,14 +19,9 @@
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn layer-type
-  "dispatch fn for builder"
-  [opts]
-  (first (keys opts)))
-
 (defmulti builder
   "multimethod that builds a layer based on the supplied type and opts"
-  layer-type)
+  generic-dispatching-fn)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn heavy lifting
@@ -117,94 +112,94 @@
                         gradient-check lambda collapse-dimensions pnorm
                         pooling-dimensions eps convolution-mode l1-bias l2-bias
                         pre-train-iterations gate-activation-fn visible-bias-init
-                        reconstruction-distribution vae-loss-fn]
-                 :or {}
+                        reconstruction-distribution vae-loss-fn build?]
+                 :or {build? true}
                  :as opts}]
-  (.build
-   (cond-> builder-type
-     (contains? opts :activation-fn) (.activation (constants/value-of {:activation-fn activation-fn}))
-     (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
-     (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
-     (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
-     (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
-                                                                    {:activation-fn gate-activation-fn}))
-     (contains? opts :bias-init) (.biasInit bias-init)
-     (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
-     (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
-                                       dist))
-     (contains? opts :l1-bias) (.l1Bias l1-bias)
-     (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
-     (contains? opts :l2-bias) (.l2Bias l2-bias)
-     (contains? opts :drop-out) (.dropOut drop-out)
-     (contains? opts :epsilon) (.epsilon epsilon)
-     (contains? opts :gradient-normalization) (.gradientNormalization
+  (cond-> builder-type
+    (contains? opts :activation-fn) (.activation (constants/value-of {:activation-fn activation-fn}))
+    (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
+    (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+    (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
+    (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
+                                                                   {:activation-fn gate-activation-fn}))
+    (contains? opts :bias-init) (.biasInit bias-init)
+    (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
+    (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
+                                      dist))
+    (contains? opts :l1-bias) (.l1Bias l1-bias)
+    (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
+    (contains? opts :l2-bias) (.l2Bias l2-bias)
+    (contains? opts :drop-out) (.dropOut drop-out)
+    (contains? opts :epsilon) (.epsilon epsilon)
+    (contains? opts :gradient-normalization) (.gradientNormalization
+                                              (constants/value-of
+                                               {:gradient-normalization gradient-normalization}))
+    (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
+                                                        gradient-normalization-threshold)
+    (contains? opts :eps) (.eps eps)
+    (contains? opts :l1) (.l1 l1)
+    (contains? opts :l2) (.l2 l2)
+    (contains? opts :layer-name) (.name layer-name)
+    (contains? opts :learning-rate) (.learningRate learning-rate)
+    (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+                                            (constants/value-of
+                                             {:learning-rate-policy
+                                              learning-rate-policy}))
+    (contains? opts :pooling-dimensions) (.poolingDimensions pooling-dimensions)
+    (contains? opts :learning-rate-schedule) (.learningRateSchedule learning-rate-schedule)
+    (contains? opts :momentum) (.momentum momentum)
+    (contains? opts :momentum-after) (.momentumAfter momentum-after)
+    (contains? opts :rho) (.rho rho)
+    (contains? opts :rms-decay) (.rmsDecay rms-decay)
+    (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
+    (contains? opts :weight-init) (.weightInit (constants/value-of
+                                                {:weight-init weight-init}))
+    (contains? opts :n-in) (.nIn n-in)
+    (contains? opts :n-out) (.nOut n-out)
+    (contains? opts :loss-fn) (.lossFunction (constants/value-of {:loss-fn loss-fn}))
+    (contains? opts :corruption-level) (.corruptionLevel corruption-level)
+    (contains? opts :sparsity) (.sparsity sparsity)
+    (contains? opts :visible-unit) (.visibleUnit (constants/value-of
+                                                  {:visible-unit visible-unit}))
+    (contains? opts :hidden-unit) (.hiddenUnit (constants/value-of
+                                                {:hidden-unit hidden-unit}))
+    (contains? opts :k) (.k k)
+    (contains? opts :forget-gate-bias-init) (.forgetGateBiasInit forget-gate-bias-init)
+    (contains? opts :beta) (.beta beta)
+    (contains? opts :decay) (.decay decay)
+    (contains? opts :gamma) (.gamma gamma)
+    (contains? opts :is-mini-batch) (.isMiniBatch is-mini-batch)
+    (contains? opts :lock-gamma-beta) (.lockGammaBeta lock-gamma-beta)
+    (contains? opts :kernel-size) (.kernelSize kernel-size)
+    (contains? opts :stride) (.stride stride)
+    (contains? opts :padding) (.padding padding)
+    (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
+                                                          {:convolution-mode
+                                                           convolution-mode}))
+    (contains? opts :cudnn-algo-mode) (.cudnnAlgoMode (constants/value-of
+                                                       {:cudnn-algo-mode
+                                                        cudnn-algo-mode}))
+    (contains? opts :pnorm) (.pnorm pnorm)
+    (contains? opts :alpha) (.alpha alpha)
+    (contains? opts :n) (.n n)
+    (contains? opts :pooling-type) (.poolingType (constants/value-of
+                                                  {:pool-type pooling-type}))
+    (contains? opts :decoder-layer-sizes) (.decoderLayerSizes (int-array decoder-layer-sizes))
+    (contains? opts :encoder-layer-sizes) (.encoderLayerSizes (int-array encoder-layer-sizes))
+    (contains? opts :num-samples) (.numSamples num-samples)
+    (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of {:activation-fn
+                                                                      (:output-activation-fn vae-loss-fn)})
+                                                 (constants/value-of {:loss-fn (:loss-fn vae-loss-fn)}))
+    (contains? opts :gradient-check) (.gradientCheck gradient-check)
+    (contains? opts :lambda) (.lambda lambda)
+    (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
+    (contains? opts :reconstruction-distribution) (.reconstructionDistribution
+                                                   (reconstruction-dist/distributions
+                                                    reconstruction-distribution))
+    (contains? opts :pzx-activation-function) (.pzxActivationFunction
                                                (constants/value-of
-                                                {:gradient-normalization gradient-normalization}))
-     (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
-                                                         gradient-normalization-threshold)
-     (contains? opts :eps) (.eps eps)
-     (contains? opts :l1) (.l1 l1)
-     (contains? opts :l2) (.l2 l2)
-     (contains? opts :layer-name) (.name layer-name)
-     (contains? opts :learning-rate) (.learningRate learning-rate)
-     (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
-                                             (constants/value-of
-                                              {:learning-rate-policy
-                                               learning-rate-policy}))
-     (contains? opts :pooling-dimensions) (.poolingDimensions pooling-dimensions)
-     (contains? opts :learning-rate-schedule) (.learningRateSchedule learning-rate-schedule)
-     (contains? opts :momentum) (.momentum momentum)
-     (contains? opts :momentum-after) (.momentumAfter momentum-after)
-     (contains? opts :rho) (.rho rho)
-     (contains? opts :rms-decay) (.rmsDecay rms-decay)
-     (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
-     (contains? opts :weight-init) (.weightInit (constants/value-of
-                                                 {:weight-init weight-init}))
-     (contains? opts :n-in) (.nIn n-in)
-     (contains? opts :n-out) (.nOut n-out)
-     (contains? opts :loss-fn) (.lossFunction (constants/value-of {:loss-fn loss-fn}))
-     (contains? opts :corruption-level) (.corruptionLevel corruption-level)
-     (contains? opts :sparsity) (.sparsity sparsity)
-     (contains? opts :visible-unit) (.visibleUnit (constants/value-of
-                                                   {:visible-unit visible-unit}))
-     (contains? opts :hidden-unit) (.hiddenUnit (constants/value-of
-                                                 {:hidden-unit hidden-unit}))
-     (contains? opts :k) (.k k)
-     (contains? opts :forget-gate-bias-init) (.forgetGateBiasInit forget-gate-bias-init)
-     (contains? opts :beta) (.beta beta)
-     (contains? opts :decay) (.decay decay)
-     (contains? opts :gamma) (.gamma gamma)
-     (contains? opts :is-mini-batch) (.isMiniBatch is-mini-batch)
-     (contains? opts :lock-gamma-beta) (.lockGammaBeta lock-gamma-beta)
-     (contains? opts :kernel-size) (.kernelSize kernel-size)
-     (contains? opts :stride) (.stride stride)
-     (contains? opts :padding) (.padding padding)
-     (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
-                                                           {:convolution-mode
-                                                            convolution-mode}))
-     (contains? opts :cudnn-algo-mode) (.cudnnAlgoMode (constants/value-of
-                                                        {:cudnn-algo-mode
-                                                         cudnn-algo-mode}))
-     (contains? opts :pnorm) (.pnorm pnorm)
-     (contains? opts :alpha) (.alpha alpha)
-     (contains? opts :n) (.n n)
-     (contains? opts :pooling-type) (.poolingType (constants/value-of
-                                                   {:pool-type pooling-type}))
-     (contains? opts :decoder-layer-sizes) (.decoderLayerSizes (int-array decoder-layer-sizes))
-     (contains? opts :encoder-layer-sizes) (.encoderLayerSizes (int-array encoder-layer-sizes))
-     (contains? opts :num-samples) (.numSamples num-samples)
-     (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of {:activation-fn
-                                                                       (:output-activation-fn vae-loss-fn)})
-                                                  (constants/value-of {:loss-fn (:loss-fn vae-loss-fn)}))
-     (contains? opts :gradient-check) (.gradientCheck gradient-check)
-     (contains? opts :lambda) (.lambda lambda)
-     (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions)
-     (contains? opts :reconstruction-distribution) (.reconstructionDistribution
-                                                    (reconstruction-dist/distributions
-                                                     reconstruction-distribution))
-     (contains? opts :pzx-activation-function) (.pzxActivationFunction
-                                                (constants/value-of
-                                                 {:activation-fn pzx-activation-function})))))
+                                                {:activation-fn pzx-activation-function}))
+    (true? build?) (.build)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods
@@ -275,10 +270,10 @@
         {:keys [pad-top pad-bot pad-left pad-right
                 pad-height pad-width padding]} data]
     (cond
-      (u/contains-many? data :pad-top :pad-bot :pad-left :pad-right)
+      (contains-many? data :pad-top :pad-bot :pad-left :pad-right)
       (any-layer-builder (ZeroPaddingLayer$Builder. pad-top pad-bot pad-left pad-right)
                          (:zero-padding-layer opts))
-      (u/contains-many? data :pad-height :pad-width)
+      (contains-many? data :pad-height :pad-width)
       (any-layer-builder (ZeroPaddingLayer$Builder. pad-height pad-width)
                          (:zero-padding-layer opts))
       :else
@@ -300,7 +295,7 @@
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon
            gradient-normalization gradient-normalization-threshold
            l1 l2 layer-name learning-rate learning-rate-policy
@@ -328,7 +323,7 @@
    opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
             :negativeloglikelihood"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon
            gradient-normalization gradient-normalization-threshold
            l1 l2 layer-name learning-rate learning-rate-policy
@@ -354,7 +349,7 @@
    opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
             :negativeloglikelihood"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -395,7 +390,7 @@
    and try to undo the effect of a corruption process stochastically applied to the input of the auto-encoder.
    The latter can only be done by capturing the statistical dependencies between the inputs."
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -441,7 +436,7 @@
 
   :sparsity (double), see http://ufldl.stanford.edu/wiki/index.php/Autoencoders_and_Sparsity"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -469,7 +464,7 @@
 
   :gate-activation-fn (keyword) activation-fn for the gate in an LSTM neuron.
    -can take on the same values as activation-fn"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -497,7 +492,7 @@
 
   :gate-activation-fn (keyword) activation-fn for the gate in an LSTM neuron.
    -can take on the same values as activation-fn"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -538,7 +533,7 @@
    specified by :gamma (double) and :beta (double).
    Default: false -> learn gamma and beta parameter values during network training."
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -574,7 +569,7 @@
   :stride (int), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -597,7 +592,7 @@
 
   :n-out (int) number of outputs for the given layer"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -627,7 +622,7 @@
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -651,7 +646,7 @@
 
   :n (double) Number of adjacent kernel maps to use when doing LRN. default: 5"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -689,7 +684,7 @@
   :stride (int), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
 
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l2 layer-name learning-rate
            learning-rate-policy learning-rate-schedule momentum momentum-after
@@ -702,7 +697,7 @@
 (defn variational-auto-encoder-builder
   ;; add in this documentation
   ""
-  [{:keys [decoder-layer-sizes encoder-layer-sizes loss-fn
+  [& {:keys [decoder-layer-sizes encoder-layer-sizes loss-fn
            n-out num-samples pzx-activation-function reconstruction-dist
            n-in pre-train-iterations visible-bias-init activation-fn
            adam-mean-decay adam-var-decay bias-init
@@ -727,7 +722,7 @@
   :loss-fn (keyword) Error measurement at the output layer
    opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
             :negativeloglikelihood"
-  [{:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -753,7 +748,7 @@
   :gradient-check (boolean)
 
   :lambda (double)"
-  [{:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -794,7 +789,7 @@
 
   :stride (int), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
-  [{:keys [convolution-mode cudnn-algo-mode kernel-size padding stride
+  [& {:keys [convolution-mode cudnn-algo-mode kernel-size padding stride
            n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
@@ -808,7 +803,7 @@
   "creates a drop-out layer with params supplied in opts map.
 
   see any-layer-builder for param descriptions"
-  [{:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -863,7 +858,7 @@
   :pooling-type (keyword) progressively reduces the spatial size of the representation to reduce
     the amount of features and the computational complexity of the network.
     one of: :avg, :max, :sum, :pnorm, :none"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -906,7 +901,7 @@
 
   :stride (int), filter movement speed across pixels.
    see http://cs231n.github.io/convolutional-networks/"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -938,7 +933,7 @@
   :pad-left (int)
 
   :pad-right (int)"
-  [{:keys [activation-fn adam-mean-decay adam-var-decay bias-init
+  [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
            bias-learning-rate dist drop-out epsilon gradient-normalization
            gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
            learning-rate learning-rate-policy learning-rate-schedule momentum
@@ -990,7 +985,7 @@
    (from VAE state Z) used when doing pretraining.
 
   all other options have been described elsewhere in this namespace"
-  [{:keys [vae-loss-fn visible-bias-init pre-train-iterations
+  [& {:keys [vae-loss-fn visible-bias-init pre-train-iterations
            n-in n-out activation-fn adam-mean-decay adam-var-decay
            bias-init bias-learning-rate dist drop-out epsilon
            gradient-normalization gradient-normalization-threshold
