@@ -14,8 +14,10 @@
             [datavec.api.split :refer :all]
             [nd4clj.linalg.dataset.api.pre-processors :refer :all]
             [nd4clj.linalg.api.ds-iter :refer :all]
+            [nd4clj.linalg.dataset.api.ds-preprocessor :refer :all]
             [datavec.api.writeable :refer :all]
             [datavec.api.records.readers :refer :all]
+            [datavec.api.records.interface :refer :all]
             [dl4clj.utils :refer [array-of]])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
@@ -358,13 +360,6 @@
 (deftest record-readers-test
   (testing "the creation of record readers"
     ;; datavec.api.records.readers
-
-
-    ))
-
-(deftest pre-processors-test
-  (testing "testing the creation of pre-processors"
-    ;; nd4clj.linalg.dataset.api.pre-processors
     ;; csv-nlines-seq-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
            (type (new-csv-nlines-seq-record-reader))))
@@ -403,20 +398,130 @@
 
     ;; list-string-rr
     (is (= org.datavec.api.records.reader.impl.collection.ListStringRecordReader
-           (type (new-list-string-record-reader))))
-    ))
+           (type (new-list-string-record-reader))))))
 
-(deftest rr-ds-iterator-creation-test
-  (testing "the creation of record readers dataset iterators"
-    ;; lets test bottom level first then work up to this
-    ;; nd4clj.linalg.api.ds-iter
-    ))
+(deftest record-readers-interface
+  (testing "the api fns for record readers"
+    (let [rr (new-file-record-reader)
+          init-rr (initialize-rr! :rr rr :input-split
+                                  (new-filesplit
+                                   :root-dir "resources/poker/poker-hand-testing.csv"))]
+      ;; these tests do not cover the entire ns but the most imporant fns
+      (is (= java.lang.Boolean (type (has-next-record? init-rr))))
+      (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
+      (is (= java.util.ArrayList (type (next-record! (reset-rr! init-rr))))))))
+
+(deftest pre-processors-test
+  (testing "testing the creation of pre-processors"
+    ;; nd4clj.linalg.dataset.api.pre-processors
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor
+           (type (new-image-flattening-ds-preprocessor))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler
+           (type (new-image-scaling-ds-preprocessor))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler
+           (type (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor
+           (type (new-vgg16-image-preprocessor))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
+           (type (new-min-max-normalization-ds-preprocessor))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
+           (type (new-min-max-normalization-ds-preprocessor :min-val 5 :max-val 15))))
+    (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize
+           (type (new-standardize-normalization-ds-preprocessor))))))
+
 
 (deftest ds-iterators-test
   (testing "the creation of various dataset iterators"
     ;; dl4clj.datasets.iterator.iterators
+    (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
+          pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
+                         :ds-iter iter)
+          pp2 (fit-iter! :normalizer (new-min-max-normalization-ds-preprocessor)
+                         :ds-iter iter)
+          multi-iter (new-multi-data-set-iterator-adapter
+                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))]
+      (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
+             (type (new-combined-pre-processor :pre-processors {0 pp1
+                                                                1 pp2}))))
+      (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
+             (type (new-async-dataset-iterator :dataset-iterator iter))))
+      (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
+             (type (new-async-dataset-iterator :dataset-iterator iter
+                                                :que-size 10))))
+      (is (= org.deeplearning4j.datasets.iterator.ExistingDataSetIterator
+             (type (new-existing-dataset-iterator :dataset-iterator iter))))
+      (is (= org.deeplearning4j.datasets.iterator.SamplingDataSetIterator
+             (type
+              (new-sampling-dataset-iterator :sampling-source iris-ds
+                                             :batch-size 10
+                                             :total-n-samples 10))))
+      (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
+             (type (new-reconstruction-dataset-iterator :dataset-iterator iter))))
+      ;; again rotating matrices error
+      #_(is (= "" (type (new-moving-window-base-dataset-iterator :batch-size 10
+                                                               :n-examples 10
+                                                               :dataset iris-ds
+                                                               :window-rows 2
+                                                               :window-columns 2))))
+      (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
+             (type (new-async-multi-dataset-iterator
+                    :multi-dataset-iterator multi-iter
+                    :que-length 10))))
+      (is (= org.deeplearning4j.datasets.iterator.IteratorDataSetIterator
+             (type (new-iterator-dataset-iterator :dataset iter :batch-size 10))))
+      (is (= org.deeplearning4j.datasets.iterator.MultipleEpochsIterator
+             (type (new-multiple-epochs-iterator :dataset-iterator iter :n-epochs 1)))))))
 
-    ))
+(deftest rr-ds-iterator-test
+  (testing "the creation of record reader dataset iterators"
+    ;; dl4clj.datasets.datavec
+    (let [rr (new-csv-record-reader)
+          seq-rr (new-csv-seq-record-reader)]
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10))))
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10
+                                                  :label-idx 6
+                                                  :n-possible-labels 10))))
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10
+                                                  :label-idx-from 0
+                                                  :label-idx-to 7
+                                                  :regression? true))))
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10
+                                                  :label-idx 6
+                                                  :n-possible-labels 10
+                                                  :max-num-batches 2))))
+
+      (is (= org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator
+           (type (new-seq-record-reader-dataset-iterator
+                  :record-reader seq-rr
+                  :mini-batch-size 5
+                  :n-possible-labels 10
+                  :label-idx 10
+                  :regression? false))))
+      (is (= org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator
+             (type (new-seq-record-reader-dataset-iterator
+                    :record-reader seq-rr
+                    :mini-batch-size 5
+                    :n-possible-labels 10
+                    :label-idx 10))))
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator
+             (type (new-record-reader-multi-dataset-iterator
+                    :alignment-mode :equal-length
+                    :batch-size 10
+                    :add-seq-reader {:reader-name "foo" :record-reader seq-rr}
+                    :add-reader {:reader-name "baz" :record-reader rr}
+                    :add-input {:reader-name "baz" :first-column 0 :last-column 11})))))))
 
 (deftest rearrange-test
   (testing "the rearrange ns"

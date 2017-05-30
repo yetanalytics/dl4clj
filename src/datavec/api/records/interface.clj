@@ -1,7 +1,8 @@
 (ns datavec.api.records.interface
   (:import [org.datavec.api.records.reader RecordReader SequenceRecordReader]
            [org.datavec.api.conf Configurable]
-           [java.io Closeable]))
+           [java.io Closeable])
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn get-conf-rr
   "Return the configuration used by this record reader"
@@ -71,18 +72,17 @@
   [& {:keys [rr input-split conf]
       :as opts}]
   (if (contains? opts conf)
-  (assert (contains-many? opts :rr :input-split))
-    (.initialize rr conf input-split)
-    (.initialize rr input-split)))
+    (doto rr (.initialize conf input-split))
+    (doto rr (.initialize input-split))))
 
-(defn load-from-meta-data
+(defn load-from-meta-data-rr
   "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)
    -see TBD for record meta data (not yet implemented)
   https://deeplearning4j.org/datavecdoc/org/datavec/api/records/metadata/RecordMetaData.html"
   [& {:keys [rr record-meta-data]}]
   (.loadFromMetaData rr record-meta-data))
 
-(defn load-seq-from-meta-data
+(defn load-seq-from-meta-data-rr
   "Load multiple (or single) sequence record(s) from the given list of record meta data instances
 
   number of sequences is determined by how record meta data is passed

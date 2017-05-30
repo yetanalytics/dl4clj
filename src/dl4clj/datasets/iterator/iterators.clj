@@ -48,7 +48,7 @@
 
 (defmethod iterators :iterator-dataset-iterator [opts]
   (let [config (:iterator-dataset-iterator opts)
-        {iter :dataset
+        {iter :iter
          batch-size :batch-size} config]
     (IteratorDataSetIterator. iter batch-size)))
 
@@ -103,7 +103,7 @@
     (SamplingDataSetIterator. ds batch-size n-samples)))
 
 (defmethod iterators :existing-dataset-iterator [opts]
-  (let [config {:existing-dataset-iterator opts}
+  (let [config (:existing-dataset-iterator opts)
         {iterable :dataset
          n-examples :total-examples
          n-features :n-features
@@ -138,13 +138,6 @@
           :else
           (assert false "you must atleast provide a dataset iterator"))))
 
-(defmethod iterators :combined-pre-processor [opts]
-  (let [config (:combined-pre-processor opts)
-        {pre-processor :pre-processor
-         idx :idx
-         b :builder} config]
-    (doto b (.addPreProcessor idx pre-processor))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -154,23 +147,22 @@
   "This is special preProcessor, that allows to combine multiple prerpocessors,
   and apply them to data sequentially.
 
-  :pre-processors {map}, preprocessors to use on a dataset
-  {{:idx (int) :pre-processor (pre-processor)}
-   {:idx (int) :pre-processor (pre-processor)}}
-   - the builder has the pre-processors added to it in the order specified by the idx key
-   - once all preprocessors have been added, it builds the builder and returns the result
+  :pre-processors (map), {(int) (pre-processor)
+                         (int) (pre-processor)}
+
+   - the keys are the desired indexes of the pre-processors
+   - values are the pre-processors themselves
+   - pre-processors should be fit to a dataset or iterator before being combined
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
   [& {:keys [pre-processors]}]
-  (let [b (CombinedPreProcessor$Builder.)]
-    (.build
-     (for [each pre-processors
-          pp each
-          :let [{pre-processor :pre-processor
-                 idx :idx} pp]]
-      (iterators {:combined-pre-processor {:idx idx
-                                           :pre-processor pre-processor
-                                           :builder b}})))))
+  (loop [b (CombinedPreProcessor$Builder.)
+         result pre-processors]
+    (if (empty? result)
+      (.build b)
+      (let [data (first result)
+            [idx pp] data]
+        (recur (doto b (.addPreProcessor idx pp)) (rest result))))))
 
 (defn new-async-dataset-iterator
   "AsyncDataSetIterator takes an existing DataSetIterator and loads one or more
@@ -281,7 +273,7 @@
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorDataSetIterator.html"
-  [& {:keys [dataset batch-size]
+  [& {:keys [iter batch-size]
       :as opts}]
   (iterators {:iterator-dataset-iterator opts}))
 
@@ -298,6 +290,8 @@
   [& {:keys [multi-dataset batch-size]
       :as opts}]
   (iterators {:iterator-multi-dataset-iterator opts}))
+
+;; need to implement berkely pairs to test/use
 
 (defn new-doubles-dataset-iterator
   "creates a dataset iterator given a pair of double arrays and a batch-size
@@ -333,6 +327,7 @@
   (iterators {:INDArray-dataset-iterator opts}))
 
 (defn new-curves-dataset-iterator
+  ;; end of file errors
   "creates a dataset iterator for curbes data
 
   :batch-size (int), the size of the batch

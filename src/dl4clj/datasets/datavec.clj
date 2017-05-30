@@ -117,11 +117,11 @@
             :else
             (assert false "if youre supplying seperate labels and features readers,
 you must supply atleast a batch size and the number of possible labels"))
-      (cond (contains-many? :mini-batch-size :n-possible-labels :label-idx
+      (cond (contains-many? config :mini-batch-size :n-possible-labels :label-idx
                             :regression?)
             (SequenceRecordReaderDataSetIterator.
              rr m-batch-size n-labels label-idx regression?)
-            (contains-many? :mini-batch-size :n-possible-labels :label-idx)
+            (contains-many? config :mini-batch-size :n-possible-labels :label-idx)
             (SequenceRecordReaderDataSetIterator.
              rr m-batch-size n-labels label-idx)
             :else
@@ -157,30 +157,29 @@ you need to suply atleast the mini batch size, number of possible labels and the
         {seq-reader-name :reader-name
          seq-rr :record-reader} add-seq-reader]
     (.build
-     (as-> (RecordReaderMultiDataSetIterator$Builder. batch-size) b
-      (cond (contains? config :add-input)
-            (if (contains-many? add-input :first-column :last-column)
-              (doto b (.addInput reader-name first-column last-column))
-              (doto b (.addInput reader-name)))
-            (and (contains? config :add-input-one-hot)
-                 (contains-many? add-input-hot :reader-name :column :n-classes))
-            (doto b (.addInputOneHot hot-reader-name hot-column hot-num-classes))
-            (contains? config :add-output)
-            (if (contains-many? add-output :first-column :last-column)
-              (doto b (.addOutput output-reader-name output-first-column output-last-column))
-              (doto b (.addOutput output-reader-name)))
-            (and (contains? config :add-output-one-hot)
-                 (contains-many? add-output-hot :column :n-classes :reader-name))
-            (doto b (.addOutputOneHot hot-output-reader-name hot-output-column
-                                      hot-output-n-classes))
-            (and (contains? config :add-reader)
-                 (contains-many? add-reader :reader-name :record-reader))
-            (doto b (.addReader record-reader-name rr))
-            (and (contains? config :add-seq-reader)
-                 (contains-many? add-seq-reader :reader-name :record-reader))
-            (doto b (.addSequenceReader seq-reader-name seq-rr))
-            (contains? config :alignment-mode)
-            (doto b (.sequenceAlignmentMode (value-of {:multi-alignment-mode alignment}))))))))
+     (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)]
+       (cond-> b
+         (and (contains? config :add-reader)
+              (contains-many? add-reader :reader-name :record-reader))
+         (doto (.addReader record-reader-name rr))
+         (and (contains? config :add-seq-reader)
+              (contains-many? add-seq-reader :reader-name :record-reader))
+         (doto (.addSequenceReader seq-reader-name seq-rr))
+         (and (contains? config :add-input)
+              (contains-many? add-input :first-column :last-column))
+         (doto (.addInput reader-name first-column last-column))
+         (and (contains? config :add-input-one-hot)
+              (contains-many? add-input-hot :reader-name :column :n-classes))
+         (doto (.addInputOneHot hot-reader-name hot-column hot-num-classes))
+         (and (contains? config :add-output)
+              (contains-many? add-output :first-column :last-column))
+         (doto (.addOutput output-reader-name output-first-column output-last-column))
+         (and (contains? config :add-output-one-hot)
+              (contains-many? add-output-hot :column :n-classes :reader-name))
+         (doto (.addOutputOneHot hot-output-reader-name hot-output-column
+                                   hot-output-n-classes))
+         (contains? config :alignment-mode)
+         (doto (.sequenceAlignmentMode (value-of {:multi-alignment-mode alignment}))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns which hae documentation for properly calling multimethod
@@ -237,9 +236,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
   :alignment-mode (keyword),  one of :equal-length, :align-start, :align-end
    -see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.AlignmentMode.html
   :batch-size (int), size of the batchs the iterator uses for a single run
-  :add-seq-reader (record-reader), a sequence record reader
+  :add-seq-reader (map) {:reader-name (str) :record-reader (record-reader)}, a sequence record reader
    -see: datavec.api.records.readers
-  :add-reader (record-reader), a record reader
+  :add-reader (map) {:reader-name (str) :record-reader (record-reader)}, a record reader
    -see: datavec.api.records.readers
   :add-output-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}
   :add-input-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}
@@ -264,7 +263,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   [iter meta-data]
   (.loadFromMetaData iter meta-data))
 
-(defn remove-data
+(defn remove-data!
   [iter]
   (doto iter
     (.remove)))

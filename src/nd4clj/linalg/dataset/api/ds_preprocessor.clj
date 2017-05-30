@@ -13,7 +13,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 ;; data-set-pre-processor interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn pre-process!
+(defn pre-process-dataset!
   "Pre process a dataset
 
   returns the dataset"
@@ -56,10 +56,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn fit-iter!
   "Iterates over a dataset accumulating statistics for normalization
 
-  returns the dataset iterator"
+  returns the normalizer"
   [& {:keys [normalizer ds-iter]}]
-  (.fit normalizer ds-iter)
-  ds-iter)
+  (doto normalizer (.fit ds-iter)))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.
