@@ -36,15 +36,15 @@
                              :momentum 0.9
                              :regularization true
                              :l2 1e-4
-                             :layers {0 (l/dense-layer-builder {:n-in (* num-rows num-columns)
-                                                                :n-out 1000
-                                                                :activation-fn :relu
-                                                                :weight-init :xavier})
-                                      1 (l/output-layer-builder {:loss-fn :negativeloglikelihood
-                                                                 :n-in 1000
-                                                                 :n-out output-num
-                                                                 :activation-fn :soft-max
-                                                                 :weight-init :xavier})}
+                             :layers {0 (l/dense-layer-builder :n-in (* num-rows num-columns)
+                                                               :n-out 1000
+                                                               :activation-fn :relu
+                                                               :weight-init :xavier)
+                                      1 (l/output-layer-builder :loss-fn :negativeloglikelihood
+                                                                :n-in 1000
+                                                                :n-out output-num
+                                                                :activation-fn :soft-max
+                                                                :weight-init :xavier)}
                              :pretrain false
                              :backprop true})
    (mlb/multi-layer-config-builder {})))

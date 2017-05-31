@@ -1,5 +1,7 @@
 (ns dl4clj.nn-tests
   (:require [dl4clj.nn.conf.builders.builders :refer :all]
+            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
+            [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -411,3 +413,67 @@
              :momentum 0.2 :momentum-after {0 0.3 1 0.4}
              :rho 0.7 :rms-decay 0.7 :updater :adam
              :weight-init :distribution))))))
+
+(deftest nn-conf-test
+  (testing "the creation of neural network configurations"
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+           (type
+            (nn-conf-builder
+             :iterations 1
+             :lr-policy-decay-rate 0.3
+             :lr-policy-power 0.4
+             :learning-rate-policy :poly
+             :max-num-line-search-iterations 6
+             :mini-batch? true
+             :minimize? true
+             :use-drop-connect? true
+             :optimization-algo :lbfgs
+             :lr-score-based-decay-rate 0.7
+             :regularization? true
+             :seed 123
+             :step-fn :default-step-fn
+             :convolution-mode :strict
+             :build? true))))
+    (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+           (type
+               (nn-conf-builder :global-activation-fn "RELU"
+                                :step-fn :negative-gradient-step-fn
+                                :updater :none
+                                :use-drop-connect true
+                                :drop-out 0.2
+                                :weight-init :xavier-uniform
+                                :build? true
+                                :gradient-normalization :renormalize-l2-per-layer
+                                :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                            :n-in 100
+                                            :n-out 1000
+                                            :layer-name "first layer"
+                                            :activation-fn "TANH"
+                                            :gradient-normalization :none )
+                                         1 {:dense-layer {:n-in 1000
+                                                          :n-out 10
+                                                          :layer-name "second layer"
+                                                          :activation-fn "TANH"
+                                                          :gradient-normalization :none}}}))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+           (type
+               (nn-conf-builder :global-activation-fn "RELU"
+                                :step-fn :negative-gradient-step-fn
+                                :updater :none
+                                :use-drop-connect true
+                                :drop-out 0.2
+                                :weight-init :xavier-uniform
+                                :gradient-normalization :renormalize-l2-per-layer
+                                :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                          :n-in 100
+                                          :n-out 1000
+                                          :layer-name "first layer"
+                                          :activation-fn "TANH"
+                                          :gradient-normalization :none)))))))
+
+(deftest multi-layer-builder-test
+  (testing "the creation of mutli layer nn's and setting top level params"
+
+
+
+    ))

@@ -9,20 +9,71 @@
             NeuralNetConfiguration$ListBuilder
             ComputationGraphConfiguration$GraphBuilder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
-;; implement and add documentation for graph builder
-(defn nn-conf-builder
-  "given a map of parameters and their values, generates the appropriate
-  builder for constructing a network.  The params provided here function
-  as the default params for a layer.  Specifying a param within the layer config maps
-  will be the param used, not the one supplied here.
 
-  Params are:
+(defn nn-conf-builder
+  "creates a nn-conf based on the supplied args.  There are two types of args here:
+   1) network args
+      - these are params that affect the network as a whole instead of just at the layer level
+
+   2) global layer args
+      - these params will not overwrite those set at the layer level
+      - will replace layer params that were not set at the layer level
+      - args from layer.builder, the base class for all layers
+
+  If you only supply one or no layer, will be a neuralnetconfiguration
+  if you supply layers, will be a multilayerconfiguration
+
+  Params for the neural network are:
+
+  :iterations (int) Number of optimization iterations
+
+  :lr-policy-decay-rate (double) Sets the decay rate for the learning rate decay policy.
+
+  :lr-policy-power (double) Sets the power used for learning rate inverse policy
+
+  :lr-policy-steps (double) Sets the number of steps used for learning decay rate steps policy
+
+  :max-num-line-search-iterations (int) Maximum number of line search iterations
+
+  :mini-batch? (boolean) Process input as minibatch instead of as a full dataset
+
+  :minimize? (boolean) Objective function to minimize or maximize cost function
+   default is true
+
+  :use-drop-connect? (boolean) Multiply the weight by a binomial sampling wrt the dropout probability.
+   Dropconnect probability is set using :drop-out(double); this is the probability of retaining a weight
+
+  :optimization-algo (keyword) Optimization algorithm to use
+   one of: :line-gradient-descent, :conjugate-gradient, :hessian-free (deprecated),
+           :lbfgs, :stochastic-gradient-descent
+
+  :lr-score-based-decay-rate (double)
+   Rate to decrease :learning-rate by when the score stops improving
+
+  :regularization? (boolean) Whether or not to use regularization
+
+  :seed (int or long) Random number generator seed, Used for reproducability between runs
+
+  :step-fn (keyword) Step functions to apply for back track line search
+   Only applies for line search optimizers: Line Search SGD, Conjugate Gradient,
+   LBFGS Options: :default-step-fn (default),
+   :negative-default-step-fn :gradient-step-fn (for SGD),
+   :negative-gradient-step-fn
+
+  :convolution-mode (keyword), one of: :strict, :truncate, :same
+   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+  :build? (boolean), defaults to true, builds the nn-conf
+
+
+  Params for layers are:
 
   :global-activation-fn (keyword) default global activation fn,
-  wont overwrite activation functions specificed in the layer or layers map.
+   wont overwrite activation functions specificed in the layer or layers map.
    opts are :cube, :elu, :hard-sigmoid, :hard-tanh, :identity, :leaky-relu
             :relu, :r-relu, :sigmoid, :soft-max, :soft-plus, :soft-sign, :tanh
             :rational-tanh
+    - does replace non-specified activation fns in layers
 
   :adam-mean-decay (double) Mean decay rate for Adam updater
 
@@ -52,11 +103,13 @@
    only used for :clip-l2-per-layer, :clip-l2-per-param-type, :clip-element-wise-absolute-value,
    L2 threshold for first two types of clipping or absolute value threshold for the last type
 
-  :iterations (int) Number of optimization iterations
-
   :l1 (double) L1 regularization coefficient
 
+  :l1-bias (double), L1 regularization coef for the bias
+
   :l2 (double) L2 regularization coefficient used when regularization is set to true
+
+  :l2-bias (double) L2 regularization coef for the bias
 
   :layer {:layer-type {config-opts vals}} map of layer config params.
     see dl4clj.nn.conf.builders.builders
@@ -73,74 +126,34 @@
 
   :learning-rate-schedule {int double} Map of the iteration to the learning rate to apply at that iteration
 
-  :learning-rate-score-based-decay-rate (double)
-   Rate to decrease :learning-rate by when the score stops improving
-
-  :lr-policy-decay-rate (double) Sets the decay rate for the learning rate decay policy.
-
-  :lr-policy-power (double) Sets the power used for learning rate inverse policy
-
-  :lr-policy-steps (double) Sets the number of steps used for learning decay rate steps policy
-
-  :max-num-line-search-iterations (int) Maximum number of line search iterations
-
-  :mini-batch (boolean) Process input as minibatch instead of as a full dataset
-
-  :minimize (boolean) Objective function to minimize or maximize cost function
-   default is true
-
   :momentum (double) Momentum rate used only when the :updater is set to :nesterovs
 
   :momentum-after {int double} Map of the iteration to the momentum rate to apply at that iteration
    also only used when :updater is :nesterovs
 
-  :optimization-algo (keyword) Optimization algorithm to use
-   one of: :line-gradient-descent, :conjugate-gradient, :hessian-free (deprecated),
-           :lbfgs, :stochastic-gradient-descent
-
-  :regularization (boolean) Whether or not to use regularization
-
   :rho (double) Ada delta coefficient
 
   :rms-decay (double) Decay rate for RMSProp, only applies if using :updater :RMSPROP
 
-  :seed (int or long) Random number generator seed, Used for reproducability between runs
-
-  :step-fn (keyword) Step functions to apply for back track line search
-   Only applies for line search optimizers: Line Search SGD, Conjugate Gradient,
-   LBFGS Options: :default-step-fn (default),
-   :negative-default-step-fn :gradient-step-fn (for SGD),
-   :negative-gradient-step-fn
-
   :updater (keyword) Gradient updater,
    one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :adagrad, :rmsprop, :none, :custom
-
-  :use-drop-connect (boolean) Multiply the weight by a binomial sampling wrt the dropout probability.
-   Dropconnect probability is set using :drop-out(double); this is the probability of retaining a weight
 
   :weight-init (keyword) Weight initialization scheme
   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform
-
-  :convolution-mode (keyword), one of: :strict, :truncate, :same
-   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
-
-  :build? (boolean), defaults to true, builds the nn-conf"
-  [{:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
-           bias-learning-rate dist drop-out epsilon gradient-normalization
-           gradient-normalization-threshold iterations l1 l2 layer layers
-           learning-rate learning-rate-policy learning-rate-schedule
-           lr-score-based-decay-rate lr-policy-decay-rate lr-policy-power
-           lr-policy-steps max-num-line-search-iterations mini-batch minimize
-           momentum momentum-after optimization-algo regularization
-           rho rms-decay seed step-fn updater use-drop-connect
-           weight-init convolution-mode build?
-           ;;graph-builder
-           ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
-           ]
-    :or {build? true}
-    :as opts}]
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform"
+  [& {:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
+             bias-learning-rate dist drop-out epsilon gradient-normalization
+             gradient-normalization-threshold l1 l2 l1-bias l2-bias layer layers
+             learning-rate learning-rate-policy learning-rate-schedule
+             momentum momentum-after rho rms-decay updater weight-init
+             ;; nn conf args
+             iterations lr-policy-decay-rate lr-policy-power
+             lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
+             use-drop-connect? optimization-algo lr-score-based-decay-rate
+             regularization? seed step-fn convolution-mode build?]
+      :or {build? true}
+      :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
     (cond-> b
       (contains? opts :global-activation-fn) (.activation (constants/value-of
@@ -165,7 +178,9 @@
                                                           gradient-normalization-threshold)
       (contains? opts :iterations) (.iterations iterations)
       (contains? opts :l1) (.l1 l1)
+      (contains? opts :l1-bias) (.l1Bias l1-bias)
       (contains? opts :l2) (.l2 l2)
+      (contains? opts :l2-bias) (.l2Bias l2-bias)
       (contains? opts :learning-rate) (.learningRate learning-rate)
       (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
                                               (constants/value-of
@@ -180,56 +195,24 @@
       (contains? opts :lr-policy-steps) (.lrPolicySteps lr-policy-steps)
       (contains? opts :max-num-line-search-iterations) (.maxNumLineSearchIterations
                                                         max-num-line-search-iterations)
-      (contains? opts :mini-batch) (.miniBatch mini-batch)
-      (contains? opts :minimize) (.minimize minimize)
+      (contains? opts :mini-batch?) (.miniBatch mini-batch?)
+      (contains? opts :minimize?) (.minimize minimize?)
       (contains? opts :momentum) (.momentum momentum)
       (contains? opts :momentum-after) (.momentumAfter momentum-after)
       (contains? opts :optimization-algo) (.optimizationAlgo
                                            (constants/value-of
                                             {:optimization-algorithm
                                              optimization-algo}))
-      (contains? opts :regularization) (.regularization regularization)
+      (contains? opts :regularization?) (.regularization regularization?)
       (contains? opts :rho) (.rho rho)
       (contains? opts :rms-decay) (.rmsDecay rms-decay)
       (contains? opts :seed) (.seed seed)
       (contains? opts :step-fn) (.stepFunction (step-functions/step-fn step-fn))
       (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
-      (contains? opts :use-drop-connect) (.useDropConnect use-drop-connect)
+      (contains? opts :use-drop-connect?) (.useDropConnect use-drop-connect?)
       (contains? opts :weight-init) (.weightInit (constants/value-of
                                                   {:weight-init weight-init}))
       (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
       (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
       (contains? opts :layers) (multi-layer/list-builder layers)
       (true? build?) (.build))))
-
-(comment
-  (println
-   (str
-    (nn-conf-builder {:global-activation-fn "RELU"
-                      :step-fn :negative-gradient-step-fn
-                      :updater :none
-                      :use-drop-connect true
-                      :drop-out 0.2
-                      :weight-init :xavier-uniform
-                      :gradient-normalization :renormalize-l2-per-layer
-                      :layer (dl4clj.nn.conf.builders.builders/garves-lstm-layer-builder
-                              {:n-in 100
-                               :n-out 1000
-                               :layer-name "single layer"
-                               :activation-fn :softmax
-                               :gradient-normalization :none })
-                      #_:layers #_{0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
-                                      {:n-in 100
-                                       :n-out 1000
-                                       :layer-name "first layer"
-                                       :activation-fn "TANH"
-                                       :gradient-normalization :none })
-                                   #_{:dense-layer {:n-in 100
-                                                    :n-out 1000
-                                                    :layer-name "first layer"
-                                                    :activation-fn "TANH"
-                                                    :gradient-normalization :none }}
-                                   1 {:output-layer {:layer-name "second layer"
-                                                     :n-in 1000
-                                                     :n-out 10
-                                                     }}}}))))

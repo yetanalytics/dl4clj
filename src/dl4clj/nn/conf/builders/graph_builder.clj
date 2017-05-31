@@ -7,6 +7,8 @@
             NeuralNetConfiguration$Builder]
            [org.deeplearning4j.nn.graph ComputationGraph]
            [org.deeplearning4j.nn.graph.vertex GraphVertex]))
+;; this is a work in progress
+;; has not been touched in months
 
 ;;need to make a ComputationGraph fn
 ;; constructor for ComputationGraph = (ComputationGraphConfiguration.)
