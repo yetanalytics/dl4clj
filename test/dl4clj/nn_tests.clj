@@ -4,6 +4,7 @@
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
             [dl4clj.nn.conf.input-pre-processor :refer :all]
             [dl4clj.nn.conf.constants :refer :all]
+            [dl4clj.nn.conf.distribution.distribution :refer :all]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,6 +61,18 @@
            (type (input-types {:convolutional {:height 1 :width 1 :depth 1}}))))
     (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutionalFlat
            (type (input-types {:convolutional-flat {:height 1 :width 1 :depth 1}}))))))
+
+(deftest distributions-test
+  (testing "the creation of distributions for use in a nn-conf"
+    (is (= org.deeplearning4j.nn.conf.distribution.UniformDistribution
+           (type (new-uniform-distribution :lower 0.2 :upper 0.4))))
+    (is (= org.deeplearning4j.nn.conf.distribution.NormalDistribution
+           (type (new-normal-distribution :mean 0 :std 1))))
+    (is (= org.deeplearning4j.nn.conf.distribution.GaussianDistribution
+           (type (new-gaussian-distribution :mean 0.0 :std 1))))
+    (is (= org.deeplearning4j.nn.conf.distribution.BinomialDistribution
+           (type (new-binomial-distribution :number-of-trials 2
+                                            :probability-of-success 0.5))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
