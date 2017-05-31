@@ -7,7 +7,7 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/BaseOutputLayer.
             [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.layers.i-output-layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
-            [dl4clj.nn.conf.utils :refer [contains-many?]])
+            [dl4clj.utils :refer [contains-many?]])
   (:import [org.deeplearning4j.nn.layers BaseOutputLayer]))
 
 ;; see the :refer :all namespaces for other interation fns that base-output-layer supports

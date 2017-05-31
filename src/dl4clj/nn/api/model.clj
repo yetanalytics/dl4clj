@@ -3,7 +3,7 @@
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html"}
   dl4clj.nn.api.model
   (:import [org.deeplearning4j.nn.api Model])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn accumulate-score!
   "Sets a rolling tally for the score."

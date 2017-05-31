@@ -19,7 +19,7 @@
                                                  init-params!
                                                  merge-layers!
                                                  validate-input!]]
-            [dl4clj.nn.conf.utils :refer [contains-many?]]))
+            [dl4clj.utils :refer [contains-many?]]))
 
 (defn new-rbm
   "creates a new rbm layer given a neural net config and optinally

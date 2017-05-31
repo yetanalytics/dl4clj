@@ -5,7 +5,7 @@ NOTE this ns is a first attempt, I need to experiment/read more to accurately wr
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/feedforward/autoencoder/recursive/Tree.html"}
     dl4clj.nn.layers.feedforward.recursive.tree
   (:import [org.deeplearning4j.nn.layers.feedforward.autoencoder.recursive Tree])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn new-tree
   "creates a new tree if supplied a list of tokens (strings), another tree, or

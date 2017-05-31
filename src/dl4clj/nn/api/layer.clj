@@ -3,7 +3,7 @@
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.html"}
   dl4clj.nn.api.layer
   (:import [org.deeplearning4j.nn.api Layer])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.nn.conf.constants :as enum]))
 
 (defn activate

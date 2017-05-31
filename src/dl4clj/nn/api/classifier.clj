@@ -3,7 +3,7 @@ fns are for classification models (this is for supervised learning)
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   dl4clj.nn.api.classifier
   (:import [org.deeplearning4j.nn.api Classifier])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.datasets.datavec :as iter]))
 
 (defn f1-score

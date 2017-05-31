@@ -2,7 +2,7 @@
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
     dl4clj.nn.api.updater
   (:import [org.deeplearning4j.nn.api Updater])
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn clone
   "create a copy of the updater"

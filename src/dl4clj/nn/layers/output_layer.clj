@@ -17,7 +17,7 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/OutputLayer.html
                                                  init-params!
                                                  merge-layers!
                                                  validate-input!]]
-            [dl4clj.nn.conf.utils :refer [contains-many?]])
+            [dl4clj.utils :refer [contains-many?]])
   (:import [org.deeplearning4j.nn.layers OutputLayer]))
 
 ;; see the :refer :all namespaces for other interation fns that output-layer supports

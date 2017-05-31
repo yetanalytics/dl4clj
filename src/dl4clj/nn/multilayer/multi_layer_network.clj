@@ -1,5 +1,5 @@
 (ns dl4clj.nn.multilayer.multi-layer-network
-  (:require [dl4clj.nn.conf.utils :refer [contains-many?]])
+  (:require [dl4clj.utils :refer [contains-many?]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html
 ;; add bangs for fns that modify the mln
