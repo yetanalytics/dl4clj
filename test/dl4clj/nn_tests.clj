@@ -287,7 +287,7 @@
              :momentum 0.2 :momentum-after {0 0.3 1 0.4}
              :rho 0.7 :rms-decay 0.7 :updater :adam
              :weight-init :distribution))))
-    (is (= ""
+    (is (= org.deeplearning4j.nn.conf.layers.SubsamplingLayer
            (type
             (subsampling-layer-builder
              :kernel-size [2 2] :stride [2 2] :padding [2 2]
@@ -306,13 +306,123 @@
              :learning-rate-schedule {0 0.2 1 0.5}
              :momentum 0.2 :momentum-after {0 0.3 1 0.4}
              :rho 0.7 :rms-decay 0.7 :updater :adam
-             :weight-init :distribution
-             )
-            )))
-
-
-
-
-
-
-    ))
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.Subsampling1DLayer
+           (type
+            (subsampling-1d-layer-builder
+             :kernel-size 2 :stride 2 :padding 2
+             :pooling-type :sum
+             :build? true
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.LossLayer
+           (type
+            (loss-layer-builder
+             :loss-fn :mse
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.DropoutLayer
+           (type
+            (dropout-layer-builder
+             :n-in 2 :n-out 10
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.GlobalPoolingLayer
+           (type
+            (global-pooling-layer-builder
+             :pooling-dimensions [3 2]
+             :collapse-dimensions? true
+             :pnorm 2
+             :pooling-type :pnorm
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.ZeroPaddingLayer
+           (type
+            (zero-padding-layer-builder
+             :pad-top 1 :pad-bot 2 :pad-left 3 :pad-right 4
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))
+    (is (= org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder
+           (type
+            (variational-autoencoder-builder
+             :n-in 5 :n-out 10 :loss-fn :mse
+             :pre-train-iterations 1 :visible-bias-init 2
+             :decoder-layer-sizes [5 9]
+             :encoder-layer-sizes [7 2]
+             :reconstruction-distribution {:gaussian {:activation-fn :tanh}}
+             :vae-loss-fn {:output-activation-fn :tanh :loss-fn :mse}
+             :num-samples 2 :pzx-activation-function :tanh
+             :activation-fn :relu
+             :adam-mean-decay 0.2 :adam-var-decay 0.1
+             :bias-init 0.7 :bias-learning-rate 0.1
+             :dist {:normal {:mean 0 :std 1}}
+             :drop-out 0.2 :epsilon 0.3
+             :gradient-normalization :none
+             :gradient-normalization-threshold 0.9
+             :l1 0.2 :l2 0.7 :layer-name "foo"
+             :learning-rate 0.1 :learning-rate-policy :inverse
+             :l1-bias 0.1 :l2-bias 0.2
+             :learning-rate-schedule {0 0.2 1 0.5}
+             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+             :rho 0.7 :rms-decay 0.7 :updater :adam
+             :weight-init :distribution))))))
