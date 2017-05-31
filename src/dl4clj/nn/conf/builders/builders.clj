@@ -410,7 +410,7 @@
       :or {}
       :as opts}]
   (builder {:activation-layer opts}))
-;; foo
+;; foobar
 (defn output-layer-builder
   "creates an output layer with params supplied in opts map.
 
