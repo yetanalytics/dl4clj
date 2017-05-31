@@ -6,6 +6,7 @@
             [dl4clj.nn.conf.constants :refer :all]
             [dl4clj.nn.conf.distribution.distribution :refer :all]
             [dl4clj.nn.conf.step-fns :refer :all]
+            [dl4clj.nn.conf.variational.dist-builders :refer :all]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,6 +80,50 @@
     (is (= org.deeplearning4j.nn.conf.distribution.BinomialDistribution
            (type (new-binomial-distribution :number-of-trials 2
                                             :probability-of-success 0.5))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; reconstruction distribution
+;; dl4clj.nn.conf.variational.dist-builders
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest reconstruction-distribution-test
+  (testing "the creation of reconstruction distributions for vae's"
+    (is (= org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution
+           (type (new-bernoulli-reconstruction-distribution :activation-fn :relu))))
+    (is (= org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution
+           (type (new-bernoulli-reconstruction-distribution))))
+
+    (is (= org.deeplearning4j.nn.conf.layers.variational.ExponentialReconstructionDistribution
+           (type (new-exponential-reconstruction-distribution :activation-fn :relu))))
+    (is (= org.deeplearning4j.nn.conf.layers.variational.ExponentialReconstructionDistribution
+           (type (new-exponential-reconstruction-distribution))))
+
+    (is (= org.deeplearning4j.nn.conf.layers.variational.GaussianReconstructionDistribution
+           (type (new-gaussian-reconstruction-distribution :activation-fn :relu))))
+    (is (= org.deeplearning4j.nn.conf.layers.variational.GaussianReconstructionDistribution
+           (type (new-gaussian-reconstruction-distribution))))
+
+    (is (= org.deeplearning4j.nn.conf.layers.variational.CompositeReconstructionDistribution
+           (type (new-composite-reconstruction-distribution
+                  :distributions-to-add
+                  ;; using a user facing fn
+                  {0 {:dist (new-bernoulli-reconstruction-distribution
+                             :activation-fn :relu)
+                      :dist-size 2}
+                   ;; using the multi method
+                   1 {:bernoulli {:activation-fn :tanh
+                                  :dist-size 5}}
+
+                   2 {:exponential {:activation-fn :sigmoid
+                                    :dist-size 3}}
+
+                   3 {:gaussian {:activation-fn :hard-tanh
+                                 :dist-size 1}}
+                   4 {:bernoulli {:activation-fn :softmax
+                                  :dist-size 4}}
+                   ;; explicitly using the multimethod
+                   5 {:dist (distributions {:bernoulli {:activation-fn :tanh}})
+                      :dist-size 7}}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; step functions for use in nn-conf creation
