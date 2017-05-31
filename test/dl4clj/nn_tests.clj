@@ -5,6 +5,7 @@
             [dl4clj.nn.conf.input-pre-processor :refer :all]
             [dl4clj.nn.conf.constants :refer :all]
             [dl4clj.nn.conf.distribution.distribution :refer :all]
+            [dl4clj.nn.conf.step-fns :refer :all]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,6 +63,11 @@
     (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutionalFlat
            (type (input-types {:convolutional-flat {:height 1 :width 1 :depth 1}}))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; distributions to sample weights from
+;; dl4clj.nn.conf.distribution.distribution
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest distributions-test
   (testing "the creation of distributions for use in a nn-conf"
     (is (= org.deeplearning4j.nn.conf.distribution.UniformDistribution
@@ -73,6 +79,22 @@
     (is (= org.deeplearning4j.nn.conf.distribution.BinomialDistribution
            (type (new-binomial-distribution :number-of-trials 2
                                             :probability-of-success 0.5))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; step functions for use in nn-conf creation
+;; dl4clj.nn.conf.step-fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest step-fn-test
+  (testing "the creation of step fns"
+    (is (= org.deeplearning4j.nn.conf.stepfunctions.DefaultStepFunction
+           (type (new-default-step-fn))))
+    (is (= org.deeplearning4j.nn.conf.stepfunctions.GradientStepFunction
+           (type (new-gradient-step-fn))))
+    (is (= org.deeplearning4j.nn.conf.stepfunctions.NegativeDefaultStepFunction
+           (type (new-negative-default-step-fn))))
+    (is (= org.deeplearning4j.nn.conf.stepfunctions.NegativeGradientStepFunction
+           (type (new-negative-gradient-step-fn))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
@@ -87,7 +109,7 @@
              :n-in 10 :n-out 2 :activation-fn :relu
              :adam-mean-decay 0.2 :adam-var-decay 0.1
              :bias-init 0.7 :bias-learning-rate 0.1
-             :dist {:normal {:mean 0 :std 1}}
+             :dist (new-normal-distribution :mean 0 :std 1)
              :drop-out 0.2 :epsilon 0.3
              :gradient-normalization :none
              :gradient-normalization-threshold 0.9
@@ -506,7 +528,7 @@
              :lr-score-based-decay-rate 0.7
              :regularization? true
              :seed 123
-             :step-fn :default-step-fn
+             :step-fn (new-gradient-step-fn)
              :convolution-mode :strict
              :build? true))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder

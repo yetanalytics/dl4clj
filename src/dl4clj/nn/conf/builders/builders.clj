@@ -51,6 +51,8 @@
         binomial-distribution {:binomial {:number-of-trails int :probability-of-success double}}
         normal-distribution {:normal {:mean double :std double}}
         uniform-distribution {:uniform {:lower double :upper double}}
+   - can also use one of the creation fns
+   - ie. (new-normal-distribution :mean 0 :std 1)
 
   :drop-out (double) Dropout probability
 

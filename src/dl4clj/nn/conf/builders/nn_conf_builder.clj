@@ -55,10 +55,11 @@
   :seed (int or long) Random number generator seed, Used for reproducability between runs
 
   :step-fn (keyword) Step functions to apply for back track line search
-   Only applies for line search optimizers: Line Search SGD, Conjugate Gradient,
-   LBFGS Options: :default-step-fn (default),
-   :negative-default-step-fn :gradient-step-fn (for SGD),
+   Only applies for line search optimizers: Line Search SGD, Conjugate Gradient, LBFGS
+   one of: :default-step-fn (default), :negative-default-step-fn :gradient-step-fn (for SGD),
    :negative-gradient-step-fn
+   - can also be the object created by one of the new-fns
+   - ie. (new-default-step-fn)
 
   :convolution-mode (keyword), one of: :strict, :truncate, :same
    - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
@@ -90,6 +91,8 @@
         binomial-distribution {:binomial {:number-of-trails int :probability-of-success double}}
         normal-distribution {:normal {:mean double :std double}}
         uniform-distribution {:uniform {:lower double :upper double}}
+   - can also use one of the creation fns
+   - ie. (new-normal-distribution :mean 0 :std 1)
 
   :drop-out (double) Dropout probability
 
@@ -210,7 +213,9 @@
       (contains? opts :rho) (.rho rho)
       (contains? opts :rms-decay) (.rmsDecay rms-decay)
       (contains? opts :seed) (.seed seed)
-      (contains? opts :step-fn) (.stepFunction (step-functions/step-fn step-fn))
+      (contains? opts :step-fn) (.stepFunction (if (keyword? step-fn)
+                                                 (step-functions/step-fn step-fn)
+                                                 step-fn))
       (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
       (contains? opts :use-drop-connect?) (.useDropConnect use-drop-connect?)
       (contains? opts :weight-init) (.weightInit (constants/value-of
