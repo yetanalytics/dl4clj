@@ -30,40 +30,40 @@
 
 (def nn-conf
   (nn/nn-conf-builder
-   {:seed 123
-    :optimization-algo :stochastic-gradient-descent
-    :iterations 1
-    :learning-rate 0.006
-    :updater :nesterovs
-    :momentum 0.9
-    :regularization true
-    :l2 1e-4
-    :layer {:graves-lstm
-            {:n-in 10
-             :n-out 1000
-             :updater :rmsprop
-             :activation :tanh
-             :weight-init :distribution
-             :dist {:uniform {:lower -0.08, :upper 0.08}}}}}))
+   :seed 123
+   :optimization-algo :stochastic-gradient-descent
+   :iterations 1
+   :learning-rate 0.006
+   :updater :nesterovs
+   :momentum 0.9
+   :regularization true
+   :l2 1e-4
+   :layer {:graves-lstm
+           {:n-in 10
+            :n-out 1000
+            :updater :rmsprop
+            :activation :tanh
+            :weight-init :distribution
+            :dist {:uniform {:lower -0.08, :upper 0.08}}}}))
 
 (def nn-conf-unsupervised
   (nn/nn-conf-builder
-   {:seed 123
-    :iterations 1
-    :optimization-algo :stochastic-gradient-descent
-    :learning-rate 1e-2
-    :updater :rmsprop
-    :rms-decay 0.95
-    :weight-init :xavier
-    :regularization true
-    :l2 1e-4
-    :layer {:variational-auto-encoder {:activation-fn :leaky-relu
-                                       :encoder-layer-sizes [256 256]
-                                       :decoder-layer-sizes [256 256]
-                                       :pzx-activation-function :identity
-                                       :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
-                                       :n-in 5
-                                       :n-out 2}}}))
+   :seed 123
+   :iterations 1
+   :optimization-algo :stochastic-gradient-descent
+   :learning-rate 1e-2
+   :updater :rmsprop
+   :rms-decay 0.95
+   :weight-init :xavier
+   :regularization true
+   :l2 1e-4
+   :layer {:variational-auto-encoder {:activation-fn :leaky-relu
+                                      :encoder-layer-sizes [256 256]
+                                      :decoder-layer-sizes [256 256]
+                                      :pzx-activation-function :identity
+                                      :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
+                                      :n-in 5
+                                      :n-out 2}}))
 
 (def single-listener (new-score-iteration-listener :print-every-n 2 :array? true))
 

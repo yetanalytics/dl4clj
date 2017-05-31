@@ -26,23 +26,23 @@
 
 (def mln (ml/multi-layer-network
           (nn/nn-conf-builder
-           {:seed 123
-            :optimization-algo :stochastic-gradient-descent
-            :iterations 1
-            :learning-rate 0.006
-            :updater :nesterovs
-            :momentum 0.9
-            :regularization true
-            :l2 1e-4
-            :layers {0 {:dense-layer {:n-in 784
-                                      :n-out 1000
-                                      :activation-fn :relu
-                                      :weight-init :xavier}}
-                     1 {:output-layer {:loss-fn :negativeloglikelihood
-                                       :n-in 1000
-                                       :n-out 10
-                                       :activation-fn :soft-max
-                                       :weight-init :xavier}}}})))
+           :seed 123
+           :optimization-algo :stochastic-gradient-descent
+           :iterations 1
+           :learning-rate 0.006
+           :updater :nesterovs
+           :momentum 0.9
+           :regularization true
+           :l2 1e-4
+           :layers {0 {:dense-layer {:n-in 784
+                                     :n-out 1000
+                                     :activation-fn :relu
+                                     :weight-init :xavier}}
+                    1 {:output-layer {:loss-fn :negativeloglikelihood
+                                      :n-in 1000
+                                      :n-out 10
+                                      :activation-fn :soft-max
+                                      :weight-init :xavier}}})))
 
 (def init-mln (ml/init-model mln))
 
