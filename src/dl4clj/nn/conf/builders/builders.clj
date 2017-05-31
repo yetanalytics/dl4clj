@@ -410,7 +410,7 @@
       :or {}
       :as opts}]
   (builder {:activation-layer opts}))
-;; foobar
+
 (defn output-layer-builder
   "creates an output layer with params supplied in opts map.
 
@@ -477,9 +477,9 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :pre-train-iterations (int)
+  :pre-train-iterations (int), number of iterations to perform unsupervised learning
 
-  :visible-bias-init (double)
+  :visible-bias-init (double), initial bias for the visible (input) layer
 
   :loss-fn (keyword) Error measurement at the output layer
    opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
@@ -510,8 +510,6 @@
   "creates a rbm layer with params supplied in opts map.
 
   Restricted Boltzmann Machine. Markov chain with gibbs sampling.
-  Supports the following visible units: BINARY GAUSSIAN SOFTMAX LINEAR
-  Supports the following hidden units: RECTIFIED BINARY GAUSSIAN SOFTMAX
   Based on Hinton et al.'s work Great reference:
   http://www.iro.umontreal.ca/~lisa/publications2/index.php/publications/show/239
 
@@ -523,9 +521,9 @@
 
   :n-out (int) number of outputs for the given layer
 
-  :pre-train-iterations (int)
+  :pre-train-iterations (int), number of iterations to perform unsupervised learning
 
-  :visible-bias-init (double)
+  :visible-bias-init (double), initial bias for the visible (input) layer
 
   :loss-fn (keyword) Error measurement at the output layer
    opts are: :mse, :expll :xent :mcxent :rmse-xent :squared-loss
@@ -616,13 +614,13 @@
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
   this builder adds :n-in, :n-out, :beta, :decay, :eps, :gamma,
-                    :is-mini-batch, :lock-gamma-beta to the param map.
+                    :mini-batch?, :lock-gamma-beta to the param map.
 
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer
 
-  :beta (double), only used when :lock-gamma-beta is true, sets beta, defaults to 0.0
+  :beta (double), only used when :lock-gamma-beta? is true, sets beta, defaults to 0.0
 
   :decay (double), Decay value to use for global stats calculation (estimation of mean and variance)
 
@@ -631,11 +629,11 @@
 
   :gamma (double), only used when :lock-gamma-beta is true, sets gamma, defaults to 1.0
 
-  :is-mini-batch (boolean), If doing minibatch training or not. Default: true.
+  :mini-batch? (boolean), If doing minibatch training or not. Default: true.
    Under most circumstances, this should be set to true.
    Affects how globabl mean/variance estimates are calc'd
 
-  :lock-gamma-beta (boolean), true: lock the gamma and beta parameters to the values for each activation,
+  :lock-gamma-beta? (boolean), true: lock the gamma and beta parameters to the values for each activation,
    specified by :gamma (double) and :beta (double).
    Default: false -> learn gamma and beta parameter values during network training."
 
@@ -644,7 +642,7 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out beta decay eps gamma
-             is-mini-batch lock-gamma-beta l1-bias l2-bias]
+             mini-batch? lock-gamma-beta? l1-bias l2-bias]
       :or {}
       :as opts}]
   (builder {:batch-normalization opts}))
@@ -662,14 +660,15 @@
   :n-out (int) number of outputs for the given layer
 
   :kernel-size (vec), Size of the convolution rows/columns (height and width of the kernel)
-   - this should be a vector describing the dims
+   - this should be a vector describing the dims, the dims should be ints
 
-  :padding (int), allow us to control the spatial size of the output volumes,
+  :padding (vec), allow us to control the spatial size of the output volumes,
     pad the input volume with zeros around the border.
+    - a vector of integers describing the dimensions
 
-  :stride (int), filter movement speed across pixels.
-   see http://cs231n.github.io/convolutional-networks/"
-  ;; need to write better descs for padding and stride
+  :stride (vec), filter movement speed across pixels.
+   see http://cs231n.github.io/convolutional-networks/
+    - a vector of integers describing the dimensions"
   [& {:keys [activation-fn adam-mean-decay adam-var-decay bias-init
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 layer-name learning-rate
@@ -814,21 +813,23 @@
 
   Center loss is similar to triplet loss except that it enforces intraclass consistency
   and doesn't require feed forward of multiple examples.
+
   Center loss typically converges faster for training ImageNet-based convolutional networks.
-  If example x is in class Y, ensure that embedding(x) is close to average(embedding(y)) for all examples y in Y
+  If example x is in class Y, ensure that embedding(x) is close to
+  average(embedding(y)) for all examples y in Y
 
   this builder adds :alpha, :gradient-check, :lambda
 
   :alpha (double)
 
-  :gradient-check (boolean)
+  :gradient-check? (boolean)
 
   :lambda (double)"
   [& {:keys [loss-fn n-in n-out activation-fn adam-mean-decay adam-var-decay
              bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
-             momentum-after rho rms-decay updater weight-init alpha gradient-check
+             momentum-after rho rms-decay updater weight-init alpha gradient-check?
              lambda]
       :or {}
       :as opts}]
@@ -845,26 +846,22 @@
 
   base case opts descriptions can be found in the doc string of any-layer-builder.
 
-  this builder adds :n-in, :n-out, :convolution-type, :cudnn-algo-mode,
-                    :kernel-size, :padding, :stride  to the param map.
+  this builder adds :n-in, :n-out, :kernel-size, :padding, :stride  to the param map.
 
   :n-in (int) number of inputs to a given layer
 
   :n-out (int) number of outputs for the given layer
 
-  :convolution-mode (keyword), one of :strict, :same, :truncate
-   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
-
-  :cudnn-algo-mode (keyword), either :no-workspace or :prefer-fastest
-   Default: :prefer-fastest but :no-workspace uses less memory
-
-  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+  :kernel-size (int), Size of the convolution rows (height of the kernel)
+   - columns automatically set to 1
 
   :padding (int), allow us to control the spatial size of the output volumes,
     pad the input volume with zeros around the border.
+   - columns automatically set to 1
 
   :stride (int), filter movement speed across pixels.
-   see http://cs231n.github.io/convolutional-networks/"
+   see http://cs231n.github.io/convolutional-networks/
+   - columns automatically set to 1"
   [& {:keys [convolution-mode cudnn-algo-mode kernel-size padding stride
              n-in n-out activation-fn adam-mean-decay adam-var-decay
              bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
@@ -877,6 +874,10 @@
 
 (defn dropout-layer-builder
   "creates a drop-out layer with params supplied in opts map.
+
+  this builder adds :n-in, :n-out
+
+  this layer is used as a way to prevent overfitting
 
   see any-layer-builder for param descriptions"
   [& {:keys [n-in n-out activation-fn adam-mean-decay adam-var-decay
@@ -926,7 +927,7 @@
   :pnorm (int) P-norm constant
   -Only used if using PoolingType.PNORM for the pooling type
 
-  :pooling-dimensions (int) Pooling dimensions
+  :pooling-dimensions (vec) Pooling dimensions
   -Note: most of the time, this doesn't need to be set, and the defaults can be used.
    -Default for RNN data: pooling dimension 2 (time).
    -Default for CNN data: pooling dimensions 2,3 (height and width)
@@ -955,15 +956,12 @@
 
    The kernel should be H
 
-  adds :convolution-mode, :eps, :kernel-size, :padding, :pnorm, :pooling-type, :stride
-
-  :convolution-mode (keyword), one of :strict, :same, :truncate
-   -see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+  adds :eps, :kernel-size, :padding, :pnorm, :pooling-type, :stride
 
   :eps (double), Epsilon value for batch normalization; small floating point value added to variance
    Default: 1e-5
 
-  :kernel-size (int), Size of the convolution rows/columns (height and width of the kernel)
+  :kernel-size (int), Size of the convolution rows/columns (height of the kernel)
 
   :padding (int), allow us to control the spatial size of the output volumes,
     pad the input volume with zeros around the border.
@@ -1036,12 +1034,12 @@
 
   Args that are unique to VAEs
 
-  :decoder-layer-sizes (int...), a collection of ints setting the size of the decoder layers
+  :decoder-layer-sizes (vec), a collection of ints setting the size of the decoder layers
    - Each decoder layer is functionally equivalent to a DenseLayer.
    - Typically the number and size of the decoder layers is similar to the encoder layers.
    - can be a vector of ints or a single ing
 
-  :encoder-layer-sizes (int...), a collection of ints setting the size of the encoder layers
+  :encoder-layer-sizes (vec), a collection of ints setting the size of the encoder layers
    - Each encoder layer is functionally equivalent to a DenseLayer.
    - can be a vector of ints or a single ing
 
@@ -1052,13 +1050,16 @@
   :pzx-activation-function (keyword), Activation function for the input
    - Care should be taken with this, as some activation functions (relu, etc) are not suitable
 
-  :reconstruction-distribution (map) {:dist-type (keyword) {dist-opts}}
+  :reconstruction-distribution (map) {(:dist-type) {dist-opts}}
    - The reconstruction distribution for the data given the hidden state
    - Distributions should be selected based on the type of data being modeled
      - :gaussian w/ identity or tanh for real valued (Gaussian) data
      - :bernoulli w/ sigmoid for binary valued data
      - The above to keywords are examples for the value of :dist-type
      - see dl4clj.nn.conf.variational.dist-builders
+     - you can also just call one of the distribution creation fns in that ns and pass it
+       in the args
+        - :reconstruction-distribution (new-gaussian....)
 
   :num-samples (int), Set the number of samples per data point
    (from VAE state Z) used when doing pretraining.
@@ -1077,56 +1078,3 @@
       :or {}
       :as opts}]
   (builder {:variational-auto-encoder opts}))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; examples
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(comment
-  (builder {:graves-lstm {:activation-fn :softmax
-                          :adam-mean-decay 0.3
-                          :adam-var-decay 0.5
-                          :bias-init 0.3
-                          :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
-                          :drop-out 0.01
-                          :gradient-normalization :clip-l2-per-layer
-                          :gradient-normalization-threshold 0.1
-                          :l1 0.02
-                          :l2 0.002
-                          :learning-rate 0.95
-                          :learning-rate-after {1000 0.5}
-                          :learning-rate-score-based-decay-rate 0.001
-                          :momentum 0.9
-                          :momentum-after {10000 1.5}
-                          :layer-name "test"
-                          :rho 0.5
-                          :rms-decay 0.01
-                          :updater :adam
-                          ;; :weight-init :normalized
-                          :n-in 30
-                          :n-out 30
-                          :forget-gate-bias-init 0.12}})
-
-  (type (garves-lstm-layer-builder {:activation-fn :softmax
-                                    :adam-mean-decay 0.3
-                                    :adam-var-decay 0.5
-                                    :bias-init 0.3
-                                    :dist {:binomial {:number-of-trials 0, :probability-of-success 0.08}}
-                                    :drop-out 0.01
-                                    :gradient-normalization :clip-l2-per-layer
-                                    :gradient-normalization-threshold 0.1
-                                    :l1 0.02
-                                    :l2 0.002
-                                    :learning-rate 0.95
-                                    :learning-rate-after {1000 0.5}
-                                    :learning-rate-score-based-decay-rate 0.001
-                                    :momentum 0.9
-                                    :momentum-after {10000 1.5}
-                                    :layer-name "test"
-                                    :rho 0.5
-                                    :rms-decay 0.01
-                                    :updater :adam
-                                    ;;:weight-init :normalized
-                                    :n-in 30
-                                    :n-out 30
-                                    :forget-gate-bias-init 0.12}))
-  )
