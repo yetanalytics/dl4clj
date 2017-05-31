@@ -63,8 +63,11 @@
   :convolution-mode (keyword), one of: :strict, :truncate, :same
    - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
 
-  :build? (boolean), defaults to true, builds the nn-conf
-
+  :build? (boolean), defaults to false, builds the nn-conf
+   - defaults to false because the resulting list builder is needed when passing
+     the result of this fn to multi-layer-config-builder.  If there are no additional
+     params you want to added the configuration (from multi-layer-config-builder) then
+     set built? to true
 
   Params for layers are:
 
@@ -152,7 +155,7 @@
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate
              regularization? seed step-fn convolution-mode build?]
-      :or {build? true}
+      :or {build? false}
       :as opts}]
   (let [b (NeuralNetConfiguration$Builder.)]
     (cond-> b

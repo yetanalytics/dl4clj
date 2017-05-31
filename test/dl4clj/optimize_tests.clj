@@ -36,6 +36,7 @@
    :learning-rate 0.006
    :updater :nesterovs
    :momentum 0.9
+   :build? true
    :regularization true
    :l2 1e-4
    :layer {:graves-lstm
@@ -56,6 +57,7 @@
    :rms-decay 0.95
    :weight-init :xavier
    :regularization true
+   :build? true
    :l2 1e-4
    :layer {:variational-auto-encoder {:activation-fn :leaky-relu
                                       :encoder-layer-sizes [256 256]

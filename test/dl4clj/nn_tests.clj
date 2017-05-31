@@ -2,7 +2,64 @@
   (:require [dl4clj.nn.conf.builders.builders :refer :all]
             [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
+            [dl4clj.nn.conf.input-pre-processor :refer :all]
+            [dl4clj.nn.conf.constants :refer :all]
             [clojure.test :refer :all]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; constants, value-of, input-type
+;; dl4clj.nn.conf.constants
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest enum-testing
+  (testing "the creation of dl4j enums/constants"
+    ;; constants (helper fn)
+    (is (= "RELU" (constants #(str %) :relu :activation? true)))
+    (is (= "FooBaz" (constants #(str %) :foo-baz :camel? true)))
+    (is (= "Relu" (constants #(str %) :relu :activation? true :camel? true)))
+    (is (= "FOO_BAZ" (constants #(str %) :foo-baz)))
+
+    (is (= org.nd4j.linalg.activations.Activation
+           (type (value-of {:activation-fn :relu}))))
+    (is (= org.deeplearning4j.nn.conf.GradientNormalization
+           (type (value-of {:gradient-normalization :none}))))
+    (is (= org.deeplearning4j.nn.conf.LearningRatePolicy
+           (type (value-of {:learning-rate-policy :poly}))))
+    (is (= org.deeplearning4j.nn.conf.Updater
+           (type (value-of {:updater :adam}))))
+    (is (= org.deeplearning4j.nn.weights.WeightInit
+           (type (value-of {:weight-init :xavier}))))
+    (is (= org.nd4j.linalg.lossfunctions.LossFunctions$LossFunction
+           (type (value-of {:loss-fn :mse}))))
+    (is (= org.deeplearning4j.nn.conf.layers.RBM$HiddenUnit
+           (type (value-of {:hidden-unit :binary}))))
+    (is (= org.deeplearning4j.nn.conf.layers.RBM$VisibleUnit
+           (type (value-of {:visible-unit :binary}))))
+    (is (= org.deeplearning4j.nn.conf.ConvolutionMode
+           (type (value-of {:convolution-mode :strict}))))
+    (is (= org.deeplearning4j.nn.conf.layers.ConvolutionLayer$AlgoMode
+           (type (value-of {:cudnn-algo-mode :no-workspace}))))
+    (is (= org.deeplearning4j.nn.conf.layers.PoolingType
+           (type (value-of {:pool-type :avg}))))
+    (is (= org.deeplearning4j.nn.conf.BackpropType
+           (type (value-of {:backprop-type :standard}))))
+    (is (= org.deeplearning4j.nn.api.OptimizationAlgorithm
+           (type (value-of {:optimization-algorithm :lbfgs}))))
+    (is (= org.deeplearning4j.nn.api.MaskState
+           (type (value-of {:mask-state :active}))))
+    (is (= org.deeplearning4j.nn.api.Layer$Type
+           (type (value-of {:layer-type :feed-forward}))))
+    (is (= org.deeplearning4j.nn.api.Layer$TrainingMode
+           (type (value-of {:layer-training-mode :train}))))
+
+    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeRecurrent
+           (type (input-types {:recurrent {:size 10}}))))
+    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeFeedForward
+           (type (input-types {:feed-forward {:size 10}}))))
+    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutional
+           (type (input-types {:convolutional {:height 1 :width 1 :depth 1}}))))
+    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutionalFlat
+           (type (input-types {:convolutional-flat {:height 1 :width 1 :depth 1}}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
@@ -414,6 +471,11 @@
              :rho 0.7 :rms-decay 0.7 :updater :adam
              :weight-init :distribution))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; nn-conf-builder
+;; dl4clj.nn.conf.builders.nn-conf-builder
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest nn-conf-test
   (testing "the creation of neural network configurations"
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
@@ -434,9 +496,27 @@
              :step-fn :default-step-fn
              :convolution-mode :strict
              :build? true))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
+           (type
+            (nn-conf-builder
+             :iterations 1
+             :lr-policy-decay-rate 0.3
+             :lr-policy-power 0.4
+             :learning-rate-policy :poly
+             :max-num-line-search-iterations 6
+             :mini-batch? true
+             :minimize? true
+             :use-drop-connect? true
+             :optimization-algo :lbfgs
+             :lr-score-based-decay-rate 0.7
+             :regularization? true
+             :seed 123
+             :step-fn :default-step-fn
+             :convolution-mode :strict
+             :build? false))))
     (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
            (type
-               (nn-conf-builder :global-activation-fn "RELU"
+               (nn-conf-builder :global-activation-fn :relu
                                 :step-fn :negative-gradient-step-fn
                                 :updater :none
                                 :use-drop-connect true
@@ -448,32 +528,205 @@
                                             :n-in 100
                                             :n-out 1000
                                             :layer-name "first layer"
-                                            :activation-fn "TANH"
+                                            :activation-fn :tanh
                                             :gradient-normalization :none )
                                          1 {:dense-layer {:n-in 1000
                                                           :n-out 10
                                                           :layer-name "second layer"
-                                                          :activation-fn "TANH"
+                                                          :gradient-normalization :none}}}))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$ListBuilder
+           (type
+               (nn-conf-builder :global-activation-fn :relu
+                                :step-fn :negative-gradient-step-fn
+                                :updater :none
+                                :use-drop-connect true
+                                :drop-out 0.2
+                                :weight-init :xavier-uniform
+                                :build? false
+                                :gradient-normalization :renormalize-l2-per-layer
+                                :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                            :n-in 100
+                                            :n-out 1000
+                                            :layer-name "first layer"
+                                            :activation-fn :tanh
+                                            :gradient-normalization :none )
+                                         1 {:dense-layer {:n-in 1000
+                                                          :n-out 10
+                                                          :layer-name "second layer"
+                                                          :activation-fn :tanh
                                                           :gradient-normalization :none}}}))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
            (type
-               (nn-conf-builder :global-activation-fn "RELU"
+               (nn-conf-builder :global-activation-fn :relu
                                 :step-fn :negative-gradient-step-fn
                                 :updater :none
                                 :use-drop-connect true
                                 :drop-out 0.2
                                 :weight-init :xavier-uniform
                                 :gradient-normalization :renormalize-l2-per-layer
+                                :build? true
                                 :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                           :n-in 100
                                           :n-out 1000
                                           :layer-name "first layer"
-                                          :activation-fn "TANH"
+                                          :activation-fn :tanh
                                           :gradient-normalization :none)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list-builder test
+;; dl4clj.nn.conf.builders.multi-layer-builders
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest list-builder-test
+  (testing "the list builder for setting up the :layers key in nn-conf-builder"
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$ListBuilder
+           (type
+            (list-builder
+             (nn-conf-builder)
+             {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                 :n-in 100
+                 :n-out 1000
+                 :layer-name "first layer"
+                 :activation-fn :tanh
+                 :gradient-normalization :none)
+              1 {:dense-layer {:n-in 1000
+                               :n-out 10
+                               :layer-name "second layer"
+                               :activation-fn :tanh
+                               :gradient-normalization :none}}}))))
+    (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+           (type
+            (.build
+             (list-builder
+              (nn-conf-builder)
+              {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                  :n-in 100
+                  :n-out 1000
+                  :layer-name "first layer"
+                  :activation-fn :tanh
+                  :gradient-normalization :none)
+               1 {:dense-layer {:n-in 1000
+                                :n-out 10
+                                :layer-name "second layer"
+                                :activation-fn :tanh
+                                :gradient-normalization :none}}})))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input pre-processors test
+;; dl4clj.nn.conf.input-pre-processor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest pre-processors-test
+  (testing "the creation of input preprocessors for use in multi-layer-conf"
+    (is (= org.deeplearning4j.nn.conf.preprocessor.BinomialSamplingPreProcessor
+           (type (new-binominal-sampling-pre-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.UnitVarianceProcessor
+           (type (new-unit-variance-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToCnnPreProcessor
+           (type (new-rnn-to-cnn-pre-processor :input-height 1 :input-width 1
+                                               :num-channels 1))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanAndUnitVariancePreProcessor
+           (type (new-zero-mean-and-unit-variance-pre-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanPrePreProcessor
+           (type (new-zero-mean-pre-pre-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor
+           (type (new-cnn-to-feed-forward-pre-processor :input-height 1
+                                                        :input-width 1
+                                                        :num-channels 1))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToRnnPreProcessor
+           (type (new-cnn-to-rnn-pre-processor :input-height 1 :input-width 1
+                                               :num-channels 1))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToCnnPreProcessor
+           (type (new-feed-forward-to-cnn-pre-processor :input-height 1
+                                                        :input-width 1
+                                                        :num-channels 1))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToFeedForwardPreProcessor
+           (type (new-rnn-to-feed-forward-pre-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToRnnPreProcessor
+           (type (new-feed-forward-to-rnn-pre-processor))))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ComposableInputPreProcessor
+           (type (new-composable-input-pre-processor
+                  :pre-processors [(new-zero-mean-pre-pre-processor)
+                                   (new-binominal-sampling-pre-processor)]))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi-layer-config-builder test
+;; dl4clj.nn.conf.builders.multi-layer-builders
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest multi-layer-builder-test
   (testing "the creation of mutli layer nn's and setting top level params"
-
-
-
-    ))
+    (let [l-builder (nn-conf-builder :global-activation-fn :relu
+                                     :step-fn :negative-gradient-step-fn
+                                     :updater :none
+                                     :use-drop-connect true
+                                     :drop-out 0.2
+                                     :weight-init :xavier-uniform
+                                     :build? false
+                                     :gradient-normalization :renormalize-l2-per-layer
+                                     :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                                 :n-in 100
+                                                 :n-out 1000
+                                                 :layer-name "first layer"
+                                                 :activation-fn :tanh
+                                                 :gradient-normalization :none)
+                                              1 {:dense-layer {:n-in 1000
+                                                               :n-out 10
+                                                               :layer-name "second layer"
+                                                               :activation-fn :tanh
+                                                               :gradient-normalization :none}}})
+          nn-conf (nn-conf-builder :global-activation-fn :relu
+                                   :step-fn :negative-gradient-step-fn
+                                   :updater :none
+                                   :use-drop-connect true
+                                   :drop-out 0.2
+                                   :weight-init :xavier-uniform
+                                   :gradient-normalization :renormalize-l2-per-layer
+                                   :build? true
+                                   :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                           :n-in 10
+                                           :n-out 100
+                                           :layer-name "another layer"
+                                           :activation-fn :tanh
+                                           :gradient-normalization :none))]
+      ;; with a list builder, a built nn-conf, and all opts
+      (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+             (type (multi-layer-config-builder
+                    :list-builder l-builder
+                    :nn-confs nn-conf
+                    :backprop? true
+                    :backprop-type :standard
+                    :input-pre-processors {0 {:zero-mean-pre-pre-processor {}}
+                                           1 (new-unit-variance-processor)}
+                    :input-type {:feed-forward {:size 100}}
+                    :pretrain? false))))
+      ;; with no nn-confs and all other opts
+      (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+             (type (multi-layer-config-builder
+                    :list-builder l-builder
+                    :backprop? true
+                    :backprop-type :standard
+                    :input-pre-processors {0 {:zero-mean-pre-pre-processor {}}
+                                           1 (new-unit-variance-processor)}
+                    :input-type {:feed-forward {:size 100}}
+                    :pretrain? false))))
+      ;; with no list-builder but nn-confs and all other opts
+      (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+             (type (multi-layer-config-builder
+                    :nn-confs [nn-conf nn-conf]
+                    :backprop? true
+                    :backprop-type :standard
+                    :input-pre-processors {0 {:zero-mean-pre-pre-processor {}}
+                                           1 (new-unit-variance-processor)}
+                    :input-type {:feed-forward {:size 100}}
+                    :pretrain? false))))
+      ;; with a single nn-conf for nn-confs
+      (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+             (type (multi-layer-config-builder
+                    :nn-confs nn-conf
+                    :backprop? true
+                    :backprop-type :standard
+                    :input-pre-processors {0 {:zero-mean-pre-pre-processor {}}
+                                           1 (new-unit-variance-processor)}
+                    :input-type {:feed-forward {:size 100}}
+                    :pretrain? false)))))))

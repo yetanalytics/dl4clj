@@ -14,7 +14,7 @@
            [org.nd4j.linalg.lossfunctions LossFunctions$LossFunction]
            [org.slf4j Logger]
            [org.slf4j LoggerFactory]))
-
+;;;;;;;;; come back and update
 (def num-rows 28)
 (def num-columns 28)
 (def output-num 10)
@@ -26,29 +26,32 @@
 (def test-iterator (MnistDataSetIterator. batchsize false rngseed))
 (def e (Evaluation. output-num))
 
-(def conf
-  (->
-   (nn-conf/nn-conf-builder {:seed rngseed
-                             :optimization-algo :stochastic-gradient-descent
-                             :iterations 1
-                             :learning-rate 0.006
-                             :updater :nesterovs
-                             :momentum 0.9
-                             :regularization true
-                             :l2 1e-4
-                             :layers {0 (l/dense-layer-builder :n-in (* num-rows num-columns)
-                                                               :n-out 1000
-                                                               :activation-fn :relu
-                                                               :weight-init :xavier)
-                                      1 (l/output-layer-builder :loss-fn :negativeloglikelihood
-                                                                :n-in 1000
-                                                                :n-out output-num
-                                                                :activation-fn :soft-max
-                                                                :weight-init :xavier)}
-                             :pretrain false
-                             :backprop true})
-   (mlb/multi-layer-config-builder {})))
+(def nn-conf
+  (nn-conf/nn-conf-builder :seed rngseed
+                           :optimization-algo :stochastic-gradient-descent
+                           :iterations 1
+                           :learning-rate 0.006
+                           :updater :nesterovs
+                           :momentum 0.9
+                           :regularization true
+                           :l2 1e-4
+                           :layers {0 (l/dense-layer-builder :n-in (* num-rows num-columns)
+                                                            :n-out 1000
+                                                            :activation-fn :relu
+                                                            :weight-init :xavier)
+                                   1 (l/output-layer-builder :loss-fn :negativeloglikelihood
+                                                             :n-in 1000
+                                                             :n-out output-num
+                                                             :activation-fn :soft-max
+                                                             :weight-init :xavier)}
+                           :build? false))
 
+(def conf
+  (mlb/multi-layer-config-builder
+   :list-builder nn-conf
+   :backprop? true
+   :pretrain? false
+   :build? true))
 
 (defn init [^MultiLayerNetwork mln]
   (.init mln)

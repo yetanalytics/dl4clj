@@ -38,6 +38,7 @@
            :momentum 0.9
            :regularization true
            :l2 1e-4
+           :build? true
            :layers {0 {:dense-layer {:n-in 784
                                      :n-out 1000
                                      :activation-fn :relu

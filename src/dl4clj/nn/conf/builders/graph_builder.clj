@@ -15,8 +15,9 @@
 ;; https://jar-download.com//javaDoc/org.deeplearning4j/deeplearning4j-nn/0.8.0/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.html
 ;; https://jar-download.com//javaDoc/org.deeplearning4j/deeplearning4j-nn/0.8.0/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.GraphBuilder.html
 
-(defn graph-builder
-  "sets up and modifies a graph builder given a param map of options
+(comment
+  (defn graph-builder
+    "sets up and modifies a graph builder given a param map of options
 
   options are:
 
@@ -60,53 +61,53 @@
   but may be larger than it in some circumstances (but never smaller)
   Ideally your training data time series length should be divisible by this"
 
-  [nn-conf-builder {:keys [add-inputs add-layer add-vertex backprop
-                           backprop-type input-pre-processor pretrain
-                           input-type set-outputs tbptt-back-length tbptt-fwd-length]
-                    :or {}
-                    :as opts}]
-  (let [b (ComputationGraphConfiguration$GraphBuilder. nn-conf-builder)]
-    (if (contains? opts :add-inputs)
-      (.addInputs b (into-array add-inputs)) b) ;; working
-    (if (contains? opts :add-layer) ;; working
-      (let [{l-name :layer-name
-             layer :layer
-             pre-processorz :input-pre-processor
-             layer-inputs :layer-inputs} add-layer]
-        (if (nil? pre-processorz)
-          (.addLayer b l-name (if (seqable? layer)
-                                (bb/builder layer) layer)
-                     (into-array layer-inputs))
-          (.addLayer b l-name (if (seqable? layer)
-                                (bb/builder layer) layer)
-                     (pre-process/pre-processors pre-processorz)
-                     (into-array layer-inputs))))
-      b)
-    ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/GraphVertex.html
-    ;; going to need a vertexName (str), vertex ^, array of vertex inputs (strings)
-    (if (contains? opts :add-vertex) ;;finish
-      (.addVertex b add-vertex) b)
-    (if (contains? opts :backprop) ;; working
-      (.backprop b backprop) b)
-    (if (contains? opts :backprop-type) ;; working
-      (.backpropType b (constants/value-of {:backprop-type backprop-type})) b)
-    (if (contains? opts :input-pre-processor) ;; working
-      (.inputPreProcessor b (:layer-name input-pre-processor)
-                          (pre-process/pre-processors input-pre-processor)) b)
-    (if (contains? opts :pretrain) ;; working but its scope is local
-      (.pretrain b pretrain) b)
-    (if (contains? opts :input-type) ;; finish (into-array (constants/input-type)) i believe
-      (.setInputTypes b input-type) b)
-    (if (contains? opts :set-outputs) ;; finish
-      (.setOutputs b (into-array set-outputs)) b)
-    (if (contains? opts :tbptt-back-length) ;;working
-      (.tBPTTBackwardLength b tbptt-back-length)
-      b)
-    (if (contains? opts :tbptt-fwd-length)
-      (.tBPTTForwardLength b tbptt-fwd-length) ;; working
-      b)
-    b))
-
+    [nn-conf-builder {:keys [add-inputs add-layer add-vertex backprop
+                             backprop-type input-pre-processor pretrain
+                             input-type set-outputs tbptt-back-length tbptt-fwd-length]
+                      :or {}
+                      :as opts}]
+    (let [b (ComputationGraphConfiguration$GraphBuilder. nn-conf-builder)]
+      (if (contains? opts :add-inputs)
+        (.addInputs b (into-array add-inputs)) b) ;; working
+      (if (contains? opts :add-layer) ;; working
+        (let [{l-name :layer-name
+               layer :layer
+               pre-processorz :input-pre-processor
+               layer-inputs :layer-inputs} add-layer]
+          (if (nil? pre-processorz)
+            (.addLayer b l-name (if (seqable? layer)
+                                  (bb/builder layer) layer)
+                       (into-array layer-inputs))
+            (.addLayer b l-name (if (seqable? layer)
+                                  (bb/builder layer) layer)
+                       (pre-process/pre-processors pre-processorz)
+                       (into-array layer-inputs))))
+        b)
+      ;;https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/GraphVertex.html
+      ;; going to need a vertexName (str), vertex ^, array of vertex inputs (strings)
+      (if (contains? opts :add-vertex) ;;finish
+        (.addVertex b add-vertex) b)
+      (if (contains? opts :backprop) ;; working
+        (.backprop b backprop) b)
+      (if (contains? opts :backprop-type) ;; working
+        (.backpropType b (constants/value-of {:backprop-type backprop-type})) b)
+      (if (contains? opts :input-pre-processor) ;; working
+        (.inputPreProcessor b (:layer-name input-pre-processor)
+                            (pre-process/pre-processors input-pre-processor)) b)
+      (if (contains? opts :pretrain) ;; working but its scope is local
+        (.pretrain b pretrain) b)
+      (if (contains? opts :input-type) ;; finish (into-array (constants/input-type)) i believe
+        (.setInputTypes b input-type) b)
+      (if (contains? opts :set-outputs) ;; finish
+        (.setOutputs b (into-array set-outputs)) b)
+      (if (contains? opts :tbptt-back-length) ;;working
+        (.tBPTTBackwardLength b tbptt-back-length)
+        b)
+      (if (contains? opts :tbptt-fwd-length)
+        (.tBPTTForwardLength b tbptt-fwd-length) ;; working
+        b)
+      b))
+  )
 (comment
 
   (let [b (ComputationGraphConfiguration$GraphBuilder. (NeuralNetConfiguration$Builder.))]

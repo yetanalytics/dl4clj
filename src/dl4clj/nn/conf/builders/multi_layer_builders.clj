@@ -7,62 +7,79 @@
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
 (defn multi-layer-config-builder
-  "creates a multi layer neural network configuration to be used within a multilayernetwork.
+  "creates and builds a multi layer neural network configuration.
+
+  you must either supply :list-builder or :confs
+   - you need some configuration to build from
+   - if only :confs is supplied, a fresh multi-layer-conf-builder will be used
+   - if list builder is supplied, that builder will have these params applied to it
 
   params are:
 
-  :backprop (boolean) whether to do backprop or not
+  :list-builder (nn-conf-list-builder) the result of nn-conf-builder
+   - when you supply the :layers key and :built? is set to false (default)
+
+  :confs (coll), a collection of built neural net configurations
+   - needs to be single layer neural network configurations
+   - when you call nn-conf-builder and supply :layer and :build? true
+
+  :backprop? (boolean) whether to do backprop or not
 
   :backprop-type (keyword) the type of backprop, one of :standard or :truncated-bptt
 
-  :damping-factor (double) damping factor used in backprop (not 100% sure on this)
-
-  :input-pre-processors {int keyword} ie {0 {:zero-mean-pre-pre-processor opts}
-                                          1 {:unit-variance-processor opts}}
+  :input-pre-processors {int pre-processor} ie {0 (new-zero-mean-pre-pre-processor)
+                                                1 (new-unit-variance-processor)}
   specifies the processors, these are used at each layer for doing things like
-  ormalization and shaping of input. see input-pre-processor ns for details
+  normalization and shaping of input.
+   - the pre-processor can be the obj created by the new- fns in input-pre-processor
+     or a config map for creating the desired pre-processor
 
-  :input-type {:input-type opts}, where :input-type is one of:
-   :convolutional, :convolutional-flat, :feed-forward, :recurrent
+  :input-type (map), map of params describing the input
+   {(keyword) other-opts}, ie. {:convolutional {:input-height 1 ...}}
+    - the first key is one of: :convolutional, :convolutional-flat, :feed-forward, :recurrent
+    - other opts: for feedforward and recurrent, supply the :size of the layer
+                  for convolutional, supply the height width depth of the layer
 
-  :pretrain (boolean) Whether to do pre train or not
+  :pretrain? (boolean) Whether to do pre train or not
 
   :tbptt-back-length (int) When doing truncated BPTT: how many steps of backward should we do?
-  Only applicable when doing backpropType(BackpropType.TruncatedBPTT)
+  Only applicable when :backprop-type = :truncated-bptt
 
   :tbptt-fwd-length (int) When doing truncated BPTT: how many steps of forward pass
-  should we do before doing (truncated) backprop? Only applicable when doing TruncatedBPTT
-  Typically tBPTTForwardLength parameter is same as the tBPTTBackwardLength parameter,
-  but may be larger than it in some circumstances (but never smaller)
-  Ideally your training data time series length should be divisible by this"
-
-  ([]
-   (multi-layer-config-builder (MultiLayerConfiguration$Builder.) {}))
-  ([opts]
-   (multi-layer-config-builder (MultiLayerConfiguration$Builder.) opts))
-  ([multi-layer-config-b
-    {:keys [backprop backprop-type damping-factor
-            input-pre-processors input-type pretrain
-            tbptt-back-length tbptt-fwd-length confs build?]
-     ;; confs java.util.List<NeuralNetConfiguration>
-     ;; confs is automaticaly set when you .build
-     :or {build? true}
-     :as opts}]
-   (cond-> multi-layer-config-b
-     (contains? opts :backprop) (.backprop backprop)
-     (contains? opts :backprop-type) (.backpropType (constants/value-of
-                                                     {:backprop-type
-                                                      backprop-type}))
-     (contains? opts :confs) (.confs (list confs))
-     (contains? opts :damping-factor) (.dampingFactor damping-factor)
-     (contains? opts :input-pre-processors) (.inputPreProcessors
-                                             (pre-process/pre-processors
-                                              input-pre-processors))
-     (contains? opts :input-type) (.setInputType (constants/input-types input-type))
-     (contains? opts :pretrain) (.pretrain pretrain)
-     (contains? opts :tbptt-back-length) (.tBPTTBackwardLength tbptt-back-length)
-     (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length)
-     (true? build?) (.build))))
+  should we do before doing (truncated) backprop? Only applicable when :backprop-type = :truncated-bptt
+   - Typically tBPTTForwardLength parameter is same as the tBPTTBackwardLength parameter,
+     but may be larger than it in some circumstances (but never smaller)
+   - Ideally your training data time series length should be divisible by this"
+  [& {:keys [list-builder nn-confs backprop? backprop-type damping-factor
+             input-pre-processors input-type pretrain?
+             tbptt-back-length tbptt-fwd-length build?]
+      :or {build? true}
+      :as opts}]
+  (let [b (if (contains? opts :list-builder)
+            list-builder
+            (MultiLayerConfiguration$Builder.))
+        confz (if (coll? nn-confs)
+                (into '() nn-confs)
+                (into '() [nn-confs]))
+        pps (into {}
+                  (for [each input-pre-processors
+                        :let [[idx pp] each]]
+                    (if (map? pp)
+                      {idx (pre-process/pre-processors pp)}
+                      {idx pp})))]
+    (cond-> b
+      (contains? opts :backprop?) (.backprop backprop?)
+      (contains? opts :backprop-type) (.backpropType (constants/value-of
+                                                      {:backprop-type
+                                                       backprop-type}))
+      (contains? opts :nn-confs) (.confs confz)
+      (contains? opts :damping-factor) (.dampingFactor damping-factor)
+      (contains? opts :input-pre-processors) (.inputPreProcessors pps)
+      (contains? opts :input-type) (.setInputType (constants/input-types input-type))
+      (contains? opts :pretrain?) (.pretrain pretrain?)
+      (contains? opts :tbptt-back-length) (.tBPTTBackwardLength tbptt-back-length)
+      (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length)
+      (true? build?) (.build))))
 
 (defn list-builder
   "builds a list of layers to be used in a multi-layer configuration
@@ -96,43 +113,3 @@
                  (.layer result idx current-layer))))
             (= idx max-idx)
             result))))
-
-
-(comment
-;; this is working
-  (-> (dl4clj.nn.conf.builders.nn-conf-builder/nn-conf-builder
-       {:drop-out 2
-        :backprop true
-        :seed 123
-        :global-activation-fn "CUBE" ;; wont overwrite the activation fns set at the layer level
-        #_:layer #_{:graves-lstm {:layer-name "first layer"
-                              :n-in 10
-                              :n-out 10
-                              :activation-fn "RELU"
-                              :epsilon 2.0}}
-        :layers {0 {:graves-lstm {:layer-name "first layer"
-                                  :n-in 10
-                                  :n-out 10
-                                  :activation-fn "RELU"
-                                  :epsilon 2.0}}
-                 1 {:graves-lstm {:layer-name "genisys"
-                                  :activation-fn "SOFTMAX"
-                                  :n-in 10
-                                  :n-out 20}}
-                 2 (dl4clj.nn.conf.builders.builders/garves-lstm-layer-builder
-                    {:n-in 100
-                     :n-out 1000
-                     ;; here activation-fn is being set by the :global-activation-fn
-                     :layer-name "third layer"
-                     :gradient-normalization :none })}})
-      (multi-layer-config-builder {:backprop true
-                                   :tbptt-back-length 10
-                                   :tbptt-fwd-length 30
-                                   :pretrain false})
-      (.build)
-      type
-      )
-  ;; will need to add checks to make sure the ovlapping config maps for nn-conf and multi layer are the same
-  ;; need error handling which determines if there are :layer and :layers keys and warns that :layer will be lost
-  ;; that detection will also determine if the output of nn-conf-builder will be set to multi-layer-conf-builder or not
-  )
