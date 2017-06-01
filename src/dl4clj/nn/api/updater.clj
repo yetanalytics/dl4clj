@@ -4,11 +4,6 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
   (:import [org.deeplearning4j.nn.api Updater])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
-(defn clone
-  "create a copy of the updater"
-  [updater]
-  (.clone updater))
-
 (defn get-state-view-array
   "returns an INDArray of the state-view of the updater"
   [updater]
@@ -19,7 +14,9 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
   returns the updater
 
   :layer is a built layer from any-layer-builder
+
   :view-array is an INDArray of the state view of the updater
+
   :initialize? (boolean)"
   [& {:keys [updater layer view-array initialize?]}]
   (doto updater
@@ -35,8 +32,11 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
   "updates the model and returns the updater.
 
   :layer is a built layer from any-layer-bulder
+
   :gradient is a gradient (improve this desc)
+
   :iteration (int) number of iterations to perform
+
   :mini-batch-size (int) size of the mini-batch"
   [& {:keys [updater layer gradient iteration mini-batch-size]}]
   (doto updater

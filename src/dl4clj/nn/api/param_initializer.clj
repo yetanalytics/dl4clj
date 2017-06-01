@@ -15,7 +15,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/ParamInitializer.h
   "Initialize the parameters
 
   :conf is a NeuralNetConfiguration
+
   :params-view is an INDArray
+
   :initialize-params? boolean"
   [& {:keys [param-init conf params-view initialize-params?]}]
   (.init param-init conf params-view initialize-params?))

@@ -35,12 +35,14 @@
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
-   mask-array (INDArray of mask values),
-   mask-state (keyword), either :active or :passthrough
+   :mask-array (INDArray of mask values),
+
+   :mask-state (keyword), either :active or :passthrough
     - :active = apply mask to activations and errors.
     - :passthrough = feed forward the input mask (if/when necessary) but don't actually apply it.
     - Note: Masks should not be applied in all cases, depends on the network configuration
-  batch-size (integer) the minibatch size to use"
+
+  :batch-size (int) the minibatch size to use"
   [& {:keys [layer mask-array mask-state batch-size]}]
   (.feedForwardMaskArray layer mask-array
    (enum/value-of {:mask-state mask-state})
@@ -61,11 +63,6 @@
   "Calculate the l2 regularization term. 0.0 if regularization is not used."
   [& {:keys [layer backprop-only-params?]}]
   (.calcL2 layer backprop-only-params?))
-
-(defn clone
-  "Clone the layer"
-  [layer]
-  (.clone layer))
 
 (defn get-index
   "Get the layer index."

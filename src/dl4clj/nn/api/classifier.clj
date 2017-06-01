@@ -9,6 +9,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
 (defn f1-score
   "With two arguments (classifier and dataset):
    - Sets the input and labels and returns a score for the prediction.
+
   With three arguments (classifier, examples and labels):
    - Returns the f1 score for the given examples.
    - examples and labels should both be INDArrays
@@ -16,9 +17,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
     - labels = the correct classifcation for a a set of examples"
   [& {:keys [classifier dataset examples labels]
       :as opts}]
-  (assert (or (contains-many? opts :classifier :dataset )
-              (contains-many? opts :classifier :examples :labels))
-          "you must supply a classifier and a dataset or a classifier, examples and labels")
   (cond (contains? opts :dataset)
         (.f1Score classifier dataset)
         (contains-many? opts :examples :labels)
@@ -32,23 +30,30 @@ examples and their labels")))
   if dataset or examples and labels are supplied, fits the classifier.
 
   :data-set = a dataset
-  :dataset-iterator {:iterator-type opts} (see dl4clj.datasets.datavec for more details)
+
+  :dataset-iterator {:iterator-type opts}
+   - can be a configuration map for creating a dataset iterator or
+     an already created dataset iterator
+  (see dl4clj.datasets.datavec for more details)
+
   :examples = INDArray of input data to be classified
+
   :labels = INDArray or integer-array of labels for the examples
 
   Returns the classifier after it has been fit"
   [& {:keys [classifier data-set dataset-iterator examples labels]
       :as opts}]
   (cond (contains? opts :data-set)
-        (.fit classifier data-set)
+        (doto classifier (.fit data-set))
         (contains? opts :dataset-iterator)
-        (.fit classifier (iter/iterator dataset-iterator))
+        (doto classifier (.fit (if (map? dataset-iterator)
+                                 (iter/iterator dataset-iterator)
+                                 dataset-iterator)))
         (contains-many? opts :examples :labels)
-        (.fit classifier examples labels)
+        (doto classifier (.fit examples labels))
         :else
         (assert false "you must supply a classifier and either a dataset,
  dataset-iterator config map, or examples and their labels")))
-
 
 (defn label-probabilities
   "Returns the probabilities for each label for each example row wise"
@@ -62,7 +67,10 @@ examples and their labels")))
 
 (defn predict
   "Takes in a list of examples for each row (INDArray), returns a label
-   or a datset of examples for each row, returns a label"
+
+   or
+
+  takes a datset of examples for each row, returns a label"
   [& {:keys [classifier examples dataset]
       :as opts}]
   (cond (contains? opts :examples) (.predict classifier examples)

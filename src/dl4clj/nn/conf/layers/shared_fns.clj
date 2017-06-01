@@ -92,9 +92,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [layer input-type override?]}]
   (doto layer (.setNIn (enum/input-types input-type) override?)))
 
-(defn reset-layer-default-config [& {:keys [this]}]
-  (.resetLayerDefaultConfig this))
-
+(defn reset-layer-default-config
+  [& {:keys [layer]}]
+  (.resetLayerDefaultConfig layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; From BaseOutputlayer
