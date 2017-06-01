@@ -3,26 +3,34 @@
   (:import [org.deeplearning4j.nn.conf MultiLayerConfiguration]))
 
 
-(defn to-json [^MultiLayerConfiguration cfg]
-  (.toJson cfg))
+(defn to-json
+  [& {:keys [multi-layer-conf]}]
+  (.toJson multi-layer-conf))
 
-(defn to-yaml [^MultiLayerConfiguration cfg]
-  (.toYaml cfg))
+(defn to-yaml
+  [& {:keys [multi-layer-conf]}]
+  (.toYaml multi-layer-conf))
 
-(defn to-str [^MultiLayerConfiguration cfg]
-  (.toString cfg))
+(defn to-str
+  [& {:keys [multi-layer-conf]}]
+  (.toString multi-layer-conf))
 
-(defn from-json [json]
+(defn from-json
+  [json]
   (.fromJson json))
 
-(defn from-yaml [json]
+(defn from-yaml
+  [json]
   (.fromYaml json))
 
-(defn clone [^MultiLayerConfiguration cfg]
-  (.clone cfg))
+(defn get-conf
+  ":layer-idx (int), the index of the layer, within the multi-layer-conf, you
+   want the configuration of"
+  [& {:keys [multi-layer-conf layer-idx]}]
+  (.getConf multi-layer-conf layer-idx))
 
-(defn get-conf [^MultiLayerConfiguration cfg layer-n]
-  (.getConf cfg (int layer-n)))
-
-(defn get-input-pre-process [^MultiLayerConfiguration cfg layer-n]
-  (.getInputPreProcess cfg layer-n))
+(defn get-input-pre-process
+  ":layer-idx (int), the index of the layer, within the multi-layer-conf,
+  that has a pre-processor."
+  [& {:keys [multi-layer-conf layer-idx]}]
+  (.getInputPreProcess multi-layer-conf layer-idx))

@@ -11,7 +11,7 @@
             FeedForwardToRnnPreProcessor RnnToFeedForwardPreProcessor]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; move to interface ns
+;; api fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn backprop
@@ -33,10 +33,10 @@
 (defn get-output-type
   "For a given type of input to this preprocessor, what is the type of the output?
 
-  The InputType class is used to track and define the types of activations etc used in a ComputationGraph.
-  This is most useful for automatically adding preprocessors between layers, and automatically setting nIn values.
-
-  redo this docstring"
+  :input-type (map), the input to the cnn layer
+  - {:convolutional {:height 1 :width 1 :depth 1}}
+   - {:recurrent {:size 10}}
+  - only 2 examples, see dl4clj.nn.conf.constants"
   [& {:keys [this input-type]}]
   (.getOutputType this (constants/input-types input-type)))
 

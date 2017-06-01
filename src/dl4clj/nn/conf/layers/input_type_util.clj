@@ -2,6 +2,11 @@
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
   (:require [dl4clj.nn.conf.constants :as enum]))
 
+(defn new-input-type-util
+  "creates a new instance of the input type util class"
+  []
+  (InputTypeUtil.))
+
 (defn get-output-type-cnn-layers
   "returns the output type from cnn layers
 
