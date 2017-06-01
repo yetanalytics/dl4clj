@@ -1,6 +1,5 @@
 (ns dl4clj.utils)
 
-;; move contains-many? here and change all of the breaking changes that ensue
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
 
@@ -27,7 +26,7 @@
 (defn camel-to-dashed
   "Turn a symbol or keyword or string like 'bigBlueCar' to 'big-blue-car'."
   [x & capitalize?]
-  (let [parts (or (re-seq #"[a-xA-Z][A-Z\s_]*[^A-Z\s_]*" (name x))
+  (let [parts (or (re-seq #"[a-zA-Z][A-Z\s_]*[^A-Z\s_]*" (name x))
                   [(name x)])
         new-name (clojure.string/join "-" (map clojure.string/lower-case parts))]
     (condp = (type x)

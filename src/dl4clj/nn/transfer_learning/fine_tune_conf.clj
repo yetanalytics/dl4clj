@@ -33,8 +33,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
       (.regularization regularization?)
       (contains? opts :seed)
       (.seed seed)
-      (and (true? build?)
-           (contains? opts :build?))
+      (true? build?)
       .build)))
 
 (defn applied-to-nn-conf!

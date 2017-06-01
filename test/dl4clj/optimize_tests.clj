@@ -15,7 +15,7 @@
             [nd4clj.linalg.factory.nd4j :refer :all]
             [dl4clj.nn.layers.variational-autoencoder :refer [new-variational-autoencoder]]
             [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
-            [dl4clj.nn.gradient.default-gradient :refer [constructor]]
+            [dl4clj.nn.gradient.default-gradient :refer [new-default-gradient]]
             [dl4clj.optimize.api.line-optimizer :refer :all]
             [dl4clj.optimize.api.step-fn :refer :all]
             [dl4clj.optimize.api.termination-condition :refer :all]
@@ -523,22 +523,22 @@
       ;; ensure the optimizer is returned
       (is (= (type conj-grad-optim)
              (type (update-gradient-according-to-params! :optim conj-grad-optim
-                                                         :gradient (constructor)
+                                                         :gradient (new-default-gradient)
                                                          :model model
                                                          :batch-size 5))))
       (is (= (type lbfgs-optim)
              (type (update-gradient-according-to-params! :optim lbfgs-optim
-                                                         :gradient (constructor)
+                                                         :gradient (new-default-gradient)
                                                          :model model
                                                          :batch-size 5))))
       (is (= (type line-grad-optim)
              (type (update-gradient-according-to-params! :optim line-grad-optim
-                                                         :gradient (constructor)
+                                                         :gradient (new-default-gradient)
                                                          :model model
                                                          :batch-size 5))))
       (is (= (type stoch-grad-optim)
              (type (update-gradient-according-to-params! :optim stoch-grad-optim
-                                                         :gradient (constructor)
+                                                         :gradient (new-default-gradient)
                                                          :model model
                                                          :batch-size 5)))))))
 

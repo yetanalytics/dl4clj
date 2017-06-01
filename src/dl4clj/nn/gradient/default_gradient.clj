@@ -3,7 +3,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
     dl4clj.nn.gradient.default-gradient
   (:import [org.deeplearning4j.nn.gradient DefaultGradient]))
 
-(defn constructor
+(defn new-default-gradient
   [& {:keys [flattened-gradient]
       :as opts}]
   (if (contains? opts :flattened-gradient)
@@ -41,5 +41,5 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
   "Update gradient for the given variable; also (optionally) specify the order in which the array should be flattened to a row vector"
   [& {:keys [this variable new-gradient flattening-order]}]
   (if flattening-order
-    (.setGradientFor this variable new-gradient flattening-order)
-    (.setGradientFor this variable new-gradient)))
+    (doto this (.setGradientFor variable new-gradient flattening-order))
+    (doto this (.setGradientFor variable new-gradient))))

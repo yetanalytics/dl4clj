@@ -21,7 +21,7 @@
 (def batchsize 128)
 (def rngseed 123)
 (def numepochs 18)
-(* 28 28)
+
 (def train-iterator (MnistDataSetIterator. batchsize true rngseed))
 (def test-iterator (MnistDataSetIterator. batchsize false rngseed))
 (def e (Evaluation. output-num))

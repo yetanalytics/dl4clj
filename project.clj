@@ -18,4 +18,5 @@
                  [org.datavec/datavec-api "0.8.0"]
                  [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"]
                  [org.apache.spark/spark-core_2.11 "2.1.0"]
+                 [cheshire "5.7.1"]
                  [org.clojure/data.json "0.2.6"]])

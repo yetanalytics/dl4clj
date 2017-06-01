@@ -65,6 +65,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 (defn instantiate
   "returns the instantiated layer
 
+  :layer (layer), the layer set in the nn-conf
+
   :conf (nn-conf), a single layer neural network configuration
 
   :listener (coll), a collection of listeners for the layer
