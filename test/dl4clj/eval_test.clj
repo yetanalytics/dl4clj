@@ -28,7 +28,7 @@
 
 ;; fully train a network, save it and then import it here for testing
 ;; this set up doesn't produce any predictions bc of low training
-(def mln (ml/multi-layer-network
+(def mln (ml/new-multi-layer-network
           :conf (nn/nn-conf-builder
                  :seed 123
                  :optimization-algo :stochastic-gradient-descent

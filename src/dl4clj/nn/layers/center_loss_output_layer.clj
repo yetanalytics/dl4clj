@@ -7,7 +7,7 @@ Implementation of the CenterLossOutputLayer class in dl4j.
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/training/CenterLossOutputLayer.html"}
     dl4clj.nn.layers.center-loss-output-layer
   (:import [org.deeplearning4j.nn.layers.training CenterLossOutputLayer])
-  (:require [dl4clj.nn.api.classifier :refer :all]
+  #_(:require [dl4clj.nn.api.classifier :refer :all]
             [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.layers.i-output-layer :refer :all]
             [dl4clj.nn.api.model :refer :all]

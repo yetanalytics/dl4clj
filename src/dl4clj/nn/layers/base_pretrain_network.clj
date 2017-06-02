@@ -3,9 +3,9 @@ Implementation of the class BasePretrainNetwork in dl4j.
 all refered fns support base-pretrain-network as the first arg.
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/BasePretrainNetwork.html"}
     dl4clj.nn.layers.base-pretrain-network
-  (:require [dl4clj.nn.api.layer :refer :all]
-            [dl4clj.nn.api.model :refer :all]
-            [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
+  (:require #_[dl4clj.nn.api.layer :refer :all]
+            #_[dl4clj.nn.api.model :refer :all]
+            #_[dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient
                                                  derivative-activation
                                                  calc-error

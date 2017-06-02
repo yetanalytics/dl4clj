@@ -17,6 +17,7 @@
             [datavec.api.records.readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.datavec :refer [new-record-reader-dataset-iterator
                                              mnist-ds]]
+            [dl4clj.nn.api.model :refer [init! score!]]
             [clojure.test :refer :all])
   (:import [java.nio.charset Charset]))
 
@@ -24,7 +25,7 @@
 ;; objs needed in multiple tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def mln (ml/multi-layer-network
+(def mln (ml/new-multi-layer-network
           :conf
           (nn/nn-conf-builder
            :seed 123
@@ -46,7 +47,7 @@
                                       :activation-fn :soft-max
                                       :weight-init :xavier}}})))
 
-(def init-mln (ml/init-model mln))
+(def init-mln (init! :model mln))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of termination conditions
@@ -169,8 +170,8 @@
       (is (= java.lang.Double
              (type
               (calculate-score :score-calc calc
-                               :model (ml/score
-                                       init-mln
+                               :model (score!
+                                       :model init-mln
                                        :dataset mnist-ds
                                        :return-model? true))))))))
 

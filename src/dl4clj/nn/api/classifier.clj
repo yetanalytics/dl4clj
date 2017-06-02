@@ -56,7 +56,9 @@ examples and their labels")))
  dataset-iterator config map, or examples and their labels")))
 
 (defn label-probabilities
-  "Returns the probabilities for each label for each example row wise"
+  "Returns the probabilities for each label for each example row wise
+
+  :examples (INDArray), the examples to classify (one example in each row)"
   [& {:keys [classifier examples]}]
   (.labelProbabilities classifier examples))
 

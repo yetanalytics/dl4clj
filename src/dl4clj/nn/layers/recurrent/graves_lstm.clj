@@ -3,7 +3,7 @@ Implementation of the GravesLSTM class in dl4j
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/GravesLSTM.html"}
     dl4clj.nn.layers.recurrent.graves-lstm
   (:import [org.deeplearning4j.nn.layers.recurrent GravesLSTM])
-  (:require [dl4clj.nn.api.layer :refer :all]
+  #_(:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.api.layers.recurrent-layer :refer :all]
             [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
@@ -11,7 +11,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/Grave
                                                  derivative-activation
                                                  calc-error
                                                  get-input
-                                                 init-params!
                                                  merge-layers!
                                                  validate-input!]]))
 

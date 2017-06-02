@@ -2,7 +2,7 @@
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/BaseRecurrentLayer.html"}
     dl4clj.nn.layers.recurrent.base-recurrent-layer
   (:import [org.deeplearning4j.nn.layers.recurrent BaseRecurrentLayer])
-  (:require [dl4clj.nn.api.layer :refer :all]
+  #_(:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.api.layers.recurrent-layer :refer :all]
             [dl4clj.nn.layers.base-layer :refer [calc-activation-mean

@@ -17,21 +17,21 @@
   5) supply input and training?
   6) supply input and training-mode
    -both 4 and 5 initialize the layer with the given input and return the activation for this layer given this input"
-  [& {:keys [layer training? input training-mode]
+  [& {:keys [model training? input training-mode]
       :as opts}]
-  (assert (contains? opts :layer) "you must supply a layer to activate")
+  (assert (contains? opts :model) "you must supply a layer to activate or a model with layers")
   (cond (contains-many? opts :input :training?)
-        (.activate layer input training?)
+        (.activate model input training?)
         (contains-many? opts :input :training-mode)
-        (.activate layer input (enum/value-of {:layer-training-mode training-mode}))
+        (.activate model input (enum/value-of {:layer-training-mode training-mode}))
         (contains? opts :input)
-        (.activate layer input)
+        (.activate model input)
         (contains? opts :training?)
-        (.activate layer training?)
+        (.activate model training?)
         (contains? opts :training-mode)
-        (.activate layer (enum/value-of {:layer-training-mode training-mode}))
+        (.activate model (enum/value-of {:layer-training-mode training-mode}))
         :else
-        (.activate layer)))
+        (.activate model)))
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
@@ -118,7 +118,7 @@
   (doto layer
     (.setIndex (int index))))
 
-(defn set-input!
+(defn set-layer-input!
   "set the layer's input and return the layer"
   [& {:keys [layer input]}]
   (doto layer

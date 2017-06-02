@@ -5,7 +5,7 @@ Implementation of the class Convolution1DLayer in dl4j.
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/convolution/Convolution1DLayer.html"}
     dl4clj.nn.layers.convolution.convolution-1d-layer
   (:import [org.deeplearning4j.nn.layers.convolution Convolution1DLayer])
-  (:require [dl4clj.nn.api.layer :refer :all]
+  #_(:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient

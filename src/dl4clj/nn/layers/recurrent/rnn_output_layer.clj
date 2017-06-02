@@ -10,7 +10,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/recurrent/RnnOu
     dl4clj.nn.layers.recurrent.rnn-output-layer
   (:import [org.deeplearning4j.nn.layers.recurrent RnnOutputLayer
             FwdPassReturn])
-  (:require [dl4clj.nn.api.layer :refer :all]
+  #_(:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.api.classifier :refer :all]
             [dl4clj.nn.api.layers.i-output-layer :refer :all]

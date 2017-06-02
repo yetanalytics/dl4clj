@@ -3,7 +3,7 @@ Implementation of the class AutoEncoder in dl4j.
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/feedforward/autoencoder/AutoEncoder.html"}
     dl4clj.nn.layers.feedforward.autoencoder
   (:import [org.deeplearning4j.nn.layers.feedforward.autoencoder AutoEncoder])
-  (:require [dl4clj.nn.api.layer :refer :all]
+  #_(:require [dl4clj.nn.api.layer :refer :all]
             [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.layers.base-pretrain-network :refer [get-corrupted-input
                                                             sample-hidden-given-visible

@@ -5,6 +5,8 @@
   (:import [org.deeplearning4j.nn.api Model])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; add .setBackpropGradientsViewArray and .validateInput
+
 (defn accumulate-score!
   "Sets a rolling tally for the score."
   [& {:keys [model accum]}]
@@ -34,25 +36,41 @@
   (doto model
     (.computeGradientAndScore)))
 
+(defn init-params!
+  "Initialize the parameters and return the model"
+  [& {:keys [model]}]
+  (doto model (.initParams)))
+
 (defn conf
   "The configuration for the neural network"
   [model]
   (.conf model))
 
-(defn fit-model!
-  "All models have a fit method
-
-  data is an INDarray of the data you want to fit the model to"
-  [& {:keys [model data]
-      :as opts}]
-  (assert (contains? opts :model) "you must supply a model to fit")
-  (cond
-    (contains? opts :data)
-    (doto model
-      (.fit data))
-    :else
-    (doto model
-     (.fit))))
+(defn fit!
+  "Fit/train the model"
+  [mln & {:keys [mln ds iter data labels
+                 features features-mask labels-mask
+                 examples label-idxs]
+          :as opts}]
+  (cond (contains-many? opts :features :labels :features-mask :labels-mask)
+        (doto mln
+          (.fit features labels features-mask labels-mask))
+        (contains-many? opts :examples :label-idxs)
+        (doto mln
+          (.fit examples label-idxs))
+        (contains-many? opts :data :labels)
+        (doto mln
+          (.fit data labels))
+        (contains? opts :data)
+        (doto mln
+          (.fit data))
+        (contains? opts :iter)
+        (doto mln
+          (.fit iter))
+        (contains? opts :ds)
+        (doto mln (.fit ds))
+        :else
+        (doto mln (.fit))))
 
 (defn get-optimizer
   "Returns this models optimizer"
@@ -75,12 +93,15 @@
   (.gradientAndScore model))
 
 (defn init!
-  [model]
-  (doto model
-    (.init)))
+  "initialize the model"
+  [& {:keys [model params clone-param-array?]
+      :as opts}]
+  (if (contains-many? opts :params :clone-param-array?)
+    (doto model (.init params clone-param-array?))
+    (doto model (.init))))
 
 (defn input
-  "The input/feature matrix for the model"
+  "returns the input/feature matrix for the model"
   [model]
   (.input model))
 
@@ -91,7 +112,9 @@
     (.iterate input)))
 
 (defn num-params
-  "the number of parameters for the model"
+  "the number of parameters for the model
+   - 1 x m vector where the vector is composed of a flattened vector of all
+     of the weights for the various neuralNets and output layer"
   [& {:keys [model backwards?]
       :as opts}]
   (assert (contains? opts :model) "you must supply a model")
@@ -101,9 +124,14 @@
         (.numParams model)))
 
 (defn params
-  "Parameters of the model (if any)"
-  [model]
-  (.params model))
+  "Returns a 1 x m vector where the vector is composed of a flattened vector
+  of all of the weights for the various neuralNets(w,hbias NOT VBIAS)
+  and output layer"
+  [& {:keys [model backward-only?]
+      :as opts}]
+  (if (contains? opts :backward-only?)
+    (.params model backward-only?)
+    (.params model)))
 
 (defn param-table
   "The param table"
@@ -115,14 +143,43 @@
         :else
         (.paramTable model)))
 
-(defn score
-  "The score for the model"
-  [model]
-  (.score model))
+(defn score!
+  "only model supplied: Score of the model (relative to the objective function)
+
+   model and dataset supplied: Sets the input and labels and returns a score for
+   the prediction with respect to the true labels
+
+   model, dataset and training? supplied: Calculate the score (loss function)
+   of the prediction with respect to the true labels
+
+   :dataset (ds), a dataset
+   -see: nd4clj.linalg.dataset.data-set
+         dl4clj.datasets.datavec
+
+   :training? (boolean), are we in training mode?
+
+   :return-model? (boolean), if you want to return the scored model instead of the score"
+  [& {:keys [model dataset training? return-model?]
+      :or {return-model? false}
+      :as opts}]
+  (cond (and (contains-many? opts :dataset :training?)
+             (true? return-model?))
+        (doto model (.score dataset training?))
+        (contains-many? opts :dataset :training?)
+        (.score model dataset training?)
+        (and (contains? opts :dataset)
+             (true? return-model?))
+        (doto model (.score dataset))
+        (contains? opts :dataset)
+        (.score model dataset)
+        (true? return-model?)
+        (doto model (.score))
+        :else
+        (.score model)))
 
 (defn set-conf!
   "Setter for the configuration"
-  [model]
+  [& {:keys [model conf]}]
   (doto model
     (.setConf conf)))
 
@@ -133,7 +190,11 @@
     (.setListeners listeners)))
 
 (defn set-param!
-  "Set the parameter with a new ndarray"
+  "Set the parameter with a new ndarray
+
+  :k (str), the key to set
+
+  :v (INDArray), the value to be set"
   [& {:keys [model k v]
       :as opts}]
   (doto model

@@ -2,7 +2,7 @@
 all refered fns support dropout-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/DropoutLayer.html"}
     dl4clj.nn.layers.dropout-layer
-  (:require [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
+  #_(:require [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient
                                                  derivative-activation
                                                  calc-error

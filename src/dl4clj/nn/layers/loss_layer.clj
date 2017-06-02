@@ -3,7 +3,7 @@ Implementation of the class LossLayer in dl4j.
 all refered fns support loss-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/LossLayer.html"}
     dl4clj.nn.layers.loss-layer
-  (:require [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
+  #_(:require [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient
                                                  derivative-activation
                                                  calc-error

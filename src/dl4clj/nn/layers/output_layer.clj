@@ -4,12 +4,12 @@ Implementation of the class OutputLayer in dl4j.
 all refered fns support output-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/OutputLayer.html"}
     dl4clj.nn.layers.output-layer
-  (:require [dl4clj.nn.api.classifier :refer :all]
-            [dl4clj.nn.api.layer :refer :all]
-            [dl4clj.nn.api.layers.i-output-layer :refer :all]
-            [dl4clj.nn.api.model :refer :all]
-            [dl4clj.nn.layers.base-output-layer :refer [classify-input]]
-            [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
+  (:require #_[dl4clj.nn.api.classifier :refer :all]
+            #_[dl4clj.nn.api.layer :refer :all]
+            #_[dl4clj.nn.api.layers.i-output-layer :refer :all]
+            #_[dl4clj.nn.api.model :refer :all]
+            #_[dl4clj.nn.layers.base-output-layer :refer [classify-input]]
+            #_[dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient
                                                  derivative-activation
                                                  calc-error

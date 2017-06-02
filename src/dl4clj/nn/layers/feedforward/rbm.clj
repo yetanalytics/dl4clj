@@ -6,12 +6,12 @@
  see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/feedforward/rbm/RBM.html"}
     dl4clj.nn.layers.feedforward.rbm
   (:import [org.deeplearning4j.nn.layers.feedforward.rbm RBM])
-  (:require [dl4clj.nn.api.layer :refer :all]
-            [dl4clj.nn.api.model :refer :all]
-            [dl4clj.nn.layers.base-pretrain-network :refer [get-corrupted-input
+  (:require #_[dl4clj.nn.api.layer :refer :all]
+            #_[dl4clj.nn.api.model :refer :all]
+            #_[dl4clj.nn.layers.base-pretrain-network :refer [get-corrupted-input
                                                             sample-hidden-given-visible
                                                             sample-visible-given-hidden]]
-            [dl4clj.nn.layers.base-layer :refer [calc-activation-mean
+            #_[dl4clj.nn.layers.base-layer :refer [calc-activation-mean
                                                  calc-gradient
                                                  derivative-activation
                                                  calc-error

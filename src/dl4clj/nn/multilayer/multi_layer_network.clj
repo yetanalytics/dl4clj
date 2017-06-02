@@ -1,11 +1,13 @@
 (ns dl4clj.nn.multilayer.multi-layer-network
-  (:require [dl4clj.utils :refer [contains-many?]])
-  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
+  (:require [dl4clj.utils :refer [contains-many? array-of]]
+            [dl4clj.nn.conf.constants :as enum])
+  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
+           [org.deeplearning4j.nn.api Layer]))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html
 ;; add bangs for fns that modify the mln
 ;; write tests for these methods
 
-(defn multi-layer-network
+(defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
   some params (INDArray)"
   [& {:keys [conf params]}]
@@ -13,176 +15,120 @@
     (MultiLayerNetwork. conf params)
     (MultiLayerNetwork. conf)))
 
-(defn accumulate-score
-  "Sets a rolling tally for the score."
-  [mln accum]
-  (doto mln
-    (.accumulateScore accum)))
-
-(defn activate
-  "Triggers the activation of the last hidden layer ie: not logistic regression"
-  ;; add docs for the various opts
-  [mln & {:keys [training? input
-                 layer-idx training-mode]
-          :as opts}]
-  (cond (contains-many? opts :input :training-mode)
-        (.activate mln input training-mode)
-        (contains-many? opts :input :training?)
-        (.activate mln input training?)
-        (contains-many? opts :input :layer-idx)
-        (.activate mln layer-idx input)
-        (contains? opts :training?)
-        (.activate mln training?)
-        (contains? opts :input)
-        (.activate mln input)
-        (contains? opts :layer-idx)
-        (.activate mln layer-idx)
-        (contains? opts :training-mode)
-        (.activate mln training-mode)
-        :else
-        (.activate mln)))
-
 (defn activate-selected-layers
-  "Calculate activation for few layers at once."
-  [mln & {:keys [from to input]}]
+  "Calculate activation for few layers at once. Suitable for autoencoder partial activation
+
+  returns the activation from the last layer
+
+   :from (int), starting layer idx
+
+   :to (int), ending layer idx
+
+   :input (INDArray), the input to propagate through the layers"
+  [& {:keys [mln from to input]}]
   (.activateSelectedLayers mln from to input))
 
 (defn activate-from-prev-layer
-  "Calculate activation from previous layer including pre processing where necessary"
-  [mln & {:keys [current-layer-idx input training?]}]
+  "Calculate activation from previous layer including pre processing where necessary
+
+  :current-layer-idx (int), the index of the current layer
+   - you will get the activation from the layer directly before this one
+
+  :input (INDArray), the input to propagate through the layers
+
+  :training? (boolean), is this training mode?"
+  [& {:keys [mln current-layer-idx input training?]}]
   (.activationFromPrevLayer mln current-layer-idx input training?))
 
-(defn activation-mean
-  "Calculate the mean representation for the activation for this layer"
-  [mln]
-  (.activationMean mln))
+(defn clear-layer-mask-arrays!
+  "Remove the mask arrays from all layers.
 
-(defn apply-learning-rate-score-decay
-  "Update learningRate using for this model."
-  [mln]
-  (doto mln
-    (.applyLearningRateScoreDecay)))
-
-(defn back-prop-gradient
-  "Calculate the gradient relative to the error in the next layer"
-  [mln epsilon]
-  (.backpropGradient mln epsilon))
-
-(defn get-batch-size
-  "The current inputs batch size"
-  [mln]
-  (.batchSize mln))
-
-(defn calc-gradient
-  "Calculate the gradient"
-  [mln & {:keys [layer-error activation]}]
-  (.calcGradient mln layer-error activation))
-
-(defn calc-l1
-  "Calculate the l1 regularization term
-  0.0 if regularization is not used."
-  [mln backprop-params-only?]
-  (.calcL1 mln backprop-params-only?))
-
-(defn calc-l2
-  "Calculate the l2 regularization term
-  0.0 if regularization is not used."
-  [mln backprop-params-only?]
-  (.calcL2 mln backprop-params-only?))
-
-(defn clear
-  "Clear the inputs."
-  [mln]
-  (doto mln
-    (.clear)))
-
-(defn clear-layer-mask-arrays
-  "Remove the mask arrays from all layers."
-  [mln]
+  returns the multi layer network after the mutation"
+  [& {:keys [mln]}]
   (doto mln
     (.clearLayerMaskArrays)))
 
-(defn clone
-  "Clone the layer" ;; is it cloning the layer or model? test this
-  [mln]
-  (.clone mln))
-
-(defn compute-gradient-and-score
-  "Update the score"
-  [mln]
-  (doto mln
-    (.computeGradientAndScore mln)))
-
 (defn compute-z
   "if you only supply training?: Compute input linear transformation (z) of the output layer
-  if you supply training? and input: Compute activations from input to output of the output layer"
-  [mln & {:keys [training? input]
-          :as opts}]
+  if you supply training? and input: Compute activations from input to output of the output layer
+   - both ways return the list of activations for each layer
+
+  :training? (boolean), training mode?
+
+  :input (INDArray), the input to propagate through the network for calcing activations"
+  [& {:keys [mln training? input]
+      :as opts}]
   (if (contains? opts :input)
     (.computeZ mln input training?)
     (.computeZ mln training?)))
 
-(defn get-configuration
-  "The configuration for the neural network"
-  [mln]
-  (.conf mln))
-
-(defn derivative-activation
-  "Take the derivative of the given input based on the activation"
-  [mln input]
-  (.derivativeActivation mln input))
-
 (defn do-evaluation
-  "Perform evaluation using an arbitrary IEvaluation instance."
-  [mln & {:keys [iterator evaluation]}]
-  (.doEvaluation mln iterator evaluation))
+  "Perform evaluation using an arbitrary IEvaluation instance.
+
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :evaluation (eval), the evaluation object
+   - see: dl4clj.eval.evaluation"
+  [& {:keys [mln iter evaluation]}]
+  (.doEvaluation mln iter evaluation))
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
-  [mln]
+  [& {:keys [mln]}]
   (.epsilon mln))
 
-(defn calc-error
-  "Calculate error with respect to the current layer."
-  [mln error-signal]
-  (.error mln error-signal))
-
 (defn evaluate-classification
-  "if you only supply mln and iterator: Evaluate the network (classification performance)
-  if you supply mln, iterator and labels-list: Evaluate the network on the provided data set.
+  "if you only supply mln and iter: Evaluate the network (classification performance)
+  if you supply mln, iter and labels-list: Evaluate the network on the provided data set.
   if you supply all args: Evaluate the network (for classification) on the provided data set,
-                          with top N accuracy in addition to standard accuracy."
-  [mln iterator & {:keys [labels-list top-n]
-                   :as opts}]
+                          with top N accuracy in addition to standard accuracy.
+
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :labels-list (coll), a collection of strings (the labels)
+
+  :top-n (int), N value for top N accuracy evaluation"
+  [& {:keys [mln iter labels-list top-n]
+      :as opts}]
   (cond (contains-many? opts :labels-list :top-n)
-        (.evaluate mln iterator labels-list top-n)
+        (.evaluate mln iter (into '() labels-list) top-n)
         (contains? opts :labels-list)
-        (.evaluate mln iterator labels-list)
+        (.evaluate mln iter (into '() labels-list))
         :else
-        (.evaluate mln iterator)))
+        (.evaluate mln iter)))
 
 (defn evaluate-regression
-  "Evaluate the network for regression performance"
-  [mln iterator]
-  (.evaluateRegression mln iterator))
+  "Evaluate the network for regression performance
+
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec"
+  [& {:keys [mln iter]}]
+  (.evaluateRegression mln iter))
 
 (defn evaluate-roc
-  "Evaluate the network (must be a binary classifier) on the specified data, using the ROC class"
-  [mln & {:keys [iterator roc-threshold-steps]}]
-  (.evaluateROC mln iterator roc-threshold-steps))
+  "Evaluate the network (must be a binary classifier) on the specified data
+   - see:dl4clj.eval.roc.rocs
+
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :roc-threshold-steps (int), value needed to call the ROC constructor
+   - see: dl4clj.eval.roc.rocs"
+  [& {:keys [mln iter roc-threshold-steps]}]
+  (.evaluateROC mln iter roc-threshold-steps))
 
 (defn evaluate-roc-multi-class
-  "Evaluate the network on the specified data, using the ROCMultiClass class"
-  [mln {:keys [iterator roc-threshold-steps]}]
-  (.evaluateROCMultiClass mln iterator roc-threshold-steps))
+  "Evaluate the network on the specified data.
 
-(defn f1-score
-  "Sets the input and labels and returns a score for the prediction wrt true labels"
-  [mln & {:keys [ds input labels]
-          :as opts}]
-  (if (contains? opts :ds)
-    (.f1Score mln ds)
-    (.f1Score mln input labels)))
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :roc-threshold-steps (int), value needed to call the ROCMultiClass constructor
+   - see: dl4clj.eval.roc.rocs"
+  [& {:keys [mln iter roc-threshold-steps]}]
+  (.evaluateROCMultiClass mln iter roc-threshold-steps))
 
 (defn feed-forward
   "if :features-mask and :labels-mask supplied:
@@ -192,9 +138,17 @@
    such an one-to-many and many-to-one rucerrent neural network (RNN) designs,
    as well as for supporting time series of varying lengths within the same minibatch for RNNs.
 
-  else, just compute the activations from the input to the output layer"
-  [mln & {:keys [train? input features-mask labels-mask]
-          :as opts}]
+  else, just compute the activations from the input to the output layer
+
+  :train? (boolean), is this training mode?
+
+  :input (INDArray), the input to be propagated through the network
+
+  :features-mask (INDArray), mask for the input features
+
+  :labels-mask (INDArray), mask for the labels"
+  [& {:keys [mln train? input features-mask labels-mask]
+      :as opts}]
   (cond (contains-many? opts :input :features-mask :labels-mask)
         (.feedForward mln input features-mask labels-mask)
         (contains-many? opts :input :train?)
@@ -206,16 +160,18 @@
         :else
         (.feedForward mln)))
 
-(defn feed-forward-mask-array
-  "Feed forward the input mask array, setting in in the layer as appropriate."
-  [mln & {:keys [mask-array current-mask-state mini-batch-size]}]
-  (.feedForwardMaskArray mln mask-array current-mask-state mini-batch-size))
-
 (defn feed-forward-to-layer
   "Compute the activations from the input to the specified layer.
+   - if input is not supplied, uses the currently set input for the mln
 
-  Note: the returned output list contains the original input"
-  [mln & {:keys [layer-idx train? input]
+  :layer-idx (int), the index of the layer you want the input propagated through
+
+  :train? (boolean), are we in training mode?
+
+  :input (INDArray), the input to propagate through the specified layer
+
+  Note: the returned output list contains the original input at idx 0"
+  [& {:keys [mln layer-idx train? input]
           :as opts}]
   (cond (contains-many? opts :layer-idx :train? :input)
         (.feedForwardToLayer mln layer-idx input train?)
@@ -226,302 +182,179 @@
         :else
         (assert false "you must supply a mln, a layer-idx and either/both train? and input")))
 
-(defn fine-tune
-  "Run SGD based on the given labels"
-  [mln]
+(defn fine-tune!
+  "Run SGD based on the given labels
+
+  returns the fine tuned model"
+  [& {:keys [mln]}]
   (doto mln
     (.finetune)))
 
-(defn fit
-  "Fit/train the model"
-  [mln & {:keys [ds iterator data labels
-                 features features-mask labels-mask
-                 examples label-idxs]
-          :as opts}]
-  (cond (contains-many? opts :features :labels :features-mask
-                        :labels-mask)
-        (doto mln
-          (.fit features labels features-mask labels-mask))
-        (contains-many? opts :examples :label-idxs)
-        (doto mln
-          (.fit examples label-idxs))
-        (contains-many? opts :data :labels)
-        (doto mln
-          (.fit data labels))
-        (contains? opts :data)
-        (doto mln
-          (.fit data))
-        (contains? opts :iterator)
-        (doto mln
-          (.fit iterator))
-        (contains? opts :ds)
-        (doto mln (.fit ds))
-        :else
-        (doto mln (.fit))))
-
 (defn get-default-config
   "gets the default config for the multi-layer-network"
-  [mln]
+  [& {:keys [mln]}]
   (.getDefaultConfiguration mln))
-
-(defn get-idx
-  "Get the layer index."
-  [mln]
-  (.getIndex mln))
 
 (defn get-input
   "return the input to the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getInput mln))
-
-(defn get-input-mini-batch-size
-  "return the input mini batch size"
-  [mln]
-  (.getInputMiniBatchSize mln))
 
 (defn get-labels
   "return an array of labels"
-  [mln]
+  [& {:keys [mln]}]
   (.getLabels mln))
 
-(defn get-layer-by-idx
-  "return the layer of the mln based on its position within the mln"
-  [mln & {:keys [idx layer-name]
-        :as opts}]
-  (cond (and (contains? opts :idx)
-             (integer? idx))
-        (.getLayer mln idx)
-        (and (contains? opts :layer-name)
-             (string? layer-name))
+(defn get-layer
+  "return the layer of the mln based on its position within the mln
+
+  :layer-idx (int), the index of the layer you want to get from the mln
+
+  :layer-name (str), the name of the layer you want to get from the mln"
+  [& {:keys [mln layer-idx layer-name]
+      :as opts}]
+  (cond (contains? opts :layer-idx)
+        (.getLayer mln layer-idx)
+        (contains? opts :layer-name)
         (.getLayer mln layer-name)
         :else
         (assert false "you must supply a mln and either the layer's name or index")))
 
 (defn get-layer-names
   "return a list of the layer names in the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getLayerNames mln))
 
 (defn get-layers
   "returns an array of the layers within the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getLayers mln))
 
 (defn get-layer-wise-config
   "returns the configuration for the layers in the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getLayerWiseConfigurations mln))
-
-(defn get-listeners
-  "Get the iteration listeners for this layer."
-  [mln]
-  (.getListeners mln))
 
 (defn get-mask
   "return the mask array used in this mln"
-  ;; look into what exactly this does, no doc string in docs
-  [mln]
+  [& {:keys [mln]}]
   (.getMask mln))
-
-(defn get-mask-array
-  "return the mask array used in this mln"
-  ;; look into what exactly this does, no doc string in docs
-  [mln]
-  (.getMaskArray mln))
 
 (defn get-n-layers
   "get the number of layers in the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getnLayers mln))
-
-(defn get-optimizer
-  "returns this models optimizer"
-  [mln]
-  (.getOptimizer mln))
 
 (defn get-output-layer
   "returns the output layer of the mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getOutputLayer mln))
-
-(defn get-param
-  "get the parameter in question, param is the name of the param (string)"
-  [mln param]
-  (.getParam mln param))
 
 (defn get-updater
   "return the updater used in this mln"
-  [mln]
+  [& {:keys [mln]}]
   (.getUpdater mln))
 
-(defn gradient
-  "calculate a gradient"
-  [mln]
-  (.gradient mln))
+(defn init-gradients-view!
+  "initializes the flattened gradients array (used in backprop) and
+  sets the appropriate subset in all layers.
 
-(defn get-gradient-and-score
-  "get the gradient and score"
-  [mln]
-  (.gradientAndScore mln))
-
-(defn init-model
-  "initialize the model"
-  [mln & {:keys [params clone-param-array?]
-          :as opts}]
-  (if (contains-many? opts :params :clone-param-array?)
-    (.init mln params clone-param-array?)
-    (.init mln))
-  mln)
-
-(defn init-gradients-view
-  "initializes the flattened gradients array (used in backprop) and sets the appropriate subset in all layers."
-  [mln]
+  - this gets called behind the scene when using fit!"
+  [& {:keys [mln]}]
   (doto mln
     (.initGradientsView)))
 
-(defn initialize
-  "Sets the input and labels from this dataset"
-  [mln ds]
+(defn initialize!
+  "Sets the input and labels from this dataset
+
+  :ds (dataset), a dataset
+   -see: nd4clj.linalg.dataset.data-set
+         dl4clj.datasets.datavec"
+  [& {:keys [mln ds]}]
   (doto mln
     (.initialize ds)))
 
-(defn initialize-layers
-  "initialize the neuralNets based on the input."
-  [mln input]
+(defn initialize-layers!
+  "initialize the neuralNets based on the input.
+
+  :input (INDArray), the input matrix for training"
+  [& {:keys [mln input]}]
   (doto mln
     (.initializeLayers input)))
 
-(defn init-params
-  "initialize the parameters"
-  [mln]
-  (doto mln
-    (.initParams)))
-
 (defn get-feature-matrix
   "returns the input/feature matrix for the model"
-  [mln]
+  [& {:keys [mln]}]
   (.input mln))
 
 (defn is-init-called?
   "was the model initialized"
-  [mln]
+  [& {:keys [mln]}]
   (.isInitCalled mln))
-
-(defn is-pretrain-layer?
-  "returns true if the layer can be trained in an unsupervised/pretain manner
-   ie. VAE, RBMs"
-  [mln]
-  (.isPretrainLayer mln))
-
-(defn run-one-iteration
-  "runs one interation given the supplied input and mln"
-  [mln input]
-  (doto mln
-    (.iterate input)))
-
-(defn get-label-probabilities
-  "returns the probabilities for each label for each example row wise"
-  [mln examples]
-  (.labelProbabilities mln examples))
-
-(defn n-labels
-  "returns the number of possible labels"
-  [mln]
-  (.numLabels mln))
-
-(defn n-params
-  "returns a 1 x m vector where the vector is composed of a flattened vector
-  of all of the weights for the various neuralNets and output layer"
-  [mln & {:keys [backwards?]
-          :as opts}]
-  (if (contains? opts :backwards?)
-    (.numParams mln backwards?)
-    (.numParams mln)))
 
 (defn output
   "label the probabilities of the input or if masks are supplied,
-  calculate the output of the network with masking arrays"
-  [& {:keys [iterator train? input features-mask labels-mask
-                 training-mode mln]
-          :as opts}]
+  calculate the output of the network with masking arrays
+
+  :iter (ds-iter), a dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :train? (boolean), are we in training mode?
+   - This mainly affect hyper parameters such as drop out
+     where certain things should be applied with activations
+
+  :input (INDArray), the input to label
+
+  :features-mask (INDArray), the mask used for the features
+
+  :labels-mask (INDArray), the mask used for the labels
+
+  :training-mode (keyword), another way to say if its training or testing mode"
+  [& {:keys [iter train? input features-mask labels-mask
+             training-mode mln]
+      :as opts}]
   (cond (contains-many? opts :input :train?
                         :features-mask :labels-mask)
         (.output mln input train? features-mask labels-mask)
         (contains-many? opts :training-mode :input)
-        (.output mln input training-mode)
+        (.output mln input (enum/value-of {:layer-training-mode training-mode}))
         (contains-many? opts :train? :input)
         (.output mln input train?)
-        (contains-many? opts :iterator :train?)
-        (.output mln iterator train?)
+        (contains-many? opts :iter :train?)
+        (.output mln iter train?)
         (contains? opts :input)
         (.output mln input)
-        (contains? mln :iterator)
-        (.output mln iterator)
+        (contains? mln :iter)
+        (.output mln iter)
         :else
         (assert false "you must supply atleast an input or iterator")))
-
-(defn params
-  "Returns a 1 x m vector where the vector is composed of a flattened vector
-  of all of the weights for the various neuralNets(w,hbias NOT VBIAS)
-  and output layer"
-  [mln & {:keys [backward-only?]
-          :as opts}]
-  (if (contains? opts :backward-only?)
-    (.params mln backward-only?)
-    (.params mln)))
-
-(defn param-table
-  "only mln supplied: The param table
-  mln and backward-only? supplied:
-  Table of parameters by key, for backprop For many models (dense layers, etc)
-  - all parameters are backprop parameters"
-  [mln & {:keys [backward-only?]
-          :as opts}]
-  (if (contains? opts :backward-only)
-    (.paramTable mln backward-only?)
-    (.paramTable mln)))
-
-(defn predict
-  "if you supply a dataset, returns the predicted label names
-  if you supply an array of examples, returns the predictions for each example in the array"
-  [mln {:keys [ds data]
-        :as opts}]
-  (cond (contains? opts :ds)
-        (.predict mln ds)
-        (contains? opts :data)
-        (.predict mln data)
-        :else
-        (assert false "you must supply either a dataset or an array of examples.")))
-
-(defn pre-output
-  "returns the raw activations"
-  [mln & {:keys [data training? training-mode]
-          :as opts}]
-  (cond (contains-many? opts :data :training-mode)
-        (.preOutput mln data training-mode)
-        (contains-many? opts :data :training?)
-        (.preOutput mln data training?)
-        (contains? opts :data)
-        (.preOutput mln data)
-        :else
-        (assert false "you need data to generate activations")))
 
 (defn pre-train!
   "Perform layerwise pretraining on all pre-trainable layers in the network (VAEs, RBMs, Autoencoders, etc)
   Note that pretraining will be performed on one layer after the other, resetting the DataSetIterator between iterations.
   For multiple epochs per layer, appropriately wrap the iterator (for example, a MultipleEpochsIterator)
-  or train each layer manually using (pre-train-layer! layer-idx DataSetIterator)"
-  [mln iterator]
-  (.pretrain mln iterator))
+  or train each layer manually using (pre-train-layer! layer-idx DataSetIterator)
+
+  :iter (ds-iter), dataset iterator
+   - see: dl4clj.datasets.datavec"
+  [& {:keys [mln iter]}]
+  (.pretrain mln iter))
 
 (defn pre-train-layer!
   "Perform layerwise unsupervised training on a single pre-trainable layer
   in the network (VAEs, RBMs, Autoencoders, etc) If the specified layer index
-  (0 to n-layers - 1) is not a pretrainable layer, this is a no-op."
-  [mln & {:keys [layer-idx iterator features]
-          :as opts}]
-  (cond (contains-many? opts :layer-idx :iterator)
-        (.pretrainLayer mln layer-idx iterator)
+  (0 to n-layers - 1) is not a pretrainable layer, this is a no-op.
+
+  :layer-idx (int), the index of the layer you want to pretrain
+
+  :iter (ds-iter), dataset iterator
+   - see: dl4clj.datasets.datavec
+
+  :features (INDArray), training data array"
+  [& {:keys [mln layer-idx iter features]
+      :as opts}]
+  (cond (contains-many? opts :layer-idx :iter)
+        (.pretrainLayer mln layer-idx iter)
         (contains-many? opts :layer-idx :features)
         (.pretrainLayer mln layer-idx features)
         :else
@@ -530,251 +363,227 @@
 
 (defn print-config
   "Prints the configuration and returns the mln"
-  [mln]
+  [& {:keys [mln]}]
   (doto mln
     (.printConfiguration)))
 
 (defn reconstruct
-  "reconstructs the input from the output of a given layer"
-  [mln & {:keys [layer-output layer-idx]
-          :as opts}]
-  (if (contains-many? opts :layer-output :layer-idx)
-    (.reconstruct mln layer-output layer-idx)
-    (assert false "you must supply a layer and its output from the mln")))
+  "reconstructs the input from the output of a given layer
+
+  :layer-output (INDArray), the input to transform
+
+  :layer-idx (int), the layer to output for encoding
+
+  returns a reconstructed matrix relative to the size of the last hidden layer
+   - normally a probability distribution summing to one"
+  [& {:keys [mln layer-output layer-idx]
+      :as opts}]
+  (assert (contains-many? opts :layer-output :layer-idx) "you must supply a layer and the input")
+  (.reconstruct mln layer-output layer-idx))
 
 (defn rnn-activate-using-stroed-state
-  "returns the activation of the rnn given its most recent state"
-  [mln & {:keys [input training? store-last-for-tbptt?]
-          :as opts}]
-  (if (contains-many? opts :input :training? :store-last-for-tbptt?)
-    (.rnnActivateUsingStoredState mln input training? store-last-for-tbptt?)
-    (assert false "you must supply a mln, the input to the model, if this is during training
-or evaluation and if we want to store the previous state for truncated backprop")))
+  "returns the activation of the rnn given its most recent state
+   - does not modify the RNN layer state, pure fn
+
+  :input (INDArray), the input fed to the rnn
+
+  :training? (boolean), is this training mode?
+
+  :store-last-for-tbptt? (boolean), set to true if used as part of truncated bptt training
+
+  returns the activations for each layer
+   - the input is idx 0, followed by the activations"
+  [& {:keys [mln input training? store-last-for-tbptt?]
+      :as opts}]
+  (assert (contains-many? opts :input :training? :store-last-for-tbptt?)
+          "you must supply a mln, the input to the model, if this is during training
+or evaluation and if we want to store the previous state for truncated backprop")
+  (.rnnActivateUsingStoredState mln input training? store-last-for-tbptt?))
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
-  [mln]
+  [& {:keys [mln]}]
   (doto mln
     (.rnnClearPreviousState)))
 
 (defn rnn-get-prev-state
-  "get the state of the rnn layer given its index in the mln"
-  [mln layer-idx]
+  "get the state of the rnn layer given its index in the mln
+
+  :layer-idx (int), the index of the rnn within the mln"
+  [& {:keys [mln layer-idx]}]
   (.rnnGetPreviousState mln layer-idx))
 
 (defn rnn-set-prev-state!
-  "Set the state of the RNN layer and return the updated mln"
-  [mln {:keys [layer-idx state]
-        :as opts}]
-  (cond (and (contains-many? opts :layer-idx :state)
-             (map? state))
-        (doto mln
-          (.rnnSetPreviousState layer-idx state))
-        :else
-        (assert false "you must supply a layer-index for the layer in question within the mln and
-a map of the desired state")))
+  "Set the state of the RNN layer and return the updated mln
+
+  :layer-idx (int), the index of the rnn within the mln
+
+  :state (map), {str INDArray}, The state to set the specified layer to
+
+  returns the mln"
+  [& {:keys [mln layer-idx state]
+      :as opts}]
+  (assert (contains-many? opts :layer-idx :state)
+          "you must supply a layer-index for the layer in question within the mln and
+a map of the desired state")
+  (doto mln
+    (.rnnSetPreviousState layer-idx state)))
 
 (defn rnn-time-step
   "If this MultiLayerNetwork contains one or more RNN layers:
-  conduct forward pass (prediction) but using previous stored state for any RNN layers."
-  [mln input]
+  conduct forward pass (prediction) but using previous stored state for any RNN layers.
+   -  The activations for the final step are also stored in the RNN layers for
+      use next time this fn is called.
+
+  :input (INDArray), Input to network. May be for one or multiple time steps.
+   - For single time step: input has shape [miniBatchSize,inputSize] or [miniBatchSize,inputSize,1].
+       - miniBatchSize=1 for single example.
+   - For multiple time steps: [miniBatchSize,inputSize,inputTimeSeriesLength]"
+  [& {:keys [mln input]}]
   (.rnnTimeStep mln input))
 
-(defn score
-  "only mln supplied: Score of the model (relative to the objective function)
-
-  mln and dataset supplied: Sets the input and labels and returns a score for
-   the prediction with respect to the true labels
-
-  mln, dataset and training? supplied: Calculate the score (loss function)
-  of the prediction with respect to the true labels"
-  [mln & {:keys [dataset training? return-model?]
-          :or {return-model? false}
-          :as opts}]
-  (cond (contains-many? opts :dataset :training?)
-        (.score mln dataset training?)
-        (true? return-model?)
-        (doto mln (.score dataset))
-        (contains? opts :dataset)
-        (.score mln dataset)
-        :else
-        (.score mln)))
-
 (defn score-examples
-  "Calculate the score for each example in a DataSet individually."
-  [mln & {:keys [dataset add-regularization-terms? iterator]
-          :as opts}]
+  "Calculate the score for each example in a DataSet individually.
+   - this fn allows for examples to be scored individually (at test time only),
+     which may be useful for example for autoencoder architectures and the like.
+
+  :dataset (datatset),
+   -see: nd4clj.linalg.dataset.data-set
+         dl4clj.datasets.datavec
+
+  :add-regularization-terms? (boolean), if true, add l1/l2 terms to the score
+   otherwise just return the scores
+
+  :iter (ds-iter), dataset iterator
+   - see: dl4clj.datasets.datavec"
+  [& {:keys [mln dataset add-regularization-terms? iter]
+      :as opts}]
   (cond (contains-many? opts :dataset :add-regularization-terms?)
         (.scoreExamples mln dataset add-regularization-terms?)
-        (contains-many? opts :iterator :add-regularization-terms?)
-        (.scoreExamples mln iterator add-regularization-terms?)
+        (contains-many? opts :iter :add-regularization-terms?)
+        (.scoreExamples mln iter add-regularization-terms?)
         :else
         (assert false "you must supply data in the form of a dataset or a dataset iterator.
 you must also supply whether or not you want to add regularization terms (L1, L2, dropout...)")))
 
-(defn set-conf!
-  "Setter for the configuration, returns the mln"
-  [mln nn-conf]
-  (doto mln
-    (.setConf nn-conf)))
-
-(defn set-index!
-  "Set the layer index and return the mln."
-  [mln layer-idx]
-  (doto mln
-    (.setIndex layer-idx)))
-
-(defn set-input!
+(defn set-mln-input!
   "Note that if input isn't nil and the neuralNets are nil,
-  this is a way of initializing the neural network, returns the mln"
-  [mln input]
+  this is a way of initializing the neural network, returns the mln
+
+  :input (INDArray), the input to the mln"
+  [& {:keys [mln input]}]
   (doto mln
     (.setInput input)))
 
-(defn set-input-mini-batch-size!
-  "Set current/last input mini-batch size.
-  Used for score and gradient calculations.
-  returns the mln"
-  [mln size]
-  (doto mln
-    (.setInputMiniBatchSize size)))
-
-(defn set-labels!
+(defn set-labels-mln!
   "sets the labels given an array of labels,
-  returns the mln."
-  [mln labels]
+  returns the mln.
+
+  :labels (INDArray), the labels to be set"
+  [& {:keys [mln labels]}]
   (doto mln
     (.setLabels labels)))
 
-(defn set-layer-mask-arrays!
-  "Set the mask arrays for features and labels.
-  returns the mln"
-  [mln & {:keys [features-mask-array labels-mask-array]
-          :as opts}]
-  (cond (contains-many? opts :features-mask-array :labels-mask-array)
-        (doto mln
-          (.setLayerMaskArrays mln features-mask-array
-                               labels-mask-array))
-        :else
-        (assert false "you need to supply a mask for the features and labels")))
-
 (defn set-layers!
-  "sets the layers of the mln in the order in which they appear in the supplied array.
+  "sets the layers of the mln in the order in which they appear in the supplied coll.
+
+  :layers (coll), a collection of layers to add to the mln
+
   returns the mln"
-  [mln layers]
+  [& {:keys [mln layers]}]
   (doto mln
-    (.setLayers layers)))
+    (.setLayers (array-of :data layers
+                          :java-type Layer))))
 
 (defn set-layer-wise-config!
   "sets the configuration for a mln given a multi-layer configuration.
-  returns the mln"
-  [mln multi-layer-conf]
+  returns the mln
+
+  :mln (multi layer network), the multi layer network
+
+  :multi-layer-conf (multi layer conf), the configuration for the multi layer network
+
+  NOTE: you should not need this fn.  You can set the multi-layer-conf when creating your mln
+   - see: new-multi-layer-network at the top of this ns"
+  [& {:keys [mln multi-layer-conf]}]
   (doto mln
     (.setLayerWiseConfigurations multi-layer-conf)))
 
 (defn set-mask!
-  "set the mask, returns the mln"
-  [mln mask]
+  "set the mask, returns the mln
+
+  :mask (INDArray), the mask to set for the mln"
+  [& {:keys [mln mask]}]
   (doto mln
     (.setMask mask)))
 
-(defn set-mask-array!
-  "set the mask array.
-  returns the mln"
-  [mln mask-array]
-  (doto mln
-    (.setMaskArray mask-array)))
-
-(defn set-param!
-  "Set the parameter with a new ndarray. returns the mln"
-  [mln param]
-  (doto mln
-    (.setParam param)))
-
-(defn set-params!
+(defn set-parameters!
   "set the paramters for this model (mln).
-  returns the mln"
-  [mln params]
-  (doto mln
-    (.setParams params)))
+   - This is used to manipulate the weights and biases across all neuralNets
+     (including the output layer)
 
-(defn set-param-table!
-  "setter for the param table. returns the mln"
-  [mln param-map]
+  :params (INDArray), a parameter vector equal 1,numParameters
+
+  returns the mln"
+  [& {:keys [mln params]}]
   (doto mln
-    (.setParamTable param-map)))
+    (.setParameters params)))
 
 (defn set-score!
-  "sets the score (double), returns the mln"
-  [mln score]
+  "sets the score,
+
+   :score (double), the score to set
+
+  returns the mln"
+  [& {:keys [mln score]}]
   (doto mln
     (.setScore score)))
 
 (defn set-updater!
-  "sets the updater for a given mln. returns the mln"
-  [mln updater]
+  "sets the updater for a given mln.
+
+  :updater (ml-updater), the updater to use
+   - see: dl4clj.nn.updater.multi-layer-updater
+
+  returns the mln"
+  [& {:keys [mln updater]}]
   (doto mln
     (.setUpdater updater)))
 
 (defn summary
-  "String detailing the architecture of the multilayernetwork. (mln)"
-  [mln]
+  "String detailing the architecture of the multi-layer-network. (mln)"
+  [& {:keys [mln]}]
   (.summary mln))
 
-(defn transpose!
-  ;; I think this needs to be in the layer api ns
-  "Return a transposed copy of the weights/bias
-  (this means reverse the number of inputs and outputs on the weights)"
-  [mln]
-  (.transpose mln))
+(defn update-mln!
+  "Assigns the parameters of mln to the ones specified by another mln.
+  This is used in loading from input streams, factory methods, etc
+   - returns mln
 
-(defn layer-type
-  ;; I think this needs to be in the layer api ns
-  "returns the layer type"
-  [layer]
-  (.type layer))
-
-(defn update!
-  "given a gradient: Update layer weights and biases with gradient change
-
-  given a gradient array and a param-type: Perform one update applying the gradient
-
-  given another mln, Assigns the parameters of this model to the ones specified by this network.
-
-  no matter the opts supplied, the mln is returned."
-  [mln & {:keys [gradient gradient-array param-type other-mln]
-          :as opts}]
-  (cond (contains-many? opts :gradient-array :param-type)
-        (doto mln
-          (.update gradient-array param-type))
-        (contains? opts :gradient)
-        (doto mln
-          (.update gradient))
-        (contains? opts :other-mln)
-        (doto mln
-          (.update other-mln))
-        :else
-        (assert false "you must supply either a gradient, a gradient-array and param-type or
-another mln")))
+  you can also use update! in the model interface ns"
+  [& {:keys [mln other-mln]}]
+  (doto mln (.update other-mln)))
 
 (defn update-rnn-state-with-tbptt-state!
   "updates the rnn state to be that of the tbptt state.
   returns the mln."
-  [mln]
+  [& {:keys [mln]}]
   (doto mln
     (.updateRnnStateWithTBPTTState)))
 
-(defn validate-input!
-  "validate the input and returns the mln"
-  [mln]
-  (doto mln
-    (.validateInput)))
-
 (defn z-from-prev-layer
   "Compute input linear transformation (z) from previous layer
-  Applies pre processing transformation where necessary"
-  [mln & {:keys [current-layer-idx input training?]
-          :as opts}]
-  (if (contains-many? opts :current-layer-idx :input :training?)
-    (.zFromPrevLayer mln current-layer-idx input training?)
-    (assert false "you must supply the index of the current layer, an input array and if this is for training or evaluation")))
+  Applies pre processing transformation where necessary
+
+  :current-layer-idx (int), the current layer
+
+  :input (INDArray), the input
+
+  :training? (boolean), are we in training mode?
+
+  returns the activation from the previous layer"
+  [& {:keys [mln current-layer-idx input training?]
+      :as opts}]
+  (assert (contains-many? opts :current-layer-idx :input :training?)
+          "you must supply the index of the current layer, an input array and if this is for training or evaluation")
+  (.zFromPrevLayer mln current-layer-idx input training?))

@@ -6,8 +6,8 @@ Implementation of the class FrozenLayer in dl4j.
 all refered fns support frozen-layer as the first arg
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/FrozenLayer.html"}
     dl4clj.nn.layers.frozen-layer
-  (:require [dl4clj.nn.api.layer :refer :all]
-            [dl4clj.nn.api.model :refer :all]
+  (:require #_[dl4clj.nn.api.layer :refer :all]
+            #_[dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.conf.constants :as enum])
   (:import [org.deeplearning4j.nn.layers FrozenLayer]))
 
