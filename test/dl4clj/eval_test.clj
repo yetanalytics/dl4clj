@@ -29,25 +29,25 @@
 ;; fully train a network, save it and then import it here for testing
 ;; this set up doesn't produce any predictions bc of low training
 (def mln (ml/multi-layer-network
-          (nn/nn-conf-builder
-           :seed 123
-           :optimization-algo :stochastic-gradient-descent
-           :iterations 1
-           :learning-rate 0.006
-           :updater :nesterovs
-           :momentum 0.9
-           :regularization true
-           :l2 1e-4
-           :build? true
-           :layers {0 {:dense-layer {:n-in 784
-                                     :n-out 1000
-                                     :activation-fn :relu
-                                     :weight-init :xavier}}
-                    1 {:output-layer {:loss-fn :negativeloglikelihood
-                                      :n-in 1000
-                                      :n-out 10
-                                      :activation-fn :soft-max
-                                      :weight-init :xavier}}})))
+          :conf (nn/nn-conf-builder
+                 :seed 123
+                 :optimization-algo :stochastic-gradient-descent
+                 :iterations 1
+                 :learning-rate 0.006
+                 :updater :nesterovs
+                 :momentum 0.9
+                 :regularization true
+                 :l2 1e-4
+                 :build? true
+                 :layers {0 {:dense-layer {:n-in 784
+                                           :n-out 1000
+                                           :activation-fn :relu
+                                           :weight-init :xavier}}
+                          1 {:output-layer {:loss-fn :negativeloglikelihood
+                                            :n-in 1000
+                                            :n-out 10
+                                            :activation-fn :soft-max
+                                            :weight-init :xavier}}})))
 
 (def mnist-train (new-mnist-data-set-iterator :batch-size 25 :train? true
                                               :seed 123 :n-examples 1024

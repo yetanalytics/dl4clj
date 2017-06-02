@@ -8,10 +8,10 @@
 (defn multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
   some params (INDArray)"
-  ([conf]
-   (MultiLayerNetwork. conf))
-  ([conf params]
-   (MultiLayerNetwork. conf params)))
+  [& {:keys [conf params]}]
+  (if params
+    (MultiLayerNetwork. conf params)
+    (MultiLayerNetwork. conf)))
 
 (defn accumulate-score
   "Sets a rolling tally for the score."

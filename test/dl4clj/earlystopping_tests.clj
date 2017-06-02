@@ -25,6 +25,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def mln (ml/multi-layer-network
+          :conf
           (nn/nn-conf-builder
            :seed 123
            :optimization-algo :stochastic-gradient-descent

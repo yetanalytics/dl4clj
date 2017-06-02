@@ -8,6 +8,7 @@
             [dl4clj.nn.conf.step-fns :refer :all]
             [dl4clj.nn.conf.variational.dist-builders :refer :all]
             [dl4clj.nn.layers.layer-creation :refer :all]
+            [dl4clj.nn.gradient.default-gradient :refer :all]
             [nd4clj.linalg.factory.nd4j :refer [zeros]]
             [dl4clj.nn.api.model :refer [set-param-table!]]
             [clojure.test :refer :all]
@@ -160,6 +161,32 @@
            (type (new-negative-default-step-fn))))
     (is (= org.deeplearning4j.nn.conf.stepfunctions.NegativeGradientStepFunction
            (type (new-negative-gradient-step-fn))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; creation of default gradients
+;; dl4clj.nn.gradient.default-gradient
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest default-gradient-test
+  (testing "the creation and manipulation of gradients"
+    (let [grad-with-var (set-gradient-for! :grad (new-default-gradient)
+                                           :variable "foo"
+                                           :new-gradient (zeros [2 2]))]
+     (is (= org.deeplearning4j.nn.gradient.DefaultGradient
+           (type (new-default-gradient))))
+    (is (= org.deeplearning4j.nn.gradient.DefaultGradient
+           (type grad-with-var)))
+    ;; I don't think this test is reliable bc it assumes cpu
+    (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+           (type (gradient :grad grad-with-var))))
+    (is (= java.util.LinkedHashMap
+           (type (gradient-for-variable :grad grad-with-var))))
+    ;; gradient order was not explictly set
+    (is (= nil
+           (type (flattening-order-for-variables :grad grad-with-var
+                                                 :variable "foo"))))
+    (is (= java.util.LinkedHashMap
+           (type (gradient-for-variable :grad grad-with-var)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder

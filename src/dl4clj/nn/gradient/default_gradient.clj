@@ -12,34 +12,34 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
 
 (defn clear!
   "Clear residual parameters (useful for returning a gradient and then clearing old objects)"
-  [this]
-  (doto this (.clear)))
+  [& {:keys [grad]}]
+  (doto grad (.clear)))
 
 (defn flattening-order-for-variables
   "Return the gradient flattening order for the specified variable, or null if it is not explicitly set"
-  [& {:keys [this variable]}]
-  (.flatteningOrderForVariable this variable))
+  [& {:keys [grad variable]}]
+  (.flatteningOrderForVariable grad variable))
 
 (defn get-gradient-for
   "The gradient for the given variable"
-  [& {:keys [this variable]}]
-  (.getGradientFor this variable))
+  [& {:keys [grad variable]}]
+  (.getGradientFor grad variable))
 
 (defn gradient
   "The full gradient as one flat vector"
-  [& {:keys [this order]}]
+  [& {:keys [grad order]}]
   (if order
-    (.gradient this order)
-    (.gradient this)))
+    (.gradient grad order)
+    (.gradient grad)))
 
 (defn gradient-for-variable
   "Gradient look up table"
-  [this]
-  (.gradientForVariable this))
+  [& {:keys [grad]}]
+  (.gradientForVariable grad))
 
 (defn set-gradient-for!
   "Update gradient for the given variable; also (optionally) specify the order in which the array should be flattened to a row vector"
-  [& {:keys [this variable new-gradient flattening-order]}]
+  [& {:keys [grad variable new-gradient flattening-order]}]
   (if flattening-order
-    (doto this (.setGradientFor variable new-gradient flattening-order))
-    (doto this (.setGradientFor variable new-gradient))))
+    (doto grad (.setGradientFor variable new-gradient flattening-order))
+    (doto grad (.setGradientFor variable new-gradient))))
