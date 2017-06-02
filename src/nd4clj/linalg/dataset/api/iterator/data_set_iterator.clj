@@ -43,7 +43,7 @@
 (defn reset
   "Resets the iterator back to the beginning"
   [^DataSetIterator this]
-  (.reset this))
+  (doto this (.reset)))
 
 (defn set-pre-processor
   "Set a pre processor"

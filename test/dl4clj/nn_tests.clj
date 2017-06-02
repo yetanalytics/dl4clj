@@ -1,7 +1,9 @@
 (ns dl4clj.nn-tests
+  (:refer-clojure :exclude [get])
   (:require [dl4clj.nn.conf.builders.builders :refer :all]
             [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
+            [dl4clj.nn.multilayer.multi-layer-network :refer :all]
             [dl4clj.nn.conf.input-pre-processor :refer :all]
             [dl4clj.nn.conf.constants :refer :all]
             [dl4clj.nn.conf.distribution.distribution :refer :all]
@@ -10,7 +12,13 @@
             [dl4clj.nn.layers.layer-creation :refer :all]
             [dl4clj.nn.gradient.default-gradient :refer :all]
             [nd4clj.linalg.factory.nd4j :refer [zeros]]
-            [dl4clj.nn.api.model :refer [set-param-table!]]
+            [dl4clj.nn.api.model :refer [set-param-table! init!]]
+            [dl4clj.datasets.datavec :refer [mnist-ds]]
+            [nd4clj.linalg.dataset.api.data-set :refer [get get-feature-matrix]]
+            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
+            [dl4clj.eval.evaluation :refer [new-classification-evaler get-stats]]
+            [dl4clj.utils :refer [array-of]]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset]]
             [clojure.test :refer :all]
             ))
 
@@ -971,6 +979,136 @@
                                            1 (new-unit-variance-processor)}
                     :input-type {:feed-forward {:size 100}}
                     :pretrain? false)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi-layer-network test
+;; dl4clj.nn.multilayer.multi-layer-network
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest multi-layer-network-creation-test
+  (testing "the creation of multi layer networks from multi-layer-confs and their unique methods"
+    (let [l-builder (nn-conf-builder :seed 123
+                                     :optimization-algo :stochastic-gradient-descent
+                                     :iterations 1
+                                     :learning-rate 0.006
+                                     :updater :nesterovs
+                                     :momentum 0.9
+                                     :regularization? true
+                                     :l2 1e-4
+                                     :build? false
+                                     :gradient-normalization :renormalize-l2-per-layer
+                                     :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                                 :n-in 784
+                                                 :n-out 1000
+                                                 :layer-name "first layer"
+                                                 :activation-fn :relu
+                                                 :weight-init :xavier)
+                                              1 {:output-layer {:n-in 1000
+                                                                :n-out 10
+                                                                :layer-name "second layer"
+                                                                :activation-fn :soft-max
+                                                                :weight-init :xavier}}})
+          mln-conf (multi-layer-config-builder :list-builder l-builder
+                                               :backprop? true
+                                               :pretrain? false
+                                               :build? true)
+          mln (new-multi-layer-network :conf mln-conf)
+          init-mln (initialize! :mln mln :ds mnist-ds)
+          mnist-iter (new-mnist-data-set-iterator :batch-size 128 :train? true :seed 123)
+          input (get-feature-matrix (get mnist-ds 0))
+          eval (new-classification-evaler :n-columns 10)
+          init-no-ds (init! :model mln)
+          evaled (do-evaluation :mln init-no-ds :iter mnist-iter :evaluation eval)]
+      ;;other-input (get-mln-input :mln init-mln)
+      ;;^ this currently crashes all of emacs
+      ;; need a fitted mln for (is (= "" (type (get-epsilon :mln ...))))
+      ;; might need a fitted mln for this too (fine-tune! :mln init-no-ds)
+      ;; was getting an unexpected error: Mis matched lengths: [600000] != [10]
+      ;; need to init a mln with a recurrent layer to test
+      ;; rnn-... fns
+      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork (type mln)))
+      ;; these tests will have to be updated to include other NDArray types so wont break with gpus
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (activate-selected-layers
+                    :from 0 :to 1 :mln mln :input input))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (activate-from-prev-layer
+                    :current-layer-idx 0 :mln mln :input input :training? true))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (activate-from-prev-layer
+                    :current-layer-idx 1 :mln mln :training? true
+                    ;; input to second layer is output of first
+                    :input (activate-from-prev-layer
+                            :current-layer-idx 0 :mln mln :input input :training? true)))))
+      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
+             (type (clear-layer-mask-arrays! :mln mln))))
+      (is (= java.util.ArrayList
+             (type (compute-z :mln init-mln :training? true :input input))))
+      (is (= java.util.ArrayList
+             (type (compute-z :mln init-mln :training? true))))
+      (is (= java.lang.String (type (get-stats :evaler (:evaler evaled)))))
+      (is (= org.deeplearning4j.eval.Evaluation
+             (type (evaluate-classification :mln init-no-ds :iter mnist-iter))))
+      (is (= org.deeplearning4j.eval.Evaluation
+             (type
+              (evaluate-classification :mln init-no-ds :iter mnist-iter
+                                       :labels-list ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9"]))))
+      (is (= org.deeplearning4j.eval.RegressionEvaluation
+             (type (evaluate-regression :mln init-no-ds :iter mnist-iter))))
+      (is (= java.util.ArrayList
+             (type (feed-forward :mln init-mln :input input))))
+      (is (= java.util.ArrayList
+             (type (feed-forward :mln init-mln))))
+      (is (= java.util.ArrayList (type (feed-forward-to-layer :mln init-mln :layer-idx 0 :train? true))))
+      (is (= java.util.ArrayList (type (feed-forward-to-layer :mln init-mln :layer-idx 0 :input input))))
+      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration (type (get-default-config :mln init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-input :mln init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-labels :mln init-mln))))
+      (is (= org.deeplearning4j.nn.layers.feedforward.dense.DenseLayer
+             (type (get-layer :mln init-mln :layer-idx 0))))
+      (is (= ["first layer" "second layer"] (get-layer-names :mln mln)))
+      (is (= (type (array-of :data [] :java-type org.deeplearning4j.nn.api.Layer))
+             (type (get-layers :mln init-mln))))
+      (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
+             (type (get-layer-wise-config :mln init-mln))))
+      ;; we never set a mask
+      (is (= nil (get-mask :mln init-mln)))
+      (is (= 2 (get-n-layers :mln init-mln)))
+      (is (= org.deeplearning4j.nn.layers.OutputLayer (type (get-output-layer :mln init-mln))))
+      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (get-updater :mln init-mln))))
+      (is (= (type mln) (type (initialize-layers! :mln mln :input input))))
+      (is (true? (is-init-called? :mln mln)))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (output :mln init-mln :input input))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (output :mln init-no-ds :iter (reset mnist-iter)))))
+      ;; not sure where this actually prints to
+      (is (= (type mln) (type (print-config :mln mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (reconstruct :mln mln
+                                :layer-output (first (feed-forward-to-layer
+                                                      :layer-idx 0 :mln mln :input input))
+                                :layer-idx 1))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (score-examples :mln init-no-ds :iter (reset mnist-iter)
+                                   :add-regularization-terms? false))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (score-examples :mln init-mln :dataset mnist-ds
+                                   :add-regularization-terms? false))))
+      (is (= java.lang.String (type (summary :mln init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (z-from-prev-layer :mln init-mln :input input
+                                   :current-layer-idx 0 :training? true)))))))
+
+
+
+
+
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fine tuning/transfer learning

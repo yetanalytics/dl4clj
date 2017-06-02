@@ -69,9 +69,12 @@
    - see: dl4clj.datasets.datavec
 
   :evaluation (eval), the evaluation object
-   - see: dl4clj.eval.evaluation"
+   - see: dl4clj.eval.evaluation
+
+  returns a map containing the multi layer network and the evaler"
   [& {:keys [mln iter evaluation]}]
-  (.doEvaluation mln iter evaluation))
+  (.doEvaluation mln iter evaluation)
+  {:mln mln :evaler evaluation})
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
@@ -87,15 +90,15 @@
   :iter (ds-iter), a dataset iterator
    - see: dl4clj.datasets.datavec
 
-  :labels-list (coll), a collection of strings (the labels)
+  :labels (coll), a collection of strings (the labels)
 
   :top-n (int), N value for top N accuracy evaluation"
-  [& {:keys [mln iter labels-list top-n]
+  [& {:keys [mln iter labels top-n]
       :as opts}]
   (cond (contains-many? opts :labels-list :top-n)
-        (.evaluate mln iter (into '() labels-list) top-n)
+        (.evaluate mln iter (into '() labels) top-n)
         (contains? opts :labels-list)
-        (.evaluate mln iter (into '() labels-list))
+        (.evaluate mln iter (into '() labels))
         :else
         (.evaluate mln iter)))
 
@@ -282,7 +285,7 @@
   (doto mln
     (.initializeLayers input)))
 
-(defn get-feature-matrix
+(defn get-mln-input
   "returns the input/feature matrix for the model"
   [& {:keys [mln]}]
   (.input mln))
@@ -324,7 +327,7 @@
         (.output mln iter train?)
         (contains? opts :input)
         (.output mln input)
-        (contains? mln :iter)
+        (contains? opts :iter)
         (.output mln iter)
         :else
         (assert false "you must supply atleast an input or iterator")))
@@ -362,7 +365,9 @@
  iterator or an array of features to pretrain on")))
 
 (defn print-config
-  "Prints the configuration and returns the mln"
+  "Prints the configuration and returns the mln
+
+  doesn't currently print to the repl"
   [& {:keys [mln]}]
   (doto mln
     (.printConfiguration)))
