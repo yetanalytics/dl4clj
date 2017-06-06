@@ -11,9 +11,8 @@
             [dl4clj.optimize.api.convex-optimizer :refer :all]
             [dl4clj.utils :refer [array-of]]
             [dl4clj.optimize.termination.terminations :refer :all]
-            [dl4clj.nn.layers.recurrent.graves-lstm :refer [new-graves-lstm-layer]]
+            [dl4clj.nn.layers.layer-creation :refer [new-layer]]
             [nd4clj.linalg.factory.nd4j :refer :all]
-            [dl4clj.nn.layers.variational-autoencoder :refer [new-variational-autoencoder]]
             [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
             [dl4clj.nn.gradient.default-gradient :refer [new-default-gradient]]
             [dl4clj.optimize.api.line-optimizer :refer :all]
@@ -72,9 +71,9 @@
 (def multiple-listeners [(new-score-iteration-listener :print-every-n 2)
                          (new-collection-scores-iteration-listener :frequency 2)])
 
-(def model (new-graves-lstm-layer :conf nn-conf))
+(def model (new-layer :nn-conf nn-conf))
 
-(def unsupervised-model (new-variational-autoencoder :conf nn-conf-unsupervised))
+(def unsupervised-model (new-layer :nn-conf nn-conf-unsupervised))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of generic solvers

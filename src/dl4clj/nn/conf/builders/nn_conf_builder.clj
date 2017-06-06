@@ -25,6 +25,9 @@
 
   Params for the neural network are:
 
+  :nn-builder (nn-conf-builder), a preexisting nn-conf-builder.  If not supplied,
+   a fresh builder will be used
+
   :iterations (int) Number of optimization iterations
 
   :lr-policy-decay-rate (double) Sets the decay rate for the learning rate decay policy.
@@ -152,75 +155,75 @@
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 l1-bias l2-bias layer layers
              learning-rate learning-rate-policy learning-rate-schedule
-             momentum momentum-after rho rms-decay updater weight-init
+             momentum momentum-after rho rms-decay updater weight-init nn-builder
              ;; nn conf args
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate
              regularization? seed step-fn convolution-mode build?]
-      :or {build? false}
+      :or {build? false
+           nn-builder (NeuralNetConfiguration$Builder.)}
       :as opts}]
-  (let [b (NeuralNetConfiguration$Builder.)]
-    (cond-> b
-      (contains? opts :global-activation-fn) (.activation (constants/value-of
-                                                           {:activation-fn
-                                                            global-activation-fn}))
-      (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
-      (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
-      (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
-                                                            {:convolution-mode
-                                                             convolution-mode}))
-      (contains? opts :bias-init) (.biasInit bias-init)
-      (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
-      (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
-                                        dist))
-      (contains? opts :drop-out) (.dropOut drop-out)
-      (contains? opts :epsilon) (.epsilon epsilon)
-      (contains? opts :gradient-normalization) (.gradientNormalization
-                                                (constants/value-of
-                                                 {:gradient-normalization
-                                                  gradient-normalization}))
-      (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
-                                                          gradient-normalization-threshold)
-      (contains? opts :iterations) (.iterations iterations)
-      (contains? opts :l1) (.l1 l1)
-      (contains? opts :l1-bias) (.l1Bias l1-bias)
-      (contains? opts :l2) (.l2 l2)
-      (contains? opts :l2-bias) (.l2Bias l2-bias)
-      (contains? opts :learning-rate) (.learningRate learning-rate)
-      (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+  (cond-> nn-builder
+    (contains? opts :global-activation-fn) (.activation (constants/value-of
+                                                         {:activation-fn
+                                                          global-activation-fn}))
+    (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
+    (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+    (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
+                                                          {:convolution-mode
+                                                           convolution-mode}))
+    (contains? opts :bias-init) (.biasInit bias-init)
+    (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
+    (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
+                                      dist))
+    (contains? opts :drop-out) (.dropOut drop-out)
+    (contains? opts :epsilon) (.epsilon epsilon)
+    (contains? opts :gradient-normalization) (.gradientNormalization
                                               (constants/value-of
-                                               {:learning-rate-policy
-                                                learning-rate-policy}))
-      (contains? opts :learning-rate-schedule) (.learningRateSchedule
-                                                learning-rate-schedule)
-      (contains? opts :lr-score-based-decay-rate) (.learningRateScoreBasedDecayRate
-                                                   lr-score-based-decay-rate)
-      (contains? opts :lr-policy-decay-rate) (.lrPolicyDecayRate lr-policy-decay-rate)
-      (contains? opts :lr-policy-power) (.lrPolicyPower lr-policy-power)
-      (contains? opts :lr-policy-steps) (.lrPolicySteps lr-policy-steps)
-      (contains? opts :max-num-line-search-iterations) (.maxNumLineSearchIterations
-                                                        max-num-line-search-iterations)
-      (contains? opts :mini-batch?) (.miniBatch mini-batch?)
-      (contains? opts :minimize?) (.minimize minimize?)
-      (contains? opts :momentum) (.momentum momentum)
-      (contains? opts :momentum-after) (.momentumAfter momentum-after)
-      (contains? opts :optimization-algo) (.optimizationAlgo
-                                           (constants/value-of
-                                            {:optimization-algorithm
-                                             optimization-algo}))
-      (contains? opts :regularization?) (.regularization regularization?)
-      (contains? opts :rho) (.rho rho)
-      (contains? opts :rms-decay) (.rmsDecay rms-decay)
-      (contains? opts :seed) (.seed seed)
-      (contains? opts :step-fn) (.stepFunction (if (keyword? step-fn)
-                                                 (step-functions/step-fn step-fn)
-                                                 step-fn))
-      (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
-      (contains? opts :use-drop-connect?) (.useDropConnect use-drop-connect?)
-      (contains? opts :weight-init) (.weightInit (constants/value-of
-                                                  {:weight-init weight-init}))
-      (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
-      (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
-      (contains? opts :layers) (multi-layer/list-builder layers)
-      (true? build?) (.build))))
+                                               {:gradient-normalization
+                                                gradient-normalization}))
+    (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
+                                                        gradient-normalization-threshold)
+    (contains? opts :iterations) (.iterations iterations)
+    (contains? opts :l1) (.l1 l1)
+    (contains? opts :l1-bias) (.l1Bias l1-bias)
+    (contains? opts :l2) (.l2 l2)
+    (contains? opts :l2-bias) (.l2Bias l2-bias)
+    (contains? opts :learning-rate) (.learningRate learning-rate)
+    (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+                                            (constants/value-of
+                                             {:learning-rate-policy
+                                              learning-rate-policy}))
+    (contains? opts :learning-rate-schedule) (.learningRateSchedule
+                                              learning-rate-schedule)
+    (contains? opts :lr-score-based-decay-rate) (.learningRateScoreBasedDecayRate
+                                                 lr-score-based-decay-rate)
+    (contains? opts :lr-policy-decay-rate) (.lrPolicyDecayRate lr-policy-decay-rate)
+    (contains? opts :lr-policy-power) (.lrPolicyPower lr-policy-power)
+    (contains? opts :lr-policy-steps) (.lrPolicySteps lr-policy-steps)
+    (contains? opts :max-num-line-search-iterations) (.maxNumLineSearchIterations
+                                                      max-num-line-search-iterations)
+    (contains? opts :mini-batch?) (.miniBatch mini-batch?)
+    (contains? opts :minimize?) (.minimize minimize?)
+    (contains? opts :momentum) (.momentum momentum)
+    (contains? opts :momentum-after) (.momentumAfter momentum-after)
+    (contains? opts :optimization-algo) (.optimizationAlgo
+                                         (constants/value-of
+                                          {:optimization-algorithm
+                                           optimization-algo}))
+    (contains? opts :regularization?) (.regularization regularization?)
+    (contains? opts :rho) (.rho rho)
+    (contains? opts :rms-decay) (.rmsDecay rms-decay)
+    (contains? opts :seed) (.seed seed)
+    (contains? opts :step-fn) (.stepFunction (if (keyword? step-fn)
+                                               (step-functions/step-fn step-fn)
+                                               step-fn))
+    (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
+    (contains? opts :use-drop-connect?) (.useDropConnect use-drop-connect?)
+    (contains? opts :weight-init) (.weightInit (constants/value-of
+                                                {:weight-init weight-init}))
+    (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
+    (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
+    (contains? opts :layers) (multi-layer/list-builder layers)
+    (true? build?) (.build)))

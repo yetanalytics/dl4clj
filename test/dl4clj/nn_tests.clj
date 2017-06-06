@@ -12,7 +12,9 @@
             [dl4clj.nn.layers.layer-creation :refer :all]
             [dl4clj.nn.gradient.default-gradient :refer :all]
             [dl4clj.nn.params.param-initializers :refer :all]
-            [dl4clj.nn.weights.weight-init-util :refer :all]
+            [dl4clj.nn.transfer-learning.fine-tune-conf :refer :all]
+            [dl4clj.nn.transfer-learning.helper :refer :all]
+            [dl4clj.nn.transfer-learning.transfer-learning :refer :all]
             [nd4clj.linalg.factory.nd4j :refer [zeros]]
             [dl4clj.nn.api.model :refer [set-param-table! init!]]
             [dl4clj.datasets.datavec :refer [mnist-ds]]
@@ -222,19 +224,6 @@
            (type (new-pre-train-initializer))))
     (is (= org.deeplearning4j.nn.params.VariationalAutoencoderParamInitializer
            (type (new-vae-initializer))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; weight init util
-;; dl4clj.nn.weights.weight-init-util
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest weight-init-util-test
-  (testing "the creation of weight matrices"
-    (is (= "" (init-weights :fan-in 0.2 :fan-out 0.4 :shape [2 2]
-                            :weight-init :xavier :distribution (new-normal-distribution :mean 0 :std 1)
-                            :param-view (zeros [2 2]))))
-    (is (= "" (init-weights :min-val 0.2 :max-val 0.4 :shape [2 2])))
-    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
@@ -1140,16 +1129,6 @@
              (type (z-from-prev-layer :mln init-mln :input input
                                    :current-layer-idx 0 :training? true)))))))
 
-
-
-
-
-
-
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fine tuning/transfer learning
 ;; dl4clj.nn.transfer-learning.fine-tune-conf
@@ -1157,11 +1136,57 @@
 ;; dl4clj.nn.transfer-learning.transfer-learning
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(deftest transfer-learning-tests
+  (testing "the transfer learning fns"
+    (let [nn-conf (nn-conf-builder :global-activation-fn :relu
+                                   :step-fn :negative-gradient-step-fn
+                                   :updater :none
+                                   :use-drop-connect true
+                                   :drop-out 0.2
+                                   :weight-init :xavier-uniform
+                                   :gradient-normalization :renormalize-l2-per-layer
+                                   :build? true
+                                   :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                           :n-in 10
+                                           :n-out 100
+                                           :layer-name "some layer"
+                                           :activation-fn :tanh
+                                           :gradient-normalization :none))
+          fine-tune-conf (new-fine-tune-conf :activation-fn :relu
+                                             :n-iterations 2
+                                             :regularization? true
+                                             :seed 123)]
+     (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration
+           (type fine-tune-conf)))
+    (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration$Builder
+           (type (new-fine-tune-conf :activation-fn :relu
+                                     :n-iterations 2
+                                     :regularization? true
+                                     :seed 123
+                                     :build? false))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+           (type (applied-to-nn-conf! :fine-tune-conf fine-tune-conf
+                                      :nn-conf nn-conf))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
+           (type (nn-conf-from-fine-tune-conf :fine-tune-conf fine-tune-conf))))
+    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+           (type (nn-conf-from-fine-tune-conf :fine-tune-conf fine-tune-conf
+                                              :build? true))))
+
+    )
+
+
+    ))
+
+
+
+
+
+
 ;; dl4clj.nn.updater.layer-updater
 ;; dl4clj.nn.updater.multi-layer-updater
 ;; dl4clj.nn.updater.updater-creator
 
-;; dl4clj.nn.weights.weight-init-util
 
 
 (comment

@@ -7,6 +7,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
             FineTuneConfiguration])
   (:require [dl4clj.constants :as enum]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; make the fine tuning conf
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn new-fine-tune-conf
   "creates a new fine tune configuration
 
@@ -20,7 +24,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
 
   :build? (boolean), do you want to build the conf or not?
    - defaults to true"
-  [{:keys [activation-fn n-iterations regularization? seed build?]
+  [& {:keys [activation-fn n-iterations regularization? seed build?]
     :or {build? true}
     :as opts}]
   (let [b (FineTuneConfiguration$Builder.)]
@@ -36,6 +40,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
       (true? build?)
       .build)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; apply the fine tune conf
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn applied-to-nn-conf!
   "applies a fine tune configuration to a supplied neural network configuration.
 
@@ -43,12 +52,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
   [& {:keys [fine-tune-conf nn-conf]}]
   (.appliedNeuralNetConfiguration fine-tune-conf nn-conf))
 
-(defn nn-conf-builder-from-fine-tune-conf
+(defn nn-conf-from-fine-tune-conf
   "creates a neural network configuration builder from a fine tune configuration.
 
-  the resulting nn-conf has the fine-tune-confs opts applied."
-  [fine-tune-conf]
-  (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
+  the resulting nn-conf has the fine-tune-confs opts applied.
+
+  :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
+  [& {:keys [fine-tune-conf build?]
+      :or {build? false}}]
+  (if (true? build?)
+    (.build (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
+    (.appliedNeuralNetConfigurationBuilder fine-tune-conf)))
 
 (defn apply-to-multi-layer-conf!
   "applies the fine-tune-conf to a multi-layer-conf and returns the mln-conf"
