@@ -90,26 +90,26 @@
   (.isPretrainLayer layer))
 
 (defn pre-output
-  "returns an array of Raw activations given the features and layer
+  "returns the raw activations for the supplied layer
 
-  -required args:
+  :input (INDArray), the input to the layer
 
-  layer: the built layer from any-layer-builder
-  features: an INDArray of input features (the x values)
+  :training? (boolean), are we in training or testing mode?
 
-  -optional args:
+  :training-mode (keyword), are we in training or testing mode?
+   one of :training or :testing
 
-  training? (boolean) are we training a layer or testing it?
-  training-mode (keyword), one of :test or :train"
-  [& {:keys [layer features training? training-mode]
+  multiple layers implement this fn"
+  [& {:keys [layer input training? training-mode]
       :as opts}]
-  (assert (contains-many? opts :layer :features) "you must supply a layer and an INDArray of input features")
-  (cond (contains? opts :training?)
-        (.preOutput layer features training?)
-        (contains? opts :training-mode)
-        (.preOutput layer features (enum/value-of {:layer-training-mode training-mode}))
-        :else
-        (.preOutput layer features)))
+  (cond (contains-many? opts :input :training?)
+        (.preOutput layer input training?)
+        (contains-many? opts :input :training-mode)
+        (.preOutput layer input (enum/value-of {:training-mode training-mode}))
+        (contains? opts :training?)
+        (.preOutput layer training?)
+        (contains? opts :input)
+        (.preOutput opts input)))
 
 (defn set-index!
   "Set the layer index and returns the layer.
