@@ -12,6 +12,7 @@
             [dl4clj.nn.layers.layer-creation :refer :all]
             [dl4clj.nn.gradient.default-gradient :refer :all]
             [dl4clj.nn.params.param-initializers :refer :all]
+            [dl4clj.nn.weights.weight-init-util :refer :all]
             [nd4clj.linalg.factory.nd4j :refer [zeros]]
             [dl4clj.nn.api.model :refer [set-param-table! init!]]
             [dl4clj.datasets.datavec :refer [mnist-ds]]
@@ -84,7 +85,6 @@
            (type (value-of {:layer-type :feed-forward}))))
     (is (= org.deeplearning4j.nn.api.Layer$TrainingMode
            (type (value-of {:layer-training-mode :train}))))
-
     (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeRecurrent
            (type (input-types {:recurrent {:size 10}}))))
     (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeFeedForward
@@ -222,6 +222,19 @@
            (type (new-pre-train-initializer))))
     (is (= org.deeplearning4j.nn.params.VariationalAutoencoderParamInitializer
            (type (new-vae-initializer))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; weight init util
+;; dl4clj.nn.weights.weight-init-util
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest weight-init-util-test
+  (testing "the creation of weight matrices"
+    (is (= "" (init-weights :fan-in 0.2 :fan-out 0.4 :shape [2 2]
+                            :weight-init :xavier :distribution (new-normal-distribution :mean 0 :std 1)
+                            :param-view (zeros [2 2]))))
+    (is (= "" (init-weights :min-val 0.2 :max-val 0.4 :shape [2 2])))
+    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
@@ -1143,10 +1156,6 @@
 ;; dl4clj.nn.transfer-learning.helper
 ;; dl4clj.nn.transfer-learning.transfer-learning
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;; dl4clj.nn.params.param-initializers
-;; make sure you can call the constructors...
 
 ;; dl4clj.nn.updater.layer-updater
 ;; dl4clj.nn.updater.multi-layer-updater

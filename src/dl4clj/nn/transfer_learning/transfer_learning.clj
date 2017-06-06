@@ -110,7 +110,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - The specified layer and the layers preceding it will be frozen with parameters staying constant
 
   :input-pre-processor (map) {:layer-idx (int) :pre-processor (pre-processor)}
-   - see: dl4clj.nn.f.input-pre-processor
+   - see: dl4clj.nn.conf.input-pre-processor
 
   :build? (boolean), wether or not to build the mutation, defaults to true"
   [{:keys [mln layer fine-tune-conf
