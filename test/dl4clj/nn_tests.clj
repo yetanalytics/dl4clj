@@ -11,6 +11,7 @@
             [dl4clj.nn.conf.variational.dist-builders :refer :all]
             [dl4clj.nn.layers.layer-creation :refer :all]
             [dl4clj.nn.gradient.default-gradient :refer :all]
+            [dl4clj.nn.params.param-initializers :refer :all]
             [nd4clj.linalg.factory.nd4j :refer [zeros]]
             [dl4clj.nn.api.model :refer [set-param-table! init!]]
             [dl4clj.datasets.datavec :refer [mnist-ds]]
@@ -195,6 +196,32 @@
                                                  :variable "foo"))))
     (is (= java.util.LinkedHashMap
            (type (gradient-for-variable :grad grad-with-var)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; param initializers
+;; dl4clj.nn.params.param-initializers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest param-initializers-test
+  (testing "the creation of param initializers"
+    (is (= org.deeplearning4j.nn.params.BatchNormalizationParamInitializer
+           (type (new-batch-norm-initializer))))
+    (is (= org.deeplearning4j.nn.params.CenterLossParamInitializer
+           (type (new-center-loss-initializer))))
+    (is (= org.deeplearning4j.nn.params.ConvolutionParamInitializer
+           (type (new-convolution-initializer))))
+    (is (= org.deeplearning4j.nn.params.DefaultParamInitializer
+           (type (new-default-initializer))))
+    (is (= org.deeplearning4j.nn.params.EmptyParamInitializer
+           (type (new-empty-initializer))))
+    (is (= org.deeplearning4j.nn.params.GravesBidirectionalLSTMParamInitializer
+           (type (new-bidirectional-lstm-initializer))))
+    (is (= org.deeplearning4j.nn.params.GravesLSTMParamInitializer
+           (type (new-lstm-initializer))))
+    (is (= org.deeplearning4j.nn.params.PretrainParamInitializer
+           (type (new-pre-train-initializer))))
+    (is (= org.deeplearning4j.nn.params.VariationalAutoencoderParamInitializer
+           (type (new-vae-initializer))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
