@@ -15,115 +15,117 @@
            [org.slf4j Logger]
            [org.slf4j LoggerFactory]))
 ;;;;;;;;; come back and update
-(def num-rows 28)
-(def num-columns 28)
-(def output-num 10)
-(def batchsize 128)
-(def rngseed 123)
-(def numepochs 18)
-
-(def train-iterator (MnistDataSetIterator. batchsize true rngseed))
-(def test-iterator (MnistDataSetIterator. batchsize false rngseed))
-(def e (Evaluation. output-num))
-
-(def nn-conf
-  (nn-conf/nn-conf-builder :seed rngseed
-                           :optimization-algo :stochastic-gradient-descent
-                           :iterations 1
-                           :learning-rate 0.006
-                           :updater :nesterovs
-                           :momentum 0.9
-                           :regularization true
-                           :l2 1e-4
-                           :layers {0 (l/dense-layer-builder :n-in (* num-rows num-columns)
-                                                            :n-out 1000
-                                                            :activation-fn :relu
-                                                            :weight-init :xavier)
-                                   1 (l/output-layer-builder :loss-fn :negativeloglikelihood
-                                                             :n-in 1000
-                                                             :n-out output-num
-                                                             :activation-fn :soft-max
-                                                             :weight-init :xavier)}
-                           :build? false))
-
-(def conf
-  (mlb/multi-layer-config-builder
-   :list-builder nn-conf
-   :backprop? true
-   :pretrain? false
-   :build? true))
-
-(defn init [^MultiLayerNetwork mln]
-  (.init mln)
-  mln)
-
-(defn ex-train [^MultiLayerNetwork mln]
-  (loop
-      [i 0
-       result {}]
-    (cond (not= i numepochs)
-          (do
-            (println "current at epoch:" i)
-            (recur (inc i)
-                   (.fit mln train-iterator)))
-          (= i numepochs)
-          (do
-            (println "training done")
-            mln))))
-
-(defn eval-model [mln]
-  (while (true? (.hasNext test-iterator))
-    (let [nxt (.next test-iterator)
-          output (.output mln (.getFeatureMatrix nxt))]
-      (do (.eval e (.getLabels nxt) output)
-          (println (.stats e))))))
-
-(defn reset-iterator
-  [t-iterator]
-  (.reset t-iterator))
-
-(defn get-feature-matrix
-  [trained-model t-iterator]
-  (.data (.output trained-model (.getFeatureMatrix (.next t-iterator)))))
-
-(defn ex-mnist []
-  (let [trained-network (-> conf
-                            (mlb/multi-layer-network)
-                            (u/init)
-                            (u/ex-train numepochs train-iterator))
-        evaled (eval-model trained-network)]
-    (reset-iterator test-iterator)))
-
 (comment
+  (def num-rows 28)
+  (def num-columns 28)
+  (def output-num 10)
+  (def batchsize 128)
+  (def rngseed 123)
+  (def numepochs 18)
 
-  (ex-mnist)
+  (def train-iterator (MnistDataSetIterator. batchsize true rngseed))
+  (def test-iterator (MnistDataSetIterator. batchsize false rngseed))
+  (def e (Evaluation. output-num))
 
-  (def model (mlb/multi-layer-network conf))
+  (def nn-conf
+    (nn-conf/nn-conf-builder :seed rngseed
+                             :optimization-algo :stochastic-gradient-descent
+                             :iterations 1
+                             :learning-rate 0.006
+                             :updater :nesterovs
+                             :momentum 0.9
+                             :regularization true
+                             :l2 1e-4
+                             :layers {0 (l/dense-layer-builder :n-in (* num-rows num-columns)
+                                                               :n-out 1000
+                                                               :activation-fn :relu
+                                                               :weight-init :xavier)
+                                      1 (l/output-layer-builder :loss-fn :negativeloglikelihood
+                                                                :n-in 1000
+                                                                :n-out output-num
+                                                                :activation-fn :soft-max
+                                                                :weight-init :xavier)}
+                             :build? false))
 
-  (def initialized-model (init model))
+  (def conf
+    (mlb/multi-layer-config-builder
+     :list-builder nn-conf
+     :backprop? true
+     :pretrain? false
+     :build? true))
 
-  (def trained-model (ex-train initialized-model))
+  (defn init [^MultiLayerNetwork mln]
+    (.init mln)
+    mln)
 
-  (println
-   (str
-    (.build
-     (nn-conf/nn-conf-builder {:seed rngseed
-                               :optimization-algo :stochastic-gradient-descent
-                               :iterations 1
-                               :learning-rate 0.006
-                               :updater :nesterovs
-                               :momentum 0.9
-                               :regularization true
-                               :l2 1e-4
-                               :layers {0 (l/dense-layer-builder {:n-in (* num-rows num-columns)
-                                                                  :n-out 1000
-                                                                  :activation-fn :relu
-                                                                  :weight-init :xavier})
-                                        1 (l/output-layer-builder {:loss-fn :negativeloglikelihood
-                                                                   :n-in 1000
-                                                                   :n-out output-num
-                                                                   :activation-fn :soft-max
-                                                                   :weight-init :xavier})}
-                               :pretrain false
-                               :backprop true}))))
+  (defn ex-train [^MultiLayerNetwork mln]
+    (loop
+        [i 0
+         result {}]
+      (cond (not= i numepochs)
+            (do
+              (println "current at epoch:" i)
+              (recur (inc i)
+                     (.fit mln train-iterator)))
+            (= i numepochs)
+            (do
+              (println "training done")
+              mln))))
+
+  (defn eval-model [mln]
+    (while (true? (.hasNext test-iterator))
+      (let [nxt (.next test-iterator)
+            output (.output mln (.getFeatureMatrix nxt))]
+        (do (.eval e (.getLabels nxt) output)
+            (println (.stats e))))))
+
+  (defn reset-iterator
+    [t-iterator]
+    (.reset t-iterator))
+
+  (defn get-feature-matrix
+    [trained-model t-iterator]
+    (.data (.output trained-model (.getFeatureMatrix (.next t-iterator)))))
+
+  (defn ex-mnist []
+    (let [trained-network (-> conf
+                              (mlb/multi-layer-network)
+                              (u/init)
+                              (u/ex-train numepochs train-iterator))
+          evaled (eval-model trained-network)]
+      (reset-iterator test-iterator)))
+
+  (comment
+
+    (ex-mnist)
+
+    (def model (mlb/multi-layer-network conf))
+
+    (def initialized-model (init model))
+
+    (def trained-model (ex-train initialized-model))
+
+    (println
+     (str
+      (.build
+       (nn-conf/nn-conf-builder {:seed rngseed
+                                 :optimization-algo :stochastic-gradient-descent
+                                 :iterations 1
+                                 :learning-rate 0.006
+                                 :updater :nesterovs
+                                 :momentum 0.9
+                                 :regularization true
+                                 :l2 1e-4
+                                 :layers {0 (l/dense-layer-builder {:n-in (* num-rows num-columns)
+                                                                    :n-out 1000
+                                                                    :activation-fn :relu
+                                                                    :weight-init :xavier})
+                                          1 (l/output-layer-builder {:loss-fn :negativeloglikelihood
+                                                                     :n-in 1000
+                                                                     :n-out output-num
+                                                                     :activation-fn :soft-max
+                                                                     :weight-init :xavier})}
+                                 :pretrain false
+                                 :backprop true}))))
+    )
   )

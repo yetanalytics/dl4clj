@@ -21,7 +21,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
             [dl4clj.nn.api.classifier :as classifier]
             [dl4clj.nn.api.layer])
   (:import [java.util Random]))
-
+(comment
 
 (def mini-batch-size 32)
 (def example-length 100)
@@ -99,3 +99,4 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 
   ;; Reset iterator for another epoch
   (reset iter))
+)

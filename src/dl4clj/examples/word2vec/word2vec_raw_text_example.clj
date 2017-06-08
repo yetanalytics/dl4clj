@@ -18,7 +18,7 @@
 ;;; This example code follows the word2vec code snippets at http://deeplearning4j.org/word2vec.html#just
 
 ;;; Loading data
-
+(comment
 (def iter (line-sentence-iterator (clojure.java.io/resource "raw_sentences.txt")))
 (set-pre-processor iter (sentence-pre-processor clojure.string/lower-case))
 
@@ -85,3 +85,4 @@
 (write-word-vectors v "/tmp/words.txt")
 (def word-vectors (load-txt-vectors "/tmp/words.txt"))
 (get-word-vector word-vectors "queen")
+)

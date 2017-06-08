@@ -39,10 +39,6 @@
   (nn-conf-builder :optimization-algo :stochastic-gradient-descent
                    :iterations 1
                    :learning-rate 0.006
-                   :updater :nesterovs
-                   :momentum 0.9
-                   :regularization true
-                   :l2 1e-4
                    :build? true
                    :layer layer))
 
@@ -238,22 +234,19 @@
   (testing "the creation of nearly any layer in dl4j"
     (let [activation-layer-conf (activation-layer-builder
                                  :n-in 10 :n-out 2 :activation-fn :relu
-                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                                  :bias-init 0.7 :bias-learning-rate 0.1
                                  :dist (new-normal-distribution :mean 0 :std 1)
                                  :drop-out 0.2 :epsilon 0.3
                                  :gradient-normalization :none
                                  :gradient-normalization-threshold 0.9
-                                 :l1 0.2 :l2 0.7 :layer-name "foo"
-                                 :learning-rate 0.1 :learning-rate-policy :inverse
-                                 :l1-bias 0.1 :l2-bias 0.2
+                                 :layer-name "foo" :learning-rate 0.1
+                                 :learning-rate-policy :inverse
                                  :learning-rate-schedule {0 0.2 1 0.5}
                                  :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                 :rho 0.7 :rms-decay 0.7 :updater :adam
-                                 :weight-init :distribution)
+                                 :updater :nesterovs :weight-init :distribution)
           center-loss-output-layer-conf (center-loss-output-layer-builder
                                          :alpha 0.1 :gradient-check? false :lambda 0.1
-                                         :loss-fn :mse
+                                         :loss-fn :mse :layer-name "foo1"
                                          :activation-fn :relu
                                          :adam-mean-decay 0.2 :adam-var-decay 0.1
                                          :bias-init 0.7 :bias-learning-rate 0.1
@@ -261,28 +254,22 @@
                                          :drop-out 0.2 :epsilon 0.3
                                          :gradient-normalization :none
                                          :gradient-normalization-threshold 0.9
-                                         :l1 0.2 :l2 0.7 :layer-name "foo"
                                          :learning-rate 0.1 :learning-rate-policy :inverse
-                                         :l1-bias 0.1 :l2-bias 0.2
                                          :learning-rate-schedule {0 0.2 1 0.5}
-                                         :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                         :rho 0.7 :rms-decay 0.7 :updater :adam
+                                         :updater :adam
                                          :weight-init :distribution)
           output-layer-conf (output-layer-builder
                              :n-in 10 :n-out 2 :loss-fn :mse
                              :activation-fn :relu
-                             :adam-mean-decay 0.2 :adam-var-decay 0.1
                              :bias-init 0.7 :bias-learning-rate 0.1
                              :dist {:normal {:mean 0 :std 1}}
                              :drop-out 0.2 :epsilon 0.3
                              :gradient-normalization :none
                              :gradient-normalization-threshold 0.9
-                             :l1 0.2 :l2 0.7 :layer-name "foo"
+                             :layer-name "foo2"
                              :learning-rate 0.1 :learning-rate-policy :inverse
-                             :l1-bias 0.1 :l2-bias 0.2
                              :learning-rate-schedule {0 0.2 1 0.5}
-                             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                             :rho 0.7 :rms-decay 0.7 :updater :adam
+                             :rho 0.7 :updater :adadelta
                              :weight-init :distribution)
           rnn-output-layer-conf (rnn-output-layer-builder
                                  :n-in 10 :n-out 2 :loss-fn :mse
@@ -293,12 +280,12 @@
                                  :drop-out 0.2 :epsilon 0.3
                                  :gradient-normalization :none
                                  :gradient-normalization-threshold 0.9
-                                 :l1 0.2 :l2 0.7 :layer-name "foo"
+                                 :l1 0.2 :l2 0.7 :layer-name "foo3"
                                  :learning-rate 0.1 :learning-rate-policy :inverse
                                  :l1-bias 0.1 :l2-bias 0.2
                                  :learning-rate-schedule {0 0.2 1 0.5}
                                  :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                 :rho 0.7 :rms-decay 0.7 :updater :adam
+                                 :rho 0.7 :rms-decay 0.7 :updater :rmsprop
                                  :weight-init :distribution)
           autoencoder-layer-conf (auto-encoder-layer-builder
                                   :n-in 10 :n-out 2 :pre-train-iterations 2
@@ -311,7 +298,7 @@
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo"
+                                  :l1 0.2 :l2 0.7 :layer-name "foo4"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
                                   :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
@@ -330,7 +317,7 @@
                           :drop-out 0.2 :epsilon 0.3
                           :gradient-normalization :none
                           :gradient-normalization-threshold 0.9
-                          :l1 0.2 :l2 0.7 :layer-name "foo"
+                          :l1 0.2 :l2 0.7 :layer-name "foo5"
                           :learning-rate 0.1 :learning-rate-policy :inverse
                           :l1-bias 0.1 :l2-bias 0.2
                           :learning-rate-schedule {0 0.2 1 0.5}
@@ -347,7 +334,7 @@
                                           :drop-out 0.2 :epsilon 0.3
                                           :gradient-normalization :none
                                           :gradient-normalization-threshold 0.9
-                                          :l1 0.2 :l2 0.7 :layer-name "foo"
+                                          :l1 0.2 :l2 0.7 :layer-name "foo6"
                                           :learning-rate 0.1 :learning-rate-policy :inverse
                                           :l1-bias 0.1 :l2-bias 0.2
                                           :learning-rate-schedule {0 0.2 1 0.5}
@@ -364,7 +351,7 @@
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo"
+                                  :l1 0.2 :l2 0.7 :layer-name "foo7"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
                                   :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
@@ -382,7 +369,7 @@
                                           :drop-out 0.2 :epsilon 0.3
                                           :gradient-normalization :none
                                           :gradient-normalization-threshold 0.9
-                                          :l1 0.2 :l2 0.7 :layer-name "foo"
+                                          :l1 0.2 :l2 0.7 :layer-name "foo8"
                                           :learning-rate 0.1 :learning-rate-policy :inverse
                                           :l1-bias 0.1 :l2-bias 0.2
                                           :learning-rate-schedule {0 0.2 1 0.5}
@@ -399,7 +386,7 @@
                                     :drop-out 0.2 :epsilon 0.3
                                     :gradient-normalization :none
                                     :gradient-normalization-threshold 0.9
-                                    :l1 0.2 :l2 0.7 :layer-name "foo"
+                                    :l1 0.2 :l2 0.7 :layer-name "foo9"
                                     :learning-rate 0.1 :learning-rate-policy :inverse
                                     :l1-bias 0.1 :l2-bias 0.2
                                     :learning-rate-schedule {0 0.2 1 0.5}
@@ -416,7 +403,7 @@
                                        :drop-out 0.2 :epsilon 0.3
                                        :gradient-normalization :none
                                        :gradient-normalization-threshold 0.9
-                                       :l1 0.2 :l2 0.7 :layer-name "foo"
+                                       :l1 0.2 :l2 0.7 :layer-name "foo10"
                                        :learning-rate 0.1 :learning-rate-policy :inverse
                                        :l1-bias 0.1 :l2-bias 0.2
                                        :learning-rate-schedule {0 0.2 1 0.5}
@@ -432,7 +419,7 @@
                             :drop-out 0.2 :epsilon 0.3
                             :gradient-normalization :none
                             :gradient-normalization-threshold 0.9
-                            :l1 0.2 :l2 0.7 :layer-name "foo"
+                            :l1 0.2 :l2 0.7 :layer-name "foo11"
                             :learning-rate 0.1 :learning-rate-policy :inverse
                             :l1-bias 0.1 :l2-bias 0.2
                             :learning-rate-schedule {0 0.2 1 0.5}
@@ -448,7 +435,7 @@
                                 :drop-out 0.2 :epsilon 0.3
                                 :gradient-normalization :none
                                 :gradient-normalization-threshold 0.9
-                                :l1 0.2 :l2 0.7 :layer-name "foo"
+                                :l1 0.2 :l2 0.7 :layer-name "foo12"
                                 :learning-rate 0.1 :learning-rate-policy :inverse
                                 :l1-bias 0.1 :l2-bias 0.2
                                 :learning-rate-schedule {0 0.2 1 0.5}
@@ -464,7 +451,7 @@
                                              :drop-out 0.2 :epsilon 0.3
                                              :gradient-normalization :none
                                              :gradient-normalization-threshold 0.9
-                                             :l1 0.2 :l2 0.7 :layer-name "foo"
+                                             :l1 0.2 :l2 0.7 :layer-name "foo13"
                                              :learning-rate 0.1 :learning-rate-policy :inverse
                                              :l1-bias 0.1 :l2-bias 0.2
                                              :learning-rate-schedule {0 0.2 1 0.5}
@@ -482,7 +469,7 @@
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo"
+                                  :l1 0.2 :l2 0.7 :layer-name "foo14"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
                                   :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
@@ -500,7 +487,7 @@
                                      :drop-out 0.2 :epsilon 0.3
                                      :gradient-normalization :none
                                      :gradient-normalization-threshold 0.9
-                                     :l1 0.2 :l2 0.7 :layer-name "foo"
+                                     :l1 0.2 :l2 0.7 :layer-name "foo15"
                                      :learning-rate 0.1 :learning-rate-policy :inverse
                                      :l1-bias 0.1 :l2-bias 0.2
                                      :learning-rate-schedule {0 0.2 1 0.5}
@@ -516,7 +503,7 @@
                            :drop-out 0.2 :epsilon 0.3
                            :gradient-normalization :none
                            :gradient-normalization-threshold 0.9
-                           :l1 0.2 :l2 0.7 :layer-name "foo"
+                           :l1 0.2 :l2 0.7 :layer-name "foo16"
                            :learning-rate 0.1 :learning-rate-policy :inverse
                            :l1-bias 0.1 :l2-bias 0.2
                            :learning-rate-schedule {0 0.2 1 0.5}
@@ -532,7 +519,7 @@
                               :drop-out 0.2 :epsilon 0.3
                               :gradient-normalization :none
                               :gradient-normalization-threshold 0.9
-                              :l1 0.2 :l2 0.7 :layer-name "foo"
+                              :l1 0.2 :l2 0.7 :layer-name "foo17"
                               :learning-rate 0.1 :learning-rate-policy :inverse
                               :l1-bias 0.1 :l2-bias 0.2
                               :learning-rate-schedule {0 0.2 1 0.5}
@@ -551,7 +538,7 @@
                                      :drop-out 0.2 :epsilon 0.3
                                      :gradient-normalization :none
                                      :gradient-normalization-threshold 0.9
-                                     :l1 0.2 :l2 0.7 :layer-name "foo"
+                                     :l1 0.2 :l2 0.7 :layer-name "foo18"
                                      :learning-rate 0.1 :learning-rate-policy :inverse
                                      :l1-bias 0.1 :l2-bias 0.2
                                      :learning-rate-schedule {0 0.2 1 0.5}
@@ -567,7 +554,7 @@
                                    :drop-out 0.2 :epsilon 0.3
                                    :gradient-normalization :none
                                    :gradient-normalization-threshold 0.9
-                                   :l1 0.2 :l2 0.7 :layer-name "foo"
+                                   :l1 0.2 :l2 0.7 :layer-name "foo19"
                                    :learning-rate 0.1 :learning-rate-policy :inverse
                                    :l1-bias 0.1 :l2-bias 0.2
                                    :learning-rate-schedule {0 0.2 1 0.5}
@@ -589,7 +576,7 @@
                           :drop-out 0.2 :epsilon 0.3
                           :gradient-normalization :none
                           :gradient-normalization-threshold 0.9
-                          :l1 0.2 :l2 0.7 :layer-name "foo"
+                          :l1 0.2 :l2 0.7 :layer-name "foo20"
                           :learning-rate 0.1 :learning-rate-policy :inverse
                           :l1-bias 0.1 :l2-bias 0.2
                           :learning-rate-schedule {0 0.2 1 0.5}

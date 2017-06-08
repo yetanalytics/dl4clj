@@ -13,66 +13,67 @@
             [dl4clj.nn.conf.builders.builders :as l]
             [dl4clj.examples.example-utils :as u]
             [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]))
+(comment
+  (def num-rows 28)
+  (def num-cols 28)
+  (def seed 123)
+  (def num-samples (.totalExamples (MnistDataFetcher. )))
+  (def batch-size 1000)
+  (def iterations 1)
+  (def listener-freq (/ iterations 5))
 
-(def num-rows 28)
-(def num-cols 28)
-(def seed 123)
-(def num-samples (.totalExamples (MnistDataFetcher. )))
-(def batch-size 1000)
-(def iterations 1)
-(def listener-freq (/ iterations 5))
+  (def iter (MnistDataSetIterator. batch-size num-samples true))
 
-(def iter (MnistDataSetIterator. batch-size num-samples true))
+  (def conf
+    (.build (nn/nn-conf-builder {:seed seed
+                                 :iterations iterations
+                                 :optimization-algo :line-gradient-descent
+                                 :layers {0 {:rbm {:n-in (* num-rows num-cols)
+                                                   :n-out 1000
+                                                   :loss-fn :kl-divergence}}
+                                          1 {:rbm {:n-in 1000
+                                                   :n-out 500
+                                                   :loss-fn :kl-divergence}}
+                                          2 {:rbm {:n-in 500
+                                                   :n-out 250
+                                                   :loss-fn :kl-divergence}}
+                                          3 {:rbm {:n-in 250
+                                                   :n-out 100
+                                                   :loss-fn :kl-divergence}}
+                                          4 {:rbm {:n-in 100
+                                                   :n-out 30
+                                                   :loss-fn :kl-divergence}}
+                                          5 {:rbm {:n-in 30
+                                                   :n-out 100
+                                                   :loss-fn :kl-divergence}}
+                                          6 {:rbm {:n-in 100
+                                                   :n-out 250
+                                                   :loss-fn :kl-divergence}}
+                                          7 {:rbm {:n-in 250
+                                                   :n-out 500
+                                                   :loss-fn :kl-divergence}}
+                                          8 {:rbm {:n-in 500
+                                                   :n-out 1000
+                                                   :loss-fn :kl-divergence}}
+                                          9 {:output-layer {:loss-fn :mse
+                                                            :activation-fn :sigmoid
+                                                            :n-in 1000
+                                                            :n-out (* num-rows num-cols)}}}
+                                 :pretrain true
+                                 :backprop true})))
+  #_(clojure.pprint/pprint (sort-by :name (filter :exception-types (:members (clojure.reflect/reflect model)))))
 
-(def conf
-  (.build (nn/nn-conf-builder {:seed seed
-                       :iterations iterations
-                       :optimization-algo :line-gradient-descent
-                       :layers {0 {:rbm {:n-in (* num-rows num-cols)
-                                         :n-out 1000
-                                         :loss-fn :kl-divergence}}
-                                1 {:rbm {:n-in 1000
-                                         :n-out 500
-                                         :loss-fn :kl-divergence}}
-                                2 {:rbm {:n-in 500
-                                         :n-out 250
-                                         :loss-fn :kl-divergence}}
-                                3 {:rbm {:n-in 250
-                                         :n-out 100
-                                         :loss-fn :kl-divergence}}
-                                4 {:rbm {:n-in 100
-                                         :n-out 30
-                                         :loss-fn :kl-divergence}}
-                                5 {:rbm {:n-in 30
-                                         :n-out 100
-                                         :loss-fn :kl-divergence}}
-                                6 {:rbm {:n-in 100
-                                         :n-out 250
-                                         :loss-fn :kl-divergence}}
-                                7 {:rbm {:n-in 250
-                                         :n-out 500
-                                         :loss-fn :kl-divergence}}
-                                8 {:rbm {:n-in 500
-                                         :n-out 1000
-                                         :loss-fn :kl-divergence}}
-                                9 {:output-layer {:loss-fn :mse
-                                                  :activation-fn :sigmoid
-                                                  :n-in 1000
-                                                  :n-out (* num-rows num-cols)}}}
-                       :pretrain true
-                       :backprop true})))
-#_(clojure.pprint/pprint (sort-by :name (filter :exception-types (:members (clojure.reflect/reflect model)))))
+  (def mln (mlb/multi-layer-network conf))
 
-(def mln (mlb/multi-layer-network conf))
+  (def model (u/init mln))
 
-(def model (u/init mln))
+  (defn training-model
+    [model iterator]
+    (while (true? (.hasNext iterator))
+      (let [nxt (.next iterator)]
+        (.fit model (DataSet. (.getFeatureMatrix nxt) (.getFeatureMatrix nxt)))))
+    model)
+  (def trained-model (training-model model iter))
 
-(defn training-model
-  [model iterator]
-  (while (true? (.hasNext iterator))
-    (let [nxt (.next iterator)]
-      (.fit model (DataSet. (.getFeatureMatrix nxt) (.getFeatureMatrix nxt)))))
-  model)
-(def trained-model (training-model model iter))
-
-;; eval is being funky, moving onto another example for now
+  ;; eval is being funky, moving onto another example for now
+  )

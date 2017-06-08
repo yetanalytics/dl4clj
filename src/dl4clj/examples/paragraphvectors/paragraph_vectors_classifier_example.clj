@@ -14,7 +14,7 @@ and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
             [dl4clj.text.documentiterator.labels-source :refer (get-labels)]
             [dl4clj.examples.paragraphvectors.tools.label-seeker :refer (get-scores)]
             [dl4clj.text.documentiterator.labelled-document :refer (get-label)]))
-
+(comment
 ;; build an iterator for our dataset
 (def iterator (file-label-aware-iterator (clojure.java.io/resource "paravec/labeled")))
 
@@ -50,3 +50,4 @@ and https://cs.stanford.edu/~quocle/paragraph_vector.pdf"}
 ;;    {science 0.018949185163223244, health -0.11507322176755937, finance 0.40230107446722246}
 ;;    Document 'health' falls into the following categories:
 ;;    {science -0.022660476948528845, health 0.5559929583559113, finance -0.3899286864778339}
+)

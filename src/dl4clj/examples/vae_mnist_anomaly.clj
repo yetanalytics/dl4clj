@@ -10,7 +10,7 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [org.nd4j.linalg.dataset DataSet]
            [org.deeplearning4j.nn.conf.layers.variational VariationalAutoencoder$Builder]))
-
+(comment
 (def mini-batch-size 128)
 (def rng-seed 12345)
 (def n-epochs 5)
@@ -34,3 +34,4 @@
                               :regularization true
                               :l2 1e-4
                               :layers {0 (l/auto-encoder-layer-builder)} }))))
+)
