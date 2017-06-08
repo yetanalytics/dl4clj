@@ -24,11 +24,7 @@
             [dl4clj.utils :refer [array-of]]
             [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset]]
             [clojure.test :refer :all]
-            )
-  (:import [org.deeplearning4j.nn.transferlearning
-            TransferLearning
-            ;; currently not supporting graph-builder
-            TransferLearning$Builder]))
+            ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fn for layer creation
@@ -121,7 +117,7 @@
 (deftest reconstruction-distribution-test
   (testing "the creation of reconstruction distributions for vae's"
     (is (= org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution
-           (type (new-bernoulli-reconstruction-distribution :activation-fn :relu))))
+           (type (new-bernoulli-reconstruction-distribution :activation-fn :sigmoid))))
     (is (= org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution
            (type (new-bernoulli-reconstruction-distribution))))
 
@@ -140,10 +136,10 @@
                   :distributions-to-add
                   ;; using a user facing fn
                   {0 {:dist (new-bernoulli-reconstruction-distribution
-                             :activation-fn :relu)
+                             :activation-fn :sigmoid)
                       :dist-size 2}
                    ;; using the multi method
-                   1 {:bernoulli {:activation-fn :tanh
+                   1 {:bernoulli {:activation-fn :sigmoid
                                   :dist-size 5}}
 
                    2 {:exponential {:activation-fn :sigmoid
@@ -151,10 +147,10 @@
 
                    3 {:gaussian {:activation-fn :hard-tanh
                                  :dist-size 1}}
-                   4 {:bernoulli {:activation-fn :softmax
+                   4 {:bernoulli {:activation-fn :sigmoid
                                   :dist-size 4}}
                    ;; explicitly using the multimethod
-                   5 {:dist (distributions {:bernoulli {:activation-fn :tanh}})
+                   5 {:dist (distributions {:bernoulli {:activation-fn :sigmoid}})
                       :dist-size 7}}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -274,18 +270,15 @@
           rnn-output-layer-conf (rnn-output-layer-builder
                                  :n-in 10 :n-out 2 :loss-fn :mse
                                  :activation-fn :relu
-                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                                  :bias-init 0.7 :bias-learning-rate 0.1
                                  :dist {:normal {:mean 0 :std 1}}
                                  :drop-out 0.2 :epsilon 0.3
                                  :gradient-normalization :none
                                  :gradient-normalization-threshold 0.9
-                                 :l1 0.2 :l2 0.7 :layer-name "foo3"
+                                 :layer-name "foo3"
                                  :learning-rate 0.1 :learning-rate-policy :inverse
-                                 :l1-bias 0.1 :l2-bias 0.2
                                  :learning-rate-schedule {0 0.2 1 0.5}
-                                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                 :rho 0.7 :rms-decay 0.7 :updater :rmsprop
+                                 :rms-decay 0.7 :updater :rmsprop
                                  :weight-init :distribution)
           autoencoder-layer-conf (auto-encoder-layer-builder
                                   :n-in 10 :n-out 2 :pre-train-iterations 2
@@ -298,12 +291,10 @@
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo4"
+                                  :layer-name "foo4"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
-                                  :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
-                                  :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                  :rho 0.7 :rms-decay 0.7 :updater :adam
+                                  :updater :adam
                                   :weight-init :distribution)
           rbm-layer-conf (rbm-layer-builder
                           :n-in 10 :n-out 2 :loss-fn :mse
@@ -317,13 +308,10 @@
                           :drop-out 0.2 :epsilon 0.3
                           :gradient-normalization :none
                           :gradient-normalization-threshold 0.9
-                          :l1 0.2 :l2 0.7 :layer-name "foo5"
+                          :layer-name "foo5"
                           :learning-rate 0.1 :learning-rate-policy :inverse
-                          :l1-bias 0.1 :l2-bias 0.2
                           :learning-rate-schedule {0 0.2 1 0.5}
-                          :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                          :rho 0.7 :rms-decay 0.7 :updater :adam
-                          :weight-init :distribution)
+                          :updater :adam :weight-init :distribution)
           graves-bidirectional-lstm-conf (graves-bidirectional-lstm-layer-builder
                                           :n-in 10 :n-out 2 :forget-gate-bias-init 0.2
                                           :gate-activation-fn :relu
@@ -334,47 +322,38 @@
                                           :drop-out 0.2 :epsilon 0.3
                                           :gradient-normalization :none
                                           :gradient-normalization-threshold 0.9
-                                          :l1 0.2 :l2 0.7 :layer-name "foo6"
+                                          :layer-name "foo6"
                                           :learning-rate 0.1 :learning-rate-policy :inverse
-                                          :l1-bias 0.1 :l2-bias 0.2
                                           :learning-rate-schedule {0 0.2 1 0.5}
-                                          :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                          :rho 0.7 :rms-decay 0.7 :updater :adam
-                                          :weight-init :distribution)
+                                          :updater :adam :weight-init :distribution)
           graves-lstm-layer-conf (graves-lstm-layer-builder
                                   :n-in 10 :n-out 2 :forget-gate-bias-init 0.2
                                   :gate-activation-fn :relu
                                   :activation-fn :relu
-                                  :adam-mean-decay 0.2 :adam-var-decay 0.1
                                   :bias-init 0.7 :bias-learning-rate 0.1
                                   :dist {:normal {:mean 0 :std 1}}
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo7"
+                                  :layer-name "foo7"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
-                                  :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
                                   :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                  :rho 0.7 :rms-decay 0.7 :updater :adam
-                                  :weight-init :distribution)
+                                  :updater :nesterovs :weight-init :distribution)
           batch-normalization-layer-conf (batch-normalization-layer-builder
                                           :n-in 10 :n-out 2 :beta 0.5
                                           :decay 0.3 :eps 0.1 :gamma 0.1
                                           :mini-batch? false :lock-gamma-beta? true
                                           :activation-fn :relu
-                                          :adam-mean-decay 0.2 :adam-var-decay 0.1
                                           :bias-init 0.7 :bias-learning-rate 0.1
                                           :dist {:normal {:mean 0 :std 1}}
                                           :drop-out 0.2 :epsilon 0.3
                                           :gradient-normalization :none
                                           :gradient-normalization-threshold 0.9
-                                          :l1 0.2 :l2 0.7 :layer-name "foo8"
+                                          :layer-name "foo8"
                                           :learning-rate 0.1 :learning-rate-policy :inverse
-                                          :l1-bias 0.1 :l2-bias 0.2
                                           :learning-rate-schedule {0 0.2 1 0.5}
-                                          :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                          :rho 0.7 :rms-decay 0.7 :updater :adam
+                                          :rho 0.7 :updater :adadelta
                                           :weight-init :distribution)
           convolutional-layer-conf (convolutional-layer-builder
                                     :n-in 10 :n-out 2
@@ -386,29 +365,23 @@
                                     :drop-out 0.2 :epsilon 0.3
                                     :gradient-normalization :none
                                     :gradient-normalization-threshold 0.9
-                                    :l1 0.2 :l2 0.7 :layer-name "foo9"
+                                    :layer-name "foo9"
                                     :learning-rate 0.1 :learning-rate-policy :inverse
-                                    :l1-bias 0.1 :l2-bias 0.2
                                     :learning-rate-schedule {0 0.2 1 0.5}
-                                    :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                    :rho 0.7 :rms-decay 0.7 :updater :adam
-                                    :weight-init :distribution)
+                                    :updater :adam :weight-init :distribution)
           convolutional-1d-layer-conf (convolution-1d-layer-builder
                                        :n-in 10 :n-out 2
                                        :kernel-size 6 :stride 3 :padding 3
                                        :activation-fn :relu
-                                       :adam-mean-decay 0.2 :adam-var-decay 0.1
                                        :bias-init 0.7 :bias-learning-rate 0.1
                                        :dist {:normal {:mean 0 :std 1}}
                                        :drop-out 0.2 :epsilon 0.3
                                        :gradient-normalization :none
                                        :gradient-normalization-threshold 0.9
-                                       :l1 0.2 :l2 0.7 :layer-name "foo10"
+                                       :layer-name "foo10"
                                        :learning-rate 0.1 :learning-rate-policy :inverse
-                                       :l1-bias 0.1 :l2-bias 0.2
                                        :learning-rate-schedule {0 0.2 1 0.5}
-                                       :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                       :rho 0.7 :rms-decay 0.7 :updater :adam
+                                       :rms-decay 0.7 :updater :rmsprop
                                        :weight-init :distribution)
           dense-layer-conf (dense-layer-builder
                             :n-in 10 :n-out 2
@@ -419,28 +392,22 @@
                             :drop-out 0.2 :epsilon 0.3
                             :gradient-normalization :none
                             :gradient-normalization-threshold 0.9
-                            :l1 0.2 :l2 0.7 :layer-name "foo11"
+                            :layer-name "foo11"
                             :learning-rate 0.1 :learning-rate-policy :inverse
-                            :l1-bias 0.1 :l2-bias 0.2
                             :learning-rate-schedule {0 0.2 1 0.5}
-                            :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                            :rho 0.7 :rms-decay 0.7 :updater :adam
-                            :weight-init :distribution)
+                            :updater :adam :weight-init :distribution)
           embedding-layer-conf (embedding-layer-builder
                                 :n-in 10 :n-out 2
                                 :activation-fn :relu
-                                :adam-mean-decay 0.2 :adam-var-decay 0.1
                                 :bias-init 0.7 :bias-learning-rate 0.1
                                 :dist {:normal {:mean 0 :std 1}}
                                 :drop-out 0.2 :epsilon 0.3
                                 :gradient-normalization :none
                                 :gradient-normalization-threshold 0.9
-                                :l1 0.2 :l2 0.7 :layer-name "foo12"
+                                :layer-name "foo12"
                                 :learning-rate 0.1 :learning-rate-policy :inverse
-                                :l1-bias 0.1 :l2-bias 0.2
                                 :learning-rate-schedule {0 0.2 1 0.5}
-                                :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                :rho 0.7 :rms-decay 0.7 :updater :adam
+                                :rms-decay 0.7 :updater :rmsprop
                                 :weight-init :distribution)
           local-response-normalization-conf (local-response-normalization-layer-builder
                                              :alpha 0.2 :beta 0.2 :k 0.2 :n 1
@@ -451,31 +418,25 @@
                                              :drop-out 0.2 :epsilon 0.3
                                              :gradient-normalization :none
                                              :gradient-normalization-threshold 0.9
-                                             :l1 0.2 :l2 0.7 :layer-name "foo13"
+                                             :layer-name "foo13"
                                              :learning-rate 0.1 :learning-rate-policy :inverse
-                                             :l1-bias 0.1 :l2-bias 0.2
                                              :learning-rate-schedule {0 0.2 1 0.5}
-                                             :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                             :rho 0.7 :rms-decay 0.7 :updater :adam
-                                             :weight-init :distribution)
+                                             :updater :adam :weight-init :distribution)
           subsampling-layer-conf (subsampling-layer-builder
                                   :kernel-size [2 2] :stride [2 2] :padding [2 2]
                                   :pooling-type :sum
                                   :build? true
                                   :activation-fn :relu
-                                  :adam-mean-decay 0.2 :adam-var-decay 0.1
                                   :bias-init 0.7 :bias-learning-rate 0.1
                                   :dist {:normal {:mean 0 :std 1}}
                                   :drop-out 0.2 :epsilon 0.3
                                   :gradient-normalization :none
                                   :gradient-normalization-threshold 0.9
-                                  :l1 0.2 :l2 0.7 :layer-name "foo14"
+                                  :layer-name "foo14"
                                   :learning-rate 0.1 :learning-rate-policy :inverse
-                                  :l1-bias 0.1 :l2-bias 0.2
                                   :learning-rate-schedule {0 0.2 1 0.5}
                                   :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                  :rho 0.7 :rms-decay 0.7 :updater :adam
-                                  :weight-init :distribution)
+                                  :updater :nesterovs :weight-init :distribution)
           subsampling-1d-layer-conf (subsampling-1d-layer-builder
                                      :kernel-size 2 :stride 2 :padding 2
                                      :pooling-type :sum
@@ -487,13 +448,10 @@
                                      :drop-out 0.2 :epsilon 0.3
                                      :gradient-normalization :none
                                      :gradient-normalization-threshold 0.9
-                                     :l1 0.2 :l2 0.7 :layer-name "foo15"
+                                     :layer-name "foo15"
                                      :learning-rate 0.1 :learning-rate-policy :inverse
-                                     :l1-bias 0.1 :l2-bias 0.2
                                      :learning-rate-schedule {0 0.2 1 0.5}
-                                     :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                     :rho 0.7 :rms-decay 0.7 :updater :adam
-                                     :weight-init :distribution)
+                                     :updater :adam :weight-init :distribution)
           loss-layer-conf (loss-layer-builder
                            :loss-fn :mse
                            :activation-fn :relu
@@ -503,13 +461,10 @@
                            :drop-out 0.2 :epsilon 0.3
                            :gradient-normalization :none
                            :gradient-normalization-threshold 0.9
-                           :l1 0.2 :l2 0.7 :layer-name "foo16"
+                           :layer-name "foo16"
                            :learning-rate 0.1 :learning-rate-policy :inverse
-                           :l1-bias 0.1 :l2-bias 0.2
                            :learning-rate-schedule {0 0.2 1 0.5}
-                           :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                           :rho 0.7 :rms-decay 0.7 :updater :adam
-                           :weight-init :distribution)
+                           :updater :adam :weight-init :distribution)
           dropout-layer-conf (dropout-layer-builder
                               :n-in 2 :n-out 10
                               :activation-fn :relu
@@ -519,31 +474,25 @@
                               :drop-out 0.2 :epsilon 0.3
                               :gradient-normalization :none
                               :gradient-normalization-threshold 0.9
-                              :l1 0.2 :l2 0.7 :layer-name "foo17"
+                              :layer-name "foo17"
                               :learning-rate 0.1 :learning-rate-policy :inverse
-                              :l1-bias 0.1 :l2-bias 0.2
                               :learning-rate-schedule {0 0.2 1 0.5}
-                              :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                              :rho 0.7 :rms-decay 0.7 :updater :adam
-                              :weight-init :distribution)
+                              :updater :adam :weight-init :distribution)
           global-pooling-layer-conf (global-pooling-layer-builder
                                      :pooling-dimensions [3 2]
                                      :collapse-dimensions? true
                                      :pnorm 2
                                      :pooling-type :pnorm
                                      :activation-fn :relu
-                                     :adam-mean-decay 0.2 :adam-var-decay 0.1
                                      :bias-init 0.7 :bias-learning-rate 0.1
                                      :dist {:normal {:mean 0 :std 1}}
                                      :drop-out 0.2 :epsilon 0.3
                                      :gradient-normalization :none
                                      :gradient-normalization-threshold 0.9
-                                     :l1 0.2 :l2 0.7 :layer-name "foo18"
+                                     :layer-name "foo18"
+                                     :updater :none
                                      :learning-rate 0.1 :learning-rate-policy :inverse
-                                     :l1-bias 0.1 :l2-bias 0.2
                                      :learning-rate-schedule {0 0.2 1 0.5}
-                                     :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                     :rho 0.7 :rms-decay 0.7 :updater :adam
                                      :weight-init :distribution)
           zero-padding-layer-conf (zero-padding-layer-builder
                                    :pad-top 1 :pad-bot 2 :pad-left 3 :pad-right 4
@@ -554,20 +503,17 @@
                                    :drop-out 0.2 :epsilon 0.3
                                    :gradient-normalization :none
                                    :gradient-normalization-threshold 0.9
-                                   :l1 0.2 :l2 0.7 :layer-name "foo19"
+                                   :layer-name "foo19"
                                    :learning-rate 0.1 :learning-rate-policy :inverse
-                                   :l1-bias 0.1 :l2-bias 0.2
                                    :learning-rate-schedule {0 0.2 1 0.5}
-                                   :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                                   :rho 0.7 :rms-decay 0.7 :updater :adam
-                                   :weight-init :distribution)
+                                   :updater :adam :weight-init :distribution)
           vae-layer-conf (variational-autoencoder-builder
                           :n-in 5 :n-out 10 :loss-fn :mse
                           :pre-train-iterations 1 :visible-bias-init 2
                           :decoder-layer-sizes [5 9]
                           :encoder-layer-sizes [7 2]
                           :reconstruction-distribution {:gaussian {:activation-fn :tanh}}
-                          :vae-loss-fn {:output-activation-fn :tanh :loss-fn :mse}
+                          :vae-loss-fn {:output-activation-fn :sigmoid :loss-fn :mse}
                           :num-samples 2 :pzx-activation-function :tanh
                           :activation-fn :relu
                           :adam-mean-decay 0.2 :adam-var-decay 0.1
@@ -576,13 +522,10 @@
                           :drop-out 0.2 :epsilon 0.3
                           :gradient-normalization :none
                           :gradient-normalization-threshold 0.9
-                          :l1 0.2 :l2 0.7 :layer-name "foo20"
+                          :layer-name "foo20"
                           :learning-rate 0.1 :learning-rate-policy :inverse
-                          :l1-bias 0.1 :l2-bias 0.2
                           :learning-rate-schedule {0 0.2 1 0.5}
-                          :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                          :rho 0.7 :rms-decay 0.7 :updater :adam
-                          :weight-init :distribution)]
+                          :updater :adam :weight-init :distribution)]
       ;; activation layer
       (is (= org.deeplearning4j.nn.conf.layers.ActivationLayer
              (type activation-layer-conf)))
@@ -709,6 +652,8 @@
              (type (new-layer :nn-conf (quick-nn-conf dropout-layer-conf)))))
 
       ;; global pooling
+      ;; this triggers warnings because you can't set the updater
+      ;; the set valuess are set to nil
       (is (= org.deeplearning4j.nn.conf.layers.GlobalPoolingLayer
              (type global-pooling-layer-conf)))
       (is (= :global-pooling (layer-type {:nn-conf (quick-nn-conf global-pooling-layer-conf)})))
@@ -757,7 +702,7 @@
              :max-num-line-search-iterations 6
              :mini-batch? true
              :minimize? true
-             :use-drop-connect? true
+             :use-drop-connect? false
              :optimization-algo :lbfgs
              :lr-score-based-decay-rate 0.7
              :regularization? true
@@ -775,7 +720,7 @@
              :max-num-line-search-iterations 6
              :mini-batch? true
              :minimize? true
-             :use-drop-connect? true
+             :use-drop-connect? false
              :optimization-algo :lbfgs
              :lr-score-based-decay-rate 0.7
              :regularization? true
@@ -1102,7 +1047,6 @@
              (type (output :mln init-mln :input input))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output :mln init-no-ds :iter (reset mnist-iter)))))
-      ;; not sure where this actually prints to
       (is (= (type mln) (type (print-config :mln mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (reconstruct :mln mln

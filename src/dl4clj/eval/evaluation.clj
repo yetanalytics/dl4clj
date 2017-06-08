@@ -298,7 +298,6 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [evaler]
   (.truePositives evaler))
 
-
 (defn eval-classification!
   [& {:keys [labels network-predictions mask-array record-meta-data evaler
              mln features predicted-idx actual-idx]

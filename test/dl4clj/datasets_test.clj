@@ -175,10 +175,11 @@
       (is (= java.lang.Integer (type (get-current-cursor iter))))
       (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
-             (type (set-pre-processor! :iter iter
-                                       :pre-processor (new-min-max-normalization-ds-preprocessor)))))
+             (type (set-pre-processor!
+                    :iter iter
+                    :pre-processor (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1)))))
       (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-             (type (new-min-max-normalization-ds-preprocessor))
+             (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1))
              (type (get-pre-processor iter))))
       (is (= java.lang.Integer (type (get-input-columns iter))))
       (is (= org.nd4j.linalg.dataset.DataSet
@@ -423,9 +424,9 @@
     (is (= org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor
            (type (new-vgg16-image-preprocessor))))
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-           (type (new-min-max-normalization-ds-preprocessor))))
+           (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1))))
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-           (type (new-min-max-normalization-ds-preprocessor :min-val 5 :max-val 15))))
+           (type (new-min-max-normalization-ds-preprocessor :min-val 7 :max-val 15))))
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize
            (type (new-standardize-normalization-ds-preprocessor))))))
 
@@ -436,7 +437,7 @@
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
           pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
                          :ds-iter iter)
-          pp2 (fit-iter! :normalizer (new-min-max-normalization-ds-preprocessor)
+          pp2 (fit-iter! :normalizer (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1)
                          :ds-iter iter)
           multi-iter (new-multi-data-set-iterator-adapter
                       (new-mnist-data-set-iterator :batch 5 :n-examples 100))]

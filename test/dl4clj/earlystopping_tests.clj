@@ -34,16 +34,20 @@
            :learning-rate 0.006
            :updater :nesterovs
            :momentum 0.9
-           :regularization true
+           :regularization? true
            :l2 1e-4
            :build? true
            :layers {0 {:dense-layer {:n-in 784
                                      :n-out 1000
+                                     :updater :nesterovs
                                      :activation-fn :relu
+                                     :regularization? true
                                      :weight-init :xavier}}
                     1 {:output-layer {:loss-fn :negativeloglikelihood
                                       :n-in 1000
                                       :n-out 10
+                                      :regularization? true
+                                      :updater :nesterovs
                                       :activation-fn :soft-max
                                       :weight-init :xavier}}})))
 
@@ -278,8 +282,6 @@
                                         :best-model-score 2.0
                                         :total-epochs 1
                                         :best-model mln)))))))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of early stopping trainer
