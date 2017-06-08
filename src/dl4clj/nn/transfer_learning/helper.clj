@@ -39,7 +39,9 @@
 
   :data-set (dataset or multi-dataset), a dataset
    - can be a single or multi dataset
-   - see: nd4clj.linalg.dataset.data-set (under construction)"
+   - see: nd4clj.linalg.dataset.data-set (under construction)
+
+  warning, this can crash if the dataset is too large"
   [& {:keys [helper data-set]}]
   (.featurize helper data-set))
 
@@ -83,5 +85,5 @@
   need to test if this returns the mutated og network with all layers or only the frozen layers
    - if its just the previously frozen layers, will need to merge back into og model
      - og model may have been mutated"
-  [helper]
+  [& {:keys [helper]}]
   (.unfrozenMLN helper))

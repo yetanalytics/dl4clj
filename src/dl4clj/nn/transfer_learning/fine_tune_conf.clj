@@ -40,7 +40,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
       (true? build?)
       .build)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply the fine tune conf
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,20 +62,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
   (if (true? build?)
     (.build (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
     (.appliedNeuralNetConfigurationBuilder fine-tune-conf)))
-
-(defn apply-to-multi-layer-conf!
-  "applies the fine-tune-conf to a multi-layer-conf and returns the mln-conf"
-  [& {:keys [fine-tune-conf mln-conf]}]
-  (.applyToMultiLayerConfiguration fine-tune-conf mln-conf)
-  mln-conf)
-
-
-(comment
-
- (applied-to-nn-conf!
-  :fine-tune-conf (new-fine-tune-conf {:n-iterations 5
-                                       :seed 123
-                                       :build? true})
- :nn-conf (.build (nn-conf-builder-from-fine-tune-conf (new-fine-tune-conf {:activation-fn :relu
-                                                                            :regularization? true
-                                                                            :build? true})))))

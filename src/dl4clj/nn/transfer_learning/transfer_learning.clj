@@ -8,7 +8,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
             ;; currently not supporting graph-builder
             TransferLearning$Builder])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.constants :as enum]))
+            [dl4clj.constants :as enum]
+            [dl4clj.nn.conf.builders.builders :as l]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -75,11 +76,29 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
             :as opts}]
   (.setInputPreProcessor builder layer-idx pre-processor))
 
+(defn add-multiple-layers
+  "adds multiple layers to a transfer learning builder"
+  [tl-builder layers]
+  (let [idxs (sort (keys layers))
+        layers (into []
+                     (for [each idxs]
+                       (get layers each)))]
+    (loop [result tl-builder
+           cur! layers]
+      (cond (empty? cur!)
+            result
+            :else
+            (let [cur-layer (first cur!)]
+              (recur (.addLayer result (if (map? cur-layer)
+                                         (l/builder cur-layer)
+                                         cur-layer))
+                     (rest cur!)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; builder for mutating multi layer networks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn multi-layer-network-mutater-builder
+(defn transfer-learning-builder
   "given a multi-layer-network and options on how to change it,
 
   creates a builder for applying the changes and applies them.
@@ -89,10 +108,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
   :mln (multi layer network), a multi layer network to mutate
    - see dl4clj.nn.conf.builders.multi-layer-builders
 
-  :layer (layer), a layer to add to the multi layer network
+  :tlb (transferlearning builder), an existing transfer learning builder
+   - if not supplied, a new one will be created from the mln
+
+  :add-layer (layer), a layer to add to the multi layer network
    - see dl4clj.nn.conf.builders.builders
 
+  :add-layers (multiple layers), a map of layers to add to the net, will be added
+   in the order of their supplied index
+    - you should either add a single layer by supplying :layer and not :layers or
+      multiple layers by supplying this key
+
   :fine-tune-conf (fine tune configuration), a fine tune configuration
+   - required to add layer(s)
    - see dl4clj.nn.transfer-learning.fine-tune-conf
 
   :n-out-replace (map), {:layer-idx (int) :n-out (int) :dist (distribution)
@@ -113,19 +141,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - see: dl4clj.nn.conf.input-pre-processor
 
   :build? (boolean), wether or not to build the mutation, defaults to true"
-  [{:keys [mln layer fine-tune-conf
+  [& {:keys [mln add-layer add-layers fine-tune-conf
            n-out-replace remove-last-n-layers
            remove-output-layer? set-feature-extractor-idx
-           input-pre-processor build?]
-    :or {build? true}
+           input-pre-processor build? tlb]
+      :or {build? true}
     :as opts}]
-  (let [b (TransferLearning$Builder. mln)]
+  (let [b (if (contains? opts :tlb)
+            tlb
+           (TransferLearning$Builder. mln))]
     (cond-> b
-      (contains? opts :layer) (.addLayer layer)
       (contains? opts :fine-tune-conf) (.fineTuneConfiguration fine-tune-conf)
       (contains? opts :n-out-replace) (replace-n-out n-out-replace)
       (contains? opts :remove-last-n-layers) (.removeLayersFromOutput remove-last-n-layers)
       (true? remove-output-layer?) .removeOutputLayer
+      ;; refactor so can add multiple layers
+      (contains? opts :add-layer) (.addLayer add-layer)
+      (contains? opts :add-layers) (add-multiple-layers add-layers)
       (contains? opts :set-feature-extractor-idx) (.setFeatureExtractor set-feature-extractor-idx)
       (contains? opts :input-pre-processor) (set-input-pre-processor! input-pre-processor)
       (true? build?) .build)))
