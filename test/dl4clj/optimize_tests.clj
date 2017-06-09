@@ -19,6 +19,7 @@
             [dl4clj.optimize.api.step-fn :refer :all]
             [dl4clj.optimize.api.termination-condition :refer :all]
             [dl4clj.optimize.api.iteration-listener :refer :all]
+            [nd4clj.linalg.factory.nd4j :refer [rand]]
             [clojure.java.io :as io])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
@@ -81,7 +82,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest generic-solvers
-  ;; still need to write a good test for optimize!
   (testing "the creation of solvers and unit tests for their methods"
     (is (= org.deeplearning4j.optimize.Solver (type (build-solver
                                                      :nn-conf nn-conf))))
@@ -118,22 +118,22 @@
     (is (= org.deeplearning4j.optimize.stepfunctions.DefaultStepFunction
            (type (step-fns :default))))
     (is (= org.deeplearning4j.optimize.stepfunctions.DefaultStepFunction
-           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :default-step-fn))))
+           (type (new-step-fn-from-nn-conf-step-fn :default-step-fn))))
 
     (is (= org.deeplearning4j.optimize.stepfunctions.GradientStepFunction
            (type (step-fns :gradient))))
     (is (= org.deeplearning4j.optimize.stepfunctions.GradientStepFunction
-           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :gradient-step-fn))))
+           (type (new-step-fn-from-nn-conf-step-fn :gradient-step-fn))))
 
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeDefaultStepFunction
            (type (step-fns :negative-default))))
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeDefaultStepFunction
-           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :negative-default-step-fn))))
+           (type (new-step-fn-from-nn-conf-step-fn :negative-default-step-fn))))
 
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
            (type (step-fns :negative-gradient))))
     (is (= org.deeplearning4j.optimize.stepfunctions.NegativeGradientStepFunction
-           (type (new-step-fn-from-nn-conf-step-fn :nn-conf-step-fn :negative-gradient-step-fn))))))
+           (type (new-step-fn-from-nn-conf-step-fn :negative-gradient-step-fn))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of listeners
@@ -194,7 +194,7 @@
     (is (= org.deeplearning4j.optimize.terminations.Norm2Termination
            (type (termination-condition {:norm-2 {:gradient-tolerance 2.0}}))))
     (is (= org.deeplearning4j.optimize.terminations.Norm2Termination
-           (type (new-norm-2-termination-condition :gradient-tolerance 2.0))))
+           (type (new-norm-2-termination-condition 2.0))))
 
     (is (= org.deeplearning4j.optimize.terminations.ZeroDirection
            (type (termination-condition {:zero-direction {}}))))
@@ -445,15 +445,16 @@
       ;; believe I need to use a trained model here instead of an untrained layer
       ;; ^ this also applies to optimize,
 
-      ;; not sure what line is suppose to be or when it needs to be used
-      ;; *************************************************************
-      ;; hence why two of the tests are commented out...
+      ;; need to initialize the layer so the otpimizers can look at the params
       #_(is (= (type conj-grad-optim)
              (type (post-step! :optim conj-grad-optim
-                               :line (row-vector [1 2 3 4 5])))))
+                               :line (rand [5])))))
       #_(is (= (type lbfgs-optim)
              (type (post-step! :optim lbfgs-optim
-                               :line (row-vector [1 2 3 4 5])))))
+                               :line (rand [5])))))
+      #_(is (= (type conj-grad-optim)  (type (pre-process-line! conj-grad-optim))))
+      #_(is (= (type lbfgs-optim)  (type (pre-process-line! lbfgs-optim))))
+
       (is (= (type line-grad-optim)
              (type (post-step! :optim line-grad-optim
                                :line (row-vector [1 2 3 4 5])))))
@@ -461,11 +462,6 @@
              (type (post-step! :optim stoch-grad-optim
                                :line (row-vector [1 2 3 4 5])))))
 
-      ;; not sure what this method is doing behind the scenes
-      ;; *************************************************************
-      ;; hence why two of the tests are commented out...
-      #_(is (= (type conj-grad-optim)  (type (pre-process-line! conj-grad-optim))))
-      #_(is (= (type lbfgs-optim)  (type (pre-process-line! lbfgs-optim))))
       (is (= (type line-grad-optim)  (type (pre-process-line! line-grad-optim))))
       (is (= (type stoch-grad-optim)  (type (pre-process-line! stoch-grad-optim))))
 
@@ -514,11 +510,11 @@
                                               :updater (new-layer-updater))))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;; come back to set-up-search-state!, need to implement the berkeley pairs
-      ;; but need to test anyways
+      ;; think the issue is with the conj-grad-optim, not the gradient or score
+      ;; the fn now uses pairs
       #_(is (= "" (set-up-search-state! :optim conj-grad-optim
-                                      :gradient (constructor)
-                                      :score 10)))
+                                      :gradient (new-default-gradient :flattened-gradient (rand [2 2]))
+                                      :score (rand [2 2]))))
       ;; ensure the optimizer is returned
       (is (= (type conj-grad-optim)
              (type (update-gradient-according-to-params! :optim conj-grad-optim
@@ -624,13 +620,6 @@
                                                  :other-params param)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; training listener interface, implementing classes not wrapped yet (ui)
-;; https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingListener.html
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; making a note for future me
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc fns that are not from a class instead of an interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -734,13 +723,6 @@
       (is (= (type back-track) (type
                                 (set-relative-tolerance! :back-track back-track
                                                          :tolerance 0.1))))
-      ;; need to figure out what to pass when methods wants params as an INDArray
-      ;; I always get this error: Unable to set parameters: must be of length 0
-      ;; I think I need to make an empty INDArray but cant with the current
-      ;; ND4j INDArray-creation ns
-      #_(is (= (type back-track) (type
-                                (set-score-for! :back-track back-track
-                                                :params (zeros 1)))))
       (is (= (type back-track) (type
                                 (set-step-max! :back-track back-track
                                                :step-max 1.0)))))))

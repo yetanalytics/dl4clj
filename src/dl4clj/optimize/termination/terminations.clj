@@ -52,9 +52,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/pac
   "Terminate if the norm2 of the gradient is < a certain tolerance
 
   :gradient-tolerance (double), the tolerance"
-  [& {:keys [gradient-tolerance]
-      :as opts}]
-  (termination-condition {:norm-2 opts}))
+  [tolerance]
+  (termination-condition {:norm-2 {:gradient-tolerance tolerance}}))
 
 (defn new-zero-direction-termination-condition
   "terminates when the absolute magnitude of gradient is 0"

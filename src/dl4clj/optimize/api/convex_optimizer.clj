@@ -1,7 +1,8 @@
 (ns ^{:doc "implementation of the Convex Optimizer interface
 see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimizer.html"}
     dl4clj.optimize.api.convex-optimizer
-  (:import [org.deeplearning4j.optimize.api ConvexOptimizer]))
+  (:import [org.deeplearning4j.optimize.api ConvexOptimizer])
+  (:require [dl4clj.berkeley :refer [new-pair]]))
 
 (defn get-batch-size
   "returns the batch size for the optimizer"
@@ -48,7 +49,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 (defn post-step!
   "After the step has been made, do an action
 
-  :line (INDArray) ... not sure what this is used for
+  :line (INDArray)
 
   returns the optimizer"
   [& {:keys [optim line]}]
@@ -102,11 +103,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 
   :score (double), the score used to set up search state
 
-  returns the optimizer
-
-  THIS FN IS NOT DONE, NEED TO IMPLEMENT berkeley.pairs"
+  returns the optimizer"
   [& {:keys [optim gradient score]}]
-  (doto optim (.setupSearchState {gradient score})))
+  (doto optim (.setupSearchState (new-pair :p1 gradient
+                                           :p2 score))))
 
 (defn update-gradient-according-to-params!
   "Update the gradient according to the configuration suc as adagrad, momentum and sparsity

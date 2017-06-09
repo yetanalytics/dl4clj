@@ -1303,7 +1303,11 @@
                       l)
                   (add-variable! :nn-conf l :var-name "baz")
                   (set-learning-rate-by-param! :nn-conf l :var-name "foo" :rate 0.2)
-                  (new-layer :nn-conf l))]
+                  (new-layer :nn-conf l)
+                  ;; try initializing the layer instead of calling new layer for setting l2byparam
+                  ;; was able to set that in a mln above
+                  ;; multi-layer-network-creation-test
+                  )]
       (is (= org.deeplearning4j.nn.updater.LayerUpdater (type layer-updater)))
       (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater
              (type (new-multi-layer-updater :mln mln))))

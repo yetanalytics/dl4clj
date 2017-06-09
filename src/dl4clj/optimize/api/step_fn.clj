@@ -14,7 +14,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/StepFunction
 
   :features (INDArray), the input data
 
-  :lines (INDArray), the line.... need to figure out what this does
+  :lines (INDArray)
 
   :step (double), the size of the step to make"
   [& {:keys [step-fn features line step]

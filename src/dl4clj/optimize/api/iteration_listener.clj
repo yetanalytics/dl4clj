@@ -16,7 +16,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/IterationLis
   (.invoked listener))
 
 (defn iteration-done!
-  ;; not sure how to properly use this method
   "Event listener for each iteration
 
   :model (model), A Model is meant for predicting something from data.
@@ -24,6 +23,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/IterationLis
 
   :iteration (int), the iteration
 
-  returns the listener"
+  returns a map containing the listener and model"
   [& {:keys [listener model iteration]}]
-  (doto listener (.iterationDone model iteration)))
+  (doto listener (.iterationDone model iteration))
+  {:listener listener :model model})
