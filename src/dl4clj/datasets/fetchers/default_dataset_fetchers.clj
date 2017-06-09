@@ -4,10 +4,7 @@
   (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn curves-fetcher
-  "gets the Curves dataset.
-
-  currently getten an EOF error on initialization
-   -seems to be an issue with macs"
+  "gets the Curves dataset."
   []
   (CurvesDataFetcher.))
 
@@ -20,8 +17,11 @@
   "fetches the mnist dataset
 
   :binarize? (boolean) whether to binarize the dataset or not
+
   :train? (boolean) whether to the dataset is for training or testing
+
   :shuffle (boolean) whether to shulffle the dataset or not
+
   :rng-seed (long) seed used for shuffling, shuffles unique per seed"
   [& {:keys [binarize? train? shuffle? rng-seed]
       :as opts}]
@@ -31,7 +31,3 @@
         (MnistDataFetcher. binarize?)
         :else
         (MnistDataFetcher.)))
-
-;; underlying mnist dataset stuff
-;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/mnist/package-summary.html
-;; don't think necessary to implement but here for refrence

@@ -19,13 +19,19 @@
   and: https://github.com/szagoruyko/cifar.torch
 
   :batch-size (int), the batch size
+
   :n-examples (int), the number of examples from the ds to include in the iterator
+
   :img-dim (vector), desired dimensions of the images
    - should contain 3 ints
+
   :train? (boolean), are we training or testing?
+
   :use-special-pre-process-cifar? (boolean), are we going to use the predefined preprocessor built for this dataset
    - There is a special preProcessor used to normalize the dataset based on Sergey Zagoruyko example https://github.com/szagoruyko/cifar.torch
+
   :img-transform (map) config map for an image-transformation (as of writing this doc string, not implemented)
+
   :n-possible-labels (int), specify the number of possible outputs/tags/classes for a given image"
   [& {:keys [batch-size n-examples img-dims train?
              use-special-pre-process-cifar?
@@ -58,6 +64,7 @@
   "IrisDataSetIterator handles traversing through the Iris Data Set.
 
   :batch (int), size of the batch
+
   :n-examples (int), number of examples to iterator over
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/IrisDataSetIterator.html"
@@ -68,16 +75,25 @@
   "Creates a dataset iterator for the LFW image dataset.
 
   :img-dims (int-array), desired dimensions of the images
+
   :batch-size (int), the batch size
+
   :n-examples (int), number of examples to take from the dataset
+
   :use-subset? (boolean), use a subset of the dataset or the whole thing
+
   :train? (boolean, are we training a net or testing it
+
   :split-train-test (double), the division between training and testing datasets
+
   :n-labels (int), the number of possible classifications for a single image
+
   :rng (anything), by supplying this key when calling this fn, it creates a new
   instance of java.util.Random
+
   :label-generator (label generator), call (new-parent-path-label-generator) or
    (new-pattern-path-label-generator opts) to create a label generator to use
+
   :image-transform (map), a transform to apply to the images,
    - as of writing this doc string, this functionality not implemented
 
@@ -118,14 +134,20 @@
   "creates a dataset iterator for the Mnist dataset
 
   :batch-size (int), the batch size
-  :train? (boolean), training or testing
-  :seed (int), int used to randomize the dataset
-  :n-examples (int), the overall number of examples
-  :binarize? (boolean), whether to binarize mnist or not
-  :shuffle? (boolean), whether to shuffle the dataset or not
-  :rng-seed (long), random number generator seed to use when shuffling examples
-  :batch (int), size of each patch
 
+  :train? (boolean), training or testing
+
+  :seed (int), int used to randomize the dataset
+
+  :n-examples (int), the overall number of examples
+
+  :binarize? (boolean), whether to binarize mnist or not
+
+  :shuffle? (boolean), whether to shuffle the dataset or not
+
+  :rng-seed (long), random number generator seed to use when shuffling examples
+
+  :batch (int), size of each patch
   - supplying batch-size will retrieve the entire dataset where as batch will get a subset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MnistDataSetIterator.html"
@@ -146,6 +168,7 @@
   "Mnist data with scaled pixels
 
   :batch (int) size of each patch
+
   :n-examples (int), the overall number of examples
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/RawMnistDataSetIterator.html"

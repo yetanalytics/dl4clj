@@ -5,14 +5,10 @@
             SequenceRecordReaderDataSetIterator])
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
-            [dl4clj.datavec.api.io :refer [new-double-writable-converter
-                                           new-float-writable-converter
-                                           new-label-writer-converter
-                                           new-self-writable-converter]]
-            ;; write mmethod for making writeable converters and require it here
-            ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/io/package-summary.html
-            ;; they are going to be in datavec.api.io
-            ))
+            [datavec.api.io :refer [new-double-writable-converter
+                                    new-float-writable-converter
+                                    new-label-writer-converter
+                                    new-self-writable-converter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; build in datasets
@@ -289,7 +285,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (.batch iter))
 
 (defn load-from-meta-data
-  [iter meta-data]
+  [& {:keys [iter meta-data]}]
   (.loadFromMetaData iter meta-data))
 
 (defn remove-data!

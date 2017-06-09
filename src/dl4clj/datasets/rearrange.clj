@@ -9,10 +9,12 @@
   "Rearrange an unstructured dataset in to split test/train on the file system
 
   :destination-root-dir (str) file path to save rearranged dataset to
+
   :src-root-dir (str) file path to get the unstructured dataset from
+
   :labeling-type (keyword), one of :directory or :name
-  :percent-train (double), the percentage of the dataset to use for training
-   -test for scale 0-100 or 0-1"
+
+  :percent-train (double), the percentage of the dataset to use for training"
   [& {:keys [destination-root-dir src-root-dir labeling-type percent-train]}]
   (LocalUnstructuredDataFormatter. (io/as-file destination-root-dir)
                                    (io/as-file src-root-dir)
@@ -23,7 +25,9 @@
   "sets a new destination for saving a rearranged dataset
 
   :unstructured-formatter (formatter), the formatter created by new-unstructured-formatter
+
   :file-path (str), the new file path to save to
+
   :train? (boolean), is this for training or testing"
   [& {:keys [unstructured-formatter file-path train?]}]
   (.getNewDestination unstructured-formatter file-path train?))
@@ -32,6 +36,7 @@
   "returns the name of the label assigned to a file
 
   :unstructured-formatter (formatter), the formatter created by new-unstructured-formatter
+
   :file-path (str), one of the files used to create the unstructured-formatter"
   [& {:keys [unstructured-formatter file-path]}]
   (.getNameLabel unstructured-formatter file-path))
@@ -55,6 +60,7 @@
   "returns the label assigned to a file path
 
   :unstructured-formatter (formatter), the formatter created by new-unstructured-formatter
+
   :file-path (str), a file path used in the creation of the dataset"
   [& {:keys [unstructured-formatter file-path]}]
   (.getPathLabel unstructured-formatter file-path))

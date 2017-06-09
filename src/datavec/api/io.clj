@@ -1,4 +1,4 @@
-(ns dl4clj.datavec.api.io
+(ns datavec.api.io
   (:import [org.datavec.api.io DataInputBuffer DataOutputBuffer WritableConverter]
            [org.datavec.api.io.converters
             DoubleWritableConverter

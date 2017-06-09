@@ -6,7 +6,8 @@
             IteratorMultiDataSetIterator MovingWindowBaseDataSetIterator
             MultipleEpochsIterator ReconstructionDataSetIterator SamplingDataSetIterator
             ExistingDataSetIterator])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+            [dl4clj.berkeley :refer [new-pair]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method heavy lifting
@@ -18,21 +19,28 @@
 
 (defmethod iterators :doubles-dataset-iterator [opts]
   (let [config (:doubles-dataset-iterator opts)
-        {iterable :iterable
+        {features :features
+         labels :labels
          batch-size :batch-size} config]
-    (DoublesDataSetIterator. iterable batch-size)))
+    (DoublesDataSetIterator. [(new-pair :p1 (double-array features)
+                                        :p2 (double-array labels))]
+                             batch-size)))
 
 (defmethod iterators :floats-dataset-iterator [opts]
   (let [config (:floats-dataset-iterator opts)
-        {iterable :iterable
+        {features :features
+         labels :labels
          batch-size :batch-size} config]
-    (FloatsDataSetIterator. iterable batch-size)))
+    (FloatsDataSetIterator. [(new-pair :p1 (float-array features)
+                                      :p2 (float-array labels))]
+                            batch-size)))
 
 (defmethod iterators :INDArray-dataset-iterator [opts]
   (let [config (:INDArray-dataset-iterator opts)
-        {iterable :iterable
+        {features :features
+         labels :labels
          batch-size :batch-size} config]
-    (INDArrayDataSetIterator. iterable batch-size)))
+    (INDArrayDataSetIterator. [(new-pair :p1 features :p2 labels)] batch-size)))
 
 (defmethod iterators :curves-dataset-iterator [opts]
   (let [config (:curves-dataset-iterator opts)
@@ -143,11 +151,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-combined-pre-processor
-  ;; going to need to test this
   "This is special preProcessor, that allows to combine multiple prerpocessors,
   and apply them to data sequentially.
 
-  :pre-processors (map), {(int) (pre-processor)
+   pre-processors (map), {(int) (pre-processor)
                          (int) (pre-processor)}
 
    - the keys are the desired indexes of the pre-processors
@@ -155,7 +162,7 @@
    - pre-processors should be fit to a dataset or iterator before being combined
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
-  [& {:keys [pre-processors]}]
+  [pre-processors]
   (loop [b (CombinedPreProcessor$Builder.)
          result pre-processors]
     (if (empty? result)
@@ -175,7 +182,9 @@
   Note however that due to asynchronous loading of data, (next! iter n) is not supported.
 
   :dataset-iterator (ds-iterator), a dataset iterator
+
   :que-size (int), the size of the que
+
   :que (blocking-que), the que containing the dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncDataSetIterator.html"
@@ -187,10 +196,15 @@
   "This wrapper provides DataSetIterator interface to existing datasets or dataset iterators
 
   :dataset (iterable), an iterable object, some dataset
+
   :total-examples (int), the total number of examples
+
   :n-features (int), the total number of features in the dataset
+
   :n-labels (int), the number of labels in a dataset
+
   :labels (list), a list of labels as strings
+
   :dataset-iterator (iterator), a dataset iterator
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ExistingDataSetIterator.html"
@@ -203,7 +217,9 @@
   This will randomly sample from the given dataset.
 
   :sampling-source (dataset), the dataset to sample from
+
   :batch-size (int), the batch size
+
   :total-n-samples (int), the total number of desired samples from the dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/SamplingDataSetIterator.html"
@@ -214,20 +230,23 @@
 (defn new-reconstruction-dataset-iterator
   "Wraps a dataset iterator, setting the first (feature matrix) as the labels.
 
-  :dataset-iterator (iterator), the iterator to wrap
+  ds-iter (iterator), the iterator to wrap
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ReconstructionDataSetIterator.html"
-  [& {:keys [dataset-iterator]
-      :as opts}]
-  (iterators {:reconstruction-dataset-iterator opts}))
+  [ds-iter]
+  (iterators {:reconstruction-dataset-iterator {:dataset-iterator ds-iter}}))
 
 (defn new-multiple-epochs-iterator
   "A dataset iterator for doing multiple passes over a dataset
 
   :dataset-iterator (dataset iterator), an iterator for a dataset
+
   :que-size (int), the size for the multiple iterations (improve this desc)
+
   :total-iterations (long), the total number of times to run through the dataset
+
   :n-epochs (int), the number of epochs to run
+
   :dataset (dataset), a dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MultipleEpochsIterator.html"
@@ -243,9 +262,13 @@
   "DataSetIterator for moving window (rotating matrices)
 
   :batch-size (int), the batch size
+
   :n-examples (int), the total number of examples
+
   :dataset (dataset), a dataset to make new examples from
+
   :window-rows (int), the number of rows to rotate
+
   :window-columns (int), the number of columns to rotate
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MovingWindowBaseDataSetIterator.html"
@@ -259,6 +282,7 @@
   use caution when using this with a CUDA backend
 
   :multi-dataset-iterator (multidataset iterator), iterator to wrap
+
   :que-length (int), length of the que for async processing
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncMultiDataSetIterator.html"
@@ -269,10 +293,12 @@
 (defn new-iterator-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
   DataSet objects as required to get a consistent batch size.
+
   Typically used in Spark training, but may be used elsewhere.
   NOTE: reset method is not supported here.
 
   :dataset (dataset), an iterator containing a single dataset
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorDataSetIterator.html"
@@ -283,10 +309,12 @@
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
   DataSet objects as required to get a consistent batch size.
+
   Typically used in Spark training, but may be used elsewhere.
   NOTE: reset method is not supported here.
 
   :multi-dataset (multi-dataset) an iterator containing multiple datasets
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorMultiDataSetIterator.html"
@@ -294,34 +322,45 @@
       :as opts}]
   (iterators {:iterator-multi-dataset-iterator opts}))
 
-;; need to implement berkely pairs to test/use
-
 (defn new-doubles-dataset-iterator
-  "creates a dataset iterator given a pair of double arrays and a batch-size
+  "creates a dataset iterator which iterates over the supplied features and labels
 
-  :iterable (pair double-array), collection to iterate over
+  :features (coll of doubles), a collection of doubles which acts as inputs
+   - [0.2 0.4 ...]
+
+  :labels (coll of doubles), a collection of doubles which acts as targets
+   - [0.4 0.8 ...]
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/DoublesDataSetIterator.html"
-  [& {:keys [iterable batch-size]
+  [& {:keys [features labels batch-size]
       :as opts}]
   (iterators {:doubles-dataset-iterator opts}))
 
 (defn new-floats-dataset-iterator
-  "creates a dataset iterator given a pair of float arrays and a batch-size
+  "creates a dataset iterator which iterates over the supplied iterable
 
-  :iterable (pair float-array), collection to iterate over
+  :features (coll of floats), a collection of floats which acts as inputs
+
+  :labels (coll of floats), a collection of floats which acts as the targets
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/FloatsDataSetIterator.html"
-  [& {:keys [iterable batch-size]
+  [& {:keys [features labels batch-size]
       :as opts}]
   (iterators {:floats-dataset-iterator opts}))
 
 (defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
 
-  :iterable (pair INDArrays), a collection to iterate over
+  :features (INDArray), an INDArray which acts as inputs
+   - see: nd4clj.linalg.factory.nd4j
+
+  :labels (INDArray), an INDArray which as the targets
+   - see: nd4clj.linalg.factory.nd4j
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/INDArrayDataSetIterator.html"
@@ -330,10 +369,10 @@
   (iterators {:INDArray-dataset-iterator opts}))
 
 (defn new-curves-dataset-iterator
-  ;; end of file errors
   "creates a dataset iterator for curbes data
 
   :batch-size (int), the size of the batch
+
   :n-examples (int), the total number of examples
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CurvesDataSetIterator.html"
@@ -345,10 +384,8 @@
 ;; api calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn pre-process!
+(defn pre-process-combined-iters!
   ;; for combined pre-processors
   "Pre process a dataset sequentially"
   [& {:keys [dataset-iter dataset]}]
   (doto dataset-iter (.preProcess dataset)))
-
-;; suppors the java.util.Iterator methods

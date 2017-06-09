@@ -439,8 +439,7 @@
           multi-iter (new-multi-data-set-iterator-adapter
                       (new-mnist-data-set-iterator :batch 5 :n-examples 100))]
       (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
-             (type (new-combined-pre-processor :pre-processors {0 pp1
-                                                                1 pp2}))))
+             (type (new-combined-pre-processor {0 pp1 1 pp2}))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
              (type (new-async-dataset-iterator :dataset-iterator iter))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
@@ -454,7 +453,7 @@
                                              :batch-size 10
                                              :total-n-samples 10))))
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
-             (type (new-reconstruction-dataset-iterator :dataset-iterator iter))))
+             (type (new-reconstruction-dataset-iterator iter))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
              (type (new-async-multi-dataset-iterator
                     :multi-dataset-iterator multi-iter
@@ -462,7 +461,19 @@
       (is (= org.deeplearning4j.datasets.iterator.IteratorDataSetIterator
              (type (new-iterator-dataset-iterator :dataset iter :batch-size 10))))
       (is (= org.deeplearning4j.datasets.iterator.MultipleEpochsIterator
-             (type (new-multiple-epochs-iterator :dataset-iterator iter :n-epochs 1)))))))
+             (type (new-multiple-epochs-iterator :dataset-iterator iter :n-epochs 1))))
+      (is (= org.deeplearning4j.datasets.iterator.DoublesDataSetIterator
+             (type (new-doubles-dataset-iterator :features [0.2 0.4]
+                                              :labels [0.4 0.8]
+                                              :batch-size 2))))
+      (is (= org.deeplearning4j.datasets.iterator.FloatsDataSetIterator
+             (type (new-floats-dataset-iterator :features [0.2 0.4]
+                                                 :labels [0.4 0.8]
+                                                 :batch-size 2))))
+      (is (= org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator
+             (type (new-INDArray-dataset-iterator :features (rand [2])
+                                                :labels (rand [2])
+                                                :batch-size 2)))))))
 
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
