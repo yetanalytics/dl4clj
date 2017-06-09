@@ -5,6 +5,10 @@
             SequenceRecordReaderDataSetIterator])
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+            [dl4clj.datavec.api.io :refer [new-double-writable-converter
+                                           new-float-writable-converter
+                                           new-label-writer-converter
+                                           new-self-writable-converter]]
             ;; write mmethod for making writeable converters and require it here
             ;; https://deeplearning4j.org/datavecdoc/org/datavec/api/io/package-summary.html
             ;; they are going to be in datavec.api.io
@@ -44,29 +48,29 @@
                             :n-possible-labels :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
              rr
-             converter ;; write mmethod for making these
+             converter
              batch-size l-idx-from l-idx-to n-labels
              max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels
                             :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
              rr
-             converter ;; write mmethod for making these
+             converter
              batch-size label-idx n-labels max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels :regression?)
             (RecordReaderDataSetIterator.
              rr
-             converter ;; write mmethod for making these
+             converter
              batch-size label-idx n-labels regression?)
             (contains-many? :batch-size :label-idx :n-possible-labels)
             (RecordReaderDataSetIterator.
              rr
-             converter ;; write mmethod for making these
+             converter
              batch-size label-idx n-labels)
             (contains? config :batch-size)
             (RecordReaderDataSetIterator.
              rr
-             converter ;; write mmethod for making these
+             converter
              batch-size)
             :else
             (assert false "you must provide a record reader, writeable converter and a batch size"))
@@ -191,14 +195,25 @@ you need to suply atleast the mini batch size, number of possible labels and the
   with the supplied args.  args are:
 
   :record-reader (record-reader) a record reader, see datavec.api.records.readers
+
   :batch-size (int) the batch size
+
   :label-idx (int) the index of the labels in a dataset
+
   :n-possible-labels (int) the number of possible labels
+
   :label-idx-from (int) starting column for range of columns containing labels in the dataset
+
   :label-idx-to (int) ending column for range of columns containing labels in the dataset
+
   :regression? (boolean) are we dealing with a regression or classification problem
+
   :max-num-batches (int) the maximum number of batches the iterator should go through
-  :writeable-converter (map) a writeable converter config, see TBD for options
+
+  :writeable-converter (writable), a writable converter
+   - opts are new-double-writable-converter, new-float-writable-converter
+     new-label-writer-converter, new-self-writable-converter
+   - see: dl4clj.datavec.api.io
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderDataSetIterator.html"
   [& {:keys [record-reader batch-size label-idx n-possible-labels
@@ -213,12 +228,19 @@ you need to suply atleast the mini batch size, number of possible labels and the
   with the supplied args.  args are:
 
   :record-reader (record-reader) a record reader, see datavec.api.records.readers
+
   :mini-batch-size (int) the mini batch size
+
   :n-possible-labels (int) the number of possible labels
+
   :label-idx (int) the index of the labels in a dataset
+
   :regression? (boolean) are we dealing with a regression or classification problem
+
   :labels-reader (record-reader) a record reader specificaly for labels, see datavec.api.records.readers
+
   :features-reader (record-reader) a record reader specificaly for features, see datavec.api.records.readers
+
   :alignment-mode (keyword), one of :equal-length, :align-start, :align-end
    -see https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.AlignmentMode.html
 
@@ -235,14 +257,21 @@ you need to suply atleast the mini batch size, number of possible labels and the
 
   :alignment-mode (keyword),  one of :equal-length, :align-start, :align-end
    -see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.AlignmentMode.html
+
   :batch-size (int), size of the batchs the iterator uses for a single run
+
   :add-seq-reader (map) {:reader-name (str) :record-reader (record-reader)}, a sequence record reader
    -see: datavec.api.records.readers
+
   :add-reader (map) {:reader-name (str) :record-reader (record-reader)}, a record reader
    -see: datavec.api.records.readers
+
   :add-output-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}
+
   :add-input-one-hot (map) {:reader-name (str) :column (int) :n-classes (int)}
+
   :add-input (map) {:reader-name (str) :first-column (int) :last-column (int)}
+
   :add-output (map) {:reader-name (str) :first-column (int) :last-column (int)}"
   [& {:keys [alignment-mode batch-size add-seq-reader
              add-reader add-output-one-hot add-output

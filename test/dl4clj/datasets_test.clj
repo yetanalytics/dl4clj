@@ -248,22 +248,22 @@
   (testing "base level io stuffs"
     ;; file split
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker"))))
+           (type (new-filesplit :root-dir "resources/poker/"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker"
+           (type (new-filesplit :root-dir "resources/poker/"
                                 :rng-seed (new java.util.Random)))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker"
+           (type (new-filesplit :root-dir "resources/poker/"
                                 :allow-format ".csv"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker"
+           (type (new-filesplit :root-dir "resources/poker/"
                                 :allow-format ".csv"
                                 :recursive? true))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker"
+           (type (new-filesplit :root-dir "resources/poker/"
                                 :allow-format ".csv"
                                 :rng-seed (new java.util.Random)))))
-    (is (= java.io.File (type (get-root-dir (new-filesplit :root-dir "resources/poker")))))
+    (is (= java.io.File (type (get-root-dir (new-filesplit :root-dir "resources/poker/")))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
@@ -346,8 +346,7 @@
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
     ;; datavec.api.writeable
-    (let [f-split (new-filesplit :root-dir "resources/poker")]
-
+    (let [f-split (new-filesplit :root-dir "resources/poker/")]
       (is (= java.lang.Long (type (length f-split))))
       (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
@@ -515,21 +514,3 @@
                     :add-seq-reader {:reader-name "foo" :record-reader seq-rr}
                     :add-reader {:reader-name "baz" :record-reader rr}
                     :add-input {:reader-name "baz" :first-column 0 :last-column 11})))))))
-
-(deftest rearrange-test
-  (testing "the rearrange ns"
-    ;; currently can't accurately test without the unstructed dataset these fns want
-    #_(let [formatter (new-unstructured-formatter
-                       :destination-root-dir (str "resources/tmp/rearrange/"
-                                                  (java.util.UUID/randomUUID))
-                       :src-root-dir "resources/poker"
-                       :labeling-type :name
-                       :percent-train 50)]
-        (is (= org.deeplearning4j.datasets.rearrange.LocalUnstructuredDataFormatter
-               (type formatter)))
-        (is (= "" (get-new-destination :unstructured-formatter formatter
-                                       :file-path (str "resources/tmp/rearrange/"
-                                                       (java.util.UUID/randomUUID))
-                                       :train? true)))
-
-        )))

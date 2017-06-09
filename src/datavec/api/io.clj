@@ -1,12 +1,10 @@
 (ns dl4clj.datavec.api.io
-  (:import [org.datavec.api.io DataInputBuffer DataOutputBuffer]))
-
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/io/WritableComparator.html
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/io/BinaryComparable.html
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/io/WritableConverter.html
-;; users should never have to directly create these ^
-;; if I am wrong, come back and implement
-;; I do need these for dl4clj.datasets.datavec.clj
+  (:import [org.datavec.api.io DataInputBuffer DataOutputBuffer WritableConverter]
+           [org.datavec.api.io.converters
+            DoubleWritableConverter
+            FloatWritableConverter
+            LabelWriterConverter
+            SelfWritableConverter]))
 
 (defn new-data-input-buffer
   "A reusable DataInput implementation that reads from an in-memory buffer.
@@ -31,6 +29,28 @@
   (if (contains? opts :size)
     (DataOutputBuffer. size)
     (DataOutputBuffer.)))
+
+(defn new-double-writable-converter
+  "Convert a writable to a double"
+  []
+  (DoubleWritableConverter.))
+
+(defn new-float-writable-converter
+  "Convert a writable to a double"
+  []
+  (FloatWritableConverter.))
+
+(defn new-label-writer-converter
+  "Convert a label in to an index
+
+  labels is a collection of strings"
+  [labels]
+  (LabelWriterConverter. (into '() labels)))
+
+(defn new-self-writable-converter
+  "baseline writeable converter"
+  []
+  (SelfWritableConverter.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; api interaction fns for buffers
@@ -78,3 +98,12 @@
   :output-stream (java.io.OutputStream) where the data is being written to"
   [& {:keys [output-buffer output-stream]}]
   (doto output-buffer (.writeTo output-stream)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; writeable interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn convert-writable
+  "Convert a writable to another kind of writable"
+  [& {:keys [desired-writable writable-to-convert]}]
+  (.convert desired-writable writable-to-convert))

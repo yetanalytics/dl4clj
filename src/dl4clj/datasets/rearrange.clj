@@ -3,6 +3,8 @@
   (:require [dl4clj.constants :as enum]
             [clojure.java.io :as io]))
 
+;; this namespace is not reflected in the datasets_test namespace
+
 (defn new-unstructured-formatter
   "Rearrange an unstructured dataset in to split test/train on the file system
 
