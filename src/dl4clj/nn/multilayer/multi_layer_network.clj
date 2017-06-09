@@ -1,11 +1,9 @@
-(ns dl4clj.nn.multilayer.multi-layer-network
+(ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
+    dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.utils :refer [contains-many? array-of]]
             [dl4clj.nn.conf.constants :as enum])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
-;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html
-;; add bangs for fns that modify the mln
-;; write tests for these methods
 
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
@@ -44,7 +42,7 @@
   "Remove the mask arrays from all layers.
 
   returns the multi layer network after the mutation"
-  [& {:keys [mln]}]
+  [mln]
   (doto mln
     (.clearLayerMaskArrays)))
 
@@ -78,7 +76,7 @@
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
-  [& {:keys [mln]}]
+  [mln]
   (.epsilon mln))
 
 (defn evaluate-classification
@@ -189,23 +187,23 @@
   "Run SGD based on the given labels
 
   returns the fine tuned model"
-  [& {:keys [mln]}]
+  [mln]
   (doto mln
     (.finetune)))
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"
-  [& {:keys [mln]}]
+  [mln]
   (.getDefaultConfiguration mln))
 
 (defn get-input
   "return the input to the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getInput mln))
 
 (defn get-labels
   "return an array of labels"
-  [& {:keys [mln]}]
+  [mln]
   (.getLabels mln))
 
 (defn get-layer
@@ -225,37 +223,37 @@
 
 (defn get-layer-names
   "return a list of the layer names in the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getLayerNames mln))
 
 (defn get-layers
   "returns an array of the layers within the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getLayers mln))
 
 (defn get-layer-wise-config
   "returns the configuration for the layers in the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getLayerWiseConfigurations mln))
 
 (defn get-mask
   "return the mask array used in this mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getMask mln))
 
 (defn get-n-layers
   "get the number of layers in the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getnLayers mln))
 
 (defn get-output-layer
   "returns the output layer of the mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getOutputLayer mln))
 
 (defn get-updater
   "return the updater used in this mln"
-  [& {:keys [mln]}]
+  [mln]
   (.getUpdater mln))
 
 (defn init-gradients-view!
@@ -263,7 +261,7 @@
   sets the appropriate subset in all layers.
 
   - this gets called behind the scene when using fit!"
-  [& {:keys [mln]}]
+  [mln]
   (doto mln
     (.initGradientsView)))
 
@@ -287,12 +285,12 @@
 
 (defn get-mln-input
   "returns the input/feature matrix for the model"
-  [& {:keys [mln]}]
+  [mln]
   (.input mln))
 
 (defn is-init-called?
   "was the model initialized"
-  [& {:keys [mln]}]
+  [mln]
   (.isInitCalled mln))
 
 (defn output
@@ -365,10 +363,8 @@
  iterator or an array of features to pretrain on")))
 
 (defn print-config
-  "Prints the configuration and returns the mln
-
-  doesn't currently print to the repl"
-  [& {:keys [mln]}]
+  "Prints the configuration and returns the mln"
+  [mln]
   (doto mln
     (.printConfiguration)))
 
@@ -407,7 +403,7 @@ or evaluation and if we want to store the previous state for truncated backprop"
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
-  [& {:keys [mln]}]
+  [mln]
   (doto mln
     (.rnnClearPreviousState)))
 
@@ -557,7 +553,7 @@ you must also supply whether or not you want to add regularization terms (L1, L2
 
 (defn summary
   "String detailing the architecture of the multi-layer-network. (mln)"
-  [& {:keys [mln]}]
+  [mln]
   (.summary mln))
 
 (defn update-mln!
@@ -572,7 +568,7 @@ you must also supply whether or not you want to add regularization terms (L1, L2
 (defn update-rnn-state-with-tbptt-state!
   "updates the rnn state to be that of the tbptt state.
   returns the mln."
-  [& {:keys [mln]}]
+  [mln]
   (doto mln
     (.updateRnnStateWithTBPTTState)))
 

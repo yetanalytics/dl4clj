@@ -84,7 +84,7 @@
   "creates a new composite reconstruction distributions
    - a combination of multiple reconstruction distributions
 
-  :distributions-to-add (map) {unique-place-holder-1 distribution
+  distributions-to-add (map) {unique-place-holder-1 distribution
                                unique-place-holder-2 distribution ...}
    - distribution can take the form of:
       {dist-type (keyword) {dist-opts :dist-size int}}
@@ -116,7 +116,7 @@
    would result in a composite distribution containing both distributions specified above
 
   if still confused, see the example at the bottom of this namespace"
-  [& {:keys [distributions-to-add]}]
+  [distributions-to-add]
   (distributions {:composite {:distributions-to-add distributions-to-add}}))
 
 (defn new-bernoulli-reconstruction-distribution

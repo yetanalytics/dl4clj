@@ -95,7 +95,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (doto layer (.setNIn (enum/input-types input-type) override?)))
 
 (defn reset-layer-default-config
-  [& {:keys [layer]}]
+  [layer]
   (.resetLayerDefaultConfig layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,33 +103,33 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-loss-fn
-  [& {:keys [layer]}]
-  (.getLossFn layer))
+  [output-layer]
+  (.getLossFn output-layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; From CenterLossOutputLayer
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-alpha
-  [& {:keys [layer]}]
-  (.getAlpha layer))
+  [center-loss-output-layer]
+  (.getAlpha center-loss-output-layer))
 
 (defn get-gradient-check
-  [& {:keys [layer]}]
-  (.getGradientCheck layer))
+  [center-loss-output-layer]
+  (.getGradientCheck center-loss-output-layer))
 
 (defn get-lambda
-  [& {:keys [layer]}]
-  (.getLambda layer))
+  [center-loss-output-layer]
+  (.getLambda center-loss-output-layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; From SubsamplingLayer
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-eps
-  [& {:keys [layer]}]
-  (.getEps layer))
+  [subsampling-layer]
+  (.getEps subsampling-layer))
 
 (defn get-pnorm
-  [& {:keys [layer]}]
-  (.getPnorm layer))
+  [subsampling-layer]
+  (.getPnorm subsampling-layer))

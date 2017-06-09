@@ -85,5 +85,5 @@
   need to test if this returns the mutated og network with all layers or only the frozen layers
    - if its just the previously frozen layers, will need to merge back into og model
      - og model may have been mutated"
-  [& {:keys [helper]}]
+  [helper]
   (.unfrozenMLN helper))

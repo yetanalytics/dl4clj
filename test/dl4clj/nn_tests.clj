@@ -19,7 +19,7 @@
             [dl4clj.nn.updater.multi-layer-updater :refer :all]
             [dl4clj.nn.conf.neural-net-configuration :refer [set-learning-rate-by-param! add-variable!]]
             [nd4clj.linalg.factory.nd4j :refer [zeros rand]]
-            [dl4clj.nn.api.model :refer [set-param-table! init! set-param! init-params!]]
+            [dl4clj.nn.api.model :refer [set-param-table! init! set-param!]]
             [dl4clj.datasets.datavec :refer [mnist-ds]]
             [nd4clj.linalg.dataset.api.data-set :refer [get get-feature-matrix]]
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
@@ -136,10 +136,8 @@
 
     (is (= org.deeplearning4j.nn.conf.layers.variational.CompositeReconstructionDistribution
            (type (new-composite-reconstruction-distribution
-                  :distributions-to-add
                   ;; using a user facing fn
-                  {0 {:dist (new-bernoulli-reconstruction-distribution
-                             :activation-fn :sigmoid)
+                  {0 {:dist (new-bernoulli-reconstruction-distribution :activation-fn :sigmoid)
                       :dist-size 2}
                    ;; using the multi method
                    1 {:bernoulli {:activation-fn :sigmoid
@@ -190,13 +188,11 @@
     (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
            (type (gradient :grad grad-with-var))))
     (is (= java.util.LinkedHashMap
-           (type (gradient-for-variable :grad grad-with-var))))
+           (type (gradient-for-variable grad-with-var))))
     ;; gradient order was not explictly set
     (is (= nil
            (type (flattening-order-for-variables :grad grad-with-var
-                                                 :variable "foo"))))
-    (is (= java.util.LinkedHashMap
-           (type (gradient-for-variable :grad grad-with-var)))))))
+                                                 :variable "foo")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; param initializers
@@ -683,10 +679,10 @@
       ;; frozen layer
       (is (= org.deeplearning4j.nn.layers.FrozenLayer
              (type (new-frozen-layer
-                    :layer (set-param-table!
-                            :model (new-layer
-                                    :nn-conf (quick-nn-conf activation-layer-conf))
-                            :param-table-map {"foo" (zeros [1])}))))))))
+                    (set-param-table!
+                     :model (new-layer
+                             :nn-conf (quick-nn-conf activation-layer-conf))
+                     :param-table-map {"foo" (zeros [1])}))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf-builder
@@ -1009,7 +1005,7 @@
                     :input (activate-from-prev-layer
                             :current-layer-idx 0 :mln mln :input input :training? true)))))
       (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (clear-layer-mask-arrays! :mln mln))))
+             (type (clear-layer-mask-arrays! mln))))
       (is (= java.util.ArrayList
              (type (compute-z :mln init-mln :training? true :input input))))
       (is (= java.util.ArrayList
@@ -1029,28 +1025,28 @@
              (type (feed-forward :mln init-mln))))
       (is (= java.util.ArrayList (type (feed-forward-to-layer :mln init-mln :layer-idx 0 :train? true))))
       (is (= java.util.ArrayList (type (feed-forward-to-layer :mln init-mln :layer-idx 0 :input input))))
-      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration (type (get-default-config :mln init-mln))))
-      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-input :mln init-mln))))
-      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-labels :mln init-mln))))
+      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration (type (get-default-config init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-input init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-labels init-mln))))
       (is (= org.deeplearning4j.nn.layers.feedforward.dense.DenseLayer
              (type (get-layer :mln init-mln :layer-idx 0))))
-      (is (= ["first layer" "second layer"] (get-layer-names :mln mln)))
+      (is (= ["first layer" "second layer"] (get-layer-names mln)))
       (is (= (type (array-of :data [] :java-type org.deeplearning4j.nn.api.Layer))
-             (type (get-layers :mln init-mln))))
+             (type (get-layers init-mln))))
       (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
-             (type (get-layer-wise-config :mln init-mln))))
+             (type (get-layer-wise-config init-mln))))
       ;; we never set a mask
-      (is (= nil (get-mask :mln init-mln)))
-      (is (= 2 (get-n-layers :mln init-mln)))
-      (is (= org.deeplearning4j.nn.layers.OutputLayer (type (get-output-layer :mln init-mln))))
-      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (get-updater :mln init-mln))))
+      (is (= nil (get-mask init-mln)))
+      (is (= 2 (get-n-layers init-mln)))
+      (is (= org.deeplearning4j.nn.layers.OutputLayer (type (get-output-layer init-mln))))
+      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (get-updater init-mln))))
       (is (= (type mln) (type (initialize-layers! :mln mln :input input))))
-      (is (true? (is-init-called? :mln mln)))
+      (is (true? (is-init-called? mln)))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output :mln init-mln :input input))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output :mln init-no-ds :iter (reset mnist-iter)))))
-      (is (= (type mln) (type (print-config :mln mln))))
+      (is (= (type mln) (type (print-config mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (reconstruct :mln mln
                                 :layer-output (first (feed-forward-to-layer
@@ -1062,7 +1058,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (score-examples :mln init-mln :dataset mnist-ds
                                    :add-regularization-terms? false))))
-      (is (= java.lang.String (type (summary :mln init-mln))))
+      (is (= java.lang.String (type (summary init-mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (z-from-prev-layer :mln init-mln :input input
                                    :current-layer-idx 0 :training? true)))))))
@@ -1186,7 +1182,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output-from-featurized :helper helper :featurized-input featurized-input))))
       (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (unfrozen-mln :helper helper))))
+             (type (unfrozen-mln helper))))
 
       ;; dl4clj.nn.transfer-learning.transfer-learning
       (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
@@ -1207,7 +1203,6 @@
       ;; testing add-layers
       (is (= ["first layer" "replacement another layer" "replacement second layer"]
              (get-layer-names
-              :mln
               (transfer-learning-builder :tlb tlb
                                          :fine-tune-conf fine-tune-conf
                                          :remove-last-n-layers 2
@@ -1225,7 +1220,6 @@
       ;; testing add-layer
       (is (= ["first layer" "another layer"]
              (get-layer-names
-              :mln
               (transfer-learning-builder
                :mln mln
                :fine-tune-conf fine-tune-conf
@@ -1325,7 +1319,7 @@
              (type (:layer (pre-apply! :updater layer-updater
                                        :layer layer :iteration 1
                                        :gradient (new-default-gradient))))))
-      (is (= {} (get-updater-for-variable :updater layer-updater)))
+      (is (= {} (get-updater-for-variable layer-updater)))
       ;; cant get this to work, cant add things to the l2ByParam hash map for some damn reason
       ;; thats what this is trying to do under the hood
       ;; https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-nn/src/main/java/org/deeplearning4j/nn/conf/NeuralNetConfiguration.java

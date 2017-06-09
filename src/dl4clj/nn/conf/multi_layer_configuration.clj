@@ -2,17 +2,16 @@
     dl4clj.nn.conf.multi-layer-configuration
   (:import [org.deeplearning4j.nn.conf MultiLayerConfiguration]))
 
-
 (defn to-json
-  [& {:keys [multi-layer-conf]}]
+  [multi-layer-conf]
   (.toJson multi-layer-conf))
 
 (defn to-yaml
-  [& {:keys [multi-layer-conf]}]
+  [multi-layer-conf]
   (.toYaml multi-layer-conf))
 
 (defn to-str
-  [& {:keys [multi-layer-conf]}]
+  [multi-layer-conf]
   (.toString multi-layer-conf))
 
 (defn from-json

@@ -12,7 +12,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
 
 (defn clear!
   "Clear residual parameters (useful for returning a gradient and then clearing old objects)"
-  [& {:keys [grad]}]
+  [grad]
   (doto grad (.clear)))
 
 (defn flattening-order-for-variables
@@ -34,7 +34,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
 
 (defn gradient-for-variable
   "Gradient look up table"
-  [& {:keys [grad]}]
+  [grad]
   (.gradientForVariable grad))
 
 (defn set-gradient-for!

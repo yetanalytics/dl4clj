@@ -8,15 +8,15 @@
   (doto nn-conf (.addVariable var-name)))
 
 (defn clear-variables!
-  [& {:keys [nn-conf]}]
+  [nn-conf]
   (doto nn-conf (.clearVariables)))
 
 (defn from-json
-  [& {:keys [json]}]
+  [json]
   (.fromJson json))
 
 (defn from-yaml
-  [& {:keys [json]}]
+  [json]
   (.fromYaml json))
 
 (defn get-l1-by-param
@@ -33,19 +33,19 @@
 
 (defn mapper
   "Object mapper for serialization of configurations"
-  [& {:keys [nn-conf]}]
+  [nn-conf]
   (.mapper nn-conf))
 
 (defn mapper-yaml
   "Object mapper for serialization of configurations"
-  [& {:keys [nn-conf]}]
+  [nn-conf]
   (.mapperYaml nn-conf))
 
 (defn reinit-mapper-with-subtypes
   "Reinitialize and return the Jackson/json ObjectMapper with additional named types.
 
-  :typez (coll), a collection of json named types"
-  [& {:keys [typez]}]
+  typez (coll), a collection of json named types"
+  [typez]
   (.reinitMapperWithSubtypes typez))
 
 (defn set-layer-param-lr!
@@ -67,9 +67,9 @@
     (.variables nn-conf)))
 
 (defn to-json
-  [& {:keys [nn-conf]}]
+  [nn-conf]
   (.toJson nn-conf))
 
 (defn build-nn
-  [& {:keys [nn-conf]}]
+  [nn-conf]
   (.build nn-conf))

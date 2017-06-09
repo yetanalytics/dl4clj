@@ -4,11 +4,13 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Usage
 
-Under construction. For now, have a look at the [examples](https://github.com/engagor/dl4clj/tree/master/src/dl4clj/examples) to get started.  You can also look at the tests (not complete)
+Under construction. For now, have a look at the [examples](https://github.com/engagor/dl4clj/tree/master/src/dl4clj/examples) to get started.
+You can also look at the tests (reflects changes from original authors work)
+- this section will be updated with the core usage and highlights of different name spaces
 
 ## Artifacts
 
-dl4clj artifacts are released to Clojars.
+dl4clj artifacts are released to Clojars. (original authors work)
 
 If using Maven add the following repository definition to your pom.xml:
 
@@ -41,17 +43,46 @@ With Maven:
 ## Features
 
 Not all of these are fully tested and are most likely going to undergo breaking changes
+- the tested features are stable for now and should stay that way.
+- even in the tested name spaces, there remain some functions which are either
+  - broken
+  - misunderstood
+  - not tested
 
 - Clustering
-- Datasets
-- Early Stopping
-- Eval/Evaluation
-- Neural Networks DSL
-- Optimize
+- Datasets (tested)
+- Early Stopping (tested)
+- Eval/Evaluation (tested)
+- Neural Networks DSL (tested)
+- Optimize (tested)
+
+## NOTES
+
+There are 3 types of arg structures for fns found in this libarary
+- single arg, just pass the arg to the function
+- single keyword arg, used when a function can accept either a single arg or no args
+- multiple keyword args, used when a function expects many args
+  - the function may expect all args to be supplied
+  - the function may expect cominations of args
+     - different combinations will produce different results
+ - see function defns to determine how the function behaves
+   - doc strings describe the arg types and in some places the result of various combinations of args
+     - I plan on adding the result of various cominations along with the arg descriptions
+   - there are cases when the function can accept all args or a subset of them
+- specs are going to replace the assertions made within the function definitions
+  - eventually all fns will be spec'd
+
+The namespaces contain dl4j user facing functions and functions that are called behind the scene
+- this decision was to allow for future development upon completion of the wrapping
+- this also allows for experimenting and fine grane control over the deeplearning building process
+- look at the dl4j source for a better understanding of the wrapped code
+  - links to the java-docs are in some name spaces and not other
+    - eventually all name spaces will have refrences to the dl4j java docs
 
 ## TODO
 
 Finish tests of currently implemented classes/interfaces
+- dl4clj.nn.layers.feedforward.recursive.tree
 
 Refactor overall structure of this project
 - ensure consistency in stlye (multimethods for heavy lifting and fns for use)
@@ -74,6 +105,8 @@ ND4j and Datavec implementations
 Update release section
 
 Spark and Kafka streaming
+
+Spark/Parallelism training
 
 ## Packages to implement:
 

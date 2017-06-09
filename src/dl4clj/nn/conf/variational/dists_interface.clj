@@ -12,6 +12,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   "Get the number of distribution parameters for the given input data size.
 
   :data-size (int) Size of the data. i.e., nIn value
+
   :dist (distribution), the distribution for a variational layer"
   [& {:keys [dist data-size]}]
   (.distributionInputSize dist data-size))
@@ -20,7 +21,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   "Calculate the negative log probability for each example individually
 
   :dist (distribution), the distribution for a variational layer
+
   :features (INDArray), input data to be modelled
+
   :pre-out-dist-params (INDArray), Distribution parameters used by :dist
    - before applying activation fn"
   [& {:keys [dist features pre-out-dist-params]}]
@@ -31,6 +34,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   i.e., return the mean value for the distribution
 
   :dist (distribution), the distribution for a variational layer
+
   :pre-out-dist-params (INDArray), Distribution parameters used by :dist
    - before applying activation fn"
   [& {:keys [dist pre-out-dist-params]}]
@@ -40,6 +44,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   "Randomly sample from P(x|z) using the specified distribution parameters
 
   :dist (distribution), the distribution for a variational layer
+
   :pre-out-dist-params (INDArray), Distribution parameters used by :dist
    - before applying activation fn"
   [& {:keys [dist pre-out-dist-params]}]
@@ -50,7 +55,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   respect to the preOutDistributionParams
 
   :dist (distribution), the distribution for a variational layer
+
   :features (INDArray), input data to be modelled
+
   :pre-out-dist-params (INDArray), Distribution parameters used by :dist
    - before applying activation fn"
   [& {:keys [dist features pre-out-dist-params]}]
@@ -68,9 +75,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   (summed or averaged over each example in the minibatch)
 
   :dist (distribution), the distribution for a variational layer
+
   :features (INDArray), input data to be modelled
+
   :pre-out-dist-params (INDArray), Distribution parameters used by :dist
    - before applying activation fn
+
   :average? (boolean), Whether the log probability should be averaged over the minibatch, or simply summed."
   [& {:keys [dist features pre-out-dist-params average?]}]
   (.negLogProbability dist features pre-out-dist-params average?))
@@ -80,7 +90,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   only works with composite reconstruction distributions
 
   :composite-dist (distribution), a composite distribution with a loss fn
+
   :features (INDArray), the input data
+
   :reconstruction (INDArray), the output of a variational model"
   [& {:keys [composite-dist features reconstruction]}]
   (.computeLossFunctionScoreArray composite-dist features reconstruction))

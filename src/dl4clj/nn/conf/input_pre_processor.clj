@@ -16,18 +16,18 @@
 
 (defn backprop
   "Reverse the preProcess during backprop."
-  [& {:keys [this output mini-batch-size]}]
-  (.backprop this output mini-batch-size))
+  [& {:keys [pp output mini-batch-size]}]
+  (.backprop pp output mini-batch-size))
 
 (defn pre-process
   "Pre preProcess input/activations for a multi layer network"
-  [& {:keys [this input mini-batch-size]}]
-  (.preProcess this input mini-batch-size))
+  [& {:keys [pp input mini-batch-size]}]
+  (.preProcess pp input mini-batch-size))
 
 (defn feed-forward-mask-array
-  [& {:keys [this mask-array current-mask-state mini-batch-size]}]
+  [& {:keys [pp mask-array current-mask-state mini-batch-size]}]
   (.feedForwardMaskArray
-   this mask-array (constants/value-of {:mask-state current-mask-state})
+   pp mask-array (constants/value-of {:mask-state current-mask-state})
    mini-batch-size))
 
 (defn get-output-type
@@ -37,8 +37,8 @@
   - {:convolutional {:height 1 :width 1 :depth 1}}
    - {:recurrent {:size 10}}
   - only 2 examples, see dl4clj.nn.conf.constants"
-  [& {:keys [this input-type]}]
-  (.getOutputType this (constants/input-types input-type)))
+  [& {:keys [pp input-type]}]
+  (.getOutputType pp (constants/input-types input-type)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method hevy lifting (constructor calling)

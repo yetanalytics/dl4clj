@@ -38,7 +38,7 @@
 
 (defn init-params!
   "Initialize the parameters and return the model"
-  [& {:keys [model]}]
+  [model]
   (doto model (.initParams)))
 
 (defn conf
@@ -48,10 +48,10 @@
 
 (defn fit!
   "Fit/train the model"
-  [mln & {:keys [mln ds iter data labels
-                 features features-mask labels-mask
-                 examples label-idxs]
-          :as opts}]
+  [& {:keys [mln ds iter data labels
+             features features-mask labels-mask
+             examples label-idxs]
+      :as opts}]
   (cond (contains-many? opts :features :labels :features-mask :labels-mask)
         (doto mln
           (.fit features labels features-mask labels-mask))

@@ -85,7 +85,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
 
 (defn get-updater-for-variable
   "returns a map of of {param-name gradient-updater}"
-  [& {:keys [updater]}]
+  [updater]
   (.getUpdaterForVariable updater))
 
 ;; all other fns found in the Updater interface

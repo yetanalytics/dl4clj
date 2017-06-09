@@ -9,12 +9,17 @@
 (defn activate
   "6 opts for triggering an activation
   1) only supply the layer, Trigger an activation with the last specified input
+
   2) supply training? (boolean), trigger with the last specified input
+
   3) supply input (INDArray), initialize the layer with the given input and return
    the activation for this layer given this input
+
   4) supply training-mode (keyword), Trigger an activation with the last specified input
     - keyword is one of :test or :train
+
   5) supply input and training?
+
   6) supply input and training-mode
    -both 4 and 5 initialize the layer with the given input and return the activation for this layer given this input"
   [& {:keys [model training? input training-mode]
@@ -35,6 +40,7 @@
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
+
    :mask-array (INDArray of mask values),
 
    :mask-state (keyword), either :active or :passthrough

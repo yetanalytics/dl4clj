@@ -1,8 +1,9 @@
 (ns dl4clj.nn.conf.graph.graph-vertex
   (:import [org.deeplearning4j.nn.graph.vertex
             VertexIndices BaseGraphVertex GraphVertex]))
+(comment
 
-(defprotocol graph-vertex-interface
+  (defprotocol graph-vertex-interface
   "an implementation of the GraphVertex interface, see
   https://deeplearning4j.org/doc/org/deeplearning4j/nn/graph/vertex/GraphVertex.html"
   (can-do-backwards [this ^boolean x]
@@ -53,7 +54,6 @@
    :output-vertices (into-array VertexIndices)")
   )
 
-(comment
 
   (extend-type ComputationGraph ;;something like this
     graph-vertex

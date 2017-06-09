@@ -82,6 +82,7 @@
       (true? build?) (.build))))
 
 (defn list-builder
+  ;; could refactor to be recursive (no counters)
   "builds a list of layers to be used in a multi-layer configuration
 
   layers should take the form of {:layers {idx {:layer-type layer-opts}}}

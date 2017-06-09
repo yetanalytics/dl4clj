@@ -27,7 +27,7 @@
 (defn layer-type
   [opts]
   (let [single-layer-nn-conf (:nn-conf opts)]
-    (-> (to-json :nn-conf single-layer-nn-conf)
+    (-> (to-json single-layer-nn-conf)
         (decode-strict true)
         :layer
         generic-dispatching-fn
@@ -204,7 +204,7 @@
 
 (defn new-frozen-layer
   "creates a new frozen layer from an existing layer"
-  [& {:keys [layer]}]
+  [layer]
   (FrozenLayer. layer))
 
 (defn new-foward-pass-return
