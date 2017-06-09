@@ -237,6 +237,9 @@
 
 
 (defn new-moving-window-base-dataset-iterator
+  ;; currently can't test this until I figure out the issue im running into with
+  ;; moving window dataset fetcher
+  ;; this calls the fetcher behind the scene
   "DataSetIterator for moving window (rotating matrices)
 
   :batch-size (int), the batch size

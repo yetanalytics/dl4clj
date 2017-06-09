@@ -4,6 +4,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/Mo
     dl4clj.datasets.iterator.impl.move-window-data-set-fetcher
   (:import [org.deeplearning4j.datasets.iterator.impl MovingWindowDataSetFetcher]))
 
+;; can't get this working in tests
+;; run into: java.lang.IllegalArgumentException: Only rotating matrices
+;; could be due to a misunderstanding on my part
+;; hence this namespace is not represented in datasets_test
+
+;; this guy is called internally by MovingWindowBaseDataSetIterator
+
 (defn new-moving-window-data-set-fetcher
   "Moving window data fetcher. Handles rotation of matrices in all directions
   to generate more examples.
@@ -17,8 +24,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/Mo
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MovingWindowDataSetFetcher.html"
   [& {:keys [data-set window-rows window-columns]}]
   (MovingWindowDataSetFetcher. data-set window-rows window-columns))
-
-(defn fetch!
-  "Fetches the next dataset."
-  [& {:keys [ds-fetcher n-examples]}]
-  (doto ds-fetcher (.fetch n-examples)))

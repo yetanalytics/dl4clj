@@ -1,5 +1,5 @@
 (ns dl4clj.datasets-test
-  (:refer-clojure :exclude [reset!])
+  (:refer-clojure :exclude [reset! rand])
   (:require [clojure.test :refer :all]
             [dl4clj.datasets.datavec :refer :all]
             [dl4clj.datasets.rearrange :refer :all]
@@ -18,7 +18,9 @@
             [datavec.api.writeable :refer :all]
             [datavec.api.records.readers :refer :all]
             [datavec.api.records.interface :refer :all]
-            [dl4clj.utils :refer [array-of]])
+            [dl4clj.utils :refer [array-of]]
+            [nd4clj.linalg.dataset.data-set :refer [data-set]]
+            [nd4clj.linalg.factory.nd4j :refer [rand]])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
@@ -138,14 +140,6 @@
                   :data-set [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
                   :batch 6))))
 
-    ;; dl4clj.datasets.iterator.impl.move-window-data-set-fetcher
-    ;; figure out what  Only rotating matrices means
-    #_(is (= "" (type (new-moving-window-data-set-fetcher
-                     :data-set (next-data-point (reset-fetcher! (new-mnist-data-set-iterator :batch 5 :n-examples 100)))
-                     :window-rows 1
-                     :window-columns 1))))
-    #_(is (= "" (type (fetch! :ds-fetcher "" :n-examples 10))))
-
     ;; dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter
     (is (= org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter
            (type (new-multi-data-set-iterator-adapter
@@ -193,10 +187,14 @@
       ;; dl4clj.datasets.iterator.impl.default-datasets
       (is (= java.lang.Boolean (type (has-next? iter))))
       (is (= org.nd4j.linalg.dataset.DataSet (type (next-data-point iter-w-labels))))
+
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
-      ;; will need to see if that is the case in some way
+      ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (get-feature-matrix (next-data-point (reset-iter! iter-w-labels))))))
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
       (is (= (type cifar-iter) (type (train-cifar-iter! cifar-iter))))
       (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter))))
       (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter
@@ -458,12 +456,6 @@
                                              :total-n-samples 10))))
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
              (type (new-reconstruction-dataset-iterator :dataset-iterator iter))))
-      ;; again rotating matrices error
-      #_(is (= "" (type (new-moving-window-base-dataset-iterator :batch-size 10
-                                                               :n-examples 10
-                                                               :dataset iris-ds
-                                                               :window-rows 2
-                                                               :window-columns 2))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
              (type (new-async-multi-dataset-iterator
                     :multi-dataset-iterator multi-iter
