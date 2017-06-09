@@ -117,12 +117,11 @@
                                         :precision 1))))
 
     ;; ROC evaluation
-    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2))))
-    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2))))
+    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc 2))))
+    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc 2))))
 
     ;; eval utils
-    (is (= org.deeplearning4j.eval.EvaluationUtils (type (new-evaluation-utils))))
-    ))
+    (is (= org.deeplearning4j.eval.EvaluationUtils (type (new-evaluation-utils))))))
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
@@ -168,6 +167,8 @@
       (is (= org.deeplearning4j.eval.ConfusionMatrix
              (type (get-confusion-matrix evaler-with-data))))
       (is (= java.lang.Integer (type (get-num-row-counter evaler-with-data))))
+
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; the network can't make any predictions bc of the low amount of training?
       ;; will need to import a trained network and test this theory
       ;; could also be nill because of aproblem creating the prediction objects
@@ -182,7 +183,9 @@
                                                    :actual-class-idx 0
                                                    :predicted-class-idx 1))))
       #_(is (= java.util.List (type (get-predictions-by-actual-class :evaler evaler-with-data
-                                                       :actual-class-idx 0))))
+                                                                     :actual-class-idx 0))))
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
       (is (= java.lang.Integer (type (get-top-n-correct-count evaler-with-data))))
       (is (= java.lang.Integer (type (get-top-n-total-count evaler-with-data))))
       (is (= org.deeplearning4j.eval.Evaluation (type
@@ -230,16 +233,10 @@
       (is (= org.deeplearning4j.eval.Evaluation (type (eval-classification!
                                                        :evaler evalr :labels labels
                                                        :network-predictions mln-output))))
-      ;; need to come back and test with a mask-array and record-meta-data
-      ;; want to use real examples of those to vars tho instead of a rand INDArray
-
       ;; need a time series network for eval-time-series!
-
       (is (= org.deeplearning4j.eval.Evaluation (type
                                                  (merge! :evaler evaler-with-data
-                                                         :other-evaler evalr))))
-      )
-    ))
+                                                         :other-evaler evalr)))))))
 
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
@@ -295,14 +292,3 @@
 ;; multi-class roc
 ;; eval-tools (roc)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-#_(deftest rocs-test
-  (testing "the creation and interaction with binary and multi-class rocs"
-    ;; this has no data in it so it returns NaN
-    (is (= java.lang.Double
-           (type (calculate-area-under-curve :roc (new-binary-roc :threshold-steps 2)))))
-    ;; need to get data into this before i can get its auc
-    #_(is (= java.lang.Double
-             (type (calculate-area-under-curve :roc (new-multiclass-roc :threshold-steps 2)
-                                               :class-idx 1))))
-    ))

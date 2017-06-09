@@ -35,10 +35,9 @@ all fns in dl4clj.eval.interface.i-evaluation work with ROCs"}
   This implementation currently uses fixed
   steps of size 1.0 / threshold-steps
 
-  :threshold-steps (int), controls the step size for generating the ROC curve"
-  [& {:keys [threshold-steps]
-      :as opts}]
-  (rocs {:binary opts}))
+  threshold-steps (int), controls the step size for generating the ROC curve"
+  [threshold-steps]
+  (rocs {:binary {:threshold-steps threshold-steps}}))
 
 (defn new-multiclass-roc
   "creates a new ROC for multi-class classifiers
@@ -46,10 +45,9 @@ all fns in dl4clj.eval.interface.i-evaluation work with ROCs"}
   This implementation currently uses fixed
   steps of size 1.0 / threshold-steps
 
-  :threshold-steps (int), controls the step size for generating the ROC curve"
-  [& {:keys [threshold-steps]
-      :as opts}]
-  (rocs {:multi-class opts}))
+  threshold-steps (int), controls the step size for generating the ROC curve"
+  [threshold-steps]
+  (rocs {:multi-class {:threshold-steps threshold-steps}}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shared fns
@@ -95,9 +93,7 @@ all fns in dl4clj.eval.interface.i-evaluation work with ROCs"}
    - when true, return the curve as a set of
    (false-positive, true-positive) points
 
-   - when false, return the curve as a set of pionts
-
- *******  need a better desc here, come back to this"
+   - when false, return the curve as a set of pionts"
   [& {:keys [roc as-array? class-idx]
       :or {as-array? false}
       :as opts}]

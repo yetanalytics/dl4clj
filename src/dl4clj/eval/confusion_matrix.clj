@@ -4,8 +4,6 @@
   (:import [org.deeplearning4j.eval ConfusionMatrix])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
-;;https://deeplearning4j.org/doc/org/deeplearning4j/eval/ConfusionMatrix.html
-
 (defn new-confusion-matrix
   "Creates a new confusion matrix.
 
