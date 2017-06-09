@@ -1,5 +1,8 @@
 (ns ^{:doc "implementation of the LayerUpdater class from dl4j.  Updates a layer
 
+These fns happen behind the scene (when you fit a model)
+- can use them to play around with a layer in combination with single forward passes
+
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.html"}
     dl4clj.nn.updater.layer-updater
   (:import [org.deeplearning4j.nn.updater LayerUpdater])
@@ -10,7 +13,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
   []
   (LayerUpdater.))
 
-(defn apply-learning-rate-decay-policy!
+(defn apply-lrate-decay-policy!
   "Update learning rate based on policy
 
   :decay-policy (keyword), the learning rate decay policy
@@ -23,15 +26,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
 
   :variable (str), the variable to apply the decay policy for
 
-  returns the updater"
+  returns a map of {:layer layer :updater updater}"
   [& {:keys [updater decay-policy layer iteration variable]}]
-  (doto updater (.applyLrDecayPolicy (enum/value-of {:learning-rate-policy decay-policy})
-                                     layer
-                                     iteration
-                                     variable)))
+  (.applyLrDecayPolicy updater (enum/value-of {:learning-rate-policy decay-policy})
+                       layer
+                       iteration
+                       variable)
+  {:layer layer :updater updater})
 
 (defn apply-momentum-decay-policy!
-  "Update momentum if schedule exist
+  "Updates current value of momentum based on the momentum schedule
+   - if the momentum schedule exists
 
   :layer (layer), a neural network layer
    - see: dl4clj.nn.conf.builders.builders
@@ -40,9 +45,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
 
   :variable (str), the variable to apply the decay policy for
 
-  returns the updater"
+  returns a map of {:layer layer :updater updater}"
   [& {:keys [updater layer iteration variable]}]
-  (doto updater (.applyMomentumDecayPolicy layer iteration variable)))
+  (.applyMomentumDecayPolicy updater layer iteration variable)
+  {:layer layer :updater updater})
 
 (defn pre-apply!
   "Apply gradient normalization: scale based on L2, clipping etc.
@@ -57,13 +63,14 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
 
   returns the updater"
   [& {:keys [updater layer gradient iteration]}]
-  (doto updater (.preApply layer gradient iteration)))
+  (.preApply updater layer gradient iteration)
+  {:layer layer :updater updater})
 
 (defn post-apply!
   "Apply the regularization
 
   :layer (layer), a neural network layer
-   - see: dl4clj.nn.conf.builders.builders
+   - see: dl4clj.nn.layers.layer-creation
 
   :gradient (INDArray), the errors for the layer
 
@@ -73,11 +80,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
 
   returns the updater"
   [& {:keys [updater layer gradient-array param mini-batch-size]}]
-  (doto updater (.postApply layer gradient-array param mini-batch-size)))
+  (.postApply updater layer gradient-array param mini-batch-size)
+  {:layer layer :updater updater})
 
 (defn get-updater-for-variable
   "returns a map of of {param-name gradient-updater}"
-  [updater]
+  [& {:keys [updater]}]
   (.getUpdaterForVariable updater))
 
 ;; all other fns found in the Updater interface

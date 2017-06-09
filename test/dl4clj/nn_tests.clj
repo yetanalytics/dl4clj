@@ -1,5 +1,5 @@
 (ns dl4clj.nn-tests
-  (:refer-clojure :exclude [get])
+  (:refer-clojure :exclude [get rand])
   (:require [dl4clj.nn.conf.builders.builders :refer :all]
             [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
@@ -15,16 +15,18 @@
             [dl4clj.nn.transfer-learning.fine-tune-conf :refer :all]
             [dl4clj.nn.transfer-learning.helper :refer :all]
             [dl4clj.nn.transfer-learning.transfer-learning :refer :all]
-            [nd4clj.linalg.factory.nd4j :refer [zeros]]
-            [dl4clj.nn.api.model :refer [set-param-table! init!]]
+            [dl4clj.nn.updater.layer-updater :refer :all]
+            [dl4clj.nn.updater.multi-layer-updater :refer :all]
+            [dl4clj.nn.conf.neural-net-configuration :refer [set-learning-rate-by-param! add-variable!]]
+            [nd4clj.linalg.factory.nd4j :refer [zeros rand]]
+            [dl4clj.nn.api.model :refer [set-param-table! init! set-param! init-params!]]
             [dl4clj.datasets.datavec :refer [mnist-ds]]
             [nd4clj.linalg.dataset.api.data-set :refer [get get-feature-matrix]]
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
             [dl4clj.eval.evaluation :refer [new-classification-evaler get-stats]]
             [dl4clj.utils :refer [array-of]]
             [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset]]
-            [clojure.test :refer :all]
-            ))
+            [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fn for layer creation
@@ -35,6 +37,7 @@
   (nn-conf-builder :optimization-algo :stochastic-gradient-descent
                    :iterations 1
                    :learning-rate 0.006
+                   :lr-policy-decay-rate 0.2
                    :build? true
                    :layer layer))
 
@@ -1239,8 +1242,94 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dl4clj.nn.updater.layer-updater
 ;; dl4clj.nn.updater.multi-layer-updater
-;; dl4clj.nn.updater.updater-creator
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest updater-tests
+  (testing "the creation of model updaters"
+    (let [l-builder (nn-conf-builder
+                     :seed 123
+                     :optimization-algo :stochastic-gradient-descent
+                     :iterations 1
+                     :learning-rate 0.006
+                     :updater :nesterovs
+                     :momentum 0.9
+                     :regularization? false
+                     :build? false
+                     :gradient-normalization :none
+                     :layers {0 (dense-layer-builder
+                                 :n-in 10
+                                 :n-out 100
+                                 :layer-name "first layer"
+                                 :activation-fn :relu
+                                 :weight-init :xavier)
+                              1 {:activation-layer {:n-in 100
+                                                    :n-out 10
+                                                    :layer-name "second layer"
+                                                    :activation-fn :soft-max
+                                                    :weight-init :xavier}}
+                              2 {:output-layer {:n-in 10
+                                                :n-out 1
+                                                :layer-name "output layer"
+                                                :activation-fn :soft-max
+                                                :weight-init :xavier}}})
+          mln-conf (multi-layer-config-builder
+                    :list-builder l-builder
+                    :backprop? true
+                    :pretrain? false
+                    :build? true)
+          mln (init! :model (new-multi-layer-network :conf mln-conf))
+          layer-updater (new-layer-updater)
+          layer (as-> (graves-lstm-layer-builder
+                       :n-in 10 :n-out 2 :forget-gate-bias-init 0.2
+                       :gate-activation-fn :relu
+                       :n-out 2
+                       :activation-fn :relu
+                       :bias-init 0.7 :bias-learning-rate 0.1
+                       :dist {:normal {:mean 0 :std 1}}
+                       :drop-out 0.2 :epsilon 0.3
+                       :gradient-normalization :renormalize-l2-per-layer
+                       :l2 0.1 :l2-bias 1
+                       :gradient-normalization-threshold 0.9
+                       :layer-name "foo"
+                       :learning-rate 0.1 :learning-rate-policy :inverse
+                       :learning-rate-schedule {0 0.6 1 0.5}
+                       :momentum 0.2  :momentum-after {0 0.3 1 0.4}
+                       :updater :nesterovs :weight-init :distribution) l
+                  (nn-conf-builder :layer l :regularization? true :build? true)
+                  ;; I can add variables now
+                  ;; just can't add anything to l1/2ByParam
+                  ;; going to need to add this logic to add-variable
+                  (do (.variables l (.add (.variables l false) "baz"))
+                      l)
+                  (add-variable! :nn-conf l :var-name "baz")
+                  (set-learning-rate-by-param! :nn-conf l :var-name "foo" :rate 0.2)
+                  (new-layer :nn-conf l))]
+      (is (= org.deeplearning4j.nn.updater.LayerUpdater (type layer-updater)))
+      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater
+             (type (new-multi-layer-updater :mln mln))))
+      (is (= (type layer)
+             (type (:layer (apply-lrate-decay-policy! :updater layer-updater
+                                              :layer layer
+                                              :iteration 1
+                                              :variable "foo"
+                                              :decay-policy :score)))))
+      (is (= (type layer)
+             (type (:layer (apply-momentum-decay-policy! :updater layer-updater
+                                                         :layer layer :iteration 1
+                                                         :variable "foo")))))
+      (is (= (type layer)
+             (type (:layer (pre-apply! :updater layer-updater
+                                       :layer layer :iteration 1
+                                       :gradient (new-default-gradient))))))
+      (is (= {} (get-updater-for-variable :updater layer-updater)))
+      ;; cant get this to work, cant add things to the l2ByParam hash map for some damn reason
+      ;; thats what this is trying to do under the hood
+      ;; https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-nn/src/main/java/org/deeplearning4j/nn/conf/NeuralNetConfiguration.java
+      #_(is (= "" (post-apply! :updater layer-updater
+                             :layer layer :gradient-array (rand [2])
+                             :param "foo" :mini-batch-size 10))))))
+
+
 
 (comment
 

@@ -1,6 +1,6 @@
 (ns ^{:doc "Gradient updater for MultiLayerNetworks.
- Expects backprop gradients for all layers to be in single Gradient object, keyed by "0_b", "1_w" etc.,
- as per MultiLayerNetwork.backward() -- NOT IMPLEMENTED YET
+ Expects backprop gradients for all layers to be in single Gradient object, keyed by 0_b, 1_w  etc.,
+ as per MultiLayerNetwork.backward()
 
  see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/MultiLayerUpdater.html"}
     dl4clj.nn.updater.multi-layer-updater
