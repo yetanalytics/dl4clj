@@ -123,8 +123,6 @@
   (constants #(Layer$TrainingMode/valueOf %) (:layer-training-mode opts)))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.TrainingMode.html
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; still need to test and make sure I have the right opts for constants
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
