@@ -10,7 +10,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
             SplitDataSetsFunction
             PathToDataSetFunction
             DataSetExportFunction
-            BatchDataSetsFunction])
+            BatchDataSetsFunction]
+           [org.deeplearning4j.spark.data.shuffle SplitDataSetExamplesPairFlatMapFunction])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,6 +46,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
 (defmethod ds-fns :split-ds [opts]
   (SplitDataSetsFunction.))
+
+(defmethod ds-fns :split-ds-rand [opts]
+  (let [max-k (:max-key-idx (:split-ds-rand opts))]
+    (SplitDataSetExamplesPairFlatMapFunction. max-k)))
 
 (defmethod ds-fns :path-to-ds [opts]
   (PathToDataSetFunction.))
@@ -150,6 +155,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   with one example in each"
   []
   (ds-fns {:split-ds {}}))
+
+(defn new-split-ds-with-appended-key
+  "splits each example in a DataSet object into its own DataSet.
+
+  Also adds a random key (int) in the range 0 to (- max-key-idx 1).
+
+  max-key-idx (int), used for adding random keys to the new datasets"
+  [max-key-idx]
+  (ds-fns {:split-ds-rand {:max-key-idx max-key-idx}}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shared fn from spark
