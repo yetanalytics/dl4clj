@@ -159,6 +159,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   "Calls one of the spark ds-fns on the dataset contained within the iter
 
   :ds-fn (obj), An instance of one of the ds-fn's defined in this ns
+   - can also be a config map which gets passed to the ds-fns multi-method
+     to create the ds-fn obj
 
   :iter (iterator), a dataset iterator
    - see: dl4clj.datasets.iterator.iterators and/or
@@ -166,6 +168,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   returns a map of the ds-fn and iter"
   [& {:keys [ds-fn iter]}]
-  (.call ds-fn iter)
-  {:fn-called ds-fn
-   :called-on iter})
+  ;; either way returns nil
+  (if (map? ds-fn)
+    (let [f (ds-fns ds-fn)]
+      (do (.call f iter)
+          {:fn-called f
+           :called-on iter}))
+    (do (.call ds-fn iter)
+        {:fn-called ds-fn
+         :called-on iter})))
