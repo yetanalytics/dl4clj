@@ -206,7 +206,10 @@ you need to suply atleast the mini batch size, number of possible labels and the
 
   :max-num-batches (int) the maximum number of batches the iterator should go through
 
-  :writeable-converter (writable), a writable converter
+  :writeable-converter (writable), converts a writable to another data type
+   - need to have a central source of their creation
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html
+     - the classes which implement this interface
    - opts are new-double-writable-converter, new-float-writable-converter
      new-label-writer-converter, new-self-writable-converter
    - see: dl4clj.datavec.api.io

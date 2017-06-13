@@ -5,7 +5,7 @@
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
             [dl4clj.nn.multilayer.multi-layer-network :refer :all]
             [dl4clj.nn.conf.input-pre-processor :refer :all]
-            [dl4clj.nn.conf.constants :refer :all]
+            [dl4clj.constants :refer :all]
             [dl4clj.nn.conf.distribution.distribution :refer :all]
             [dl4clj.nn.conf.step-fns :refer :all]
             [dl4clj.nn.conf.variational.dist-builders :refer :all]
@@ -40,60 +40,6 @@
                    :lr-policy-decay-rate 0.2
                    :build? true
                    :layer layer))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; constants, value-of, input-type
-;; dl4clj.nn.conf.constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest enum-testing
-  (testing "the creation of dl4j enums/constants"
-    ;; constants (helper fn)
-    (is (= "RELU" (constants #(str %) :relu :activation? true)))
-    (is (= "FooBaz" (constants #(str %) :foo-baz :camel? true)))
-    (is (= "Relu" (constants #(str %) :relu :activation? true :camel? true)))
-    (is (= "FOO_BAZ" (constants #(str %) :foo-baz)))
-
-    (is (= org.nd4j.linalg.activations.Activation
-           (type (value-of {:activation-fn :relu}))))
-    (is (= org.deeplearning4j.nn.conf.GradientNormalization
-           (type (value-of {:gradient-normalization :none}))))
-    (is (= org.deeplearning4j.nn.conf.LearningRatePolicy
-           (type (value-of {:learning-rate-policy :poly}))))
-    (is (= org.deeplearning4j.nn.conf.Updater
-           (type (value-of {:updater :adam}))))
-    (is (= org.deeplearning4j.nn.weights.WeightInit
-           (type (value-of {:weight-init :xavier}))))
-    (is (= org.nd4j.linalg.lossfunctions.LossFunctions$LossFunction
-           (type (value-of {:loss-fn :mse}))))
-    (is (= org.deeplearning4j.nn.conf.layers.RBM$HiddenUnit
-           (type (value-of {:hidden-unit :binary}))))
-    (is (= org.deeplearning4j.nn.conf.layers.RBM$VisibleUnit
-           (type (value-of {:visible-unit :binary}))))
-    (is (= org.deeplearning4j.nn.conf.ConvolutionMode
-           (type (value-of {:convolution-mode :strict}))))
-    (is (= org.deeplearning4j.nn.conf.layers.ConvolutionLayer$AlgoMode
-           (type (value-of {:cudnn-algo-mode :no-workspace}))))
-    (is (= org.deeplearning4j.nn.conf.layers.PoolingType
-           (type (value-of {:pool-type :avg}))))
-    (is (= org.deeplearning4j.nn.conf.BackpropType
-           (type (value-of {:backprop-type :standard}))))
-    (is (= org.deeplearning4j.nn.api.OptimizationAlgorithm
-           (type (value-of {:optimization-algorithm :lbfgs}))))
-    (is (= org.deeplearning4j.nn.api.MaskState
-           (type (value-of {:mask-state :active}))))
-    (is (= org.deeplearning4j.nn.api.Layer$Type
-           (type (value-of {:layer-type :feed-forward}))))
-    (is (= org.deeplearning4j.nn.api.Layer$TrainingMode
-           (type (value-of {:layer-training-mode :train}))))
-    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeRecurrent
-           (type (input-types {:recurrent {:size 10}}))))
-    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeFeedForward
-           (type (input-types {:feed-forward {:size 10}}))))
-    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutional
-           (type (input-types {:convolutional {:height 1 :width 1 :depth 1}}))))
-    (is (= org.deeplearning4j.nn.conf.inputs.InputType$InputTypeConvolutionalFlat
-           (type (input-types {:convolutional-flat {:height 1 :width 1 :depth 1}}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; distributions to sample weights from

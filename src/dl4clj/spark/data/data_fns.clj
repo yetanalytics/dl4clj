@@ -169,12 +169,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 ;; shared fn from spark
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn call!
+(defn call-ds-fns!
   "Calls one of the spark ds-fns on the dataset contained within the iter
 
-  :ds-fn (obj), An instance of one of the ds-fn's defined in this ns
+  :ds-fn (obj or map), An instance of one of the ds-fn's defined in this ns
    - can also be a config map which gets passed to the ds-fns multi-method
      to create the ds-fn obj
+   - see the new... fns for what should be in the config map
 
   :iter (iterator), a dataset iterator
    - see: dl4clj.datasets.iterator.iterators and/or

@@ -20,7 +20,8 @@
            [java.util.concurrent TimeUnit]
 
            ;; spark
-           [org.deeplearning4j.spark.api RDDTrainingApproach Repartition RepartitionStrategy]))
+           [org.deeplearning4j.spark.api RDDTrainingApproach Repartition RepartitionStrategy]
+           [org.deeplearning4j.spark.datavec DataVecSequencePairDataSetFunction$AlignmentMode]))
 
 ;; need to migrate all namespaces to using this ns for enums!
 
@@ -138,6 +139,11 @@
 (defmethod value-of :repartition-strategy [opts]
   (constants #(RepartitionStrategy/valueOf %) (:repartition-strategy opts) :camel? true))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/RepartitionStrategy.html
+
+(defmethod value-of :spark-alignment-mode [opts]
+  (constants #(DataVecSequencePairDataSetFunction$AlignmentMode/valueOf %)
+             (:spark-alignment-mode opts)))
+;; https://deeplearning4j.org/doc/org/deeplearning4j/spark/datavec/DataVecSequencePairDataSetFunction.AlignmentMode.html
 
 (defn input-types
   [opts]
