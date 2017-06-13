@@ -70,7 +70,7 @@
 
     ;; iris dataset
     (is (= org.deeplearning4j.datasets.iterator.impl.IrisDataSetIterator
-           (type (new-iris-data-set-iterator :batch 2 :n-examples 100))))
+           (type (new-iris-data-set-iterator :batch-size 2 :n-examples 100))))
 
     ;; lfwd
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator

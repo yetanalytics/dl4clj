@@ -25,7 +25,7 @@
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
             [dl4clj.eval.evaluation :refer [new-classification-evaler get-stats]]
             [dl4clj.utils :refer [array-of]]
-            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset]]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset-iter!]]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -991,7 +991,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output :mln init-mln :input input))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (output :mln init-no-ds :iter (reset mnist-iter)))))
+             (type (output :mln init-no-ds :iter (reset-iter! mnist-iter)))))
       (is (= (type mln) (type (print-config mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (reconstruct :mln mln
@@ -999,7 +999,7 @@
                                                       :layer-idx 0 :mln mln :input input))
                                 :layer-idx 1))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (score-examples :mln init-no-ds :iter (reset mnist-iter)
+             (type (score-examples :mln init-no-ds :iter (reset-iter! mnist-iter)
                                    :add-regularization-terms? false))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (score-examples :mln init-mln :dataset mnist-ds

@@ -172,7 +172,7 @@
         (recur (doto b (.addPreProcessor idx pp)) (rest result))))))
 
 (defn new-async-dataset-iterator
-  "AsyncDataSetIterator takes an existing DataSetIterator and loads one or more
+  "AsyncDataSetIterator takes an existing DataFmulSetIterator and loads one or more
   DataSet objects from it using a separate thread. For data sets where
   (next! some-iterator) is long running (limited by disk read or processing time for example)
   this may improve performance by loading the next DataSet asynchronously
@@ -306,6 +306,10 @@
       :as opts}]
   (iterators {:iterator-dataset-iterator opts}))
 
+;;*************************************************
+;; multi-dataset is misleading
+;; needs to be an iterator containing a multi-dataset not the dataset itself
+;;*************************************************
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
   DataSet objects as required to get a consistent batch size.

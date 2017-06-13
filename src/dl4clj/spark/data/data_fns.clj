@@ -27,7 +27,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     (BatchAndExportDataSetsFunction. batch-size path)))
 
 (defmethod ds-fns :batch-and-export-multi-ds [opts]
-  (let [conf (:batch-and-export-ds opts)
+  (let [conf (:batch-and-export-multi-ds opts)
         {batch-size :batch-size
          path :export-path} conf]
     (BatchAndExportMultiDataSetsFunction. batch-size path)))
@@ -36,13 +36,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   (let [mbs (:batch-size (:batch-ds opts))]
     (BatchDataSetsFunction. mbs)))
 
+;; did i miss batch-multi?????
+
 (defmethod ds-fns :export-ds [opts]
   (let [p (:export-path (:export-ds opts))]
-    (DataSetExportFunction. p)))
+    (DataSetExportFunction. (java.net.URI/create p))))
 
 (defmethod ds-fns :export-multi-ds [opts]
-  (let [p (:export-path (:export-ds opts))]
-    (MultiDataSetExportFunction. p)))
+  (let [p (:export-path (:export-multi-ds opts))]
+    (MultiDataSetExportFunction. (java.net.URI/create p))))
 
 (defmethod ds-fns :split-ds [opts]
   (SplitDataSetsFunction.))
@@ -106,8 +108,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Usage: (def single-ds-ex (map-partitions (new-batch-ds-fn n)))
 
   batch-size (int), the size of the batches"
-  [batch-size]
-  (ds-fns {:batch-ds {:batch-size batch-size}}))
+  [& {:keys [batch-size]
+      :as opts}]
+  (ds-fns {:batch-ds opts}))
 
 (defn new-ds-export-fn
   "A function to save DataSet objects to disk/HDFS.
@@ -117,10 +120,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Each DataSet object is given a random and (probably) unique name starting with
   dataset_ and ending with .bin.
 
-  export-path (URI), the place to export to, needs to be a java.net.URI"
-  [export-path]
-  (ds-fns {:export-ds {:export-path export-path}}))
-
+  export-path (str), the place to export to"
+  [& {:keys [export-path]
+      :as opts}]
+  (ds-fns {:export-ds opts}))
 
 (defn new-multi-ds-export-fn
   "A function to save MultiDataSet objects to disk/HDFS.
@@ -130,9 +133,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Each MultiDataSet object is given a random and (probably) unique name starting with
   dataset_ and ending with .bin.
 
-  export-path (URI), the place to export to, needs to be a java.net.URI"
-  [export-path]
-  (ds-fns {:export-multi-ds {:export-path export-path}}))
+  export-path (str), the place to export to"
+  [& {:keys [export-path]
+      :as opts}]
+  (ds-fns {:export-multi-ds opts}))
 
 (defn new-path-to-ds-fn
   "Simple function used to load DataSets from a given Path (str) to a DataSet object
@@ -162,33 +166,64 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Also adds a random key (int) in the range 0 to (- max-key-idx 1).
 
   max-key-idx (int), used for adding random keys to the new datasets"
-  [max-key-idx]
-  (ds-fns {:split-ds-rand {:max-key-idx max-key-idx}}))
+  [& {:keys [max-key-idx]
+      :as opts}]
+  (ds-fns {:split-ds-rand opts}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; shared fn from spark
+;; calling fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn call-ds-fns!
-  "Calls one of the spark ds-fns on the dataset contained within the iter
+(defn call-batch-and-export-ds-fn!
+  "uses the object created by new-batch-and-export-ds-fn
+   to perform its function
+    - this fn has the ability to create the object and call it
+      in a single use when you provide a config map for the
+      batch-and-export-ds-fn
 
-  :ds-fn (obj or map), An instance of one of the ds-fn's defined in this ns
-   - can also be a config map which gets passed to the ds-fns multi-method
-     to create the ds-fn obj
-   - see the new... fns for what should be in the config map
+  :the-fn (obj or config-map), will accept the object created using
+   new-batch-and-export-ds-fn, but will also accept a config map used
+   to call the ds-fns multimethod directly
+    - config map = {:batch-and-export-ds opts}
+      - opts is a map with keys/values described in new-batch-and-export-ds-fn
 
-  :iter (iterator), a dataset iterator
-   - see: dl4clj.datasets.iterator.iterators and/or
-          dl4clj.datasets.datavec
+  :partition-idx (int), tag for labeling the new datasets created via this fn
 
-  returns a map of the ds-fn and iter"
-  [& {:keys [ds-fn iter]}]
-  ;; either way returns nil
-  (if (map? ds-fn)
-    (let [f (ds-fns ds-fn)]
-      (do (.call f iter)
-          {:fn-called f
-           :called-on iter}))
-    (do (.call ds-fn iter)
-        {:fn-called ds-fn
-         :called-on iter})))
+  :ds-iter (dataset iterator), the iterator which goes through a dataset
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses"
+  [& {:keys [the-fn partition-idx ds-iter]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) (int partition-idx) ds-iter)
+    (.call the-fn (int partition-idx) ds-iter)))
+
+(defn call-batch-and-export-multi-ds-fn!
+  "uses the object created by new-batch-and-export-multi-ds-fn
+   to perform its function
+    - this fn has the ability to create the object and call it
+      in a single use when you provide a config map for the
+      batch-and-export-multi-ds-fn
+
+  :the-fn (obj or config-map), will accept the object created using
+   new-batch-and-export-ds-fn, but will also accept a config map used
+   to call the ds-fns multimethod directly
+    - config map = {:batch-and-export-multi-ds opts}
+      - opts is a map with keys/values described in new-batch-and-export-multi-ds-fn
+
+  :partition-idx (int), tag for labeling the new datasets created via this fn
+
+  :multi-ds-iter (multi-dataset iterator), the iterator which goes through a dataset
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses"
+  [& {:keys [the-fn partition-idx multi-ds-iter]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) (int partition-idx) multi-ds-iter)
+    (.call the-fn (int partition-idx) multi-ds-iter)))
+
+(defn call-batch-ds-fn!
+  ;; will write this doc tomorrow
+  ""
+  [& {:keys [the-fn ds-iter]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) ds-iter)
+    (.call the-fn ds-iter)))

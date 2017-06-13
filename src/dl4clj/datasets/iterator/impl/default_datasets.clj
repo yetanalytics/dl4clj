@@ -63,13 +63,13 @@
 (defn new-iris-data-set-iterator
   "IrisDataSetIterator handles traversing through the Iris Data Set.
 
-  :batch (int), size of the batch
+  :batch-size (int), size of the batch
 
   :n-examples (int), number of examples to iterator over
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/IrisDataSetIterator.html"
-  [& {:keys [batch n-examples]}]
-  (IrisDataSetIterator. batch n-examples))
+  [& {:keys [batch-size n-examples]}]
+  (IrisDataSetIterator. batch-size n-examples))
 
 (defn new-lfw-data-set-iterator
   "Creates a dataset iterator for the LFW image dataset.

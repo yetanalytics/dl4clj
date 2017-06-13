@@ -124,9 +124,33 @@
   (constants #(Layer$TrainingMode/valueOf %) (:layer-training-mode opts)))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.TrainingMode.html
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; still need to test and make sure I have the right opts for constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmethod value-of :seq-alignment-mode [opts]
+  (constants #(SequenceRecordReaderDataSetIterator$AlignmentMode/valueOf %)
+             (:seq-alignment-mode opts)
+             :activation true))
+;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.AlignmentMode.html
+
+(defmethod value-of :multi-alignment-mode [opts]
+  (constants #(RecordReaderMultiDataSetIterator$AlignmentMode/valueOf %)
+             (:multi-alignment-mode opts)
+             :activation true))
+;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.AlignmentMode.html
+
+(defmethod value-of :labeling-type [opts]
+  (constants #(LocalUnstructuredDataFormatter$LabelingType/valueOf %)
+             (:labeling-type opts)))
+;; https://deeplearning4j.org/doc/org/deeplearning4j/datasets/rearrange/LocalUnstructuredDataFormatter.LabelingType.html
+
+(defmethod value-of :termination-condition [opts]
+  (constants #(EarlyStoppingResult$TerminationReason/valueOf %)
+             (:termination-condition opts)
+             :camel? true))
+;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.TerminationReason.html
+
+(defmethod value-of :time-unit [opts]
+  (constants #(TimeUnit/valueOf %)
+             (:time-unit opts)))
+;; https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html
 
 (defmethod value-of :rdd-training-approach [opts]
   (constants #(RDDTrainingApproach/valueOf %) (:rdd-training-approach opts) :camel? true))

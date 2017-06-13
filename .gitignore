@@ -24,3 +24,5 @@ pom.xml.asc
 .repl
 .hgignore
 .hg/
+/resources/tmp/
+/resources/tests/spark/

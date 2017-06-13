@@ -23,7 +23,7 @@
   [^DataSetIterator this]
   (.inputColumns this))
 
-(defn has-next
+(defn has-next?
   "Get dataset iterator record reader labels"
   [^DataSetIterator this]
   (.hasNext this))
@@ -40,7 +40,7 @@
   [^DataSetIterator this]
   (.numExamples this))
 
-(defn reset
+(defn reset-iter!
   "Resets the iterator back to the beginning"
   [^DataSetIterator this]
   (doto this (.reset)))
