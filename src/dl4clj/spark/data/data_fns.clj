@@ -36,8 +36,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   (let [mbs (:batch-size (:batch-ds opts))]
     (BatchDataSetsFunction. mbs)))
 
-;; did i miss batch-multi?????
-
 (defmethod ds-fns :export-ds [opts]
   (let [p (:export-path (:export-ds opts))]
     (DataSetExportFunction. (java.net.URI/create p))))
@@ -107,7 +105,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   Usage: (def single-ds-ex (map-partitions (new-batch-ds-fn n)))
 
-  batch-size (int), the size of the batches"
+  :batch-size (int), the size of the batches"
   [& {:keys [batch-size]
       :as opts}]
   (ds-fns {:batch-ds opts}))
@@ -120,7 +118,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Each DataSet object is given a random and (probably) unique name starting with
   dataset_ and ending with .bin.
 
-  export-path (str), the place to export to"
+  :export-path (str), the place to export to"
   [& {:keys [export-path]
       :as opts}]
   (ds-fns {:export-ds opts}))
@@ -133,7 +131,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Each MultiDataSet object is given a random and (probably) unique name starting with
   dataset_ and ending with .bin.
 
-  export-path (str), the place to export to"
+  :export-path (str), the place to export to"
   [& {:keys [export-path]
       :as opts}]
   (ds-fns {:export-multi-ds opts}))
@@ -165,7 +163,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   Also adds a random key (int) in the range 0 to (- max-key-idx 1).
 
-  max-key-idx (int), used for adding random keys to the new datasets"
+  :max-key-idx (int), used for adding random keys to the new datasets"
   [& {:keys [max-key-idx]
       :as opts}]
   (ds-fns {:split-ds-rand opts}))
@@ -177,14 +175,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 (defn call-batch-and-export-ds-fn!
   "uses the object created by new-batch-and-export-ds-fn
    to perform its function
-    - this fn has the ability to create the object and call it
-      in a single use when you provide a config map for the
-      batch-and-export-ds-fn
+    - batch DataSet objects together, and save the result
 
   :the-fn (obj or config-map), will accept the object created using
    new-batch-and-export-ds-fn, but will also accept a config map used
    to call the ds-fns multimethod directly
-    - config map = {:batch-and-export-ds opts}
+    - config map = {:batch-and-export-ds {:batch-size (int) :export-path (str)}}
       - opts is a map with keys/values described in new-batch-and-export-ds-fn
 
   :partition-idx (int), tag for labeling the new datasets created via this fn
@@ -200,14 +196,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 (defn call-batch-and-export-multi-ds-fn!
   "uses the object created by new-batch-and-export-multi-ds-fn
    to perform its function
-    - this fn has the ability to create the object and call it
-      in a single use when you provide a config map for the
-      batch-and-export-multi-ds-fn
+    - batch MultiDataSet objects together, and save the result
 
   :the-fn (obj or config-map), will accept the object created using
    new-batch-and-export-ds-fn, but will also accept a config map used
    to call the ds-fns multimethod directly
-    - config map = {:batch-and-export-multi-ds opts}
+    - config map = {:batch-and-export-multi-ds {:batch-size (int) :export-path (str)}}
       - opts is a map with keys/values described in new-batch-and-export-multi-ds-fn
 
   :partition-idx (int), tag for labeling the new datasets created via this fn
@@ -221,9 +215,122 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     (.call the-fn (int partition-idx) multi-ds-iter)))
 
 (defn call-batch-ds-fn!
-  ;; will write this doc tomorrow
-  ""
+  "uses the object created by new-batch-ds-fn
+   to perform its function
+    - batch DataSet objects together, ie. combine single-example ds objs
+      together into minibatches
+
+  :the-fn (obj or map), will accept the object created by new-batch-ds-fn
+   or a config map to make that object
+   - config map = {:batch-ds {:batch-size (int)}}
+
+  :ds-iter, (iterator), an iterator which wraps a dataset you want batched
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses"
   [& {:keys [the-fn ds-iter]}]
   (if (map? the-fn)
     (.call (ds-fns the-fn) ds-iter)
     (.call the-fn ds-iter)))
+
+(defn call-ds-export-fn!
+  "uses the object created by new-ds-export-fn to perform its function
+   - save the dataset to a specified directory
+
+  :the-fn (obj or map), will accept the object created by new-ds-export-fn
+   or a config map to make the object
+    - config mpa = {:export-ds {:export-path path (str)}}
+
+  :ds-iter (iterator), an iterator which wraps a dataset you want exported
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses
+
+  returns a map of the export-fn and ds-iter"
+  [& {:keys [the-fn ds-iter]}]
+  (if (map? the-fn)
+    (do (.call (ds-fns the-fn) ds-iter)
+        {:export-fn the-fn :iter ds-iter})
+    (do (.call the-fn ds-iter)
+        {:export-fn the-fn :iter ds-iter})))
+
+(defn call-multi-ds-export-fn!
+  "uses the object created by new-multi-ds-export-fn to perform its function
+   - save the multi dataset to a specified directory
+
+  :the-fn (obj or map), will accept the object created by new-multi-ds-export-fn
+   or a config map to make the object
+    - config mpa = {:export-multi-ds {:export-path path (str)}}
+
+  :ds-iter (iterator), an iterator which wraps a dataset you want exported
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses
+
+  returns a map of the export-fn and ds-iter"
+  [& {:keys [the-fn ds-iter]}]
+  (if (map? the-fn)
+    (do (.call (ds-fns the-fn) ds-iter)
+        {:export-fn the-fn :iter ds-iter})
+    (do (.call the-fn ds-iter)
+        {:export-fn the-fn :iter ds-iter})))
+
+(defn call-path-to-ds-fn!
+  "uses the object created by new-path-to-ds-fn to perform its function
+   - load serialized datasets from a given path
+   - RDD<String> to RDD<DataSet>
+
+  :the-fn (obj or map), will accept the object created by new-path-to-ds-fn
+   or a config map to make the object
+    - config map = {:path-to-ds {}}
+
+  :path (str), the path to the seralized statsets
+   - needs to point at the ds file itself not the directory its in"
+  [& {:keys [the-fn path]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) path)
+    (.call the-fn path)))
+
+(defn call-path-to-multi-ds-fn!
+  "uses the object created by new-path-to-multi-ds-fn to perform its function
+   - load serialized multi-datasets from a given path
+   - RDD<String> to RDD<MultiDataSet>
+
+  :the-fn (obj or map), will accept the object created by new-path-to-multi-ds-fn
+   or a config map to make the object
+    - config map = {:path-to-multi-ds {}}
+
+  :path (str), the path to the seralized statsets
+   - needs to point at the ds file itself not the directory its in"
+  [& {:keys [the-fn path]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) path)
+    (.call the-fn path)))
+
+(defn call-split-ds-fn!
+  "uses the object created by new-split-ds-fn to perform its function
+   - split an existing dataset into multiple dataset objecs with one example each
+
+  :the-fn (obj or map), will accept the object created by new-split-ds-fn
+   or a config map to make the object
+    - config map = {:split-ds {}}
+
+  :ds-iter (iterator), an iterator which wraps a dataset you want split
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses"
+  [& {:keys [the-fn ds-iter]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) ds-iter)
+    (.call the-fn ds-iter)))
+
+(defn call-split-ds-with-appended-key!
+  "uses the object created by new-split-ds-with-appended-key to perform its function
+   - split an existing dataset into multiple dataset objecs with one example each
+     and tagging those objs with a random key from 0 (- max-key-idx 1)
+
+  :the-fn (obj or map), will accept the object created by new-split-ds-fn
+   or a config map to make the object
+    - config map = {:split-ds-rand {:max-key-idx (int)}}
+
+  :ds (data-set), the dataset you want to split"
+  [& {:keys [the-fn ds]}]
+  (if (map? the-fn)
+    (.call (ds-fns the-fn) ds)
+    (.call the-fn ds)))
