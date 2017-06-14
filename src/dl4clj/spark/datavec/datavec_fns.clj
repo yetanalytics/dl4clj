@@ -279,7 +279,9 @@ the number of classes (labels), and if the ds is for regression or classificatio
                               :pre-processor (pre-processor)}}
     - only :label-idx, :n-labels, :batch-size, :byte-file-len are required
 
-  :input-tuple (scala.Tuple2) <hadoop.io.Text, hadoop.io.BytesWritable"
+  :input-tuple (scala.Tuple2) <hadoop.io.Text, hadoop.io.BytesWritable>
+   - see: https://deeplearning4j.org/datavecdoc/org/datavec/spark/functions/data/FilesAsBytesFunction.html
+          - needs to be implemented"
   [& {:keys [the-fn input-tuple]}]
   (if (map? the-fn)
     (.call (datavec-fns the-fn) input-tuple)
@@ -342,6 +344,9 @@ the number of classes (labels), and if the ds is for regression or classificatio
 
   :input (scala.Tuple2),
   <(list (list writable) (list writable) ...), (list (list writable) (list writable) ...)>
+   - see :https://deeplearning4j.org/datavecdoc/org/datavec/spark/functions/pairdata/PairSequenceRecordReaderBytesFunction.html
+     - needs to be implemented, its how you create the scala.Tuple2 input
+       - which needs https://deeplearning4j.org/datavecdoc/org/datavec/spark/functions/pairdata/BytesPairWritable.html
    - classes which implement the writable interface
      - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html
      - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/package-tree.html"

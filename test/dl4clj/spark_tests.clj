@@ -74,7 +74,7 @@
 (def csv-rr (new-csv-record-reader))
 
 (def poker-training-file-byte-size
-  (int (.length (clojure.java.io/as-file "resources/poker-spark-test.txt"))))
+  (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-fns creation and calling
@@ -215,5 +215,14 @@
                                                                      :label-idx 10
                                                                      :n-labels 10}}
                                          :string-ds (slurp "resources/poker-spark-test.csv")))))
+
+    ;; to test fns which require tuple inputs, datavec.spark packages need to be implemented
+    #_(is (= "" (call-datavec-byte-ds-fn! :the-fn (new-datavec-byte-ds-fn :label-idx 10
+                                                                        :n-labels 10
+                                                                        :batch-size 1
+                                                                        :byte-file-len poker-training-file-byte-size))))
+
+    ;; implement the higher level implementation fns
+    ;; see when we get back to the low level
 
     ))
