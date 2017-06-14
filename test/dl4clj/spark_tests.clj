@@ -1,6 +1,8 @@
 (ns dl4clj.spark-tests
+  (:refer-clojure :exclude [rand])
   (:require [clojure.test :refer :all]
             [dl4clj.spark.data.data-fns :refer :all]
+            [dl4clj.spark.datavec.datavec-fns :refer :all]
 
             ;; other fns used for testing
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
@@ -11,11 +13,28 @@
             [nd4clj.linalg.dataset.multi-ds :refer [new-multi-ds]]
 
             ;; data for multi-ds
-            ;; dont forget to add in the refer-clojure exclude
             [nd4clj.linalg.factory.nd4j :refer [rand]]
-            [dl4clj.utils :refer [array-of]])
+
+            ;; used in multi-ds-iter
+            [dl4clj.utils :refer [array-of]]
+
+            ;; need record readers
+            [datavec.api.records.readers :refer [new-csv-record-reader
+                                                 new-csv-nlines-seq-record-reader]]
+
+            ;; ds pre-processor
+            [nd4clj.linalg.dataset.api.pre-processors :refer [new-min-max-normalization-ds-preprocessor]]
+
+            ;; string split
+            [datavec.api.split :refer [new-string-split
+                                       get-list-string-split-data]]
+            )
   (:import [org.nd4j.linalg.dataset.api.iterator TestMultiDataSetIterator]
            [org.nd4j.linalg.dataset.api MultiDataSet]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; helper fns and defs used in testing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def iris-iter (new-iris-data-set-iterator :batch-size 10 :n-examples 2))
 ;; this way of making an iter from an existing multi-dataset needs to
@@ -51,6 +70,15 @@
       reset-multi-ds-iter?!
       .next
       (.save (clojure.java.io/as-file "resources/tests/spark/test-save-multi.bin"))))
+
+(def csv-rr (new-csv-record-reader))
+
+(def poker-training-file-byte-size
+  (int (.length (clojure.java.io/as-file "resources/poker-spark-test.txt"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; data-fns creation and calling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest data-fns-test
   (testing "the creation of ds-fns"
@@ -150,3 +178,42 @@
     (is (= java.util.ArrayList$Itr
            (type (call-split-ds-with-appended-key! :the-fn {:split-ds-rand {:max-key-idx 12}}
                                                    :ds (.next (reset-iter?! iris-iter))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; datavec-fns creation and calling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest create-datavec-spark-fns
+  (testing "the creation of datavec fns for spark"
+    (is (= org.deeplearning4j.spark.datavec.RecordReaderFunction
+           (type (new-record-reader-fn :record-reader csv-rr
+                                       :label-idx 10
+                                       :n-labels 10))))
+    (is (= org.deeplearning4j.spark.datavec.DataVecByteDataSetFunction
+           (type (new-datavec-byte-ds-fn :label-idx 10 :n-labels 10
+                                         :batch-size 10 :byte-file-len poker-training-file-byte-size
+                                         :regression? false))))
+    (is (= org.deeplearning4j.spark.datavec.DataVecDataSetFunction
+           (type (new-datavec-ds-fn :label-idx 10 :n-labels 10 :regression? false))))
+    (is (= org.deeplearning4j.spark.datavec.DataVecSequenceDataSetFunction
+           (type (new-datavec-seq-ds-fn :label-idx 10 :n-labels 10
+                                        :regression? false
+                                        :pre-processor (new-min-max-normalization-ds-preprocessor)))))
+    (is (= org.deeplearning4j.spark.datavec.DataVecSequencePairDataSetFunction
+           (type (new-datavec-seq-pair-ds-fn :n-labels 10 :regression? false
+                                             :spark-alignment-mode :equal-length))))))
+
+(deftest calling-datavec-spark-fns
+  (testing "the calling of the datavec spark fns"
+    (is (= org.nd4j.linalg.dataset.DataSet
+           (type (call-record-reader-fn! :the-fn (new-record-reader-fn :record-reader csv-rr
+                                                                       :label-idx 10
+                                                                       :n-labels 10)
+                                         :string-ds (slurp "resources/poker-spark-test.csv")))))
+    (is (= org.nd4j.linalg.dataset.DataSet
+           (type (call-record-reader-fn! :the-fn {:record-reader-fn {:record-reader csv-rr
+                                                                     :label-idx 10
+                                                                     :n-labels 10}}
+                                         :string-ds (slurp "resources/poker-spark-test.csv")))))
+
+    ))

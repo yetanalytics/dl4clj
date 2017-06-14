@@ -38,17 +38,16 @@ and the number of classes (labels)"))))
          byte-file-len :byte-file-len
          regression? :regression?
          pp :pre-processor} conf]
-    (cond (contains-many? conf :label-idx :n-labels :batch-size :btye-file-len :regression? :pre-processor)
+    (cond (contains-many? conf :label-idx :n-labels :batch-size :byte-file-len :regression? :pre-processor)
           (DataVecByteDataSetFunction. label-idx n-labels batch-size byte-file-len regression? pp)
-          (contains-many? conf :label-idx :n-labels :batch-size :btye-file-len :regression?)
+          (contains-many? conf :label-idx :n-labels :batch-size :byte-file-len :regression?)
           (DataVecByteDataSetFunction. label-idx n-labels batch-size byte-file-len regression?)
-          (contains-many? conf :label-idx :n-labels :batch-size :btye-file-len)
+          (contains-many? conf :label-idx :n-labels :batch-size :byte-file-len)
           (DataVecByteDataSetFunction. label-idx n-labels batch-size byte-file-len)
           :else
           ;; this will turn into a spec
           (assert false "you must atleast supply the idx of the label column,
  the number of classes (labels), the size of the ds and the number of bytes per individual file"))))
-
 
 (defmethod datavec-fns :spark-ds-iter [opts]
   (let [conf (:spark-ds-iter opts)
@@ -246,37 +245,110 @@ the number of classes (labels), and if the ds is for regression or classificatio
       :as opts}]
   (datavec-fns {:spark-seq-pair-ds-iter opts}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; calling fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn call-datavec-fns!
-  "Calls one of the spark ds-fns on the dataset contained within the iter
+(defn call-record-reader-fn!
+  "uses the object created by new-record-reader-fn to perform its function
+   - turn a string into a dataset based on a record reader
 
-  :datavec-fn (obj or map), either the return value of one of the new-datavec...-fn
-   or a config map used to call the multi method.  see the fn doc strings for opts values
-   and the fn body for fn type (first keyword, ie :spark-seq-ds-iter)
-    - {:spark-seq-ds-iter {...opts}}
+  :the-fn (obj or map), will accept the object created using new-record-reader-fn,
+   but will also accept a config map used to call the datavec-fns multimethod
+   directly.
+    - config map = {:record-reader-fn {:record-reader (record-reader) :label-idx (int)
+                                       :n-labels (int), :writable-converter (writable-converter)}}
+    - only :record-reader, :label-idx and :n-labels are required
 
-  :fn-dependent-data (data), data used in the call to the datavec-fn instance
-   - when datavec-fn = record-reader-fn, data should be a string
+  :string-ds (str), the dataset as a string to be used in a string-split
+   - for info on string splits, see: datavec.api.split"
+  [& {:keys [the-fn string-ds]}]
+  (if (map? the-fn)
+    (.call (datavec-fns the-fn) string-ds)
+    (.call the-fn string-ds)))
 
-   - when datavec-fn = new-datavec-byte-ds-fn, data should be:
-     scala.Tuple2<hadoop.io.Text, hadoop.io.BytesWritable>
+(defn call-datavec-byte-ds-fn!
+  "uses the object created by new-datavec-byte-ds-fn to perform its function
+   - turn a string into a dataset based on a record reader
 
-   - when datavec-fn = new-datavec-ds-fn, data should be:
-     list of writables
+  :the-fn (obj or map), will accept the object created using new-datavec-byte-ds-fn,
+   but will also accept a config map used to call the datavec-fns multimethod
+   directly.
+    - config map = {:byte-ds {:batch-size (int) :label-idx (int) :n-labels (int),
+                              :byte-file-len (int), :regression? (boolean),
+                              :pre-processor (pre-processor)}}
+    - only :label-idx, :n-labels, :batch-size, :byte-file-len are required
 
-   - when datavec-fn = new-datavec-seq-ds-fn, data should be:
-     (list (list writable) (list writable) ...)
+  :input-tuple (scala.Tuple2) <hadoop.io.Text, hadoop.io.BytesWritable"
+  [& {:keys [the-fn input-tuple]}]
+  (if (map? the-fn)
+    (.call (datavec-fns the-fn) input-tuple)
+    (.call the-fn input-tuple)))
 
-   -when datavec-fn = new-datavec-seq-pair-ds-fn, data should be:
-     scala.Tuple2 <(list (list writable) (list writable)...), (list (list writable) (list writable) ...)>
+(defn call-datavec-ds-fn!
+  "uses the object created by new-datavec-ds-fn to perform its function
+   - maps a collection of writable objects (out of a datavec-spark record reader fn)
+     to DataSet objects for Spark training
 
-  STILL NEED TO FIGURE OUT THE RDDMINIBATCHES CALL TYPE (3 subtypes)"
-  [& {:keys [datavec-fn fn-dependent-data]}]
-  ;; either way returns nil
-  (if (map? datavec-fn)
-    (let [f (datavec-fns datavec-fn)]
-      (.call f fn-dependent-data))
-    (.call datavec-fn fn-dependent-data)))
+  :the-fn (obj or map), will accept the object created using new-datavec-ds-fn,
+   but will also accept a config map used to call the datavec-fns multimethod
+   directly.
+    - config map = {:spark-ds-iter {:label-idx (int), :n-labels (int) :regression? (boolean)
+                                    :pre-processor (pre-processor), :writable-converter (writable)
+                                    :label-idx-from (int), :label-idx-to (int)}}
+    - only :label-idx, :n-labels, :regression? are required
+
+  :list-of-writables (list), a collection (list), of writable objects
+   - classes which implement the writable interface
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/package-tree.html"
+  [& {:keys [the-fn list-of-writables]}]
+  (if (map? the-fn)
+    (.call (datavec-fns the-fn) list-of-writables)
+    (.call the-fn list-of-writables)))
+
+(defn call-datavec-seq-ds-fn!
+  "uses the object created by new-datavec-seq-ds-fn to perform its function
+   - maps a collection of collections of writables (out of a datavec-spark sequence record reader fn)
+     to DataSet objects for spark training
+
+  :the-fn (obj or map), will accept the object created using new-datavec-seq-ds-fn,
+   but will also accept a config map used to call the datavec-fns multimethod directly.
+    - config map = {:spark-seq-ds-iter {:label-idx (int), :n-labels (int),
+                                        :regression? (boolean), :pre-processor (pre-processor)
+                                        :writable-converter (converter)}}
+    - only :label-idx, :n-labels, :regression? are required
+
+  :input (list), (list (list writable) (list writable) ...)
+   - classes which implement the writable interface
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/package-tree.html"
+  [& {:keys [the-fn input]}]
+  (if (map? the-fn)
+    (.call (datavec-fns the-fn) input)
+    (.call the-fn input)))
+
+(defn call-datavec-seq-pair-ds-fn!
+  "uses the object created by new-datavec-seq-pair-ds-fn to perform its function
+   - maps a tuple of collection of collections of writables (out of two datavec-spark sequence record reader fns)
+     to DataSet objects for spark training
+
+  :the-fn (obj or map), will accept the object created using new-datavec-seq-pair-ds-fn,
+   but will also accept a config map used to call the datavec-fns multimethod directly.
+    - config map = {:spark-seq-pair-ds-iter {:spark-alignment-mode (keyword), :n-labels (int),
+                                             :regression? (boolean), :pre-processor (pre-processor)
+                                             :writable-converter (converter)}}
+    - only :label-idx, :n-labels, :regression? are required
+
+  :input (scala.Tuple2),
+  <(list (list writable) (list writable) ...), (list (list writable) (list writable) ...)>
+   - classes which implement the writable interface
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html
+     - https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/package-tree.html"
+  [& {:keys [the-fn input-tuple]}]
+  (if (map? the-fn)
+    (.call (datavec-fns the-fn) input-tuple)
+    (.call the-fn input-tuple)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the subclass has the mini-batches-fn which has the call method
@@ -284,6 +356,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
 ;; when calling the superclass constructor
 ;; for now just going to implement the superclass constructor
 ;; https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-scaleout/spark/dl4j-spark/src/main/java/org/deeplearning4j/spark/datavec/RDDMiniBatches.java
+;; come back to test once there is a good way of making java rdds out of datasets
 (defmethod datavec-fns :rdd-mini-batches [opts]
   (let [conf (:rdd-mini-batches opts)
         {mini-batch :mini-batch

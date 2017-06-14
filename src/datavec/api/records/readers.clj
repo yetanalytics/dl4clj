@@ -95,6 +95,9 @@
   :delimiter (str) the delimiter seperating values
   :n-lines-per-seq (int) the number of lines which compose a single series
 
+  NOTE: This record reader is for saying, there are multiple time series which should
+        be considered together and classified by a single label (for classification)
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVNLinesSequenceRecordReader.html"
   [& {:keys [skip-num-lines delimiter n-lines-per-seq]
       :as opts}]
