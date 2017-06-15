@@ -6,7 +6,8 @@
             RecordReaderFunction
             RDDMiniBatches
             RDDMiniBatches$MiniBatchFunction
-            DataVecByteDataSetFunction])
+            DataVecByteDataSetFunction]
+           [org.deeplearning4j.spark.datavec.export StringToDataSetExportFunction])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many?]]
             [dl4clj.constants :as enum]))
 
@@ -103,6 +104,16 @@ the number of classes (labels), and if the ds is for regression or classificatio
           (DataVecSequencePairDataSetFunction. n-labels regression?)
           :else
           (DataVecSequencePairDataSetFunction.))))
+
+(defmethod datavec-fns :string-to-ds-export [opts]
+  (let [conf (:string-to-ds-export opts)
+        {dir :output-directory
+         rr :record-reader
+         batch-size :batch-size
+         r? :regression?
+         l-idx :label-idx
+         n-labels :n-labels} conf]
+    (StringToDataSetExportFunction. (java.net.URI/create dir) rr batch-size r? l-idx n-labels)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns, need to document keyword combos in doc string
@@ -245,6 +256,27 @@ the number of classes (labels), and if the ds is for regression or classificatio
       :as opts}]
   (datavec-fns {:spark-seq-pair-ds-iter opts}))
 
+(defn new-string-to-ds-export-fn
+  "A function used in forEachPartition to convert Strings to Dataset Objects
+   using a record reader.
+
+  :output-directory (str), the directory to export to
+
+  :record-reader (record-reader), the object containing the string data
+   - see: datavec.api.records.readers
+
+  :batch-size (int), the size of the minibatch
+
+  :regression? (boolean), are we dealing with a classification or regression dataset
+
+  :label-idx (int), the column index of the labels within the record-reader
+
+  :n-labels (int), the total number of possible labels or classes"
+  [& {:keys [output-directory record-reader batch-size
+             regression? label-idx n-labels]
+      :as opts}]
+  (datavec-fns {:string-to-ds-export opts}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; calling fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -354,6 +386,30 @@ the number of classes (labels), and if the ds is for regression or classificatio
   (if (map? the-fn)
     (.call (datavec-fns the-fn) input-tuple)
     (.call the-fn input-tuple)))
+
+(defn call-string-to-ds-export-fn!
+  "uses the object created by new-string-to-ds-fn to perform its function
+   - converts strings to datasset objects using a record reader
+
+  :the-fn (obj or map), will  accept the object created using new-string-to-ds-export-fn
+   but will also accept a config map used to call the datavec-fns multimethod directly.
+   - config map = {:string-to-ds-export {:output-directory (str), :record-reader (record reader),
+                                         :batch-size (int), :regression? (boolean),
+                                         :label-idx (int), :n-labels (int)}}
+   - all args are required to create the string-to-ds-export fn
+
+  :iter (iterator), an iterator which contains the string data to convert and export
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - NOTE: make sure to reset the iter after uses
+
+  returns the iterator and the fn-object"
+  [& {:keys [the-fn iter]}]
+  (if (map? the-fn)
+    (let [f (datavec-fns the-fn)]
+      (do (.call f iter)
+        {:fn f :iter iter}))
+    (do (.call the-fn iter)
+        {:fn the-fn :iter iter})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the subclass has the mini-batches-fn which has the call method

@@ -21,6 +21,9 @@
             ;; need record readers
             [datavec.api.records.readers :refer [new-csv-record-reader
                                                  new-csv-nlines-seq-record-reader]]
+            ;; string iterator
+            [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]
+            [dl4clj.datasets.iterator.impl.list-data-set-iterator :refer :all]
 
             ;; ds pre-processor
             [nd4clj.linalg.dataset.api.pre-processors :refer [new-min-max-normalization-ds-preprocessor]]
@@ -201,7 +204,14 @@
                                         :pre-processor (new-min-max-normalization-ds-preprocessor)))))
     (is (= org.deeplearning4j.spark.datavec.DataVecSequencePairDataSetFunction
            (type (new-datavec-seq-pair-ds-fn :n-labels 10 :regression? false
-                                             :spark-alignment-mode :equal-length))))))
+                                             :spark-alignment-mode :equal-length))))
+    (is (= org.deeplearning4j.spark.datavec.export.StringToDataSetExportFunction
+           (type (new-string-to-ds-export-fn :output-directory "resources/tests/spark/export/"
+                                             :record-reader (new-csv-record-reader)
+                                             :batch-size 1
+                                             :regression? false
+                                             :label-idx 10
+                                             :n-labels 10))))))
 
 (deftest calling-datavec-spark-fns
   (testing "the calling of the datavec spark fns"
@@ -215,7 +225,20 @@
                                                                      :label-idx 10
                                                                      :n-labels 10}}
                                          :string-ds (slurp "resources/poker-spark-test.csv")))))
-
+    (is (= '(:fn :iter)
+           (keys (call-string-to-ds-export-fn!
+                  :the-fn (new-string-to-ds-export-fn
+                           :output-directory "resources/tests/spark/export/"
+                           :record-reader (new-csv-record-reader)
+                           :batch-size 1
+                           :regression? false
+                           :label-idx 10
+                           :n-labels 10)
+                  :iter (-> (slurp "resources/poker-spark-test.csv")
+                            (clojure.string/replace "\n" "")
+                            vector
+                            (java.util.ArrayList.)
+                            .listIterator)))))
     ;; to test fns which require tuple inputs, datavec.spark packages need to be implemented
     #_(is (= "" (call-datavec-byte-ds-fn! :the-fn (new-datavec-byte-ds-fn :label-idx 10
                                                                         :n-labels 10
