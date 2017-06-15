@@ -171,7 +171,8 @@
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/spark/datavec/DataVecSequencePairDataSetFunction.AlignmentMode.html
 
 (defmethod value-of :storage-level [opts]
-;; StorageLevel doesn't have a value-of method
+  ;; StorageLevel doesn't have a value-of method
+  ;; http://spark.apache.org/docs/2.0.0/api/java/index.html?org/apache/spark/storage/StorageLevel.html
   (let [lvl (:storage-level opts)]
     (cond
       (= lvl :disk-only-2) (StorageLevel/DISK_ONLY_2)
