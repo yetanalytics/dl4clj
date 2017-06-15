@@ -21,7 +21,8 @@
 
            ;; spark
            [org.deeplearning4j.spark.api RDDTrainingApproach Repartition RepartitionStrategy]
-           [org.deeplearning4j.spark.datavec DataVecSequencePairDataSetFunction$AlignmentMode]))
+           [org.deeplearning4j.spark.datavec DataVecSequencePairDataSetFunction$AlignmentMode]
+           [org.apache.spark.storage StorageLevel]))
 
 ;; need to migrate all namespaces to using this ns for enums!
 
@@ -168,6 +169,23 @@
   (constants #(DataVecSequencePairDataSetFunction$AlignmentMode/valueOf %)
              (:spark-alignment-mode opts)))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/spark/datavec/DataVecSequencePairDataSetFunction.AlignmentMode.html
+
+(defmethod value-of :storage-level [opts]
+;; StorageLevel doesn't have a value-of method
+  (let [lvl (:storage-level opts)]
+    (cond
+      (= lvl :disk-only-2) (StorageLevel/DISK_ONLY_2)
+      (= lvl :disk-only) (StorageLevel/DISK_ONLY)
+      (= lvl :memory-and-disk-2) (StorageLevel/MEMORY_AND_DISK_2)
+      (= lvl :memory-and-disk-ser-2) (StorageLevel/MEMORY_AND_DISK_SER_2)
+      (= lvl :memory-and-disk-ser) (StorageLevel/MEMORY_AND_DISK_SER)
+      (= lvl :memory-and-disk) (StorageLevel/MEMORY_AND_DISK)
+      (= lvl :memory-only-2) (StorageLevel/MEMORY_ONLY_2)
+      (= lvl :memory-only-ser-2) (StorageLevel/MEMORY_ONLY_SER_2)
+      (= lvl :memory-only-ser) (StorageLevel/MEMORY_ONLY_SER)
+      (= lvl :memory-only) (StorageLevel/MEMORY_ONLY)
+      (= lvl :none) (StorageLevel/NONE)
+      (= lvl :off-heap) (StorageLevel/OFF_HEAP))))
 
 (defn input-types
   [opts]
