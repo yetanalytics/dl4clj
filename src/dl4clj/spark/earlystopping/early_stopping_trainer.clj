@@ -1,4 +1,7 @@
-(ns dl4clj.spark.earlystopping.early-stopping-trainer
+(ns ^{:doc "early stopping training via spark
+
+:see https://deeplearning4j.org/doc/org/deeplearning4j/spark/earlystopping/SparkEarlyStoppingTrainer.html"}
+    dl4clj.spark.earlystopping.early-stopping-trainer
   (:import [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer]))
 
 (defn new-spark-early-stopping-trainer
