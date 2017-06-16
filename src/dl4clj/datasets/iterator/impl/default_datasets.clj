@@ -179,14 +179,6 @@
 ;; api fns not specified in nd4clj.linalg.api.ds-iter
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn has-next?
-  [iter]
-  (.hasNext iter))
-
-(defn next-data-point
-  [iter]
-  (.next iter))
-
 (defn test-cifar-iter!
   [& {:keys [iter n-examples batch-size]
       :as opts}]

@@ -1,4 +1,4 @@
-(ns dl4clj.spark.training-master.param-avg
+(ns dl4clj.spark.masters.param-avg
   (:import [org.deeplearning4j.spark.impl.paramavg
             ParameterAveragingTrainingMaster
             ParameterAveragingTrainingMaster$Builder])
@@ -70,16 +70,17 @@
              worker-prefetch-n-batches]
       :or {build? true}
       :as opts}]
-  (let [b (if (contains? opts :builder)
+  (let [rdd-n-e (int rdd-n-examples)
+        b (if (contains? opts :builder)
             builder
             (if (contains-many? opts :rdd-n-examples :n-workers)
-              (ParameterAveragingTrainingMaster$Builder. rdd-n-examples n-workers)
-              (ParameterAveragingTrainingMaster$Builder. rdd-n-examples)))]
+              (ParameterAveragingTrainingMaster$Builder. rdd-n-e (int n-workers))
+              (ParameterAveragingTrainingMaster$Builder. rdd-n-e)))]
     (cond-> b
       (contains? opts :averaging-freq)
-      (.averagingFrequency averaging-freq)
+      (.averagingFrequency (int averaging-freq))
       (contains? opts :batch-size-per-worker)
-      (.batchSizePerWorker batch-size-per-worker)
+      (.batchSizePerWorker (int batch-size-per-worker))
       (contains? opts :export-dir)
       (.exportDirectory export-dir)
       (contains? opts :rdd-training-approach)
@@ -89,7 +90,7 @@
       (contains? opts :repartition-strategy)
       (.repartitionStrategy (value-of {:repartition-strategy repartition-strategy}))
       (contains? opts :seed)
-      (.rngSeed seed)
+      (.rngSeed (long seed))
       (contains? opts :save-updater?)
       (.saveUpdater save-updater?)
       (contains? opts :storage-level)
@@ -99,5 +100,5 @@
       (contains? opts :training-hooks)
       (.trainingHooks training-hooks)
       (contains? opts :worker-prefetch-n-batches)
-      (.workerPrefetchNumBatches worker-prefetch-n-batches)
+      (.workerPrefetchNumBatches (int worker-prefetch-n-batches))
       (true? build?) .build)))

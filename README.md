@@ -55,6 +55,121 @@ Not all of these are fully tested and are most likely going to undergo breaking 
 - Eval/Evaluation (tested)
 - Neural Networks DSL (tested)
 - Optimize (tested)
+- Spark training
+
+## Spark Training
+For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark
+
+How it is done in dl4clj
+- same workflow as https://deeplearning4j.org/spark#Overview
+  - need to verify the spark hosting of trained models
+
+1) create your model
+
+``` clojure
+(ns my.ns
+    (:require [dl4clj.nn.conf.builders.builders :as l]
+              [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
+              [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+              [dl4clj.nn.multilayer.multi-layer-network :as mln]
+              [dl4clj.spark.masters.param-avg :as master]
+              [dl4clj.spark.dl4j-multi-layer :as spark-mln]
+              [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
+              [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 1, create your model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def mln-conf
+  (nn-conf/nn-conf-builder
+   :optimization-algo :stochastic-gradient-descent
+   :learning-rate 0.006
+   :build? false ;; needs to be false to be passed to multi-layer-config-builder
+   :layers {0 (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)
+   ;; for creating layers, there are fns you can call ^
+   ;; or you can pass a layer configuration map that builds the layer behind the scene
+            1 {:output-layer
+               {:loss-fn :negativeloglikelihood
+                :n-in 2 :n-out 1
+                :activation-fn :soft-max
+                :weight-init :xavier}}}))
+
+(def multi-layer-model
+  (mln/new-multi-layer-network :conf
+   (mlb/multi-layer-config-builder
+    :list-builder mln-conf
+    :backprop? true
+    :backprop-type :standard)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 2, create a training master
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; not all options specified, but most are
+
+(def training-master
+ (master/new-parameter-averaging-training-master
+ :build? true :rdd-n-examples 10 :n-workers 4 :averaging-freq 10
+ :batch-size-per-worker 2 :export-dir "resources/spark/master/"
+ :rdd-training-approach :direct :repartition-data :always
+ :repartition-strategy :balanced :seed 1234 :save-updater? true
+ :storage-level :none))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 3, create a Spark Multi Layer Network
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(spark-mln/new-spark-multi-layer-network
+ :spark-context your-spark-context
+ :mln multi-layer-model
+ :training-master training-master)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 4, load your data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; we need a dataset-iterator
+;; can make one directly from a dataset (iterator data-set)
+;; see: nd4clj.linalg.dataset.api.data-set and nd4clj.linalg.dataset.data-set
+;; we are going to use a pre-built one
+
+(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
+
+;; we need a spark context to create a RDD
+
+(def sc (new-java-spark-context :app-name "testing"))
+
+;; now lets convert the data into a javaRDD
+
+(def our-rdd (java-rdd-from-iter :spark-context sc :iter iris-iter))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 5, fit the model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; call fit....finish this monday
+
+```
+It is also possible to train single layer models via spark
+
+``` clojure
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; model with single layer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def single-layer-model
+  (nn-conf/nn-conf-builder
+   :optimization-algo :stochastic-gradient-descent
+   :learning-rate 0.006
+   :build? true
+   :layer (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)))
+
+
+```
+
+
 
 ## NOTES
 

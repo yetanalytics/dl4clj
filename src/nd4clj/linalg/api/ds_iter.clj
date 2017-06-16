@@ -40,6 +40,11 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [& {:keys [iter n]}]
   (.next iter n))
 
+(defn next-example
+  "returns the next example in an iterator"
+  [iter]
+  (.next iter))
+
 (defn get-num-examples
   "Total number of examples in the dataset"
   [iter]
@@ -70,3 +75,21 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   "The number of labels for the dataset"
   [iter]
   (.totalOutcomes iter))
+
+(defn has-next?
+  "checks to see if there is anymore data in the iterator"
+  [iter]
+  (.hasNext iter))
+
+(defn reset-if-empty?!
+  "resets an iterator if we are at the end"
+  [iter]
+  (if (false? (has-next? iter))
+    (reset-iter! iter)
+    iter))
+
+(defn data-from-iter
+  "returns all the data from an iterator as a lazy seq"
+  [iter]
+  (when (has-next? iter)
+    (lazy-seq (cons (next-example iter) (data-from-iter iter)))))

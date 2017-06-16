@@ -7,10 +7,15 @@
             ;; other fns used for testing
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
             ;; reseting the iter
-            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [reset-iter!
-                                                                          has-next?]]
+            [nd4clj.linalg.api.ds-iter :refer [reset-iter!
+                                               has-next?
+                                               data-from-iter
+                                               next-example]]
             ;; multi-ds
             [nd4clj.linalg.dataset.multi-ds :refer [new-multi-ds]]
+
+            [nd4clj.linalg.dataset.data-set :refer [data-set]]
+            [nd4clj.linalg.dataset.api.data-set :refer [iterator]]
 
             ;; data for multi-ds
             [nd4clj.linalg.factory.nd4j :refer [rand]]
@@ -31,15 +36,19 @@
             ;; string split
             [datavec.api.split :refer [new-string-split
                                        get-list-string-split-data]]
+            [dl4clj.spark.data.dataset-provider :refer [spark-context-to-dataset-rdd]]
             )
   (:import [org.nd4j.linalg.dataset.api.iterator TestMultiDataSetIterator]
-           [org.nd4j.linalg.dataset.api MultiDataSet]))
+           [org.nd4j.linalg.dataset.api MultiDataSet]
+           [org.apache.spark SparkConf]
+           [org.apache.spark.api.java JavaRDD JavaSparkContext]
+           ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns and defs used in testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def iris-iter (new-iris-data-set-iterator :batch-size 10 :n-examples 2))
+(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
 ;; this way of making an iter from an existing multi-dataset needs to
 ;; be migrated over to the multi-dataset ns or have its own
 (def multi-ds-iter (TestMultiDataSetIterator.

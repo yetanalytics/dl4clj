@@ -3,6 +3,9 @@
   (:require [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
             [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.spark.masters.param-avg :as master]
+            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
             [dl4clj.examples.example-utils :as u])
   (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]

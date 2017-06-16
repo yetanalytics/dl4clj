@@ -26,3 +26,4 @@ pom.xml.asc
 .hg/
 /resources/tmp/
 /resources/tests/spark/
+/resources/test/spark/saving/
