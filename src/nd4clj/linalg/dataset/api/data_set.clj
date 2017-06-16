@@ -176,7 +176,7 @@
   ([^DataSet this num-samples with-replacement? rng]
    (.sample this (int num-samples) (boolean with-replacement?) rng)))
 
-(defn save
+(defn save-dataset!
   ""
   [^DataSet this destination]
   (.save this (clojure.java.io/as-file destination)))
