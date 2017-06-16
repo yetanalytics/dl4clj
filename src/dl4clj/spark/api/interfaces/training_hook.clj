@@ -11,8 +11,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingHook.ht
 
   :model (model), a nn or layer which implements the model interface.
 
-  :param-server-training-hook (hook), the training hook used for the update
-   - see: ...
+  :training-hook (hook), the training hook used for the update
+   - see: ... (none are in 0.8.0), will have to wait for next release or implement myself via gen-class
 
   returns a map of the supplied args"
   [& {:keys [training-hook mini-batch model]}]
@@ -29,8 +29,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingHook.ht
 
   :model (model), a nn or layer which implements the model interface.
 
-  :param-server-training-hook (hook), the training hook used for the update
-   - see: ...
+  :training-hook (hook), the training hook used for the update
+   - see: ... (none are in 0.8.0), will have to wait for next release or implement myself via gen-class
 
   returns a map of the supplied args"
   [& {:keys [training-hook mini-batch model]}]
@@ -38,6 +38,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingHook.ht
   {:this training-hook
    :ds mini-batch
    :model model})
-
-;; I dont have the dep or something for the only implementing class
-;; [org.deeplearning4j.spark.parameterserver ParameterServerTrainingHook]

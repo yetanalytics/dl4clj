@@ -8,5 +8,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/DataSetProvide
   "Return an rdd of type dataset"
   ;; not sure what this is here
   ;; docs dont specify any implementing classes
+  ;; seems like another case where gen-class would need to be used
   [& {:keys [this spark-context]}]
   (.data this spark-context))

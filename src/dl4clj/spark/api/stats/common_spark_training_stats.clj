@@ -5,6 +5,7 @@
 
 (defn new-common-stats-builder
   "A SparkTrainingStats implementation for common stats functionality used by most workers
+   - not a user facing fn
 
    :builder (stats-builder), a way to provide an existing unbuilt common stats builder
     - if not supplied, defaults to a fresh CommonSparkTrainingStats builder

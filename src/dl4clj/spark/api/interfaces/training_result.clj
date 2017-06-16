@@ -4,6 +4,7 @@
 
 (defn set-stats!
   "sets the stats for a training result
+   - not a user facing fn
 
   returns a map of the supplied input after the mutation"
   [& {:keys [training-result training-stats]}]

@@ -2,6 +2,8 @@
   (:import [org.deeplearning4j.spark.api.worker NetBroadcastTuple]))
 
 (defn new-net-broadcast-tuple
+  ;; this fn should not need to be used
+  ;; gets called behind the scene
   "creation of a simple class for storing configurations,
   parameters and updaters in one class (so they can be broadcast together)
 
@@ -15,6 +17,5 @@
 
   :updater-state (INDArray), the state of the updater attached to the mln-conf
    - see: (get-state-view-array) in dl4clj.nn.api.updater"
-  ;; will need to implement support for comp graphs
   [& {:keys [mln-conf params updater-state]}]
   (NetBroadcastTuple. mln-conf params updater-state))

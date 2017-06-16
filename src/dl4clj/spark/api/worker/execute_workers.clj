@@ -1,4 +1,5 @@
-(ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/worker/package-summary.html"}
+(ns ^{:doc "The fns here should not need to be called by the user.  Happens behind the scene
+ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/worker/package-summary.html"}
     dl4clj.spark.api.worker.execute-workers
   (:import [org.deeplearning4j.spark.api.worker
             ExecuteWorkerMultiDataSetFlatMap

@@ -25,7 +25,8 @@
 
   :early-stopping-listener (listener), a listener which implements the EarlyStoppingListener interface
    - see: dl4clj.earlystopping.interfaces.listener
-   - NOTE: building listeners in general still needs to be done"
+   - NOTE: building listeners in general still needs to be done
+   - optional arg"
   [& {:keys [spark-context training-master early-stopping-conf
              mln training-rdd early-stopping-listener]
       :as opts}]
