@@ -55,16 +55,14 @@ Not all of these are fully tested and are most likely going to undergo breaking 
 - Eval/Evaluation (tested)
 - Neural Networks DSL (tested)
 - Optimize (tested)
-- Spark training
+- Spark training/hosting
 
 ## Spark Training
 For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark
 
 How it is done in dl4clj
 - same workflow as https://deeplearning4j.org/spark#Overview
-  - need to verify the spark hosting of trained models
-
-1) create your model
+  - NOTE: need to verify the spark hosting of trained models
 
 ``` clojure
 (ns my.ns
@@ -75,7 +73,8 @@ How it is done in dl4clj
               [dl4clj.spark.masters.param-avg :as master]
               [dl4clj.spark.dl4j-multi-layer :as spark-mln]
               [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
-              [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]))
+              [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]
+              [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model
@@ -120,43 +119,51 @@ How it is done in dl4clj
 ;; Step 3, create a Spark Multi Layer Network
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(spark-mln/new-spark-multi-layer-network
- :spark-context your-spark-context
- :mln multi-layer-model
- :training-master training-master)
+(def your-spark-context
+  (new-java-spark-context :app-name "example app"))
+
+;; new-java-spark-context will turn an existing spark-configuration into a java spark context
+;; or create a new java spark context with master set to "local[*]" and the app name
+;; set to :app-name
+
+
+(def spark-mln
+  (spark-mln/new-spark-multi-layer-network
+   :spark-context your-spark-context
+   :mln multi-layer-model
+   :training-master training-master))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 4, load your data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; we need a dataset-iterator
+;; one way is via a dataset-iterator
 ;; can make one directly from a dataset (iterator data-set)
 ;; see: nd4clj.linalg.dataset.api.data-set and nd4clj.linalg.dataset.data-set
 ;; we are going to use a pre-built one
 
 (def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
 
-;; we need a spark context to create a RDD
-
-(def sc (new-java-spark-context :app-name "testing"))
-
 ;; now lets convert the data into a javaRDD
 
-(def our-rdd (java-rdd-from-iter :spark-context sc :iter iris-iter))
+(def our-rdd (java-rdd-from-iter :spark-context your-spark-context :iter iris-iter))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Step 5, fit the model
+;; Step 5, fit and evaluate the model
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; call fit....finish this monday
+(def fitted-spark-mln (fit-spark-mln! :spark-mln spark-mln :rdd our-rdd))
+;; this fn also has the option to supply :path-to-data instead of :rdd
+;; that path should point to a directory containing a number of dataset objects
 
-```
-It is also possible to train single layer models via spark
+(eval-classification-spark-mln :spark-mln fitted-spark-mln
+                               :rdd our-rdd)
+;; we would want to have different testing and training rdd's but here we are using
+;; the data we trained on
 
-``` clojure
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; model with single layer
+;; It is also possible to train single layer models via spark
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def single-layer-model
@@ -166,8 +173,19 @@ It is also possible to train single layer models via spark
    :build? true
    :layer (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)))
 
+(def spark-layer (new-spark-dl4j-layer :spark-context your-spark-context
+                                       :nn-conf single-layer-model))
 
+(def fitted-spark-layer (fit-spark-layer-with-ds! :rdd our-rdd
+                                                  :spark-layer spark-layer))
+
+;; need to figure out creating these org.apache.spark.mllib.linalg.Matrix or org.apache.spark.mllib.linalg.Vector
+;; needed to call predict
+
+;; also need to figure out JavaRDD<org.nd4j.linalg.dataset.DataSet> -> JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>
+;; this is for single fn call training (fit-spark-layer!...)
 ```
+
 
 
 
