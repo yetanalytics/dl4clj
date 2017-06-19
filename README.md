@@ -4,6 +4,8 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Usage
 
+# Layers
+
 Creating distributions to sample layer weights from
 
 ``` clojure
@@ -41,9 +43,38 @@ Creating Layers
 ```
 
 There is also support for Variational Autoencoders
-- see: dl4clj.nn.conf.variational.dist-builders
-- see: dl4clj.nn.conf.builders.builders/variational-autoencoder-builder
 
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.conf.variational.dist-builders :as v-dist]))
+
+(l/variational-autoencoder-builder
+ :decoder-layer-sizes [2 2]
+ :encoder-layer-sizes [2 2]
+ :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
+ :pzx-activation-function :identity)
+
+(l/variational-autoencoder-builder
+ :decoder-layer-sizes [2 2]
+ :encoder-layer-sizes [2 2]
+ :reconstruction-distribution (v-dist/new-bernoulli-reconstruction-distribution
+                               :activation-fn :sigmoid)
+ :pzx-activation-function :identity)
+
+;;these configurations are the same
+```
+
+There are a lot of utilities for working with Convolutional and Recurrent layers
+- see: dl4clj.nn.conf.layers.input-type-util
+
+And working with any type of layer
+- see: dl4clj.nn.conf.layers.shared-fns
+  - need to revisit this ns. make sure all the language is clear and no overlapping
+    fns with the model interface ns
+
+There is also configuration validation
+- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
 
 Creating input pre-processors
 
@@ -67,17 +98,6 @@ Creating input pre-processors
                    {:input-height 2 :input-width 3 :num-channels 4}}])
 
 ```
-There are a lot of utilities for working with Convolutional and Recurrent layers
-- see: dl4clj.nn.conf.layers.input-type-util
-
-And working with any type of layer
-- see: dl4clj.nn.conf.layers.shared-fns
-  - need to revisit this ns. make sure all the language is clear and no overlapping
-    fns with the model interface ns
-
-There is also configuration validation
-- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
-
 
 Adding the layers to a neural network configuration
 
@@ -213,7 +233,14 @@ Adding the layers to a neural network configuration
  (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
 
 ```
+Going from configuration to models
 
+``` clojure
+
+
+
+
+```
 
 
 ## Artifacts
