@@ -215,13 +215,13 @@ Adding the layers to a neural network configuration
                          ;; ^ these defaults will be applied to "final layer" but will
                          ;; not overwrite "first of two layers"
                          :build? true
+                         ;; :layers accepts heterogeneous config maps
                          :layers {0 (l/activation-layer-builder
                                      :activation-fn :relu :updater :adam
                                      :adam-mean-decay 0.2 :adam-var-decay 0.1
                                      :dist (new-normal-distribution :mean 0 :std 1)
                                      :learning-rate 0.006 :weight-init :xavier
                                      :layer-name "first of two layers" :n-in 10 :n-out 20)
-                                  ;; can pass a layer configuration map instead of calling a fn
                                   1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
                                                     :layer-name "final layer"}}})
 
@@ -241,7 +241,6 @@ Adding the layers to a neural network configuration
                             :dist {:normal {:mean 0 :std 1.0}}
                             :learning-rate 0.006 :weight-init :xavier
                             :layer-name "example first layer" :n-in 10 :n-out 20)
-                         ;; can pass a layer configuration map instead of calling a fn
                          1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
                                            :layer-name "example output layer"}}}))
 
@@ -502,15 +501,19 @@ How it is done in dl4clj
 
 There are 3 types of arg structures for fns found in this libarary
 - single arg, just pass the arg to the function
+
 - single keyword arg, used when a function can accept either a single arg or no args
+
 - multiple keyword args, used when a function expects many args
   - the function may expect all args to be supplied
   - the function may expect cominations of args
      - different combinations will produce different results
+
  - see function defns to determine how the function behaves
    - doc strings describe the arg types and in some places the result of various combinations of args
      - I plan on adding the result of various cominations along with the arg descriptions
    - there are cases when the function can accept all args or a subset of them
+
 - specs are going to replace the assertions made within the function definitions
   - eventually all fns will be spec'd
 
