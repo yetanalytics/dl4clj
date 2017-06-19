@@ -4,7 +4,7 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Usage
 
-# Layers
+### Layers
 
 Creating distributions to sample layer weights from
 
