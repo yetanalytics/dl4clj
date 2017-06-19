@@ -151,8 +151,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-combined-pre-processor
-  ;; this is reflected in the input-pre-processors ns
-  ;; need to confirm that this is different
   "This is special preProcessor, that allows to combine multiple prerpocessors,
   and apply them to data sequentially.
 

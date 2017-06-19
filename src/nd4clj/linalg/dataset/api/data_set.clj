@@ -1,4 +1,4 @@
-(ns ^{:doc "see http://nd4j.org/apidocs/org/nd4j/linalg/dataset/api/DataSet.html"}
+(ns ^{:doc "see http://nd4j.org/doc/org/nd4j/linalg/dataset/api/DataSet.html"}
   nd4clj.linalg.dataset.api.data-set
   (:refer-clojure :exclude [get apply])
   (:import [org.nd4j.linalg.dataset.api DataSet]
@@ -7,6 +7,7 @@
 
 ;;TODO
 ;; double check these fns
+;; convert to keyword args
 ;; fill out doc strings
 
 (defn add-feature-vector

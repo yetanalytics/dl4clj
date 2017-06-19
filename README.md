@@ -289,9 +289,6 @@ Adding the layers to a neural network configuration
 ### Importing data
 - examples coming
 
-data buffers
-- datavec.api.io
-
 input splits
 - datavec.api.split
 
