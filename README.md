@@ -2,6 +2,57 @@
 
 Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
+## Features
+
+Not all of these are fully tested and are most likely going to undergo breaking changes
+- the tested features are stable for now and should stay that way.
+- even in the tested name spaces, there remain some functions which are either
+  - broken
+  - misunderstood
+  - not tested
+
+- Clustering
+- Datasets (tested)
+- Early Stopping (tested)
+- Eval/Evaluation (tested)
+- Neural Networks DSL (tested)
+- Optimize (tested)
+- Spark training/hosting
+
+Support for Computational Graphs will come in a future release
+
+## Artifacts
+
+dl4clj artifacts are released to Clojars. (original authors work)
+
+If using Maven add the following repository definition to your pom.xml:
+
+```
+<repository>
+  <id>clojars.org</id>
+  <url>http://clojars.org/repo</url>
+</repository>
+```
+
+## Latest release
+
+With Leiningen:
+
+```
+[engagor/clj-vw "0.0.1"]
+
+```
+
+With Maven:
+
+```
+<dependency>
+  <groupId>engagor</groupId>
+  <artifactId>dl4clj</artifactId>
+  <version>0.0.1</version>
+</dependency>
+```
+
 ## Usage
 
 ### Layers
@@ -75,6 +126,8 @@ And working with any type of layer
 
 There is also configuration validation
 - see: dl4clj.nn.conf.layers.layer-testing.layer-validation
+
+### Model configuration
 
 Creating input pre-processors
 
@@ -233,7 +286,70 @@ Adding the layers to a neural network configuration
  (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
 
 ```
-Going from configuration to models
+
+### Importing data
+- examples coming
+
+data buffers
+- datavec.api.io
+
+input splits
+- datavec.api.split
+
+record readers
+- datavec.api.records.readers
+
+INDArrays and Datasets
+- nd4clj.linalg.api.ndarray.indarray
+- nd4clj.linalg.factory.nd4j
+- nd4clj.linalg.dataset.data-set
+- nd4clj.linalg.dataset.multi-ds
+- nd4clj.linalg.dataset.api.data-set
+- nd4clj.linalg.dataset.api.ds-preprocessor
+- nd4clj.linalg.dataset.api.pre-processors
+
+default datasets
+- dl4clj.datasets.iterator.impl.default-datasets
+
+datset iterators
+- dl4clj.datasets.iterator.iterators
+- nd4clj.linalg.api.ds-iter
+
+record reader dataset iterators
+- dl4clj.datasets.datavec
+
+
+### Congiuration to Initialized models
+
+Layers as models
+
+``` clojure
+
+dl4clj.nn.layers.layer-creation
+
+
+```
+
+Multi Layer models
+
+``` clojure
+
+dl4clj.nn.multilayer.multi-layer-network
+
+
+```
+
+Evaluation of Models
+
+``` clojure
+
+
+
+
+```
+### Model Tuning
+
+Transfer Learning (freezing layers)
 
 ``` clojure
 
@@ -242,59 +358,16 @@ Going from configuration to models
 
 ```
 
+Early Stopping (controlling training)
 
-## Artifacts
+``` clojure
 
-dl4clj artifacts are released to Clojars. (original authors work)
 
-If using Maven add the following repository definition to your pom.xml:
 
-```
-<repository>
-  <id>clojars.org</id>
-  <url>http://clojars.org/repo</url>
-</repository>
-```
-
-## Latest release
-
-With Leiningen:
-
-```
-[engagor/clj-vw "0.0.1"]
 
 ```
 
-With Maven:
-
-```
-<dependency>
-  <groupId>engagor</groupId>
-  <artifactId>dl4clj</artifactId>
-  <version>0.0.1</version>
-</dependency>
-```
-
-## Features
-
-Not all of these are fully tested and are most likely going to undergo breaking changes
-- the tested features are stable for now and should stay that way.
-- even in the tested name spaces, there remain some functions which are either
-  - broken
-  - misunderstood
-  - not tested
-
-- Clustering
-- Datasets (tested)
-- Early Stopping (tested)
-- Eval/Evaluation (tested)
-- Neural Networks DSL (tested)
-- Optimize (tested)
-- Spark training/hosting
-
-Support for Computational Graphs will come in a future release
-
-## Spark Training
+### Spark Training
 For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark
 
 How it is done in dl4clj
@@ -427,9 +500,6 @@ How it is done in dl4clj
 ;; this is for single fn call training (fit-spark-layer!...)
 ```
 
-
-
-
 ## NOTES
 
 There are 3 types of arg structures for fns found in this libarary
@@ -480,7 +550,7 @@ Update release section
 
 Spark and Kafka streaming
 
-Spark/Parallelism training
+Parallelism (single machine)
 
 ## Packages to implement:
 
