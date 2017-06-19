@@ -148,7 +148,7 @@
     ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
            (type (new-singleton-multi-data-set-iterator
-                  (next-data-point
+                  (next-example
                    (reset-fetcher!
                     (new-multi-data-set-iterator-adapter
                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
@@ -186,13 +186,13 @@
 
       ;; dl4clj.datasets.iterator.impl.default-datasets
       (is (= java.lang.Boolean (type (has-next? iter))))
-      (is (= org.nd4j.linalg.dataset.DataSet (type (next-data-point iter-w-labels))))
+      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example iter-w-labels))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-feature-matrix (next-data-point (reset-iter! iter-w-labels))))))
+             (type (get-feature-matrix (next-example (reset-iter! iter-w-labels))))))
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
       (is (= (type cifar-iter) (type (train-cifar-iter! cifar-iter))))

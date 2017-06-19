@@ -20,7 +20,4 @@
                  [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"]
                  [org.apache.spark/spark-core_2.11 "2.1.0"]
                  [org.deeplearning4j/dl4j-streaming_2.11 "0.8.0_spark_2"]
-                 ;; try getting all of the scale out modules as deps
-                 ;;[org.deeplearning4j/deeplearning4j-scaleout "0.8.0"]
-                 [cheshire "5.7.1"]
-                 [org.clojure/data.json "0.2.6"]])
+                 [cheshire "5.7.1"]])

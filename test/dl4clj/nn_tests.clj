@@ -642,8 +642,6 @@
             (nn-conf-builder
              :iterations 1
              :lr-policy-decay-rate 0.3
-             :lr-policy-power 0.4
-             :learning-rate-policy :poly
              :max-num-line-search-iterations 6
              :mini-batch? true
              :minimize? true
@@ -654,6 +652,7 @@
              :seed 123
              :step-fn (new-gradient-step-fn)
              :convolution-mode :strict
+             :learning-rate-policy :poly
              :build? true))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
            (type

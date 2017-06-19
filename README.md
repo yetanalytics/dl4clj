@@ -395,10 +395,8 @@ How it is done in dl4clj
   (nn-conf/nn-conf-builder
    :optimization-algo :stochastic-gradient-descent
    :learning-rate 0.006
-   :build? false ;; needs to be false to be passed to multi-layer-config-builder
+   :build? false
    :layers {0 (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)
-   ;; for creating layers, there are fns you can call ^
-   ;; or you can pass a layer configuration map that builds the layer behind the scene
             1 {:output-layer
                {:loss-fn :negativeloglikelihood
                 :n-in 2 :n-out 1
