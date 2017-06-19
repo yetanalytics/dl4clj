@@ -276,7 +276,7 @@
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
 
-  :coll-pre-processors (coll), a collection of pre-processor objects
+  :pre-processors (coll), a collection of pre-processor objects
    - can be pre-processors built using the above fns or a configuration map
      that is passed to the pre-processors multi method
 
@@ -285,10 +285,10 @@
                         (binominal-sampling-pre-processor)
                         {:cnn-to-feed-forward-pre-processor
                          {:input-height 2 :input-width 3 :num-channels 4}}])"
-  [& {:keys [coll-pre-processors]
+  [& {:keys [pre-processors]
       :as opts}]
   (let [pp (into []
-                 (for [each coll-pre-processors]
+                 (for [each pre-processors]
                    (if (map? each)
                      (pre-processors each)
                      each)))]

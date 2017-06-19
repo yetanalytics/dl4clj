@@ -4,10 +4,6 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Usage
 
-Under construction. For now, have a look at the [examples](https://github.com/engagor/dl4clj/tree/master/src/dl4clj/examples) to get started.
-You can also look at the tests (reflects changes from original authors work)
-- this section will be updated with the core usage and highlights of different name spaces
-
 Creating distributions to sample layer weights from
 
 ``` clojure
@@ -16,6 +12,8 @@ Creating distributions to sample layer weights from
   (:require [dl4clj.nn.conf.distribution.distribution :as dist]))
 
 (dist/new-normal-distribution :mean 0 :std 1)
+
+(dist/new-binomial-distribution :number-of-trials 5 :probability-of-success 0.50)
 
 ```
 
@@ -42,6 +40,11 @@ Creating Layers
 ;;these layer configurations are the same
 ```
 
+There is also support for Variational Autoencoders
+- see: dl4clj.nn.conf.variational.dist-builders
+- see: dl4clj.nn.conf.builders.builders/variational-autoencoder-builder
+
+
 Creating input pre-processors
 
 ``` clojure
@@ -58,11 +61,23 @@ Creating input pre-processors
 ;; this fn also supports heterogeneous args
 
 (pp/new-composable-input-pre-processor
- :coll-pre-processors [(new-zero-mean-pre-pre-processor)
-                       (new-binominal-sampling-pre-processor)
-                       {:cnn-to-feed-forward-pre-processor {:input-height 2 :input-width 3 :num-channels 4}}])
+ :pre-processors [(new-zero-mean-pre-pre-processor)
+                  (new-binominal-sampling-pre-processor)
+                  {:cnn-to-feed-forward-pre-processor
+                   {:input-height 2 :input-width 3 :num-channels 4}}])
 
 ```
+There are a lot of utilities for working with Convolutional and Recurrent layers
+- see: dl4clj.nn.conf.layers.input-type-util
+
+And working with any type of layer
+- see: dl4clj.nn.conf.layers.shared-fns
+  - need to revisit this ns. make sure all the language is clear and no overlapping
+    fns with the model interface ns
+
+There is also configuration validation
+- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
+
 
 Adding the layers to a neural network configuration
 
@@ -71,7 +86,8 @@ Adding the layers to a neural network configuration
   (:require [dl4clj.nn.conf.builders.builders :as l]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
             [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-            [dl4clj.nn.conf.distribution.distribution :as dist]))
+            [dl4clj.nn.conf.distribution.distribution :as dist]
+            [dl4clj.nn.conf.step-fns :as s-fn]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; single layer nn-conf
@@ -82,6 +98,7 @@ Adding the layers to a neural network configuration
                          :seed 123 :iterations 1 :minimize? true
                          :use-drop-connect? false :lr-score-based-decay-rate 0.002
                          :regularization? false
+                         :step-fn (s-fn/new-default-step-fn)
                          :build? true
                          :layer (l/dense-layer-builder
                                  :activation-fn :relu :updater :adam
@@ -98,6 +115,7 @@ Adding the layers to a neural network configuration
                          :seed 123 :iterations 1 :minimize? true
                          :use-drop-connect? false :lr-score-based-decay-rate 0.002
                          :regularization? false
+                         :step-fn :default-step-fn
                          :build? true
                          :layer (l/dense-layer-builder
                                  :activation-fn :relu :updater :adam
@@ -196,6 +214,8 @@ Adding the layers to a neural network configuration
 
 ```
 
+
+
 ## Artifacts
 
 dl4clj artifacts are released to Clojars. (original authors work)
@@ -244,6 +264,8 @@ Not all of these are fully tested and are most likely going to undergo breaking 
 - Neural Networks DSL (tested)
 - Optimize (tested)
 - Spark training/hosting
+
+Support for Computational Graphs will come in a future release
 
 ## Spark Training
 For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark
