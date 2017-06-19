@@ -75,7 +75,7 @@ How it is done in dl4clj
               [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
               [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]
               [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]
-              [dl4clj.eval.evaluation :refer [get-stats))
+              [dl4clj.eval.evaluation :refer [get-stats]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model
