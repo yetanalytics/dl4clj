@@ -8,18 +8,6 @@ Under construction. For now, have a look at the [examples](https://github.com/en
 You can also look at the tests (reflects changes from original authors work)
 - this section will be updated with the core usage and highlights of different name spaces
 
-Creating Layers
-
-``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]))
-
-(l/activation-layer-builder :activation-fn :relu :updater :adam
-                          :adam-mean-decay 0.2 :adam-var-decay 0.1
-                          :dist {:normal {:mean 0 :std 1.0}}
-                          :learning-rate 0.006 :weight-init :xavier
-                          :layer-name "example layer" :n-in 10 :n-out 1)
-```
 Creating distributions to sample layer weights from
 
 ``` clojure
@@ -30,6 +18,30 @@ Creating distributions to sample layer weights from
 (dist/new-normal-distribution :mean 0 :std 1)
 
 ```
+
+Creating Layers
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.builders :as l]))
+
+(l/activation-layer-builder
+ :activation-fn :relu :updater :adam
+ :adam-mean-decay 0.2 :adam-var-decay 0.1
+ :dist {:normal {:mean 0 :std 1.0}}
+ :learning-rate 0.006 :weight-init :xavier
+ :layer-name "example layer" :n-in 10 :n-out 1)
+
+(l/activation-layer-builder
+ :activation-fn :relu :updater :adam
+ :adam-mean-decay 0.2 :adam-var-decay 0.1
+ :dist (dist/new-normal-distribution :mean 0 :std 1)
+ :learning-rate 0.006 :weight-init :xavier
+ :layer-name "example layer" :n-in 10 :n-out 1)
+
+;;these layer configurations are the same
+```
+
 Creating input pre-processors
 
 ``` clojure
@@ -109,6 +121,8 @@ Adding the layers to a neural network configuration
                          :use-drop-connect? false :lr-score-based-decay-rate 0.002
                          :regularization? false
                          :default-activation-fn :sigmoid :default-weight-init :uniform
+                         ;; ^ these defaults will be applied to "final layer" but will
+                         ;; not overwrite "first of two layers"
                          :build? true
                          :layers {0 (l/activation-layer-builder
                                      :activation-fn :relu :updater :adam
@@ -117,7 +131,6 @@ Adding the layers to a neural network configuration
                                      :learning-rate 0.006 :weight-init :xavier
                                      :layer-name "first of two layers" :n-in 10 :n-out 20)
                                   ;; can pass a layer configuration map instead of calling a fn
-                                  ;; and use defaults
                                   1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
                                                     :layer-name "final layer"}}})
 
