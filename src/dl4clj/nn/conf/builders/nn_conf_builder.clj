@@ -73,89 +73,91 @@
      params you want to added the configuration (from multi-layer-config-builder) then
      set built? to true
 
+  :layer {:layer-type {config-opts vals}} map of layer config params.
+    see dl4clj.nn.conf.builders.builders (can also be a fn used to create a layer)
+    :layer will be ignored if :layers is supplied, layer only creates a single layer
+
+  :layers {idx (int) {:layer-type {config-opts vals}}}
+   see dl4clj.nn.conf.builders.builders
+
   Params for layers are:
 
-  :global-activation-fn (keyword) default global activation fn,
+  :default-activation-fn (keyword) default global activation fn,
    wont overwrite activation functions specificed in the layer or layers map.
    opts are :cube, :elu, :hard-sigmoid, :hard-tanh, :identity, :leaky-relu
             :relu, :r-relu, :sigmoid, :soft-max, :soft-plus, :soft-sign, :tanh
             :rational-tanh
     - does replace non-specified activation fns in layers
 
-  :adam-mean-decay (double) Mean decay rate for Adam updater
+  :default-adam-mean-decay (double) Mean decay rate for Adam updater
 
-  :adam-var-decay (double) Variance decay rate for Adam updater
+  :default-adam-var-decay (double) Variance decay rate for Adam updater
 
-  :bias-init (double) Constant for bias initialization
+  :default-bias-init (double) Constant for bias initialization
 
-  :bias-learning-rate (double) Bias learning rate
+  :default-bias-learning-rate (double) Bias learning rate
 
-  :dist (map) distribution to sample initial weights from, one of:
+  :default-dist (map) distribution to sample initial weights from, one of:
         binomial-distribution {:binomial {:number-of-trails int :probability-of-success double}}
         normal-distribution {:normal {:mean double :std double}}
         uniform-distribution {:uniform {:lower double :upper double}}
    - can also use one of the creation fns
    - ie. (new-normal-distribution :mean 0 :std 1)
 
-  :drop-out (double) Dropout probability
+  :default-drop-out (double) Dropout probability
 
-  :epsilon (double) Epsilon value for updaters: Adagrad and Adadelta
+  :default-epsilon (double) Epsilon value for updaters: Adagrad and Adadelta
 
-  :gradient-normalization (keyword) gradient normalization strategy,
+  :default-gradient-normalization (keyword) gradient normalization strategy,
    These are applied on raw gradients, before the gradients are passed to the updater
    (SGD, RMSProp, Momentum, etc)
    one of: :none (default), :renormalize-l2-per-layer, :renormalize-l2-per-param-type,
            :clip-element-wise-absolute-value, :clip-l2-per-layer, :clip-l2-per-param-type
    reference: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/GradientNormalization.html
 
-  :gradient-normalization-threshold (double) Threshold for gradient normalization,
+  :default-gradient-normalization-threshold (double) Threshold for gradient normalization,
    only used for :clip-l2-per-layer, :clip-l2-per-param-type, :clip-element-wise-absolute-value,
    L2 threshold for first two types of clipping or absolute value threshold for the last type
 
-  :l1 (double) L1 regularization coefficient
+  :default-l1 (double) L1 regularization coefficient
 
-  :l1-bias (double), L1 regularization coef for the bias
+  :default-l1-bias (double), L1 regularization coef for the bias
 
-  :l2 (double) L2 regularization coefficient used when regularization is set to true
+  :default-l2 (double) L2 regularization coefficient used when regularization is set to true
 
-  :l2-bias (double) L2 regularization coef for the bias
+  :default-l2-bias (double) L2 regularization coef for the bias
 
-  :layer {:layer-type {config-opts vals}} map of layer config params.
-    see dl4clj.nn.conf.builders.builders
-    :layer will be ignored if :layers is supplied, layer only creates a single layer
+  :default-learning-rate (double) Paramter that controls the learning rate
 
-  :layers {idx (int) {:layer-type {config-opts vals}}}
-   see dl4clj.nn.conf.builders.builders
-
-  :learning-rate (double) Paramter that controls the learning rate
-
-  :learning-rate-policy (keyword) How to decay learning rate during training
+  :default-learning-rate-policy (keyword) How to decay learning rate during training
    see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/LearningRatePolicy.html
    one of :none, :exponential, :inverse, :poly, :sigmoid, :step, :torch-step :schedule :score
 
-  :learning-rate-schedule {int double} Map of the iteration to the learning rate to apply at that iteration
+  :default-learning-rate-schedule {int double} Map of the iteration to the learning rate to apply at that iteration
 
-  :momentum (double) Momentum rate used only when the :updater is set to :nesterovs
+  :default-momentum (double) Momentum rate used only when the :updater is set to :nesterovs
 
-  :momentum-after {int double} Map of the iteration to the momentum rate to apply at that iteration
+  :default-momentum-after {int double} Map of the iteration to the momentum rate to apply at that iteration
    also only used when :updater is :nesterovs
 
-  :rho (double) Ada delta coefficient
+  :default-rho (double) Ada delta coefficient
 
-  :rms-decay (double) Decay rate for RMSProp, only applies if using :updater :RMSPROP
+  :default-rms-decay (double) Decay rate for RMSProp, only applies if using :updater :RMSPROP
 
-  :updater (keyword) Gradient updater,
+  :default-updater (keyword) Gradient updater,
    one of: :adagrad, :sgd, :adam, :adadelta, :nesterovs, :adagrad, :rmsprop, :none, :custom
 
-  :weight-init (keyword) Weight initialization scheme
+  :default-weight-init (keyword) Weight initialization scheme
   see https://deeplearning4j.org/doc/org/deeplearning4j/nn/weights/WeightInit.html (use cases)
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
           :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform"
-  [& {:keys [global-activation-fn adam-mean-decay adam-var-decay bias-init
-             bias-learning-rate dist drop-out epsilon gradient-normalization
-             gradient-normalization-threshold l1 l2 l1-bias l2-bias layer layers
-             learning-rate learning-rate-policy learning-rate-schedule
-             momentum momentum-after rho rms-decay updater weight-init nn-builder
+  [& {:keys [default-activation-fn default-adam-mean-decay default-adam-var-decay
+             default-bias-init default-bias-learning-rate default-dist default-drop-out
+             default-epsilon default-gradient-normalization default-gradient-normalization-threshold
+             default-l1 default-l2 default-l1-bias default-l2-bias layer layers
+             default-learning-rate default-learning-rate-policy default-learning-rate-schedule
+             default-momentum default-momentum-after default-rho default-rms-decay
+             default-updater default-weight-init nn-builder
              ;; nn conf args
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
@@ -165,38 +167,38 @@
            nn-builder (NeuralNetConfiguration$Builder.)}
       :as opts}]
   (cond-> nn-builder
-    (contains? opts :global-activation-fn) (.activation (constants/value-of
+    (contains? opts :default-activation-fn) (.activation (constants/value-of
                                                          {:activation-fn
-                                                          global-activation-fn}))
-    (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
-    (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
+                                                          default-activation-fn}))
+    (contains? opts :default-adam-mean-decay) (.adamMeanDecay default-adam-mean-decay)
+    (contains? opts :default-adam-var-decay) (.adamVarDecay default-adam-var-decay)
     (contains? opts :convolution-mode) (.convolutionMode (constants/value-of
                                                           {:convolution-mode
                                                            convolution-mode}))
-    (contains? opts :bias-init) (.biasInit bias-init)
-    (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
-    (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
-                                      dist))
-    (contains? opts :drop-out) (.dropOut drop-out)
-    (contains? opts :epsilon) (.epsilon epsilon)
-    (contains? opts :gradient-normalization) (.gradientNormalization
-                                              (constants/value-of
-                                               {:gradient-normalization
-                                                gradient-normalization}))
-    (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
-                                                        gradient-normalization-threshold)
+    (contains? opts :default-bias-init) (.biasInit default-bias-init)
+    (contains? opts :default-bias-learning-rate) (.biasLearningRate default-bias-learning-rate)
+    (contains? opts :default-dist) (.dist (if (map? default-dist) (distribution/distribution default-dist)
+                                              default-dist))
+    (contains? opts :default-drop-out) (.dropOut default-drop-out)
+    (contains? opts :default-epsilon) (.epsilon default-epsilon)
+    (contains? opts :default-gradient-normalization) (.gradientNormalization
+                                                      (constants/value-of
+                                                       {:gradient-normalization
+                                                        default-gradient-normalization}))
+    (contains? opts :default-gradient-normalization-threshold) (.gradientNormalizationThreshold
+                                                                default-gradient-normalization-threshold)
     (contains? opts :iterations) (.iterations iterations)
-    (contains? opts :l1) (.l1 l1)
-    (contains? opts :l1-bias) (.l1Bias l1-bias)
-    (contains? opts :l2) (.l2 l2)
-    (contains? opts :l2-bias) (.l2Bias l2-bias)
-    (contains? opts :learning-rate) (.learningRate learning-rate)
-    (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
+    (contains? opts :default-l1) (.l1 default-l1)
+    (contains? opts :default-l1-bias) (.l1Bias default-l1-bias)
+    (contains? opts :default-l2) (.l2 default-l2)
+    (contains? opts :default-l2-bias) (.l2Bias default-l2-bias)
+    (contains? opts :default-learning-rate) (.learningRate default-learning-rate)
+    (contains? opts :default-learning-rate-policy) (.learningRateDecayPolicy
                                             (constants/value-of
                                              {:learning-rate-policy
-                                              learning-rate-policy}))
-    (contains? opts :learning-rate-schedule) (.learningRateSchedule
-                                              learning-rate-schedule)
+                                              default-learning-rate-policy}))
+    (contains? opts :default-learning-rate-schedule) (.learningRateSchedule
+                                                      default-learning-rate-schedule)
     (contains? opts :lr-score-based-decay-rate) (.learningRateScoreBasedDecayRate
                                                  lr-score-based-decay-rate)
     (contains? opts :lr-policy-decay-rate) (.lrPolicyDecayRate lr-policy-decay-rate)
@@ -206,24 +208,24 @@
                                                       max-num-line-search-iterations)
     (contains? opts :mini-batch?) (.miniBatch mini-batch?)
     (contains? opts :minimize?) (.minimize minimize?)
-    (contains? opts :momentum) (.momentum momentum)
-    (contains? opts :momentum-after) (.momentumAfter momentum-after)
+    (contains? opts :default-momentum) (.momentum default-momentum)
+    (contains? opts :default-momentum-after) (.momentumAfter default-momentum-after)
     (contains? opts :optimization-algo) (.optimizationAlgo
                                          (constants/value-of
                                           {:optimization-algorithm
                                            optimization-algo}))
     (contains? opts :regularization?) (.regularization regularization?)
-    (contains? opts :rho) (.rho rho)
-    (contains? opts :rms-decay) (.rmsDecay rms-decay)
+    (contains? opts :default-rho) (.rho default-rho)
+    (contains? opts :default-rms-decay) (.rmsDecay default-rms-decay)
     (contains? opts :seed) (.seed seed)
     (contains? opts :step-fn) (.stepFunction (if (keyword? step-fn)
                                                (step-functions/step-fn step-fn)
                                                step-fn))
-    (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
+    (contains? opts :default-updater) (.updater (constants/value-of {:updater default-updater}))
     (contains? opts :use-drop-connect?) (.useDropConnect use-drop-connect?)
-    (contains? opts :weight-init) (.weightInit (constants/value-of
-                                                {:weight-init weight-init}))
-    (and (contains? opts :layer) (seqable? layer)) (.layer (layer-builders/builder layer))
-    (and (contains? opts :layer) (false? (seqable? layer))) (.layer layer)
+    (contains? opts :default-weight-init) (.weightInit (constants/value-of
+                                                        {:weight-init default-weight-init}))
+    (and (contains? opts :layer) (map? layer)) (.layer (layer-builders/builder layer))
+    (and (contains? opts :layer) (false? (map? layer))) (.layer layer)
     (contains? opts :layers) (multi-layer/list-builder layers)
     (true? build?) .build))

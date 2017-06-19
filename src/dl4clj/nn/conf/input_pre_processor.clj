@@ -276,14 +276,21 @@
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
 
-  :pre-processors (coll), a collection of pre-processor objects
-   - this fn does not call the multimethod above, pass it the result of the
-     multimethod not the configuration to be used in the multimethod
+  :coll-pre-processors (coll), a collection of pre-processor objects
+   - can be pre-processors built using the above fns or a configuration map
+     that is passed to the pre-processors multi method
 
   ie. (composable-input-pre-processor
        :pre-processors [(zero-mean-pre-pre-processor)
-                        (binominal-sampling-pre-processor)])"
-  [& {:keys [pre-processors]
+                        (binominal-sampling-pre-processor)
+                        {:cnn-to-feed-forward-pre-processor
+                         {:input-height 2 :input-width 3 :num-channels 4}}])"
+  [& {:keys [coll-pre-processors]
       :as opts}]
-  (ComposableInputPreProcessor.
-   (array-of :data pre-processors :java-type InputPreProcessor)))
+  (let [pp (into []
+                 (for [each coll-pre-processors]
+                   (if (map? each)
+                     (pre-processors each)
+                     each)))]
+   (ComposableInputPreProcessor.
+   (array-of :data pp :java-type InputPreProcessor))))

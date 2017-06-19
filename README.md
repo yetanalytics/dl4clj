@@ -8,6 +8,181 @@ Under construction. For now, have a look at the [examples](https://github.com/en
 You can also look at the tests (reflects changes from original authors work)
 - this section will be updated with the core usage and highlights of different name spaces
 
+Creating Layers
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.builders :as l]))
+
+(l/activation-layer-builder :activation-fn :relu :updater :adam
+                          :adam-mean-decay 0.2 :adam-var-decay 0.1
+                          :dist {:normal {:mean 0 :std 1.0}}
+                          :learning-rate 0.006 :weight-init :xavier
+                          :layer-name "example layer" :n-in 10 :n-out 1)
+```
+Creating distributions to sample layer weights from
+
+``` clojure
+
+(ns my.ns
+  (:require [dl4clj.nn.conf.distribution.distribution :as dist]))
+
+(dist/new-normal-distribution :mean 0 :std 1)
+
+```
+Creating input pre-processors
+
+``` clojure
+
+(ns my.ns
+  (:require [dl4clj.nn.conf.input-pre-processor :as pp]))
+
+;; single pre-processor
+
+(pp/new-cnn-to-feed-forward-pre-processor
+ :input-height 2 :input-width 3 :num-channels 4)
+
+;; single pre-processor made of multiple pre-processors
+;; this fn also supports heterogeneous args
+
+(pp/new-composable-input-pre-processor
+ :coll-pre-processors [(new-zero-mean-pre-pre-processor)
+                       (new-binominal-sampling-pre-processor)
+                       {:cnn-to-feed-forward-pre-processor {:input-height 2 :input-width 3 :num-channels 4}}])
+
+```
+
+Adding the layers to a neural network configuration
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
+            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+            [dl4clj.nn.conf.distribution.distribution :as dist]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; single layer nn-conf
+;; build? should be set to true
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
+                         :seed 123 :iterations 1 :minimize? true
+                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                         :regularization? false
+                         :build? true
+                         :layer (l/dense-layer-builder
+                                 :activation-fn :relu :updater :adam
+                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
+                                 :dist {:normal {:mean 0 :std 1.0}}
+                                 :learning-rate 0.006 :weight-init :xavier
+                                 :layer-name "single layer model example"
+                                 :n-in 10 :n-out 20))
+
+;; distributions can be created using the fns in dl4clj.nn.conf.distribution.distribution
+;; or by passing a configuration map as shown above
+
+(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
+                         :seed 123 :iterations 1 :minimize? true
+                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                         :regularization? false
+                         :build? true
+                         :layer (l/dense-layer-builder
+                                 :activation-fn :relu :updater :adam
+                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
+                                 :dist (dist/new-normal-distribution :mean 0 :std 1)
+                                 :learning-rate 0.006 :weight-init :xavier
+                                 :layer-name "single layer model example"
+                                 :n-in 10 :n-out 20))
+
+;; these configurations are the same
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; model with multiple layers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; when we dont want to specify multi-layer-config-builder options
+;; build? set to true
+
+(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
+                         :seed 123 :iterations 1 :minimize? true
+                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                         :regularization? false
+                         :default-activation-fn :sigmoid :default-weight-init :uniform
+                         :build? true
+                         :layers {0 (l/activation-layer-builder
+                                     :activation-fn :relu :updater :adam
+                                     :adam-mean-decay 0.2 :adam-var-decay 0.1
+                                     :dist (new-normal-distribution :mean 0 :std 1)
+                                     :learning-rate 0.006 :weight-init :xavier
+                                     :layer-name "first of two layers" :n-in 10 :n-out 20)
+                                  ;; can pass a layer configuration map instead of calling a fn
+                                  ;; and use defaults
+                                  1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
+                                                    :layer-name "final layer"}}})
+
+
+;; when we want to specify multi-layer-config-builder options
+;; can leave out :build? as it defaults to false
+
+(def l-builder (nn-conf/nn-conf-builder
+                :optimization-algo :stochastic-gradient-descent
+                :seed 123 :iterations 1 :minimize? true
+                :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                :regularization? false
+                :default-activation-fn :sigmoid :default-weight-init :uniform
+                :layers {0 (l/activation-layer-builder
+                            :activation-fn :relu :updater :adam
+                            :adam-mean-decay 0.2 :adam-var-decay 0.1
+                            :dist {:normal {:mean 0 :std 1.0}}
+                            :learning-rate 0.006 :weight-init :xavier
+                            :layer-name "example first layer" :n-in 10 :n-out 20)
+                         ;; can pass a layer configuration map instead of calling a fn
+                         1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
+                                           :layer-name "example output layer"}}}))
+
+;; here we can add in pre-processors
+;; pass in a map of either pre-processor fn calls or configuration maps
+;; can be heterogeneous just like any other place where you can pass fns or config maps
+
+(mlb/multi-layer-config-builder
+ :list-builder l-builder
+ :backprop? true :backprop-type :standard
+ :pretrain? false
+ :input-pre-processors {0 (new-zero-mean-pre-pre-processor)
+                        1 {:unit-variance-processor {}})
+
+;; we can also create multi-layer configurations using many single layer configurations
+
+(def first-layer-conf
+  (nn-conf/nn-conf-builder
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :minimize? true
+   :use-drop-connect? false :lr-score-based-decay-rate 0.002
+   :regularization? false
+   :build? true
+   :layer {:dense-layer {:activation-fn :relu :updater :adam
+                         :adam-mean-decay 0.2 :adam-var-decay 0.1
+                         :dist {:normal {:mean 0 :std 1.0}}
+                         :learning-rate 0.006 :weight-init :xavier
+                         :layer-name "first layer"
+                         :n-in 10 :n-out 20}}))
+
+(def second-layer-conf
+  (nn-conf/nn-conf-builder
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :minimize? true
+   :use-drop-connect? false :lr-score-based-decay-rate 0.002
+   :regularization? false
+   :build? true
+   :layer {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
+                          :layer-name "second layer"}}))
+
+(def multi-from-multiple-single
+ (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
+
+```
+
 ## Artifacts
 
 dl4clj artifacts are released to Clojars. (original authors work)
@@ -66,16 +241,16 @@ How it is done in dl4clj
 
 ``` clojure
 (ns my.ns
-    (:require [dl4clj.nn.conf.builders.builders :as l]
-              [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
-              [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-              [dl4clj.nn.multilayer.multi-layer-network :as mln]
-              [dl4clj.spark.masters.param-avg :as master]
-              [dl4clj.spark.dl4j-multi-layer :as spark-mln]
-              [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
-              [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]
-              [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]
-              [dl4clj.eval.evaluation :refer [get-stats]))
+  (:require [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
+            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.spark.masters.param-avg :as master]
+            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
+            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
+            [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]]
+            [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]
+            [dl4clj.eval.evaluation :refer [get-stats]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model
