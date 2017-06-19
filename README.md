@@ -74,7 +74,8 @@ How it is done in dl4clj
               [dl4clj.spark.dl4j-multi-layer :as spark-mln]
               [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
               [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]
-              [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]))
+              [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]
+              [dl4clj.eval.evaluation :refer [get-stats))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model
@@ -156,11 +157,14 @@ How it is done in dl4clj
 ;; this fn also has the option to supply :path-to-data instead of :rdd
 ;; that path should point to a directory containing a number of dataset objects
 
-(eval-classification-spark-mln :spark-mln fitted-spark-mln
-                               :rdd our-rdd)
+(def eval-obj (eval-classification-spark-mln :spark-mln fitted-spark-mln
+                                             :rdd our-rdd))
 ;; we would want to have different testing and training rdd's but here we are using
 ;; the data we trained on
 
+;; lets get the stats for how our model performed
+
+(get-stats :evaler eval-obj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; It is also possible to train single layer models via spark
