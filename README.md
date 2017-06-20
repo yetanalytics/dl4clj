@@ -288,7 +288,7 @@ Adding the layers to a neural network configuration
 
 ### Importing data
 
-Loading data from a csv
+Loading data from a file (here its a csv)
 
 ``` clojure
 
@@ -317,7 +317,7 @@ Loading data from a csv
 
 ;; lets look at some data
 (println (next-record! csv-rr))
-;; => #object[java.util.ArrayList 0x5a54f709 [2, 11, 2, 13, 2, 10, 2, 12, 2, 1, 9]]
+;; => #object[java.util.ArrayList 0x2473e02d [1, 10, 1, 11, 1, 13, 1, 12, 1, 1, 9]]
 ;; this is our first line from the csv
 
 ;; next-record! moves the record readers interal cursor, so we should now reset the record reader
@@ -387,6 +387,103 @@ Loading data from a csv
 
 ```
 
+Creating datasets from INDArrays (and creating INDArrays)
+
+``` clojure
+
+(my.ns
+ (:require [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
+                                               indarray-of-zeros indarray-of-ones
+                                               indarray-of-rand]]
+           [nd4clj.linalg.dataset.data-set :refer [data-set]]
+           [nd4clj.linalg.dataset.api.data-set :refer [as-list]]
+           [dl4clj.datasets.iterator.iterators :refer[new-existing-dataset-iterator]]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; INDArray creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; can create from a vector
+
+(vec->indarray [1 2 3 4])
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x269df212 [1.00, 2.00, 3.00, 4.00]]
+
+;; or from a matrix
+
+(matrix->indarray [[1 2 3 4] [2 4 6 8]])
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x20aa7fe1 [[1.00, 2.00, 3.00, 4.00], [2.00, 4.00, 6.00, 8.00]]]
+
+;; will fill in spareness with zeros
+
+(matrix->indarray [[1 2 3 4] [2 4 6 8] [10 12]])
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x8b7796c
+;;[[1.00, 2.00, 3.00, 4.00],
+;; [2.00, 4.00, 6.00, 8.00],
+;; [10.00, 12.00, 0.00, 0.00]]]
+
+;; can create an indarray of all zeros with specified shape
+;; defaults to :rows = 1 :columns = 1
+
+(indarray-of-zeros :rows 3 :columns 2)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x6f586a7e
+;;[[0.00, 0.00],
+;; [0.00, 0.00],
+;; [0.00, 0.00]]]
+
+(indarray-of-zeros) => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0xe59ffec 0.00]
+
+;; and if only one is supplied, will get a vector of specified length
+
+(indarray-of-zeros :rows 2)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x2899d974 [0.00, 0.00]]
+
+(indarray-of-zeros :columns 2)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0xa5b9782 [0.00, 0.00]]
+
+;; same considerations/defaults for indarray-of-ones and indarray-of-rand
+
+(indarray-of-ones :rows 2 :columns 3)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x54f08662 [[1.00, 1.00, 1.00], [1.00, 1.00, 1.00]]]
+
+(indarray-of-rand :rows 2 :columns 3)
+;; all values are greater than 0 but less than 1
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x2f20293b [[0.85, 0.86, 0.13], [0.94, 0.04, 0.36]]]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; data-set creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ds-with-single-example (data-set :input (vec->indarray [1 2 3 4])
+                                      :output (vec->indarray [0.0 1.0 0.0])))
+(as-list ds-with-single-example)
+;; =>
+;; #object[java.util.ArrayList 0x5d703d12
+;;[===========INPUT===================
+;;[1.00, 2.00, 3.00, 4.00]
+;;=================OUTPUT==================
+;;[0.00, 1.00, 0.00]]]
+
+(def ds-with-multiple-examples (data-set
+                                :input (matrix->indarray [[1 2 3 4] [2 4 6 8]])
+                                :output (matrix->indarray [[0.0 1.0 0.0] [0.0 0.0 1.0]])))
+
+(as-list ds-with-multiple-examples)
+;; =>
+;;#object[java.util.ArrayList 0x29c7a9e2
+;;[===========INPUT===================
+;;[1.00, 2.00, 3.00, 4.00]
+;;=================OUTPUT==================
+;;[0.00, 1.00, 0.00],
+;;===========INPUT===================
+;;[2.00, 4.00, 6.00, 8.00]
+;;=================OUTPUT==================
+;;[0.00, 0.00, 1.00]]]
+
+;; we can create a dataset iterator directly from a dataset
+;; and set the labels for our outputs (optional)
+(new-existing-dataset-iterator :dataset ds-with-multiple-examples :labels ["foo" "baz"])
+
+```
 
 ### Congiuration to Initialized models
 

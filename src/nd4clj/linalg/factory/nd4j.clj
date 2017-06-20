@@ -7,8 +7,45 @@
            [org.nd4j.linalg.api.rng Random]))
 ;; (remove-ns 'nd4clj.linalg.factory.nd4j)
 
-;; TODO
-;; make sure these work
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; INDArray creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn vec->indarray
+  [data]
+  (Nd4j/create (double-array data)))
+
+(defn matrix->indarray
+  [matrix]
+  (as-> (for [each matrix]
+          (double-array each))
+      data
+    (into [] data)
+    (into-array data)
+    (Nd4j/create data)))
+
+(defn indarray-of-zeros
+  [& {:keys [rows columns]
+      :or {rows 1
+           columns 1}}]
+  (Nd4j/zeros (int rows) (int columns)))
+
+(defn indarray-of-ones
+  [& {:keys [rows columns]
+      :or {rows 1
+           columns 1}}]
+  (Nd4j/ones (int rows) (int columns)))
+
+(defn indarray-of-rand
+  [& {:keys [rows columns]
+      :or {rows 1
+           columns 1}}]
+  (Nd4j/rand (int rows) (int columns)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Legacy INDArray creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn zeros
   ([shape]

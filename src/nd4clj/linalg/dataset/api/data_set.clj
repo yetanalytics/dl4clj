@@ -29,9 +29,10 @@
 ;;   (.apply this condition function))
 
 
-(defn as-list [^DataSet this]
-  ""
-  (.asList this))
+(defn as-list
+  "returns all the examples in a dataset as an array list"
+  [data-set]
+  (.asList data-set))
 
 (defn batch-by
   "Partitions a dataset in to mini batches where each dataset in each list is of the specified number of examples"
@@ -119,9 +120,9 @@
   (.getLabels this))
 
 (defn iterator
-  ""
-  [^DataSet this]
-  (.iterator this))
+  "creates an iterator for the supplied dataset"
+  [data-set]
+  (.iterator data-set))
 
 (defn multiply-by
   ""
