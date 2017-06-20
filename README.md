@@ -374,7 +374,7 @@ Loading data from a file (here its a csv)
 
 (realized? lazy-seq-data) ;; => false
 
-;; (first lazy-seq-data) =>
+(first lazy-seq-data) ;; =>
 
 ;;===========INPUT===================
 ;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
@@ -411,7 +411,9 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; or from a matrix
 
 (matrix->indarray [[1 2 3 4] [2 4 6 8]])
-;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x20aa7fe1 [[1.00, 2.00, 3.00, 4.00], [2.00, 4.00, 6.00, 8.00]]]
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x20aa7fe1
+;; [[1.00, 2.00, 3.00, 4.00], [2.00, 4.00, 6.00, 8.00]]]
+
 
 ;; will fill in spareness with zeros
 
@@ -481,7 +483,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ;; we can create a dataset iterator directly from a dataset
 ;; and set the labels for our outputs (optional)
-(new-existing-dataset-iterator :dataset ds-with-multiple-examples :labels ["foo" "baz"])
+(new-existing-dataset-iterator :dataset ds-with-multiple-examples :labels ["foo" "baz" "foobaz"])
 
 ```
 
