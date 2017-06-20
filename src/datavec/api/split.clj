@@ -19,7 +19,7 @@
 
 (defmethod input-split :file-split [opts]
   (let [config (:file-split opts)
-        {root :root-dir
+        {root :path
          rng :rng-seed
          fmt :allow-format
          recursive? :recursive?} config
@@ -188,9 +188,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-filesplit
-  "File input split. Splits up a root directory in to files.
+  "File input split. Splits up a file into writables
 
-  :root-dir (str), the root directory of the file you want to import
+  :path (str), the path to the file you want to import
 
   :rng-seed (java.util.Random), seed for consistent randomization
 
@@ -199,7 +199,7 @@
   :recursive? (boolean), how the files should be read in
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/FileSplit.html"
-  [& {:keys [root-dir rng-seed allow-format recursive?]
+  [& {:keys [path rng-seed allow-format recursive?]
       :as opts}]
   (input-split {:file-split opts}))
 

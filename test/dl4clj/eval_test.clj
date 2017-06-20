@@ -9,7 +9,7 @@
             ;; requireing early stopping ns for minimal training
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator
                                                                     get-feature-matrix]]
-            [nd4clj.linalg.api.ds-iter :refer [next-example get-labels reset-iter!]]
+            [nd4clj.linalg.api.ds-iter :refer [next-example! get-labels reset-iter!]]
             [dl4clj.earlystopping.early-stopping-trainer :refer :all]
             [dl4clj.earlystopping.termination-conditions :refer :all]
             [dl4clj.earlystopping.early-stopping-config :refer :all]
@@ -124,7 +124,7 @@
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
-    (let [data (next-example (reset-iter! mnist-test))
+    (let [data (next-example! (reset-iter! mnist-test))
           features (get-feature-matrix data)
           mln-output (ml/output :mln es-trained :input features)
           evalr (new-classification-evaler)
@@ -239,7 +239,7 @@
 
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
-    (let [data (next-example (reset-iter! mnist-test))
+    (let [data (next-example! (reset-iter! mnist-test))
           features (get-feature-matrix data)
           evalr (new-classification-evaler)
           labels (get-labels data)

@@ -148,7 +148,7 @@
     ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
            (type (new-singleton-multi-data-set-iterator
-                  (next-example
+                  (next-example!
                    (reset-fetcher!
                     (new-multi-data-set-iterator-adapter
                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
@@ -177,7 +177,7 @@
              (type (get-pre-processor iter))))
       (is (= java.lang.Integer (type (get-input-columns iter))))
       (is (= org.nd4j.linalg.dataset.DataSet
-             (type (next-n-examples :iter iter-w-labels :n 2))))
+             (type (next-n-examples! :iter iter-w-labels :n 2))))
       (is (= java.lang.Integer (type (get-num-examples iter))))
       (is (= (type iter-w-labels) (type (reset-iter! iter-w-labels))))
       (is (= java.lang.Boolean (type (reset-supported? iter-w-labels))))
@@ -186,13 +186,13 @@
 
       ;; dl4clj.datasets.iterator.impl.default-datasets
       (is (= java.lang.Boolean (type (has-next? iter))))
-      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example iter-w-labels))))
+      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! iter-w-labels))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-feature-matrix (next-example (reset-iter! iter-w-labels))))))
+             (type (get-feature-matrix (next-example! (reset-iter! iter-w-labels))))))
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
       (is (= (type cifar-iter) (type (train-cifar-iter! cifar-iter))))
@@ -248,22 +248,22 @@
   (testing "base level io stuffs"
     ;; file split
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker/"))))
+           (type (new-filesplit :path "resources/poker/"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker/"
+           (type (new-filesplit :path "resources/poker/"
                                 :rng-seed (new java.util.Random)))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker/"
+           (type (new-filesplit :path "resources/poker/"
                                 :allow-format ".csv"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker/"
+           (type (new-filesplit :path "resources/poker/"
                                 :allow-format ".csv"
                                 :recursive? true))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :root-dir "resources/poker/"
+           (type (new-filesplit :path "resources/poker/"
                                 :allow-format ".csv"
                                 :rng-seed (new java.util.Random)))))
-    (is (= java.io.File (type (get-root-dir (new-filesplit :root-dir "resources/poker/")))))
+    (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/poker/")))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
@@ -346,7 +346,7 @@
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
     ;; datavec.api.writeable
-    (let [f-split (new-filesplit :root-dir "resources/poker/")]
+    (let [f-split (new-filesplit :path "resources/poker/")]
       (is (= java.lang.Long (type (length f-split))))
       (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
@@ -403,7 +403,7 @@
     (let [rr (new-file-record-reader)
           init-rr (initialize-rr! :rr rr :input-split
                                   (new-filesplit
-                                   :root-dir "resources/poker/poker-hand-testing.csv"))]
+                                   :path "resources/poker/poker-hand-testing.csv"))]
       ;; these tests do not cover the entire ns but the most imporant fns
       (is (= java.lang.Boolean (type (has-next-record? init-rr))))
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))

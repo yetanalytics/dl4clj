@@ -35,12 +35,12 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [iter]
   (.inputColumns iter))
 
-(defn next-n-examples
+(defn next-n-examples!
   "Like the standard next method but allows a customizable number of examples returned"
   [& {:keys [iter n]}]
   (.next iter n))
 
-(defn next-example
+(defn next-example!
   "returns the next example in an iterator"
   [iter]
   (.next iter))
@@ -92,4 +92,4 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   "returns all the data from an iterator as a lazy seq"
   [iter]
   (when (has-next? iter)
-    (lazy-seq (cons (next-example iter) (data-from-iter iter)))))
+    (lazy-seq (cons (next-example! iter) (data-from-iter iter)))))

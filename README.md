@@ -287,32 +287,105 @@ Adding the layers to a neural network configuration
 ```
 
 ### Importing data
-- examples coming
 
-input splits
-- datavec.api.split
+Loading data from a csv
 
-record readers
-- datavec.api.records.readers
+``` clojure
 
-INDArrays and Datasets
-- nd4clj.linalg.api.ndarray.indarray
-- nd4clj.linalg.factory.nd4j
-- nd4clj.linalg.dataset.data-set
-- nd4clj.linalg.dataset.multi-ds
-- nd4clj.linalg.dataset.api.data-set
-- nd4clj.linalg.dataset.api.ds-preprocessor
-- nd4clj.linalg.dataset.api.pre-processors
+(my.ns (:require [datavec.api.split :as s]
+                 [datavec.api.records.readers :as rr]
+                 [datavec.api.records.interface :refer :all]
+                 [dl4clj.datasets.datavec :as ds-iter]
+                 [nd4clj.linalg.api.ds-iter :refer :all]))
 
-default datasets
-- dl4clj.datasets.iterator.impl.default-datasets
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; file splits (convert the data to records)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-datset iterators
-- dl4clj.datasets.iterator.iterators
-- nd4clj.linalg.api.ds-iter
+(def poker-path "resources/poker/poker-hand-training.csv")
 
-record reader dataset iterators
-- dl4clj.datasets.datavec
+(def file-split (s/new-filesplit :path poker-path))
+
+;; we can't look at the data until we create a record reader
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; record readers, (read the records created by the file split)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+                                 :input-split file-split))
+
+;; lets look at some data
+(println (next-record! csv-rr))
+;; => #object[java.util.ArrayList 0x5a54f709 [2, 11, 2, 13, 2, 10, 2, 12, 2, 1, 9]]
+;; this is our first line from the csv
+
+;; next-record! moves the record readers interal cursor, so we should now reset the record reader
+
+(reset-rr! csv-rr)
+;; this will return the reset record reader, so this fn can be at the start of a fn chain
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; record readers dataset iterators (turn our writables into a dataset)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                 :record-reader csv-rr
+                 :batch-size 1
+                 :label-idx 10
+                 :n-possible-labels 10))
+
+;; we use our record reader created above
+;; we want to see one example per dataset obj returned (:batch-size = 1)
+;; we know our label is at the last index, so :label-idx = 10
+;; there are 10 possible types of poker hands so :n-possible-labels = 10
+
+;; you can also set :label-idx to -1 to use the last index no matter the size of the seq
+(def other-rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                       :record-reader csv-rr
+                       :batch-size 1
+                       :label-idx -1
+                       :n-possible-labels 10))
+
+;; lets look at some data
+
+(str (next-example! rr-ds-iter))
+;; =>
+;;===========INPUT===================
+;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
+;;=================OUTPUT==================
+;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
+
+;; dont forget to reset the iterator as next example changes the cursor value
+(reset-iter! rr-ds-iter)
+
+;; and to show that :label-idx = -1 gives us the same output
+
+(= (next-example! (reset-iter! rr-ds-iter))
+   (next-example! (reset-iter! other-rr-ds-iter)))
+
+;; => true
+
+;; we now have our csv data in a format that can be fed to a neural network
+
+;; if we want all the data out of our record-reader-dataset-iterator as a lazy seq
+
+(def lazy-seq-data (data-from-iter rr-ds-iter))
+
+(realized? lazy-seq-data) ;; => false
+
+;; (first lazy-seq-data) =>
+
+;;===========INPUT===================
+;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
+;;=================OUTPUT==================
+;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
+
+;; getting the data out of a rr-ds-iter ourself becomes important
+;; when making javaRDDs for spark training but is not necessary
+;; for local machine training
+
+```
 
 
 ### Congiuration to Initialized models
@@ -520,6 +593,11 @@ The namespaces contain dl4j user facing functions and functions that are called 
 - look at the dl4j source for a better understanding of the wrapped code
   - links to the java-docs are in some name spaces and not other
     - eventually all name spaces will have refrences to the dl4j java docs
+
+##Terminology
+
+Coming soon
+
 
 ## TODO
 

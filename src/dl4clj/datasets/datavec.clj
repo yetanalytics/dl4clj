@@ -81,7 +81,7 @@
              rr batch-size label-idx n-labels)
             (contains? config :batch-size)
             (RecordReaderDataSetIterator.
-            rr batch-size)
+             rr batch-size)
             :else
             (assert false "you must supply a record reader and a batch size")))))
 
@@ -226,7 +226,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   "creates a new sequence record reader dataset iterator by calling its constructor
   with the supplied args.  args are:
 
-  :record-reader (record-reader) a record reader, see datavec.api.records.readers
+  :record-reader (sequence-record-reader) a record reader, see datavec.api.records.readers
 
   :mini-batch-size (int) the mini batch size
 

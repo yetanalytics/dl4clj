@@ -10,7 +10,7 @@
             [nd4clj.linalg.api.ds-iter :refer [reset-iter!
                                                has-next?
                                                data-from-iter
-                                               next-example]]
+                                               next-example!]]
             ;; multi-ds
             [nd4clj.linalg.dataset.multi-ds :refer [new-multi-ds]]
 
