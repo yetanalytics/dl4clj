@@ -1,7 +1,8 @@
 (ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
     dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.utils :refer [contains-many? array-of]]
-            [dl4clj.nn.conf.constants :as enum])
+            [dl4clj.nn.conf.constants :as enum]
+            [dl4clj.nn.api.model :refer [fit!]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
 
@@ -12,6 +13,20 @@
   (if params
     (MultiLayerNetwork. conf params)
     (MultiLayerNetwork. conf)))
+
+(defn train-mln-with-ds-iter!
+  "train the supplied multi layer network on the supplied dataset
+
+  :ds-iter (iterator), an iterator wrapping a dataset
+
+  :n-epochs (int), the number of passes through the dataset"
+  [& {:keys [mln ds-iter n-epochs]}]
+  (loop [i 0
+         result {}]
+    (cond (not= i n-epochs)
+          (recur (inc i) (fit! :mln mln :iter ds-iter))
+          (= i n-epochs)
+          mln)))
 
 (defn activate-selected-layers
   "Calculate activation for few layers at once. Suitable for autoencoder partial activation
@@ -61,6 +76,7 @@
     (.computeZ mln training?)))
 
 (defn do-evaluation
+  ;; this can be deleted, call the evaluate-...
   "Perform evaluation using an arbitrary IEvaluation instance.
 
   :iter (ds-iter), a dataset iterator

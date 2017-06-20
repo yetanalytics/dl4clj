@@ -19,7 +19,7 @@
   :list-builder (nn-conf-list-builder) the result of nn-conf-builder
    - when you supply the :layers key and :built? is set to false (default)
 
-  :confs (coll), a collection of built neural net configurations
+  :nn-confs (coll), a collection of built neural net configurations
    - needs to be single layer neural network configurations
    - when you call nn-conf-builder and supply :layer and :build? true
 

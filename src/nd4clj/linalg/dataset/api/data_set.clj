@@ -114,7 +114,7 @@
   [^DataSet this]
   (.getLabelNames this))
 
-(defn get-labels
+(defn get-labels-from-dataset
   "Returns the labels for the dataset"
   [^DataSet this]
   (.getLabels this))

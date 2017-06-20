@@ -6,7 +6,7 @@
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.nn.conf.constants :as enum]))
 
-(defn activate
+(defn activate-layer
   "6 opts for triggering an activation
   1) only supply the layer, Trigger an activation with the last specified input
 
@@ -157,7 +157,7 @@
   [layer]
   (.transpose layer))
 
-(defn layer-type
+(defn get-layer-type
   "Returns the layer type"
   [layer]
   (.type layer))

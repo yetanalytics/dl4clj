@@ -79,18 +79,10 @@ Creating Layers
 (l/activation-layer-builder
  :activation-fn :relu :updater :adam
  :adam-mean-decay 0.2 :adam-var-decay 0.1
- :dist {:normal {:mean 0 :std 1.0}}
- :learning-rate 0.006 :weight-init :xavier
+ :learning-rate 0.006 :weight-init :distribution
+ :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
  :layer-name "example layer" :n-in 10 :n-out 1)
 
-(l/activation-layer-builder
- :activation-fn :relu :updater :adam
- :adam-mean-decay 0.2 :adam-var-decay 0.1
- :dist (dist/new-normal-distribution :mean 0 :std 1)
- :learning-rate 0.006 :weight-init :xavier
- :layer-name "example layer" :n-in 10 :n-out 1)
-
-;;these layer configurations are the same
 ```
 
 There is also support for Variational Autoencoders
@@ -130,6 +122,7 @@ There is also configuration validation
 ### Model configuration
 
 Creating input pre-processors
+- manipulate the incoming data before it reaches the weights of the upcoming layer
 
 ``` clojure
 
@@ -171,24 +164,23 @@ Adding the layers to a neural network configuration
                          :seed 123 :iterations 1 :minimize? true
                          :use-drop-connect? false :lr-score-based-decay-rate 0.002
                          :regularization? false
-                         :step-fn (s-fn/new-default-step-fn)
+                         :step-fn :default-step-fn
                          :build? true
-                         :layer (l/dense-layer-builder
-                                 :activation-fn :relu :updater :adam
-                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
-                                 :dist {:normal {:mean 0 :std 1.0}}
-                                 :learning-rate 0.006 :weight-init :xavier
-                                 :layer-name "single layer model example"
-                                 :n-in 10 :n-out 20))
+                         :layer {:dense-layer {:activation-fn :relu :updater :adam
+                                               :adam-mean-decay 0.2 :adam-var-decay 0.1
+                                               :learning-rate 0.006 :weight-init :xavier
+                                               :layer-name "single layer model example"
+                                               :n-in 10 :n-out 20}})
 
-;; distributions can be created using the fns in dl4clj.nn.conf.distribution.distribution
-;; or by passing a configuration map as shown above
+;; there are several options within a nn-conf map which can be configuration maps
+;; or calls to fns
+;; It doesn't matter which option you choose and you don't have to stay consistent
 
 (nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
                          :seed 123 :iterations 1 :minimize? true
                          :use-drop-connect? false :lr-score-based-decay-rate 0.002
                          :regularization? false
-                         :step-fn :default-step-fn
+                         :step-fn (s-fn/new-default-step-fn)
                          :build? true
                          :layer (l/dense-layer-builder
                                  :activation-fn :relu :updater :adam
@@ -204,30 +196,7 @@ Adding the layers to a neural network configuration
 ;; model with multiple layers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; when we dont want to specify multi-layer-config-builder options
-;; build? set to true
-
-(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
-                         :seed 123 :iterations 1 :minimize? true
-                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
-                         :regularization? false
-                         :default-activation-fn :sigmoid :default-weight-init :uniform
-                         ;; ^ these defaults will be applied to "final layer" but will
-                         ;; not overwrite "first of two layers"
-                         :build? true
-                         ;; :layers accepts heterogeneous config maps
-                         :layers {0 (l/activation-layer-builder
-                                     :activation-fn :relu :updater :adam
-                                     :adam-mean-decay 0.2 :adam-var-decay 0.1
-                                     :dist (new-normal-distribution :mean 0 :std 1)
-                                     :learning-rate 0.006 :weight-init :xavier
-                                     :layer-name "first of two layers" :n-in 10 :n-out 20)
-                                  1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
-                                                    :layer-name "final layer"}}})
-
-
-;; when we want to specify multi-layer-config-builder options
-;; can leave out :build? as it defaults to false
+;; defaults will apply to layers which do not specify those value in their config
 
 (def l-builder (nn-conf/nn-conf-builder
                 :optimization-algo :stochastic-gradient-descent
@@ -238,7 +207,6 @@ Adding the layers to a neural network configuration
                 :layers {0 (l/activation-layer-builder
                             :activation-fn :relu :updater :adam
                             :adam-mean-decay 0.2 :adam-var-decay 0.1
-                            :dist {:normal {:mean 0 :std 1.0}}
                             :learning-rate 0.006 :weight-init :xavier
                             :layer-name "example first layer" :n-in 10 :n-out 20)
                          1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
@@ -248,12 +216,13 @@ Adding the layers to a neural network configuration
 ;; pass in a map of either pre-processor fn calls or configuration maps
 ;; can be heterogeneous just like any other place where you can pass fns or config maps
 
-(mlb/multi-layer-config-builder
- :list-builder l-builder
- :backprop? true :backprop-type :standard
- :pretrain? false
- :input-pre-processors {0 (new-zero-mean-pre-pre-processor)
-                        1 {:unit-variance-processor {}})
+(def multi-layer-conf
+  (mlb/multi-layer-config-builder
+   :list-builder l-builder
+   :backprop? true :backprop-type :standard
+   :pretrain? false
+   :input-pre-processors {0 (new-zero-mean-pre-pre-processor)
+                          1 {:unit-variance-processor {}}}))
 
 ;; we can also create multi-layer configurations using many single layer configurations
 
@@ -266,7 +235,6 @@ Adding the layers to a neural network configuration
    :build? true
    :layer {:dense-layer {:activation-fn :relu :updater :adam
                          :adam-mean-decay 0.2 :adam-var-decay 0.1
-                         :dist {:normal {:mean 0 :std 1.0}}
                          :learning-rate 0.006 :weight-init :xavier
                          :layer-name "first layer"
                          :n-in 10 :n-out 20}}))
@@ -279,10 +247,13 @@ Adding the layers to a neural network configuration
    :regularization? false
    :build? true
    :layer {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
-                          :layer-name "second layer"}}))
+                          :layer-name "second layer" :activation-fn :softmax}}))
 
 (def multi-from-multiple-single
  (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
+
+;; other args can also be passed just like when we added pre-processors to our other mln
+
 
 ```
 
@@ -489,21 +460,74 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ### Congiuration to Initialized models
 
-Layers as models
-
-``` clojure
-
-dl4clj.nn.layers.layer-creation
-
-
-```
-
 Multi Layer models
 
 ``` clojure
 
-dl4clj.nn.multilayer.multi-layer-network
+(my.ns (:require [datavec.api.split :as s]
+                 [datavec.api.records.readers :as rr]
+                 [datavec.api.records.interface :refer [initialize-rr!]]
+                 [dl4clj.datasets.datavec :as ds-iter]
+                 [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
+                 [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+                 [dl4clj.nn.multilayer.multi-layer-network :as mln]
+                 [dl4clj.nn.api.model :refer [init!]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; nn-conf -> multi-layer-conf -> multi-layer-network
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def l-builder (nn-conf/nn-conf-builder
+                :optimization-algo :stochastic-gradient-descent
+                :seed 123 :iterations 1 :minimize? true
+                :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                :regularization? false :default-activation-fn :sigmoid
+                :default-weight-init :uniform
+                :layers {0 {:activation-layer
+                            {:activation-fn :relu :updater :adam
+                             :adam-mean-decay 0.2 :adam-var-decay 0.1
+                             :learning-rate 0.006 :weight-init :xavier
+                             :layer-name "example first layer"
+                             :n-in 10 :n-out 20}}
+                         1 {:output-layer
+                            {:n-in 20 :n-out 10 :loss-fn :mse
+                             :layer-name "example output layer"}}}))
+
+(def multi-layer-conf
+  (mlb/multi-layer-config-builder
+   :list-builder l-builder
+   :backprop? true :backprop-type :standard
+   :pretrain? false))
+
+(def multi-layer-network
+  (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; local cpu training
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; lets use the record-reader-dataset-iterator we created earlier
+;; we will recreate it here as review
+
+(def poker-path "resources/poker/poker-hand-training.csv")
+
+(def file-split (s/new-filesplit :path poker-path))
+
+(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+                            :input-split file-split))
+
+(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                 :record-reader csv-rr
+                 :batch-size 1
+                 :label-idx 10
+                 :n-possible-labels 10))
+
+(def trained-mln (train-mln-with-ds-iter! :mln multi-layer-network
+                                          :ds-iter rr-ds-iter
+                                          :n-epochs 2))
+;; we now have a trained model
+;; not well trained but still has gone through the dataset twice
+;; lets evaluate how poorly trained the network is
 
 ```
 
@@ -666,6 +690,13 @@ How it is done in dl4clj
 ;; this is for single fn call training (fit-spark-layer!...)
 ```
 
+### Putting it all together
+
+- local training example
+
+- spark-mnist example port
+
+
 ## NOTES
 
 There are 3 types of arg structures for fns found in this libarary
@@ -693,7 +724,7 @@ The namespaces contain dl4j user facing functions and functions that are called 
   - links to the java-docs are in some name spaces and not other
     - eventually all name spaces will have refrences to the dl4j java docs
 
-##Terminology
+## Terminology
 
 Coming soon
 
