@@ -476,7 +476,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ```
 
-### Congiuration to Initialized models
+### Configuration to Initialized models
 
 Multi Layer models
 - an implementation of the dl4j [mnist classification](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)

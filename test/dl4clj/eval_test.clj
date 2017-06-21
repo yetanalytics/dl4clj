@@ -9,7 +9,7 @@
             ;; requireing early stopping ns for minimal training
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator
                                                                     get-feature-matrix]]
-            [nd4clj.linalg.api.ds-iter :refer [next-example! get-labels reset-iter!]]
+            [nd4clj.linalg.api.ds-iter :refer [next-example! reset-iter!]]
             [dl4clj.earlystopping.early-stopping-trainer :refer :all]
             [dl4clj.earlystopping.termination-conditions :refer :all]
             [dl4clj.earlystopping.early-stopping-config :refer :all]
@@ -18,6 +18,7 @@
             [dl4clj.earlystopping.score-calc :refer :all]
             [dl4clj.earlystopping.interfaces.early-stopping-trainer :refer [fit-trainer!]]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn]
+            [dl4clj.utils :refer [get-labels]]
             [dl4clj.nn.multilayer.multi-layer-network :as ml]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

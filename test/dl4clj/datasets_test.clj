@@ -18,7 +18,7 @@
             [datavec.api.writeable :refer :all]
             [datavec.api.records.readers :refer :all]
             [datavec.api.records.interface :refer :all]
-            [dl4clj.utils :refer [array-of]]
+            [dl4clj.utils :refer [array-of get-labels]]
             [nd4clj.linalg.dataset.data-set :refer [data-set]]
             [nd4clj.linalg.factory.nd4j :refer [rand]])
   ;; image transforms have not been implemented so importing this default one for testing

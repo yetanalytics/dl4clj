@@ -24,7 +24,7 @@
             [nd4clj.linalg.dataset.api.data-set :refer [get get-feature-matrix]]
             [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
             [dl4clj.eval.evaluation :refer [new-classification-evaler get-stats]]
-            [dl4clj.utils :refer [array-of]]
+            [dl4clj.utils :refer [array-of get-labels]]
             [nd4clj.linalg.api.ds-iter :refer [reset-iter!]]
             [clojure.test :refer :all]))
 
