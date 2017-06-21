@@ -3,7 +3,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html and
 https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html"}
     dl4clj.eval.evaluation
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn get-labels]]
+            [nd4clj.linalg.api.ds-iter :refer [has-next? next-example!]]
+            [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
+            [nd4clj.linalg.dataset.api.data-set :refer [get-features]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod for creating the evaluation java object
@@ -81,6 +84,52 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   [& {:keys [column-names precision n-columns]
       :as opts}]
   (evaler {:regression opts}))
+
+(defn eval-classification!
+  [& {:keys [labels network-predictions mask-array record-meta-data evaler
+             mln features predicted-idx actual-idx]
+      :as opts}]
+  (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
+  (cond (contains-many? opts :labels :network-predictions :record-meta-data)
+        (doto evaler (.eval labels network-predictions (into '() record-meta-data)))
+        (contains-many? opts :labels :network-predictions :mask-array)
+        (doto evaler (.eval labels network-predictions mask-array))
+        (contains-many? opts :labels :features :mln)
+        (doto evaler (.eval labels features mln))
+        (contains-many? opts :labels :network-predictions)
+        (doto evaler (.eval labels network-predictions))
+        (contains-many? opts :predicted-idx :actual-idx)
+        (doto evaler (.eval predicted-idx actual-idx))
+        :else
+        (assert false "you must supply an evaler, the correct labels and the network predicted labels")))
+
+(defn get-stats
+  "Method to obtain the classification report as a String"
+  [& {:keys [evaler suppress-warnings?]
+      :as opts}]
+  (if (contains? opts :suppress-warnings?)
+    (.stats evaler suppress-warnings?)
+    (.stats evaler)))
+
+(defn eval-model-whole-ds
+  "evaluate the model performance on an entire data set and print the results
+
+  :mln (multi layer network), a trained mln you want to get classification stats for
+
+  :eval-obj (evaler), the object created by new-classification-evaler
+
+  :ds-iter (iter), the dataset iterator which has the data you want to evaluate the model on
+
+  returns the evaluation object"
+  [& {:keys [mln eval-obj ds-iter]}]
+  (while (has-next? ds-iter)
+    (let [nxt (next-example! ds-iter)
+          prediction (output :mln mln :input (get-features nxt))]
+      (println (get-stats :evaler (eval-classification!
+                                   :evaler eval-obj
+                                   :labels (get-labels nxt)
+                                   :network-predictions prediction)))
+      eval-obj)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; classification evaluator interaction fns
@@ -275,14 +324,6 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
         :else
         (assert false "you must atleast provide an evaler to get the recall of the model being evaluated")))
 
-(defn get-stats
-  "Method to obtain the classification report as a String"
-  [& {:keys [evaler suppress-warnings?]
-      :as opts}]
-  (if (contains? opts :suppress-warnings?)
-    (.stats evaler suppress-warnings?)
-    (.stats evaler)))
-
 (defn top-n-accuracy
   "Top N accuracy of the predictions so far."
   [evaler]
@@ -297,24 +338,6 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   "True positives: correctly rejected"
   [evaler]
   (.truePositives evaler))
-
-(defn eval-classification!
-  [& {:keys [labels network-predictions mask-array record-meta-data evaler
-             mln features predicted-idx actual-idx]
-      :as opts}]
-  (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
-  (cond (contains-many? opts :labels :network-predictions :record-meta-data)
-        (doto evaler (.eval labels network-predictions (into '() record-meta-data)))
-        (contains-many? opts :labels :network-predictions :mask-array)
-        (doto evaler (.eval labels network-predictions mask-array))
-        (contains-many? opts :labels :features :mln)
-        (doto evaler (.eval labels features mln))
-        (contains-many? opts :labels :network-predictions)
-        (doto evaler (.eval labels network-predictions))
-        (contains-many? opts :predicted-idx :actual-idx)
-        (doto evaler (.eval predicted-idx actual-idx))
-        :else
-        (assert false "you must supply an evaler, the correct labels and the network predicted labels")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interact with a regression evaluator

@@ -368,7 +368,7 @@ Creating datasets from INDArrays (and creating INDArrays)
                                                indarray-of-rand]]
            [nd4clj.linalg.dataset.data-set :refer [data-set]]
            [nd4clj.linalg.dataset.api.data-set :refer [as-list]]
-           [dl4clj.datasets.iterator.iterators :refer[new-existing-dataset-iterator]]))
+           [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
@@ -456,47 +456,66 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; and set the labels for our outputs (optional)
 (new-existing-dataset-iterator :dataset ds-with-multiple-examples :labels ["foo" "baz" "foobaz"])
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; data-set normalization
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(my.ns
+ (:require [nd4clj.linalg.dataset.api.ds-preprocessor :as ds-pp]
+           [nd4clj.linalg.dataset.api.pre-processors :refer :all]))
+
+(def normalizer (fit-dataset! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
+                              :ds training-rr-ds-iter))
+;; this gathers statistics on the dataset and normalizes the data
+
+(def train-iter-normalized (set-pre-processor! :iter (reset-iter! training-rr-ds-iter)
+                                               :pre-processor normalizer))
+
+;; this applies the transformation to all dataset objects in the iterator
+
 ```
 
 ### Congiuration to Initialized models
 
 Multi Layer models
+- an implementation of the dl4j [mnist classification](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)
+
 
 ``` clojure
 
-(my.ns (:require [datavec.api.split :as s]
-                 [datavec.api.records.readers :as rr]
-                 [datavec.api.records.interface :refer [initialize-rr!]]
-                 [dl4clj.datasets.datavec :as ds-iter]
-                 [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
+(my.ns (:require [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
+                 [dl4clj.optimize.listeners.listeners :refer [new-score-iteration-listener]]
+                 [dl4clj.nn.conf.builders.nn-conf-builder :refer [nn-conf-builder]]
                  [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
                  [dl4clj.nn.multilayer.multi-layer-network :as mln]
-                 [dl4clj.nn.api.model :refer [init!]]))
+                 [dl4clj.nn.api.model :refer [init! set-listeners!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf -> multi-layer-conf -> multi-layer-network
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def l-builder (nn-conf/nn-conf-builder
+(def l-builder (nn-conf-builder
                 :optimization-algo :stochastic-gradient-descent
-                :seed 123 :iterations 1 :minimize? true
-                :use-drop-connect? false :lr-score-based-decay-rate 0.002
-                :regularization? false :default-activation-fn :sigmoid
-                :default-weight-init :uniform
-                :layers {0 {:activation-layer
-                            {:activation-fn :relu :updater :adam
-                             :adam-mean-decay 0.2 :adam-var-decay 0.1
-                             :learning-rate 0.006 :weight-init :xavier
-                             :layer-name "example first layer"
-                             :n-in 10 :n-out 20}}
-                         1 {:output-layer
-                            {:n-in 20 :n-out 10 :loss-fn :mse
+                :seed 123 :iterations 1 :default-activation-fn :relu
+                :regularization? true :default-l2 7.5e-6
+                :default-weight-init :xavier :default-learning-rate 0.0015
+                :default-updater :nesterovs :default-momentum 0.98
+                :layers {0 {:dense-layer
+                            {:layer-name "example first layer"
+                             :n-in 784 :n-out 500}}
+                         1 {:dense-layer
+                            {:layer-name "example second layer"
+                             :n-in 500 :n-out 100}}
+                         2 {:output-layer
+                            {:n-in 100 :n-out 10 :loss-fn :negativeloglikelihood
+                             :activation-fn :softmax
                              :layer-name "example output layer"}}}))
 
 (def multi-layer-conf
   (mlb/multi-layer-config-builder
    :list-builder l-builder
-   :backprop? true :backprop-type :standard
+   :backprop? true
    :pretrain? false))
 
 (def multi-layer-network
@@ -506,28 +525,27 @@ Multi Layer models
 ;; local cpu training
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; lets use the record-reader-dataset-iterator we created earlier
-;; we will recreate it here as review
+;; lets use the pre-built Mnist data set iterator
 
-(def poker-path "resources/poker/poker-hand-training.csv")
+(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? true :seed 123))
 
-(def file-split (s/new-filesplit :path poker-path))
+(def test-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? false :seed 123))
 
-(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
-                            :input-split file-split))
+;; and lets set a listener so we can know how training is going
 
-(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
-                 :record-reader csv-rr
-                 :batch-size 1
-                 :label-idx 10
-                 :n-possible-labels 10))
+(def score-listener (new-score-iteration-listener :print-every-n 5))
 
-(def trained-mln (train-mln-with-ds-iter! :mln multi-layer-network
-                                          :ds-iter rr-ds-iter
-                                          :n-epochs 2))
-;; we now have a trained model
-;; not well trained but still has gone through the dataset twice
-;; lets evaluate how poorly trained the network is
+;; and attach it to our model
+
+(def mln-with-listener (set-listeners! :model multi-layer-network
+                                       :listeners [performance-listener]))
+
+(def trained-mln (train-mln-with-ds-iter! :mln mln-with-listener
+                                          :ds-iter train-mnist-iter
+                                          :n-epochs 15))
+;; we now have a trained model that has seen the training dataset 15 times
+;; - feel free to change this if youre following along
+;; lets evaluate the performance of the model
 
 ```
 
@@ -535,8 +553,113 @@ Evaluation of Models
 
 ``` clojure
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Create an evaluation object
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(my.ns
+ (:require [dl4clj.eval.evaluation :refer [new-classification-evaler eval-model-whole-ds
+                                           get-accuracy]]))
 
+(def evaler-obj (new-classification-evaler :n-classes 10))
+
+;; we trained the model on a training dataset.  We evaluate on a test set
+
+(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :eval-obj evaler-obj
+                                            :ds-iter test-mnist-iter))
+
+;; this will print the stats to standard out for each feature/label pair
+
+;;Examples labeled as 0 classified by model as 0: 968 times
+;;Examples labeled as 0 classified by model as 1: 1 times
+;;Examples labeled as 0 classified by model as 2: 1 times
+;;Examples labeled as 0 classified by model as 3: 1 times
+;;Examples labeled as 0 classified by model as 5: 1 times
+;;Examples labeled as 0 classified by model as 6: 3 times
+;;Examples labeled as 0 classified by model as 7: 1 times
+;;Examples labeled as 0 classified by model as 8: 2 times
+;;Examples labeled as 0 classified by model as 9: 2 times
+;;Examples labeled as 1 classified by model as 1: 1126 times
+;;Examples labeled as 1 classified by model as 2: 2 times
+;;Examples labeled as 1 classified by model as 3: 1 times
+;;Examples labeled as 1 classified by model as 5: 1 times
+;;Examples labeled as 1 classified by model as 6: 2 times
+;;Examples labeled as 1 classified by model as 7: 1 times
+;;Examples labeled as 1 classified by model as 8: 2 times
+;;Examples labeled as 2 classified by model as 0: 3 times
+;;Examples labeled as 2 classified by model as 1: 2 times
+;;Examples labeled as 2 classified by model as 2: 1006 times
+;;Examples labeled as 2 classified by model as 3: 2 times
+;;Examples labeled as 2 classified by model as 4: 3 times
+;;Examples labeled as 2 classified by model as 6: 3 times
+;;Examples labeled as 2 classified by model as 7: 7 times
+;;Examples labeled as 2 classified by model as 8: 6 times
+;;Examples labeled as 3 classified by model as 2: 4 times
+;;Examples labeled as 3 classified by model as 3: 990 times
+;;Examples labeled as 3 classified by model as 5: 3 times
+;;Examples labeled as 3 classified by model as 7: 3 times
+;;Examples labeled as 3 classified by model as 8: 3 times
+;;Examples labeled as 3 classified by model as 9: 7 times
+;;Examples labeled as 4 classified by model as 2: 2 times
+;;Examples labeled as 4 classified by model as 3: 1 times
+;;Examples labeled as 4 classified by model as 4: 967 times
+;;Examples labeled as 4 classified by model as 6: 4 times
+;;Examples labeled as 4 classified by model as 7: 1 times
+;;Examples labeled as 4 classified by model as 9: 7 times
+;;Examples labeled as 5 classified by model as 0: 2 times
+;;Examples labeled as 5 classified by model as 3: 6 times
+;;Examples labeled as 5 classified by model as 4: 1 times
+;;Examples labeled as 5 classified by model as 5: 874 times
+;;Examples labeled as 5 classified by model as 6: 3 times
+;;Examples labeled as 5 classified by model as 7: 1 times
+;;Examples labeled as 5 classified by model as 8: 3 times
+;;Examples labeled as 5 classified by model as 9: 2 times
+;;Examples labeled as 6 classified by model as 0: 4 times
+;;Examples labeled as 6 classified by model as 1: 3 times
+;;Examples labeled as 6 classified by model as 3: 2 times
+;;Examples labeled as 6 classified by model as 4: 4 times
+;;Examples labeled as 6 classified by model as 5: 4 times
+;;Examples labeled as 6 classified by model as 6: 939 times
+;;Examples labeled as 6 classified by model as 7: 1 times
+;;Examples labeled as 6 classified by model as 8: 1 times
+;;Examples labeled as 7 classified by model as 1: 7 times
+;;Examples labeled as 7 classified by model as 2: 4 times
+;;Examples labeled as 7 classified by model as 3: 3 times
+;;Examples labeled as 7 classified by model as 7: 1005 times
+;;Examples labeled as 7 classified by model as 8: 2 times
+;;Examples labeled as 7 classified by model as 9: 7 times
+;;Examples labeled as 8 classified by model as 0: 3 times
+;;Examples labeled as 8 classified by model as 2: 3 times
+;;Examples labeled as 8 classified by model as 3: 2 times
+;;Examples labeled as 8 classified by model as 4: 4 times
+;;Examples labeled as 8 classified by model as 5: 3 times
+;;Examples labeled as 8 classified by model as 6: 2 times
+;;Examples labeled as 8 classified by model as 7: 4 times
+;;Examples labeled as 8 classified by model as 8: 947 times
+;;Examples labeled as 8 classified by model as 9: 6 times
+;;Examples labeled as 9 classified by model as 0: 2 times
+;;Examples labeled as 9 classified by model as 1: 2 times
+;;Examples labeled as 9 classified by model as 3: 4 times
+;;Examples labeled as 9 classified by model as 4: 8 times
+;;Examples labeled as 9 classified by model as 6: 1 times
+;;Examples labeled as 9 classified by model as 7: 4 times
+;;Examples labeled as 9 classified by model as 8: 2 times
+;;Examples labeled as 9 classified by model as 9: 986 times
+
+;;==========================Scores========================================
+;; Accuracy:        0.9808
+;; Precision:       0.9808
+;; Recall:          0.9807
+;; F1 Score:        0.9807
+;;========================================================================
+
+;; can get the stats that are printed via fns in the evaluation namespace
+;; after running eval-model-whole-ds
+
+(get-accuracy evaler-with-stats) ;; => 0.9808
+
+;; this good score, but what if it wasnt?
+;; we would want to refine the model
 
 ```
 ### Model Tuning

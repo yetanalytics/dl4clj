@@ -217,11 +217,6 @@
   [mln]
   (.getInput mln))
 
-(defn get-labels
-  "return an array of labels"
-  [mln]
-  (.getLabels mln))
-
 (defn get-layer
   "return the layer of the mln based on its position within the mln
 

@@ -20,7 +20,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [iter]
   (.cursor iter))
 
-(defn get-labels
+(defn get-labels-from-iter
   "Get dataset iterator record reader labels"
   [iter]
   (.getLabels iter))
@@ -85,6 +85,13 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   "resets an iterator if we are at the end"
   [iter]
   (if (false? (has-next? iter))
+    (reset-iter! iter)
+    iter))
+
+(defn reset-if-not-at-start!
+  "checks the current cursor of the iterator and if not at 0 resets it"
+  [iter]
+  (if (not= 0 (get-current-cursor iter))
     (reset-iter! iter)
     iter))
 

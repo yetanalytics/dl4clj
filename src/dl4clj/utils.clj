@@ -3,6 +3,11 @@
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
 
+(defn get-labels
+  "returns labels for various types of objects in dl4j"
+  [this]
+  (.getLabels this))
+
 (defn generic-dispatching-fn
   [opts]
   (first (keys opts)))

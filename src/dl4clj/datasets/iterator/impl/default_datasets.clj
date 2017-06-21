@@ -145,7 +145,7 @@
 
   :shuffle? (boolean), whether to shuffle the dataset or not
 
-  :rng-seed (long), random number generator seed to use when shuffling examples
+  :seed (long), random number generator seed to use when shuffling examples
 
   :batch (int), size of each patch
   - supplying batch-size will retrieve the entire dataset where as batch will get a subset

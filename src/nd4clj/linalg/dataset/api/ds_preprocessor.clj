@@ -28,7 +28,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn fit-dataset!
   "Fit a dataset (only compute based on the statistics from this dataset)"
   [& {:keys [normalizer ds]}]
-  (.fit normalizer ds))
+  (doto normalizer (.fit ds)))
 
 (defn get-normalizer-type
   "Get the enum type of this normalizer"
