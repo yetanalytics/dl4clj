@@ -479,7 +479,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 ### Configuration to Initialized models
 
 Multi Layer models
-- an implementation of the dl4j [mnist classification](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)
+- an implementation of the dl4j [mnist classification example](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)
 
 
 ``` clojure
@@ -664,6 +664,59 @@ Evaluation of Models
 ```
 ### Model Tuning
 
+Early Stopping (controlling training)
+
+``` clojure
+(my.ns
+ (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
+           [dl4clj.earlystopping.termination-conditions :refer :all]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; we are going to need termination conditions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; these allow us to control when we exit training
+
+;; this can be based off of iterations or epochs
+
+;; iteration termination conditions
+
+(def invalid-score-condition (new-invalid-score-iteration-termination-condition))
+
+(def max-score-condition (new-max-score-iteration-termination-condition
+                          :max-score 20.0))
+
+(def max-time-condition (new-max-time-iteration-termination-condition
+                         :max-time-val 10
+                         :max-time-unit :minutes))
+
+;; epoch termination conditions
+
+(def score-doesnt-improve-condition (new-score-improvement-epoch-termination-condition
+                                     :max-n-epoch-no-improve 5))
+
+(def target-score-condition (new-best-score-epoch-termination-condition :best-expected-score 0.99))
+
+(def max-number-epochs-condition (new-max-epochs-termination-condition :max-n 10))
+
+
+(def early-stopping-config
+  (new-early-stopping-config
+   :epoch-termination-conditions [score-doesnt-improve-condition
+                                  target-score-condition
+                                  max-number-epochs-condition]
+   :iteration-termination-conditions [invalid-score-condition
+                                      max-score-condition
+                                      max-time-condition]
+   :n-epochs 7
+   :model-saver
+   :save-last-model? false
+   :score-calculator))
+
+
+
+```
+
 Transfer Learning (freezing layers)
 
 ``` clojure
@@ -673,14 +726,6 @@ Transfer Learning (freezing layers)
 
 ```
 
-Early Stopping (controlling training)
-
-``` clojure
-
-
-
-
-```
 
 ### Spark Training
 For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark

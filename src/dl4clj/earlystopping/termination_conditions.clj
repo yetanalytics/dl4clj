@@ -72,7 +72,7 @@
   max-score (double), the max score value
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/MaxScoreIterationTerminationCondition.html"
-  [max-score]
+  [& {:keys [max-score]}]
   (termination-condition {:max-score-iteration {:max-score max-score}}))
 
 (defn new-max-time-iteration-termination-condition
@@ -124,5 +124,5 @@
   max-n (int), the max number of allowed epochs
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/MaxEpochsTerminationCondition.html"
-  [max-n]
+  [& {:keys [max-n]}]
   (termination-condition {:max-epochs {:max-n max-n}}))
