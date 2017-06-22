@@ -23,7 +23,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
 
   :best-model (nn), the neural network which was the best version of the model
 
-  I do not believe this needs to be a user facing fn, but need to test to determine"
+  not a user facing fn, would be used to create custom early stopping results"
   [& {:keys [termination-reason termination-details
              score-vs-epoch best-model-epoch best-model-score
              total-epochs best-model]}]

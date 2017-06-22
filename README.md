@@ -735,7 +735,7 @@ Early Stopping (controlling training)
 ;; going to use the mnist iterator from before
 ;; need to make sure its reset
 
-(def score-calcer (new-data-set-loss-calculator :ds-iter (reset-iter! train-mnist-iter)
+(def score-calcer (new-data-set-loss-calculator :iter train-mnist-iter
                                                 :average? true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -765,7 +765,7 @@ Early Stopping (controlling training)
 
 (def es-trainer (new-early-stopping-trainer :early-stopping-conf early-stopping-conf
                                             :mln mln-with-listener
-                                            :training-dataset-iterator (reset-if-empty?! train-mnist-iter)))
+                                            :iter train-mnist-iter))
 
 ;; now fit that trainer
 (def es-trainer-fitted (fit-trainer! es-trainer))

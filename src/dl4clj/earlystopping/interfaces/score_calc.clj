@@ -2,20 +2,24 @@
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/ScoreCalculator.html"}
     dl4clj.earlystopping.interfaces.score-calc
-  (:import [org.deeplearning4j.earlystopping.scorecalc ScoreCalculator]))
+  (:import [org.deeplearning4j.earlystopping.scorecalc ScoreCalculator])
+  (:require [dl4clj.earlystopping.score-calc :refer [score-calc]]))
 
 (defn calculate-score
   "Calculate the score for the given MultiLayerNetwork
 
-  :score-calc (calculator), the object that does the calculations
+  :score-calcer (map or obj), the object that does the calculations or a config map to create the obj
    - one of: :data-set-loss-calc, :spark-data-set-loss-calc (not implemented)
 
-   - see: TBD
+   - see: dl4clj.earlystopping.score-calc
 
   :mln (model), A Model is meant for predicting something from data.
    - a multi-layer-network
 
    - see: dl4clj.nn.conf.builders.multi-layer-builders"
-  [& {:keys [score-calc model]}]
+  [& {:keys [score-calcer model]}]
   ;; this also works for computation graphs but they have not been implemented yet
-  (.calculateScore score-calc model))
+  (let [sc (if (map? score-calcer)
+             (score-calc score-calcer)
+             score-calcer)]
+    (.calculateScore sc model)))
