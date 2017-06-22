@@ -1,7 +1,8 @@
 (ns ^{:doc "A DataSetIterator handles traversing through a dataset and preparing data for a nn
 see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.html"}
     nd4clj.linalg.api.ds-iter
-  (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]))
+  (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator])
+  (:require [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]))
 
 (defn async-supported?
   "Does this DataSetIterator support asynchronous prefetching of multiple DataSet objects?
@@ -95,3 +96,12 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [iter]
   (when (has-next? iter)
     (lazy-seq (cons (next-example! iter) (data-from-iter iter)))))
+
+(defn iter-from-lazy-seq
+  "creates an iterator for a lazy seq.  This iterator can be used in model training"
+  [lazy-seq & {:keys [labels]
+               :as opts}]
+  (if (contains? opts :labels)
+    (new-existing-dataset-iterator :dataset-iterator (.iterator lazy-seq)
+                                   :labels labels))
+  (new-existing-dataset-iterator :dataset-iterator (.iterator lazy-seq)))

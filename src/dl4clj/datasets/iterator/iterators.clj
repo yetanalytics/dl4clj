@@ -7,7 +7,8 @@
             MultipleEpochsIterator ReconstructionDataSetIterator SamplingDataSetIterator
             ExistingDataSetIterator])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
-            [dl4clj.berkeley :refer [new-pair]]))
+            [dl4clj.berkeley :refer [new-pair]]
+            [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method heavy lifting
@@ -50,21 +51,21 @@
 
 (defmethod iterators :iterator-multi-dataset-iterator [opts]
   (let [config (:iterator-multi-dataset-iterator opts)
-        {iter :multi-dataset
+        {iter :multi-dataset-iter
          batch-size :batch-size} config]
-    (IteratorMultiDataSetIterator. iter batch-size)))
+    (IteratorMultiDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
 
 (defmethod iterators :iterator-dataset-iterator [opts]
   (let [config (:iterator-dataset-iterator opts)
         {iter :iter
          batch-size :batch-size} config]
-    (IteratorDataSetIterator. iter batch-size)))
+    (IteratorDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
 
 (defmethod iterators :async-multi-dataset-iterator [opts]
   (let [config (:async-multi-dataset-iterator opts)
-        {iter :multi-dataset-iterator
+        {iter :multi-dataset-iter
          que-l :que-length} config]
-    (AsyncMultiDataSetIterator. iter que-l)))
+    (AsyncMultiDataSetIterator. (reset-if-not-at-start! iter) que-l)))
 
 (defmethod iterators :moving-window-base-dataset-iterator [opts]
   (let [config (:moving-window-base-dataset-iterator opts)
@@ -77,31 +78,31 @@
 
 (defmethod iterators :multiple-epochs-iterator [opts]
   (let [config (:multiple-epochs-iterator opts)
-        {iter :dataset-iterator
+        {iter :iter
          q-size :que-size
          t-iterations :total-iterations
          n-epochs :n-epochs
          ds :dataset} config]
     (if (contains? config :n-epochs)
-      (cond (contains-many? config :dataset-iterator :que-size)
-            (MultipleEpochsIterator. n-epochs iter q-size)
-            (contains? config :dataset-iterator)
-            (MultipleEpochsIterator. n-epochs iter)
+      (cond (contains-many? config :iter :que-size)
+            (MultipleEpochsIterator. n-epochs (reset-if-not-at-start! iter) q-size)
+            (contains? config :iter)
+            (MultipleEpochsIterator. n-epochs (reset-if-not-at-start! iter))
             (contains? config :dataset)
             (MultipleEpochsIterator. n-epochs ds)
             :else
             (assert false "if you provide the number of epochs, you also need to provide either an iterator or a dataset"))
-      (cond (contains-many? config :dataset-iterator :que-size :total-iterations)
-            (MultipleEpochsIterator. iter q-size t-iterations)
-            (contains-many? config :dataset-iterator :total-iterations)
-            (MultipleEpochsIterator. iter t-iterations)
+      (cond (contains-many? config :iter :que-size :total-iterations)
+            (MultipleEpochsIterator. (reset-if-not-at-start! iter) q-size t-iterations)
+            (contains-many? config :iter :total-iterations)
+            (MultipleEpochsIterator. (reset-if-not-at-start! iter) t-iterations)
             :else
             (assert false "if you dont supply the number of epochs, you must supply atleast a dataset iterator and the total number of iterations")))))
 
 (defmethod iterators :reconstruction-dataset-iterator [opts]
   (let [config (:reconstruction-dataset-iterator opts)
-        iter (:dataset-iterator config)]
-    (ReconstructionDataSetIterator. iter)))
+        iter (:iter config)]
+    (ReconstructionDataSetIterator. (reset-if-not-at-start! iter))))
 
 (defmethod iterators :sampling-dataset-iterator [opts]
   (let [config (:sampling-dataset-iterator opts)
@@ -117,14 +118,14 @@
          n-features :n-features
          n-labels :n-labels
          labels :labels
-         ds-iter :dataset-iterator} config]
+         ds-iter :iter} config]
     (assert (or (contains? config :dataset)
-                (contains? config :dataset-iterator))
+                (contains? config :iter))
             "you must supply a dataset or a dataset iterator")
-    (if (contains? config :dataset-iterator)
+    (if (contains? config :iter)
       (if (contains? config :labels)
-        (ExistingDataSetIterator. ds-iter labels)
-        (ExistingDataSetIterator. ds-iter))
+        (ExistingDataSetIterator. (reset-if-not-at-start! ds-iter) labels)
+        (ExistingDataSetIterator. (reset-if-not-at-start! ds-iter)))
       (cond (contains-many? config :dataset :total-examples :n-features :n-labels)
             (ExistingDataSetIterator. iterable n-examples n-features n-labels)
             (contains-many? config :dataset :labels)
@@ -134,17 +135,18 @@
 
 (defmethod iterators :async-dataset-iterator [opts]
   (let [config (:async-dataset-iterator opts)
-        {ds-iter :dataset-iterator
+        {ds-iter :iter
          que-size :que-size
          que :que} config]
-    (cond (contains-many? config :que :que-size :dataset-iterator)
-          (AsyncDataSetIterator. ds-iter que-size que)
-          (contains-many? config :dataset-iterator :que-size)
-          (AsyncDataSetIterator. ds-iter que-size)
-          (contains? config :dataset-iterator)
-          (AsyncDataSetIterator. ds-iter)
+    (let [i (reset-if-not-at-start! ds-iter)]
+      (cond (contains-many? config :que :que-size :iter)
+          (AsyncDataSetIterator. i que-size que)
+          (contains-many? config :iter :que-size)
+          (AsyncDataSetIterator. i que-size)
+          (contains? config :iter)
+          (AsyncDataSetIterator. i)
           :else
-          (assert false "you must atleast provide a dataset iterator"))))
+          (assert false "you must atleast provide a dataset iterator")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing functions
@@ -157,7 +159,7 @@
    pre-processors (map), {(int) (pre-processor)
                          (int) (pre-processor)}
 
-   - the keys are the desired indexes of the pre-processors
+   - the keys are the desired indexes of the pre-processors (dataset index within the iterator)
    - values are the pre-processors themselves
    - pre-processors should be fit to a dataset or iterator before being combined
 
@@ -181,14 +183,14 @@
   Obviously this may use additional memory.
   Note however that due to asynchronous loading of data, (next! iter n) is not supported.
 
-  :dataset-iterator (ds-iterator), a dataset iterator
+  :iter (ds-iterator), a dataset iterator
 
   :que-size (int), the size of the que
 
   :que (blocking-que), the que containing the dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncDataSetIterator.html"
-  [& {:keys [dataset-iterator que-size que]
+  [& {:keys [iter que-size que]
       :as opts}]
   (iterators {:async-dataset-iterator opts}))
 
@@ -205,10 +207,10 @@
 
   :labels (list), a list of labels as strings
 
-  :dataset-iterator (iterator), a dataset iterator
+  :iter (iterator), a dataset iterator
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ExistingDataSetIterator.html"
-  [& {:keys [dataset total-examples n-features n-labels labels dataset-iterator]
+  [& {:keys [dataset total-examples n-features n-labels labels iter]
       :as opts}]
   (iterators {:existing-dataset-iterator opts}))
 
@@ -233,13 +235,14 @@
   ds-iter (iterator), the iterator to wrap
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ReconstructionDataSetIterator.html"
-  [ds-iter]
-  (iterators {:reconstruction-dataset-iterator {:dataset-iterator ds-iter}}))
+  [& {:keys [iter]
+      :as opts}]
+  (iterators {:reconstruction-dataset-iterator opts}))
 
 (defn new-multiple-epochs-iterator
   "A dataset iterator for doing multiple passes over a dataset
 
-  :dataset-iterator (dataset iterator), an iterator for a dataset
+  :iter (dataset iterator), an iterator for a dataset
 
   :que-size (int), the size for the multiple iterations (improve this desc)
 
@@ -250,7 +253,7 @@
   :dataset (dataset), a dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MultipleEpochsIterator.html"
-  [& {:keys [dataset-iterator que-size total-iterations n-epochs dataset]
+  [& {:keys [iter que-size total-iterations n-epochs dataset]
       :as opts}]
   (iterators {:multiple-epochs-iterator opts}))
 
@@ -281,12 +284,12 @@
 
   use caution when using this with a CUDA backend
 
-  :multi-dataset-iterator (multidataset iterator), iterator to wrap
+  :multi-dataset-iter (multidataset iterator), iterator to wrap
 
   :que-length (int), length of the que for async processing
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncMultiDataSetIterator.html"
-  [& {:keys [multi-dataset-iterator que-length]
+  [& {:keys [multi-dataset-iter que-length]
       :as opts}]
   (iterators {:async-multi-dataset-iterator opts}))
 
@@ -297,7 +300,7 @@
   Typically used in Spark training, but may be used elsewhere.
   NOTE: reset method is not supported here.
 
-  :dataset (dataset), an iterator containing a single dataset
+  :iter (iter), an iterator containing datasets
 
   :batch-size (int), the batch size
 
@@ -306,10 +309,6 @@
       :as opts}]
   (iterators {:iterator-dataset-iterator opts}))
 
-;;*************************************************
-;; multi-dataset is misleading
-;; needs to be an iterator containing a multi-dataset not the dataset itself
-;;*************************************************
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
   DataSet objects as required to get a consistent batch size.
@@ -317,12 +316,12 @@
   Typically used in Spark training, but may be used elsewhere.
   NOTE: reset method is not supported here.
 
-  :multi-dataset (multi-dataset) an iterator containing multiple datasets
+  :multi-dataset-iter (iter) an iterator containing multiple datasets
 
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorMultiDataSetIterator.html"
-  [& {:keys [multi-dataset batch-size]
+  [& {:keys [multi-dataset-iter batch-size]
       :as opts}]
   (iterators {:iterator-multi-dataset-iterator opts}))
 
@@ -389,7 +388,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pre-process-combined-iters!
-  ;; for combined pre-processors
-  "Pre process a dataset sequentially"
+  "Pre process a dataset sequentially using a combined pre-processor
+   - the pre-processor is attached to the dataset"
   [& {:keys [dataset-iter dataset]}]
   (doto dataset-iter (.preProcess dataset)))

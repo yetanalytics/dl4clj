@@ -85,7 +85,8 @@ Creating Layers
 
 ```
 
-There is also support for Variational Autoencoders
+There is also support for unsupervised learning layers
+ - ie. Variational Autoencoders
 
 ``` clojure
 (ns my.ns
@@ -294,13 +295,12 @@ Loading data from a file (here its a csv)
 ;; => #object[java.util.ArrayList 0x2473e02d [1, 10, 1, 11, 1, 13, 1, 12, 1, 1, 9]]
 ;; this is our first line from the csv
 
-;; next-record! moves the record readers interal cursor, so we should now reset the record reader
+;; next-record! moves the record readers interal cursor
+;; all iterators are reset before use when they are passed as args to fns which require them
+;; but if you need to manually reset one just call reset-rr!
 
 (reset-rr! csv-rr)
-;; this will return the reset record reader, so this fn can be at the start of a fn chain
-;; you will normaly be dealing with record-reader-dataset-iterators so this fn
-;; should not need to be used often, just when double checking that your data
-;; was uploaded correctly
+;; will return the reset record reader
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record readers dataset iterators (turn our writables into a dataset)
@@ -333,7 +333,8 @@ Loading data from a file (here its a csv)
 ;;=================OUTPUT==================
 ;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
 
-;; dont forget to reset the iterator as next-example! changes the cursor value
+;; manual reset also works on record-reader-dataset-iterators
+;; but again this is taken care of for you when you pass one as an arg to a fn
 (reset-iter! rr-ds-iter)
 
 ;; and to show that :label-idx = -1 gives us the same output
@@ -359,7 +360,13 @@ Loading data from a file (here its a csv)
 ;; getting the data out of a rr-ds-iter ourself becomes important
 ;; when making javaRDDs for spark training but is not necessary
 ;; for local machine training
-;; fit! calls do not work with lazy seqs
+
+;; to use any lazy-seq of dataset objects in model training
+
+(def lazy-seq-iter (iter-from-lazy-seq lazy-seq-data))
+
+;; there is no need to reset these iterators and you cant using
+;; the fns you use to reset native dl4j iterators
 
 ```
 
