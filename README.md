@@ -122,7 +122,8 @@ There is also configuration validation
 ### Model configuration
 
 Creating input pre-processors
-- manipulate the incoming data before it reaches the weights of the upcoming layer
+- manipulate the incoming data at the layer level
+- each layer can have its own pre-processor
 
 ``` clojure
 
@@ -215,6 +216,7 @@ Adding the layers to a neural network configuration
 ;; here we can add in pre-processors
 ;; pass in a map of either pre-processor fn calls or configuration maps
 ;; can be heterogeneous just like any other place where you can pass fns or config maps
+;; keys are the indexs of the layers you want to add the pre-processor to
 
 (def multi-layer-conf
   (mlb/multi-layer-config-builder
@@ -274,6 +276,7 @@ Loading data from a file (here its a csv)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def poker-path "resources/poker/poker-hand-training.csv")
+;; this is not a complete dataset, it is just here to sever as an example
 
 (def file-split (s/new-filesplit :path poker-path))
 
@@ -295,13 +298,16 @@ Loading data from a file (here its a csv)
 
 (reset-rr! csv-rr)
 ;; this will return the reset record reader, so this fn can be at the start of a fn chain
+;; you will normaly be dealing with record-reader-dataset-iterators so this fn
+;; should not need to be used often, just when double checking that your data
+;; was uploaded correctly
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record readers dataset iterators (turn our writables into a dataset)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
-                 :record-reader csv-rr
+                 :record-reader csv-rr ;; no need to reset manually, done for you behind the scene
                  :batch-size 1
                  :label-idx 10
                  :n-possible-labels 10))
@@ -327,15 +333,13 @@ Loading data from a file (here its a csv)
 ;;=================OUTPUT==================
 ;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
 
-;; dont forget to reset the iterator as next example changes the cursor value
+;; dont forget to reset the iterator as next-example! changes the cursor value
 (reset-iter! rr-ds-iter)
 
 ;; and to show that :label-idx = -1 gives us the same output
 
 (= (next-example! (reset-iter! rr-ds-iter))
-   (next-example! (reset-iter! other-rr-ds-iter)))
-
-;; => true
+   (next-example! (reset-iter! other-rr-ds-iter))) ;; => true
 
 ;; we now have our csv data in a format that can be fed to a neural network
 
@@ -355,6 +359,7 @@ Loading data from a file (here its a csv)
 ;; getting the data out of a rr-ds-iter ourself becomes important
 ;; when making javaRDDs for spark training but is not necessary
 ;; for local machine training
+;; fit! calls do not work with lazy seqs
 
 ```
 
@@ -538,7 +543,7 @@ Multi Layer models
 ;; and attach it to our model
 
 (def mln-with-listener (set-listeners! :model multi-layer-network
-                                       :listeners [performance-listener]))
+                                       :listeners [score-listener]))
 
 (def trained-mln (train-mln-with-ds-iter! :mln mln-with-listener
                                           :ds-iter train-mnist-iter
@@ -665,11 +670,17 @@ Evaluation of Models
 ### Model Tuning
 
 Early Stopping (controlling training)
+- it is recommened you start here when designing models
+  - gives you more control than just setting the number of epochs
 
 ``` clojure
 (my.ns
  (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
-           [dl4clj.earlystopping.termination-conditions :refer :all]))
+           [dl4clj.earlystopping.termination-conditions :refer :all]
+           [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
+           [dl4clj.earlystopping.score-calc :refer [new-data-set-loss-calculator]]
+           [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
+           [dl4clj.utils :refer [load-model!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we are going to need termination conditions
@@ -695,12 +706,41 @@ Early Stopping (controlling training)
 (def score-doesnt-improve-condition (new-score-improvement-epoch-termination-condition
                                      :max-n-epoch-no-improve 5))
 
-(def target-score-condition (new-best-score-epoch-termination-condition :best-expected-score 0.99))
+(def target-score-condition (new-best-score-epoch-termination-condition :best-expected-score 0.009))
 
 (def max-number-epochs-condition (new-max-epochs-termination-condition :max-n 10))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; we also need a way to save our model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def early-stopping-config
+;; can be in memory or to a local directory
+
+(def in-mem-saver (new-in-memory-saver))
+
+(def local-file-saver (new-local-file-model-saver :directory "resources/tmp/readme/"))
+;; this directory does not exist
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set up your score calculator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; we need our dataset iterator here
+;; going to use the mnist iterator from before
+;; need to make sure its reset
+
+(def score-calcer (new-data-set-loss-calculator :ds-iter (reset-iter! train-mnist-iter)
+                                                :average? true))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; create an early stopping configuration using the objs we just created
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; termination conditions
+;; a way to save our model
+;; a way to calculate the score of our model on the dataset
+
+(def early-stopping-conf
   (new-early-stopping-config
    :epoch-termination-conditions [score-doesnt-improve-condition
                                   target-score-condition
@@ -709,11 +749,41 @@ Early Stopping (controlling training)
                                       max-score-condition
                                       max-time-condition]
    :n-epochs 7
-   :model-saver
-   :save-last-model? false
-   :score-calculator))
+   :model-saver local-file-saver
+   :save-last-model? true
+   :score-calculator score-calcer))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; create an early stopping trainer from our data, model and early stopping conf
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def es-trainer (new-early-stopping-trainer :early-stopping-conf early-stopping-conf
+                                            :mln mln-with-listener
+                                            :training-dataset-iterator (reset-if-empty?! train-mnist-iter)))
+
+;; now fit that trainer
+(def es-trainer-fitted (fit-trainer! es-trainer))
+
+;; when the trainer terminates, you will see something like this
+;;[nREPL-worker-24] BaseEarlyStoppingTrainer INFO  Completed training epoch 14
+;;[nREPL-worker-24] BaseEarlyStoppingTrainer INFO  New best model: score = 0.005225599372851298,
+;;                                                   epoch = 14 (previous: score = 0.018243224899038346, epoch = 7)
+;;[nREPL-worker-24] BaseEarlyStoppingTrainer INFO Hit epoch termination condition at epoch 14.
+;;                                           Details: BestScoreEpochTerminationCondition(0.009)
+
+;; and if we look at the es-trainer-fitted object we see
+
+;;#object[org.deeplearning4j.earlystopping.EarlyStoppingResult 0x5ab74f27 EarlyStoppingResult
+;;(terminationReason=EpochTerminationCondition,details=BestScoreEpochTerminationCondition(0.009),
+;; bestModelEpoch=14,bestModelScore=0.005225599372851298,totalEpochs=15)]
+
+;; and our model has been saved to /resources/tmp/readme/bestModel.bin
+;; there we have our model config, model params and our updater state
+
+;; we can then load this model to use it or continue refining it
+
+(def loaded-model (load-model! :path "resources/tmp/readme/bestModel.bin"
+                               :load-updater? true))
 
 ```
 

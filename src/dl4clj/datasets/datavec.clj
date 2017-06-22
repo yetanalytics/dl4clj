@@ -8,7 +8,8 @@
             [datavec.api.io :refer [new-double-writable-converter
                                     new-float-writable-converter
                                     new-label-writer-converter
-                                    new-self-writable-converter]]))
+                                    new-self-writable-converter]]
+            [datavec.api.records.interface :refer [reset-rr!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; build in datasets
@@ -39,51 +40,52 @@
          converter :writeable-converter} config]
     (assert (contains-many? config :record-reader :batch-size)
             "you must supply atleast a record reader config map and a batch size")
-    (if (contains? config :writeable-converter)
+    (let [r (reset-rr! rr)]
+     (if (contains? config :writeable-converter)
       (cond (contains-many? config :batch-size :label-idx-from :label-idx-to
                             :n-possible-labels :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
-             rr
+             r
              converter
              batch-size l-idx-from l-idx-to n-labels
              max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels
                             :max-num-batches :regression?)
             (RecordReaderDataSetIterator.
-             rr
+             r
              converter
              batch-size label-idx n-labels max-n-batches regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels :regression?)
             (RecordReaderDataSetIterator.
-             rr
+             r
              converter
              batch-size label-idx n-labels regression?)
             (contains-many? :batch-size :label-idx :n-possible-labels)
             (RecordReaderDataSetIterator.
-             rr
+             r
              converter
              batch-size label-idx n-labels)
             (contains? config :batch-size)
             (RecordReaderDataSetIterator.
-             rr
+             r
              converter
              batch-size)
             :else
             (assert false "you must provide a record reader, writeable converter and a batch size"))
       (cond (contains-many? config :batch-size :label-idx :n-possible-labels :max-num-batches)
             (RecordReaderDataSetIterator.
-             rr batch-size label-idx n-labels max-n-batches)
+             r batch-size label-idx n-labels max-n-batches)
             (contains-many? config :batch-size :label-idx-from :label-idx-to :regression?)
             (RecordReaderDataSetIterator.
-             rr batch-size l-idx-from l-idx-to regression?)
+             r batch-size l-idx-from l-idx-to regression?)
             (contains-many? config :batch-size :label-idx :n-possible-labels)
             (RecordReaderDataSetIterator.
-             rr batch-size label-idx n-labels)
+             r batch-size label-idx n-labels)
             (contains? config :batch-size)
             (RecordReaderDataSetIterator.
-             rr batch-size)
+             r batch-size)
             :else
-            (assert false "you must supply a record reader and a batch size")))))
+            (assert false "you must supply a record reader and a batch size"))))))
 
 (defmethod iterator :seq-rr-dataset-iter [opts]
   (let [config (:seq-rr-dataset-iter opts)
@@ -99,20 +101,23 @@
                      (contains? config :features-reader))
                 (contains? config :record-reader))
             "you must supply a record reader or a pair of labels/features readers")
-    (if (contains-many? config :labels-reader :features-reader)
+    (let [r (reset-rr! rr)
+          features-r (reset-rr! features-reader)
+          labels-r (reset-rr! labels-reader)]
+     (if (contains-many? config :labels-reader :features-reader)
       (cond (contains-many? config :mini-batch-size :n-possible-labels
                             :regression? :alignment-mode)
             (SequenceRecordReaderDataSetIterator.
-             features-reader labels-reader
+             features-r labels-r
              m-batch-size n-labels regression?
              (value-of {:seq-alignment-mode alignment}))
             (contains-many? config :mini-batch-size :n-possible-labels :regression?)
             (SequenceRecordReaderDataSetIterator.
-             features-reader labels-reader
+             features-r labels-r
              m-batch-size n-labels regression?)
             (contains-many? config :mini-batch-size :n-possible-labels)
             (SequenceRecordReaderDataSetIterator.
-             features-reader labels-reader
+             features-r labels-r
              m-batch-size n-labels)
             :else
             (assert false "if youre supplying seperate labels and features readers,
@@ -120,13 +125,13 @@ you must supply atleast a batch size and the number of possible labels"))
       (cond (contains-many? config :mini-batch-size :n-possible-labels :label-idx
                             :regression?)
             (SequenceRecordReaderDataSetIterator.
-             rr m-batch-size n-labels label-idx regression?)
+             r m-batch-size n-labels label-idx regression?)
             (contains-many? config :mini-batch-size :n-possible-labels :label-idx)
             (SequenceRecordReaderDataSetIterator.
-             rr m-batch-size n-labels label-idx)
+             r m-batch-size n-labels label-idx)
             :else
             (assert false "if you're supplying a single record reader for the features and the labels,
-you need to suply atleast the mini batch size, number of possible labels and the column index of the labels")))))
+you need to suply atleast the mini batch size, number of possible labels and the column index of the labels"))))))
 
 (defmethod iterator :multi-dataset-iter [opts]
   (assert (integer? (:batch-size (:multi-dataset-iter opts)))
@@ -157,14 +162,16 @@ you need to suply atleast the mini batch size, number of possible labels and the
         {seq-reader-name :reader-name
          seq-rr :record-reader} add-seq-reader]
     (.build
-     (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)]
+     (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)
+           r (reset-rr! rr)
+           seq-r (reset-rr! seq-rr)]
        (cond-> b
          (and (contains? config :add-reader)
               (contains-many? add-reader :reader-name :record-reader))
-         (doto (.addReader record-reader-name rr))
+         (doto (.addReader record-reader-name r))
          (and (contains? config :add-seq-reader)
               (contains-many? add-seq-reader :reader-name :record-reader))
-         (doto (.addSequenceReader seq-reader-name seq-rr))
+         (doto (.addSequenceReader seq-reader-name seq-r))
          (and (contains? config :add-input)
               (contains-many? add-input :first-column :last-column))
          (doto (.addInput reader-name first-column last-column))

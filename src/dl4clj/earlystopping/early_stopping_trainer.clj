@@ -16,10 +16,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/Ear
    - see: dl4clj.nn.conf.builders.multi-layer-builders
 
   :training-dataset-iterator (dataset-iterator), an iterator for a dataset where training? is set to true
-   - see: dl4clj.datasets.datavec
-
-  :listener (listener), a listener that implements the EarlyStoppingListener interface
-   - when more work is done on listeners this doc will be updated"
+   - see: dl4clj.datasets.datavec"
   [& {:keys [early-stopping-conf mln training-dataset-iterator]
       :as opts}]
   (assert (contains-many? opts :early-stopping-conf :mln :training-dataset-iterator)
