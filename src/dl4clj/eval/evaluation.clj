@@ -6,7 +6,8 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn get-labels]]
             [nd4clj.linalg.api.ds-iter :refer [has-next? next-example!]]
             [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
-            [nd4clj.linalg.dataset.api.data-set :refer [get-features]]))
+            [nd4clj.linalg.dataset.api.data-set :refer [get-features]]
+            [dl4clj.helpers :refer [reset-if-empty?! new-lazy-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod for creating the evaluation java object
@@ -86,6 +87,7 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   (evaler {:regression opts}))
 
 (defn eval-classification!
+  ;; add doc string
   [& {:keys [labels network-predictions mask-array record-meta-data evaler
              mln features predicted-idx actual-idx]
       :as opts}]
@@ -112,24 +114,33 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
     (.stats evaler)))
 
 (defn eval-model-whole-ds
-  "evaluate the model performance on an entire data set and print the results
+  "evaluate the model performance on an entire data set and print the final result
 
   :mln (multi layer network), a trained mln you want to get classification stats for
 
   :eval-obj (evaler), the object created by new-classification-evaler
 
-  :ds-iter (iter), the dataset iterator which has the data you want to evaluate the model on
+  :iter (iter), the dataset iterator which has the data you want to evaluate the model on
+
+  :lazy-data (lazy-seq), a lazy sequence of dataset objects
+
+  you should supply either a dl4j dataset-iterator (:iter) or a lazy-seq (:lazy-data), not both
 
   returns the evaluation object"
-  [& {:keys [mln eval-obj ds-iter]}]
-  (while (has-next? ds-iter)
-    (let [nxt (next-example! ds-iter)
-          prediction (output :mln mln :input (get-features nxt))]
-      (println (get-stats :evaler (eval-classification!
-                                   :evaler eval-obj
-                                   :labels (get-labels nxt)
-                                   :network-predictions prediction)))
-      eval-obj)))
+  [& {:keys [mln eval-obj iter lazy-data]
+      :as opts}]
+  (let [ds-iter (if (contains? opts :lazy-data)
+                  (new-lazy-iter lazy-data)
+                  (reset-if-empty?! iter))]
+    (while (has-next? ds-iter)
+      (let [nxt (next-example! ds-iter)
+            prediction (output :mln mln :input (get-features nxt))]
+        (eval-classification!
+         :evaler eval-obj
+         :labels (get-labels nxt)
+         :network-predictions prediction))))
+  (println (get-stats :evaler eval-obj))
+  eval-obj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; classification evaluator interaction fns

@@ -5,7 +5,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/Ear
   (:import [org.deeplearning4j.earlystopping.trainer
             EarlyStoppingTrainer BaseEarlyStoppingTrainer])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
+            [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 (defn new-early-stopping-trainer
   "onducting early stopping training locally (single machine), for training a MultiLayerNetwork.
@@ -22,4 +22,4 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/Ear
       :as opts}]
   (assert (contains-many? opts :early-stopping-conf :mln :iter)
           "you must supply a configuration, multi-layer-network and a dataset-iterator")
-  (EarlyStoppingTrainer. early-stopping-conf mln (reset-if-not-at-start! iter)))
+  (EarlyStoppingTrainer. early-stopping-conf mln (reset-if-empty?! iter)))

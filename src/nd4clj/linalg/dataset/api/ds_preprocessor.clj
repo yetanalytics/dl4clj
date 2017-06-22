@@ -8,7 +8,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   (:import [org.nd4j.linalg.dataset.api DataSetPreProcessor]
            [org.nd4j.linalg.dataset.api.preprocessor Normalizer
             DataNormalization])
-  (:require [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
+  (:require [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set-pre-processor interface
@@ -40,7 +40,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
   returns the fit normalizer"
   [& {:keys [normalizer iter]}]
-  (doto normalizer (.fit (reset-if-not-at-start! iter))))
+  (doto normalizer (.fit (reset-if-empty?! iter))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.

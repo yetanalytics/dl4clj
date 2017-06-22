@@ -1,8 +1,7 @@
 (ns ^{:doc "A DataSetIterator handles traversing through a dataset and preparing data for a nn
 see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.html"}
     nd4clj.linalg.api.ds-iter
-  (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator])
-  (:require [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]))
+  (:import [org.nd4j.linalg.dataset.api.iterator DataSetIterator]))
 
 (defn async-supported?
   "Does this DataSetIterator support asynchronous prefetching of multiple DataSet objects?
@@ -76,32 +75,3 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   "checks to see if there is anymore data in the iterator"
   [iter]
   (.hasNext iter))
-
-(defn reset-if-empty?!
-  "resets an iterator if we are at the end"
-  [iter]
-  (if (false? (has-next? iter))
-    (reset-iter! iter)
-    iter))
-
-(defn reset-if-not-at-start!
-  "checks the current cursor of the iterator and if not at 0 resets it"
-  [iter]
-  (if (not= 0 (get-current-cursor iter))
-    (reset-iter! iter)
-    iter))
-
-(defn data-from-iter
-  "returns all the data from an iterator as a lazy seq"
-  [iter]
-  (when (has-next? iter)
-    (lazy-seq (cons (next-example! iter) (data-from-iter iter)))))
-
-(defn iter-from-lazy-seq
-  "creates an iterator for a lazy seq.  This iterator can be used in model training"
-  [& {:keys [lazy-seq labels]
-      :as opts}]
-  (if (contains? opts :labels)
-    (new-existing-dataset-iterator :iter (.iterator lazy-seq)
-                                   :labels labels))
-  (new-existing-dataset-iterator :iter (.iterator lazy-seq)))

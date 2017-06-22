@@ -2,7 +2,9 @@
     dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.utils :refer [contains-many? array-of]]
             [dl4clj.nn.conf.constants :as enum]
-            [dl4clj.nn.api.model :refer [fit!]])
+            [dl4clj.nn.api.model :refer [fit!]]
+            [dl4clj.helpers :refer [new-lazy-iter]]
+            [nd4clj.linalg.api.ds-iter :refer [has-next? next-example!]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
 
@@ -27,6 +29,20 @@
           (recur (inc i) (fit! :mln mln :iter ds-iter))
           (= i n-epochs)
           mln)))
+
+(defn train-mln-with-lazy-seq!
+  "train the supplied multi layer network on the dataset contained within
+   the supplied lazy seq
+
+   :lazy-seq-data (lazy-seq), a lazy-seq of dataset objects
+    - created by data-from-iter in: dl4clj.helpers"
+  [& {:keys [lazy-seq-data mln n-epochs]}]
+  (dotimes [n n-epochs]
+    (let [iter (new-lazy-iter lazy-seq-data)]
+      (while (has-next? iter)
+        (let [nxt (next-example! iter)]
+          (fit! :mln mln :data nxt)))))
+  mln)
 
 (defn activate-selected-layers
   "Calculate activation for few layers at once. Suitable for autoencoder partial activation

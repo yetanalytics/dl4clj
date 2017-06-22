@@ -10,7 +10,7 @@
             ListDataSetIterator SingletonMultiDataSetIterator])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             [dl4clj.berkeley :refer [new-pair]]
-            [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
+            [dl4clj.helpers :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method heavy lifting

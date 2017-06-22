@@ -276,7 +276,7 @@ Loading data from a file (here its a csv)
 ;; file splits (convert the data to records)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def poker-path "resources/poker/poker-hand-training.csv")
+(def poker-path "resources/poker-hand-training.csv")
 ;; this is not a complete dataset, it is just here to sever as an example
 
 (def file-split (s/new-filesplit :path poker-path))
@@ -296,7 +296,7 @@ Loading data from a file (here its a csv)
 ;; this is our first line from the csv
 
 ;; next-record! moves the record readers interal cursor
-;; all iterators are internally reset before use when they are passed as args to fns which require them
+;; all iterators are automaticaly reset before use when they are passed as args to fns which require them
 ;; but if you need to manually reset one just call reset-rr!
 
 (reset-rr! csv-rr)
@@ -359,13 +359,9 @@ Loading data from a file (here its a csv)
 
 ;; getting the data out of a rr-ds-iter ourself becomes important
 ;; when making javaRDDs for spark training but is not necessary
-;; for local machine training
+;; for local machine training (it is possible tho)
 
-;; to use any lazy-seq of dataset objects in model training
-
-(def lazy-seq-iter (iter-from-lazy-seq lazy-seq-data))
-
-;; there is no need to reset these iterators (you can't even if you tried)
+;; lazy-training will be described in the Configuration to Trained models section
 
 ```
 
@@ -487,7 +483,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ```
 
-### Configuration to Initialized models
+### Configuration to Trained models
 
 Multi Layer models
 - an implementation of the dl4j [mnist classification example](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)
@@ -496,11 +492,16 @@ Multi Layer models
 ``` clojure
 
 (my.ns (:require [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
+                 [datavec.api.split :refer [new-filesplit]]
+                 [datavec.api.records.readers :refer [new-csv-record-reader]]
+                 [datavec.api.records.interface :refer [initialize-rr!]]
+                 [dl4clj.datasets.datavec :refer [new-record-reader-dataset-iterator]]
                  [dl4clj.optimize.listeners.listeners :refer [new-score-iteration-listener]]
                  [dl4clj.nn.conf.builders.nn-conf-builder :refer [nn-conf-builder]]
                  [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
                  [dl4clj.nn.multilayer.multi-layer-network :as mln]
-                 [dl4clj.nn.api.model :refer [init! set-listeners!]]))
+                 [dl4clj.nn.api.model :refer [init! set-listeners!]]
+                 [dl4clj.helpers :refer [data-from-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf -> multi-layer-conf -> multi-layer-network
@@ -533,7 +534,7 @@ Multi Layer models
   (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; local cpu training
+;; local cpu training with dl4j iterators
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; lets use the pre-built Mnist data set iterator
@@ -556,8 +557,60 @@ Multi Layer models
                                           :n-epochs 15))
 ;; we now have a trained model that has seen the training dataset 15 times
 ;; - feel free to change this if youre following along
-;; lets evaluate the performance of the model
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; local cpu training with lazy-iterators
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; lets load our csv data like we did in the Importing data section
+;; but we are going to want a test set and a training set
+;; these are not real datasets (only have about 10 records each)
+;; the dl4j mnist model is not a great model for the data even if it was a full dataset
+
+(def poker-path "resources/poker-hand-training.csv")
+
+(def test-poker-path "resources/poker-hand-testing.csv")
+
+(def file-split (new-filesplit :path poker-path))
+
+(def test-file-split (new-filesplit :path test-poker-path))
+
+(def csv-rr (initialize-rr! :rr (new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+                            :input-split file-split))
+
+(def test-csv-rr (initialize-rr! :rr (new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+                                 :input-split test-file-split))
+
+(def rr-ds-iter (new-record-reader-dataset-iterator
+                 :record-reader csv-rr
+                 :batch-size 1
+                 :label-idx 10
+                 :n-possible-labels 10))
+
+(def test-rr-ds-iter (new-record-reader-dataset-iterator
+                      :record-reader test-csv-rr
+                      :batch-size 1
+                      :label-idx 10
+                      :n-possible-labels 10))
+
+;; reset-if-empty? needs to be called as its not built into data-from-iter
+;; would only NEED to be called if any changes were made to the internal state of either rr-ds-iters
+
+(def lazy-seq-data (data-from-iter (reset-if-empty?! rr-ds-iter)))
+
+(def test-lazy-seq-data (data-from-iter (reset-if-empty?! test-rr-ds-iter)))
+
+;; we are going to use the same multi layer network from above but give it a new name
+
+(def newer-multi-layer-network
+  (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
+
+(def fresh-mln-to-train (set-listeners! :model newer-multi-layer-network
+                                        :listeners [score-listener]))
+
+(def fresh-trained-mln (mlb/train-mln-with-lazy-seq! :lazy-seq-data lazy-seq-data
+                                                     :mln fresh-mln-to-train
+                                                     :n-epochs 10))
 ```
 
 Evaluation of Models
@@ -570,16 +623,29 @@ Evaluation of Models
 
 (my.ns
  (:require [dl4clj.eval.evaluation :refer [new-classification-evaler eval-model-whole-ds
-                                           get-accuracy]]))
+                                           get-accuracy]]
+           [dl4clj.helpers :refer [new-lazy-iter]]))
 
-(def evaler-obj (new-classification-evaler :n-classes 10))
+(def example-evaler-obj (new-classification-evaler :n-classes 10))
+
+(def lazy-evaler-obj (new-classification-evaler :n-classes 10))
+
+;; always remember that these objects are stateful, dont use the same eval-obj
+;; to eval two different networks
+
 
 ;; we trained the model on a training dataset.  We evaluate on a test set
 
-(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :eval-obj evaler-obj
-                                            :ds-iter test-mnist-iter))
+;; for dl4j iterators
+(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :eval-obj example-evaler-obj
+                                            :iter test-mnist-iter))
+
+;; for lazy iterators
+(def lazy-evaler-wtih-stats (eval-model-whole-ds :mln trained-mln :eval-obj lazy-evaler-obj
+                                                 :lazy-data test-lazy-seq-data))
 
 ;; this will print the stats to standard out for each feature/label pair
+;; this is only for our evaler-wtih-stats object.
 
 ;;Examples labeled as 0 classified by model as 0: 968 times
 ;;Examples labeled as 0 classified by model as 1: 1 times
@@ -667,6 +733,7 @@ Evaluation of Models
 ;; can get the stats that are printed via fns in the evaluation namespace
 ;; after running eval-model-whole-ds
 
+(get-summary evaler-with-stats) ;; => above but as a string
 (get-accuracy evaler-with-stats) ;; => 0.9808
 
 ;; this good score, but what if it wasnt?
@@ -725,7 +792,6 @@ Early Stopping (controlling training)
 (def in-mem-saver (new-in-memory-saver))
 
 (def local-file-saver (new-local-file-model-saver :directory "resources/tmp/readme/"))
-;; this directory does not exist
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; set up your score calculator
@@ -791,11 +857,23 @@ Early Stopping (controlling training)
 (def loaded-model (load-model! :path "resources/tmp/readme/bestModel.bin"
                                :load-updater? true))
 
+
+****************************************************************************
+;; need to double check on if I can use lazy-iters here
+;; trainer, score-calc
+****************************************************************************
+
 ```
 
 Transfer Learning (freezing layers)
 
 ``` clojure
+
+****************************************************************************
+;; need to write up examples
+;; need to go through nn dir and add in automatic iterator resets
+;; also all the other dirs
+****************************************************************************
 
 
 
@@ -804,11 +882,12 @@ Transfer Learning (freezing layers)
 
 
 ### Spark Training
-For a walk through on how to use Spark wtih dl4j, see: https://deeplearning4j.org/spark
+For a walk through on how to use [Spark](https://deeplearning4j.org/spark) wtih dl4j
 
 How it is done in dl4clj
-- same workflow as https://deeplearning4j.org/spark#Overview
+- same [workflow](https://deeplearning4j.org/spark#Overview)
   - NOTE: need to verify the spark hosting of trained models
+  - NOTE: see if there needs to be updates with the lazy-seq stuffs or iterator reseting
 
 ``` clojure
 (ns my.ns
