@@ -296,7 +296,7 @@ Loading data from a file (here its a csv)
 ;; this is our first line from the csv
 
 ;; next-record! moves the record readers interal cursor
-;; all iterators are reset before use when they are passed as args to fns which require them
+;; all iterators are internally reset before use when they are passed as args to fns which require them
 ;; but if you need to manually reset one just call reset-rr!
 
 (reset-rr! csv-rr)
@@ -365,8 +365,7 @@ Loading data from a file (here its a csv)
 
 (def lazy-seq-iter (iter-from-lazy-seq lazy-seq-data))
 
-;; there is no need to reset these iterators and you cant using
-;; the fns you use to reset native dl4j iterators
+;; there is no need to reset these iterators (you can't even if you tried)
 
 ```
 
@@ -477,8 +476,8 @@ Creating datasets from INDArrays (and creating INDArrays)
  (:require [nd4clj.linalg.dataset.api.ds-preprocessor :as ds-pp]
            [nd4clj.linalg.dataset.api.pre-processors :refer :all]))
 
-(def normalizer (fit-dataset! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
-                              :ds training-rr-ds-iter))
+(def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
+                           :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
 
 (def train-iter-normalized (set-pre-processor! :iter (reset-iter! training-rr-ds-iter)

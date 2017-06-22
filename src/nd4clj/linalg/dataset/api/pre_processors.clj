@@ -172,5 +172,4 @@
 
   returns the processed features"
   [& {:keys [vgg16-pp features]}]
-  (.preProcess vgg16-pp features)
-  features)
+  (.preProcess vgg16-pp features))

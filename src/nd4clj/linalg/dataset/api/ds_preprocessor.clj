@@ -7,7 +7,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
     nd4clj.linalg.dataset.api.ds-preprocessor
   (:import [org.nd4j.linalg.dataset.api DataSetPreProcessor]
            [org.nd4j.linalg.dataset.api.preprocessor Normalizer
-            DataNormalization]))
+            DataNormalization])
+  (:require [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set-pre-processor interface
@@ -16,7 +17,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn pre-process-dataset!
   "Pre process a dataset
 
-  returns the dataset"
+  returns a the dataset"
   [& {:keys [pre-processor ds]}]
   (.preProcess pre-processor ds)
   ds)
@@ -25,29 +26,10 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 ;; normalizer interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn fit-dataset!
-  "Fit a dataset (only compute based on the statistics from this dataset)"
-  [& {:keys [normalizer ds]}]
-  (doto normalizer (.fit ds)))
-
 (defn get-normalizer-type
   "Get the enum type of this normalizer"
   [normalizer]
   (.getType normalizer))
-
-(defn revert-normalization!
-  "undo the normalization applied by the normalizer.
-
-  returns the now (un)normalized dataset"
-  [& {:keys [normalizer normalized]}]
-  (.revert normalizer normalized)
-  normalized)
-
-(defn transform-dataset!
-  "transforms the dataset and returns it"
-  [& {:keys [normalizer ds]}]
-  (.transform normalizer ds)
-  ds)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data normalization interface
@@ -56,9 +38,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn fit-iter!
   "Iterates over a dataset accumulating statistics for normalization
 
-  returns the normalizer"
-  [& {:keys [normalizer ds-iter]}]
-  (doto normalizer (.fit ds-iter)))
+  returns the fit normalizer"
+  [& {:keys [normalizer iter]}]
+  (doto normalizer (.fit (reset-if-not-at-start! iter))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.
@@ -84,8 +66,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
       :as opts}]
   (if (contains? opts :features-mask)
     (.revertFeatures normalizer features features-mask)
-    (.revertFeatures normalizer features))
-  features)
+    (.revertFeatures normalizer features)))
 
 (defn revert-labels!
   "Undo the normalization applied by the normalizer on the labels array
@@ -99,8 +80,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
       :as opts}]
   (if (contains? opts :labels-mask)
     (.revertLabels normalizer labels labels-mask)
-    (.revertLabels normalizer labels))
-  labels)
+    (.revertLabels normalizer labels)))
 
 (defn transform-features!
   "applies the transform specified by the normalizer to the features
@@ -114,8 +94,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
       :as opts}]
   (if (contains? opts :features-mask)
     (.transform normalizer features features-mask)
-    (.transform normalizer features))
-  features)
+    (.transform normalizer features)))
 
 (defn transform-labels!
   "applies the transform specified by the normalizer to the labels
@@ -129,5 +108,4 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
       :as opts}]
   (if (contains? opts :labels-mask)
     (.transformLabel normalizer labels labels-mask)
-    (.transformLabel normalizer labels))
-  labels)
+    (.transformLabel normalizer labels)))

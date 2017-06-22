@@ -5,7 +5,9 @@
             CombinedPreProcessor$Builder CurvesDataSetIterator IteratorDataSetIterator
             IteratorMultiDataSetIterator MovingWindowBaseDataSetIterator
             MultipleEpochsIterator ReconstructionDataSetIterator SamplingDataSetIterator
-            ExistingDataSetIterator])
+            ExistingDataSetIterator]
+           [org.deeplearning4j.datasets.iterator.impl MultiDataSetIteratorAdapter
+            ListDataSetIterator SingletonMultiDataSetIterator])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             [dl4clj.berkeley :refer [new-pair]]
             [nd4clj.linalg.api.ds-iter :refer [reset-if-not-at-start!]]))
@@ -147,6 +149,22 @@
           (AsyncDataSetIterator. i)
           :else
           (assert false "you must atleast provide a dataset iterator")))))
+
+(defmethod iterators :ds-iter-to-multi-ds-iter [opts]
+  (let [iter (reset-if-not-at-start! (:iter (:ds-iter-to-multi-ds-iter opts)))]
+    (MultiDataSetIteratorAdapter. iter)))
+
+(defmethod iterators :list-ds-iter [opts]
+  (let [conf (:list-ds-iter opts)
+        {ds :dataset
+         batch-size :batch-size} conf]
+    (if (contains? conf :batch-size)
+      (ListDataSetIterator. ds batch-size)
+      (ListDataSetIterator. ds))))
+
+(defmethod iterators :multi-ds-to-multi-ds-iter [opts]
+  (let [mds (:multi-dataset (:multi-ds-to-multi-ds-iter opts))]
+    (SingletonMultiDataSetIterator. mds)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing functions
@@ -383,11 +401,38 @@
       :as opts}]
   (iterators {:curves-dataset-iterator opts}))
 
+(defn new-multi-data-set-iterator-adapter
+  "Iterator that adapts a DataSetIterator to a MultiDataSetIterator"
+  [& {:keys [iter]
+      :as opts}]
+  (iterators {:ds-iter-to-multi-ds-iter opts}))
+
+(defn new-list-dataset-iterator
+  "creates a new list data set iterator given a collection of datasets.
+
+  :dataset (collection), a collection of dataset examples
+   - from (as-list dataset), from nd4clj.linalg.dataset.api.data-set
+
+  :batch-size (int), the batch size, if not supplied, defaults to 5
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/ListDataSetIterator.html"
+  [& {:keys [dataset batch-size]
+      :as opts}]
+  (iterators {:list-ds-iter opts}))
+
+(defn new-singleton-multi-dataset-iterator
+  "A very simple adapter class for converting a single MultiDataSet to a MultiDataSetIterator.
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/SingletonMultiDataSetIterator.html"
+  [& {:keys [multi-dataset]
+      :as opts}]
+  (iterators {:multi-ds-to-multi-ds-iter opts}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; api calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn pre-process-combined-iters!
+(defn pre-process-iter-combined-pp!
   "Pre process a dataset sequentially using a combined pre-processor
    - the pre-processor is attached to the dataset"
   [& {:keys [dataset-iter dataset]}]

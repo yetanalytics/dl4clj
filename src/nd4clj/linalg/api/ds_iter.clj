@@ -99,9 +99,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
 
 (defn iter-from-lazy-seq
   "creates an iterator for a lazy seq.  This iterator can be used in model training"
-  [lazy-seq & {:keys [labels]
-               :as opts}]
+  [& {:keys [lazy-seq labels]
+      :as opts}]
   (if (contains? opts :labels)
-    (new-existing-dataset-iterator :dataset-iterator (.iterator lazy-seq)
+    (new-existing-dataset-iterator :iter (.iterator lazy-seq)
                                    :labels labels))
-  (new-existing-dataset-iterator :dataset-iterator (.iterator lazy-seq)))
+  (new-existing-dataset-iterator :iter (.iterator lazy-seq)))

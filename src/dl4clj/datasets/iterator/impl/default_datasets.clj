@@ -174,27 +174,3 @@
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/RawMnistDataSetIterator.html"
   [& {:keys [batch n-examples]}]
   (RawMnistDataSetIterator. batch n-examples))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; api fns not specified in nd4clj.linalg.api.ds-iter
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn test-cifar-iter!
-  [& {:keys [iter n-examples batch-size]
-      :as opts}]
-  (cond (contains-many? opts :iter :n-examples :batch-size)
-        (doto iter (.test n-examples batch-size))
-        (contains-many? opts :iter :n-examples)
-        (doto iter (.test n-examples))
-        (contains? opts :iter)
-        (doto iter (.test))
-        :else
-        (assert false "you must provide a cifar iterator")))
-
-(defn train-cifar-iter!
-  [iter]
-  (doto iter (.train)))
-
-(defn get-feature-matrix
-  [data-from-iter]
-  (.getFeatureMatrix data-from-iter))
