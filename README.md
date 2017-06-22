@@ -410,7 +410,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; [0.00, 0.00],
 ;; [0.00, 0.00]]]
 
-(indarray-of-zeros) => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0xe59ffec 0.00]
+(indarray-of-zeros) ;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0xe59ffec 0.00]
 
 ;; and if only one is supplied, will get a vector of specified length
 
@@ -476,6 +476,9 @@ Creating datasets from INDArrays (and creating INDArrays)
                            :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
 
+
+************************************************************************************
+;; shouldnt need to reset this anymore, double check tho
 (def train-iter-normalized (set-pre-processor! :iter (reset-iter! training-rr-ds-iter)
                                                :pre-processor normalizer))
 
@@ -602,10 +605,10 @@ Multi Layer models
 
 ;; we are going to use the same multi layer network from above but give it a new name
 
-(def newer-multi-layer-network
+(def fresh-multi-layer-network
   (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
 
-(def fresh-mln-to-train (set-listeners! :model newer-multi-layer-network
+(def fresh-mln-to-train (set-listeners! :model fresh-multi-layer-network
                                         :listeners [score-listener]))
 
 (def fresh-trained-mln (mlb/train-mln-with-lazy-seq! :lazy-seq-data lazy-seq-data
@@ -1015,10 +1018,7 @@ How it is done in dl4clj
 
 ### Putting it all together
 
-- local training example
-
-- spark-mnist example port
-
+- not sure if i still need this section
 
 ## NOTES
 
