@@ -5,7 +5,8 @@
             PathSparkMultiDataSetIterator
             PortableDataStreamDataSetIterator
             PortableDataStreamMultiDataSetIterator])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+            [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod constructor calling
@@ -19,7 +20,7 @@
          iter :iter} conf]
     (if (contains? conf :string-paths)
       (PathSparkDataSetIterator. str-paths)
-      (PathSparkDataSetIterator. iter))))
+      (PathSparkDataSetIterator. (reset-if-empty?! iter)))))
 
 (defmethod spark-stream-iterators :path-to-multi-ds [opts]
   (let [conf (:path-to-multi-ds opts)
@@ -27,7 +28,7 @@
          iter :iter} conf]
     (if (contains? conf :string-paths)
       (PathSparkMultiDataSetIterator. str-paths)
-      (PathSparkMultiDataSetIterator. iter))))
+      (PathSparkMultiDataSetIterator. (reset-if-empty?! iter)))))
 
 (defmethod spark-stream-iterators :portable-ds-stream [opts]
   (let [conf (:portable-ds-stream opts)
@@ -35,7 +36,7 @@
          iter :iter} conf]
     (if (contains? conf :streams)
       (PortableDataStreamDataSetIterator. streams)
-      (PortableDataStreamDataSetIterator. iter))))
+      (PortableDataStreamDataSetIterator. (reset-if-empty?! iter)))))
 
 (defmethod spark-stream-iterators :portable-multi-ds-stream [opts]
   (let [conf (:portable-multi-ds-stream opts)
@@ -43,7 +44,7 @@
          iter :iter} conf]
     (if (contains? conf :streams)
       (PortableDataStreamMultiDataSetIterator. streams)
-      (PortableDataStreamMultiDataSetIterator. iter))))
+      (PortableDataStreamMultiDataSetIterator. (reset-if-empty?! iter)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns

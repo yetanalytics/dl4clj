@@ -4,7 +4,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   dl4clj.nn.api.classifier
   (:import [org.deeplearning4j.nn.api Classifier])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.datasets.datavec :as iter]))
+            [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 (defn f1-score
   "With two arguments (classifier and dataset):
@@ -31,29 +31,24 @@ examples and their labels")))
 
   :data-set = a dataset
 
-  :dataset-iterator {:iterator-type opts}
-   - can be a configuration map for creating a dataset iterator or
-     an already created dataset iterator
-  (see dl4clj.datasets.datavec for more details)
+  :iter (iterator), an iterator for going through a collection of dataset objects
 
   :examples = INDArray of input data to be classified
 
   :labels = INDArray or integer-array of labels for the examples
 
   Returns the classifier after it has been fit"
-  [& {:keys [classifier data-set dataset-iterator examples labels]
+  [& {:keys [classifier data-set iter examples labels]
       :as opts}]
   (cond (contains? opts :data-set)
         (doto classifier (.fit data-set))
         (contains? opts :dataset-iterator)
-        (doto classifier (.fit (if (map? dataset-iterator)
-                                 (iter/iterator dataset-iterator)
-                                 dataset-iterator)))
+        (doto classifier (.fit (reset-if-empty?! iter)))
         (contains-many? opts :examples :labels)
         (doto classifier (.fit examples labels))
         :else
         (assert false "you must supply a classifier and either a dataset,
- dataset-iterator config map, or examples and their labels")))
+ iterator obj, or examples and their labels")))
 
 (defn label-probabilities
   "Returns the probabilities for each label for each example row wise

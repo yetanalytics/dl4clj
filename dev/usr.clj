@@ -261,3 +261,102 @@
                            (into-array String (list "suit-c1")))))
   (.executeToSequence poker-hands data-transform)
   )
+
+
+(comment
+  "java still faster :()"
+ (use '[dl4clj.nn.conf.builders.nn-conf-builder])
+(use '[dl4clj.nn.conf.builders.multi-layer-builders])
+(use '[dl4clj.datasets.iterator.impl.default-datasets])
+(use '[dl4clj.optimize.listeners.listeners])
+(use '[dl4clj.nn.multilayer.multi-layer-network])
+(use '[dl4clj.nn.api.model])
+(use '[dl4clj.helpers])
+
+(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? true :seed 123))
+
+#_(reset-if-not-at-start! train-mnist-iter)
+
+(def lazy-l-builder (nn-conf-builder
+                :optimization-algo :stochastic-gradient-descent
+                :seed 123 :iterations 1 :default-activation-fn :relu
+                :regularization? true :default-l2 7.5e-6
+                :default-weight-init :xavier :default-learning-rate 0.0015
+                :default-updater :nesterovs :default-momentum 0.98
+                :layers {0 {:dense-layer
+                            {:layer-name "example first layer"
+                             :n-in 784 :n-out 500}}
+                         1 {:dense-layer
+                            {:layer-name "example second layer"
+                             :n-in 500 :n-out 100}}
+                         2 {:output-layer
+                            {:n-in 100 :n-out 10 :loss-fn :negativeloglikelihood
+                             :activation-fn :softmax
+                             :layer-name "example output layer"}}}))
+
+(def lazy-multi-layer-conf
+  (multi-layer-config-builder
+   :list-builder lazy-l-builder
+   :backprop? true
+   :pretrain? false))
+
+(def multi-layer-network-lazy-training
+  (init! :model (new-multi-layer-network :conf lazy-multi-layer-conf)))
+
+(def lazy-score-listener (new-score-iteration-listener :print-every-n 5))
+
+
+(def mln-lazy-with-listener (set-listeners! :model multi-layer-network-lazy-training
+                                            :listeners [lazy-score-listener]))
+
+(def lazy-data (data-from-iter train-mnist-iter))
+
+
+#_(time
+ (train-mln-with-lazy-seq! :lazy-seq-data lazy-data :mln mln-lazy-with-listener
+                           :n-epochs 15))
+
+;; => "Elapsed time: 262699.667516 msecs"
+
+
+
+
+
+
+(def l-builder (nn-conf-builder
+                     :optimization-algo :stochastic-gradient-descent
+                     :seed 123 :iterations 1 :default-activation-fn :relu
+                     :regularization? true :default-l2 7.5e-6
+                     :default-weight-init :xavier :default-learning-rate 0.0015
+                     :default-updater :nesterovs :default-momentum 0.98
+                     :layers {0 {:dense-layer
+                                 {:layer-name "example first layer"
+                                  :n-in 784 :n-out 500}}
+                              1 {:dense-layer
+                                 {:layer-name "example second layer"
+                                  :n-in 500 :n-out 100}}
+                              2 {:output-layer
+                                 {:n-in 100 :n-out 10 :loss-fn :negativeloglikelihood
+                                  :activation-fn :softmax
+                                  :layer-name "example output layer"}}}))
+
+(def multi-layer-conf
+  (multi-layer-config-builder
+   :list-builder l-builder
+   :backprop? true
+   :pretrain? false))
+
+(def multi-layer-network-standard-training
+  (init! :model (new-multi-layer-network :conf multi-layer-conf)))
+
+
+(def score-listener (new-score-iteration-listener :print-every-n 5))
+
+(def mln-standard-with-listener (set-listeners! :model multi-layer-network-standard-training
+                                                :listeners [score-listener]))
+
+#_(def trained-mln (time (train-mln-with-ds-iter! :mln mln-standard-with-listener
+                                          :ds-iter train-mnist-iter
+                                          :n-epochs 15)))
+;; => "Elapsed time: 220454.276825 msecs"
+)

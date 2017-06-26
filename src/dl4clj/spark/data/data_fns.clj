@@ -12,7 +12,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
             DataSetExportFunction
             BatchDataSetsFunction]
            [org.deeplearning4j.spark.data.shuffle SplitDataSetExamplesPairFlatMapFunction])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+            [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method for constructor calling
@@ -185,13 +186,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :partition-idx (int), tag for labeling the new datasets created via this fn
 
-  :ds-iter (dataset iterator), the iterator which goes through a dataset
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses"
-  [& {:keys [the-fn partition-idx ds-iter]}]
-  (if (map? the-fn)
+  :iter (dataset iterator), the iterator which goes through a dataset
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+  [& {:keys [the-fn partition-idx iter]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (.call (ds-fns the-fn) (int partition-idx) ds-iter)
-    (.call the-fn (int partition-idx) ds-iter)))
+    (.call the-fn (int partition-idx) ds-iter))))
 
 (defn call-batch-and-export-multi-ds-fn!
   "uses the object created by new-batch-and-export-multi-ds-fn
@@ -207,12 +208,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :partition-idx (int), tag for labeling the new datasets created via this fn
 
   :multi-ds-iter (multi-dataset iterator), the iterator which goes through a dataset
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses"
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
   [& {:keys [the-fn partition-idx multi-ds-iter]}]
-  (if (map? the-fn)
-    (.call (ds-fns the-fn) (int partition-idx) multi-ds-iter)
-    (.call the-fn (int partition-idx) multi-ds-iter)))
+  (let [mds-iter (reset-if-empty?! multi-ds-iter)]
+   (if (map? the-fn)
+    (.call (ds-fns the-fn) (int partition-idx) mds-iter)
+    (.call the-fn (int partition-idx) mds-iter))))
 
 (defn call-batch-ds-fn!
   "uses the object created by new-batch-ds-fn
@@ -224,13 +225,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    or a config map to make that object
    - config map = {:batch-ds {:batch-size (int)}}
 
-  :ds-iter, (iterator), an iterator which wraps a dataset you want batched
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses"
-  [& {:keys [the-fn ds-iter]}]
-  (if (map? the-fn)
+  :iter, (iterator), an iterator which wraps a dataset you want batched
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+  [& {:keys [the-fn iter]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (.call (ds-fns the-fn) ds-iter)
-    (.call the-fn ds-iter)))
+    (.call the-fn ds-iter))))
 
 (defn call-ds-export-fn!
   "uses the object created by new-ds-export-fn to perform its function
@@ -240,17 +241,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    or a config map to make the object
     - config mpa = {:export-ds {:export-path path (str)}}
 
-  :ds-iter (iterator), an iterator which wraps a dataset you want exported
+  :iter (iterator), an iterator which wraps a dataset you want exported
    - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses
 
   returns a map of the export-fn and ds-iter"
-  [& {:keys [the-fn ds-iter]}]
-  (if (map? the-fn)
+  [& {:keys [the-fn iter]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (do (.call (ds-fns the-fn) ds-iter)
         {:export-fn the-fn :iter ds-iter})
     (do (.call the-fn ds-iter)
-        {:export-fn the-fn :iter ds-iter})))
+        {:export-fn the-fn :iter ds-iter}))))
 
 (defn call-multi-ds-export-fn!
   "uses the object created by new-multi-ds-export-fn to perform its function
@@ -260,17 +261,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    or a config map to make the object
     - config mpa = {:export-multi-ds {:export-path path (str)}}
 
-  :ds-iter (iterator), an iterator which wraps a dataset you want exported
+  :iter (iterator), an iterator which wraps a dataset you want exported
    - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses
 
   returns a map of the export-fn and ds-iter"
-  [& {:keys [the-fn ds-iter]}]
-  (if (map? the-fn)
+  [& {:keys [the-fn iter]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (do (.call (ds-fns the-fn) ds-iter)
         {:export-fn the-fn :iter ds-iter})
     (do (.call the-fn ds-iter)
-        {:export-fn the-fn :iter ds-iter})))
+        {:export-fn the-fn :iter ds-iter}))))
 
 (defn call-path-to-ds-fn!
   "uses the object created by new-path-to-ds-fn to perform its function
@@ -312,13 +313,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    or a config map to make the object
     - config map = {:split-ds {}}
 
-  :ds-iter (iterator), an iterator which wraps a dataset you want split
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses"
-  [& {:keys [the-fn ds-iter]}]
-  (if (map? the-fn)
+  :iter (iterator), an iterator which wraps a dataset you want split
+   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+  [& {:keys [the-fn iter]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (.call (ds-fns the-fn) ds-iter)
-    (.call the-fn ds-iter)))
+    (.call the-fn ds-iter))))
 
 (defn call-split-ds-with-appended-key!
   "uses the object created by new-split-ds-with-appended-key to perform its function

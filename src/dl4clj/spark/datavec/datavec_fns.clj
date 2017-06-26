@@ -9,7 +9,9 @@
             DataVecByteDataSetFunction]
            [org.deeplearning4j.spark.datavec.export StringToDataSetExportFunction])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many?]]
-            [dl4clj.constants :as enum]))
+            [dl4clj.constants :as enum]
+            [datavec.api.records.interface :refer [reset-rr!]]
+            [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method constructor calling
@@ -23,13 +25,14 @@
          label-idx :label-idx
          n-labels :n-labels
          converter :writable-converter} conf]
-    (cond (contains-many? conf :record-reader :label-idx :n-labels :writable-converter)
-          (RecordReaderFunction. rr label-idx n-labels converter)
+    (let [r (reset-rr! rr)]
+     (cond (contains-many? conf :record-reader :label-idx :n-labels :writable-converter)
+          (RecordReaderFunction. r label-idx n-labels converter)
           (contains-many? conf :record-reader :label-idx :n-labels)
-          (RecordReaderFunction. rr label-idx n-labels)
+          (RecordReaderFunction. r label-idx n-labels)
           :else
           (assert false "you must atleast supply a record reader, the idx of the label column
-and the number of classes (labels)"))))
+and the number of classes (labels)")))))
 
 (defmethod datavec-fns :byte-ds [opts]
   (let [conf (:byte-ds opts)
@@ -113,7 +116,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
          r? :regression?
          l-idx :label-idx
          n-labels :n-labels} conf]
-    (StringToDataSetExportFunction. (java.net.URI/create dir) rr batch-size r? l-idx n-labels)))
+    (StringToDataSetExportFunction. (java.net.URI/create dir) (reset-rr! rr) batch-size r? l-idx n-labels)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns, need to document keyword combos in doc string
@@ -404,12 +407,13 @@ the number of classes (labels), and if the ds is for regression or classificatio
 
   returns the iterator and the fn-object"
   [& {:keys [the-fn iter]}]
-  (if (map? the-fn)
+  (let [ds-iter (reset-if-empty?! iter)]
+   (if (map? the-fn)
     (let [f (datavec-fns the-fn)]
-      (do (.call f iter)
-        {:fn f :iter iter}))
-    (do (.call the-fn iter)
-        {:fn the-fn :iter iter})))
+      (do (.call f ds-iter)
+        {:fn f :iter ds-iter}))
+    (do (.call the-fn ds-iter)
+        {:fn the-fn :iter ds-iter}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the subclass has the mini-batches-fn which has the call method

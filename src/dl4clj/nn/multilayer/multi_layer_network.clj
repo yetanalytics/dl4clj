@@ -3,7 +3,7 @@
   (:require [dl4clj.utils :refer [contains-many? array-of]]
             [dl4clj.nn.conf.constants :as enum]
             [dl4clj.nn.api.model :refer [fit!]]
-            [dl4clj.helpers :refer [new-lazy-iter]]
+            [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?!]]
             [nd4clj.linalg.api.ds-iter :refer [has-next? next-example!]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
@@ -19,16 +19,15 @@
 (defn train-mln-with-ds-iter!
   "train the supplied multi layer network on the supplied dataset
 
-  :ds-iter (iterator), an iterator wrapping a dataset
+  :iter (iterator), an iterator wrapping a dataset
 
   :n-epochs (int), the number of passes through the dataset"
-  [& {:keys [mln ds-iter n-epochs]}]
-  (loop [i 0
-         result {}]
-    (cond (not= i n-epochs)
-          (recur (inc i) (fit! :mln mln :iter ds-iter))
-          (= i n-epochs)
-          mln)))
+  [& {:keys [mln iter n-epochs]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+    (dotimes [n n-epochs]
+      (while (has-next? ds-iter)
+        (fit! :mln mln :iter ds-iter))))
+  mln)q
 
 (defn train-mln-with-lazy-seq!
   "train the supplied multi layer network on the dataset contained within
@@ -38,6 +37,9 @@
     - created by data-from-iter in: dl4clj.helpers"
   [& {:keys [lazy-seq-data mln n-epochs]}]
   (dotimes [n n-epochs]
+    ;; dont know of a more effecient way of doing this
+    ;; you cant reset a lazy-seq-iter so i just make a new one
+    ;; prob why training takes non-neglegible amount of time
     (let [iter (new-lazy-iter lazy-seq-data)]
       (while (has-next? iter)
         (let [nxt (next-example! iter)]
@@ -91,21 +93,6 @@
     (.computeZ mln input training?)
     (.computeZ mln training?)))
 
-(defn do-evaluation
-  ;; this can be deleted, call the evaluate-...
-  "Perform evaluation using an arbitrary IEvaluation instance.
-
-  :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec
-
-  :evaluation (eval), the evaluation object
-   - see: dl4clj.eval.evaluation
-
-  returns a map containing the multi layer network and the evaler"
-  [& {:keys [mln iter evaluation]}]
-  (.doEvaluation mln iter evaluation)
-  {:mln mln :evaler evaluation})
-
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
   [mln]
@@ -125,20 +112,22 @@
   :top-n (int), N value for top N accuracy evaluation"
   [& {:keys [mln iter labels top-n]
       :as opts}]
-  (cond (contains-many? opts :labels-list :top-n)
-        (.evaluate mln iter (into '() labels) top-n)
+  (let [ds-iter (reset-if-empty?! iter)]
+   (cond (contains-many? opts :labels-list :top-n)
+        (.evaluate mln ds-iter (into '() labels) top-n)
         (contains? opts :labels-list)
-        (.evaluate mln iter (into '() labels))
+        (.evaluate mln ds-iter (into '() labels))
         :else
-        (.evaluate mln iter)))
+        (.evaluate mln ds-iter))))
 
 (defn evaluate-regression
   "Evaluate the network for regression performance
 
   :iter (ds-iter), a dataset iterator
    - see: dl4clj.datasets.datavec"
+  ;; update doc
   [& {:keys [mln iter]}]
-  (.evaluateRegression mln iter))
+  (.evaluateRegression mln (reset-if-empty?! iter)))
 
 (defn evaluate-roc
   "Evaluate the network (must be a binary classifier) on the specified data
@@ -150,7 +139,7 @@
   :roc-threshold-steps (int), value needed to call the ROC constructor
    - see: dl4clj.eval.roc.rocs"
   [& {:keys [mln iter roc-threshold-steps]}]
-  (.evaluateROC mln iter roc-threshold-steps))
+  (.evaluateROC mln (reset-if-empty?! iter) roc-threshold-steps))
 
 (defn evaluate-roc-multi-class
   "Evaluate the network on the specified data.
@@ -161,7 +150,7 @@
   :roc-threshold-steps (int), value needed to call the ROCMultiClass constructor
    - see: dl4clj.eval.roc.rocs"
   [& {:keys [mln iter roc-threshold-steps]}]
-  (.evaluateROCMultiClass mln iter roc-threshold-steps))
+  (.evaluateROCMultiClass mln (reset-if-empty?! iter) roc-threshold-steps))
 
 (defn feed-forward
   "if :features-mask and :labels-mask supplied:
@@ -341,21 +330,22 @@
   [& {:keys [iter train? input features-mask labels-mask
              training-mode mln]
       :as opts}]
-  (cond (contains-many? opts :input :train?
-                        :features-mask :labels-mask)
-        (.output mln input train? features-mask labels-mask)
-        (contains-many? opts :training-mode :input)
-        (.output mln input (enum/value-of {:layer-training-mode training-mode}))
-        (contains-many? opts :train? :input)
-        (.output mln input train?)
-        (contains-many? opts :iter :train?)
-        (.output mln iter train?)
-        (contains? opts :input)
-        (.output mln input)
-        (contains? opts :iter)
-        (.output mln iter)
-        :else
-        (assert false "you must supply atleast an input or iterator")))
+  (let [ds-iter (reset-if-empty?! iter)]
+    (cond (contains-many? opts :input :train?
+                          :features-mask :labels-mask)
+          (.output mln input train? features-mask labels-mask)
+          (contains-many? opts :training-mode :input)
+          (.output mln input (enum/value-of {:layer-training-mode training-mode}))
+          (contains-many? opts :train? :input)
+          (.output mln input train?)
+          (contains-many? opts :iter :train?)
+          (.output mln ds-iter train?)
+          (contains? opts :input)
+          (.output mln input)
+          (contains? opts :iter)
+          (.output mln ds-iter)
+          :else
+          (assert false "you must supply atleast an input or iterator"))))
 
 (defn pre-train!
   "Perform layerwise pretraining on all pre-trainable layers in the network (VAEs, RBMs, Autoencoders, etc)
@@ -366,7 +356,7 @@
   :iter (ds-iter), dataset iterator
    - see: dl4clj.datasets.datavec"
   [& {:keys [mln iter]}]
-  (.pretrain mln iter))
+  (.pretrain mln (reset-if-empty?! iter)))
 
 (defn pre-train-layer!
   "Perform layerwise unsupervised training on a single pre-trainable layer
@@ -382,7 +372,7 @@
   [& {:keys [mln layer-idx iter features]
       :as opts}]
   (cond (contains-many? opts :layer-idx :iter)
-        (.pretrainLayer mln layer-idx iter)
+        (.pretrainLayer mln layer-idx (reset-if-empty?! iter))
         (contains-many? opts :layer-idx :features)
         (.pretrainLayer mln layer-idx features)
         :else
@@ -489,7 +479,7 @@ a map of the desired state")
   (cond (contains-many? opts :dataset :add-regularization-terms?)
         (.scoreExamples mln dataset add-regularization-terms?)
         (contains-many? opts :iter :add-regularization-terms?)
-        (.scoreExamples mln iter add-regularization-terms?)
+        (.scoreExamples mln (reset-if-empty?! iter) add-regularization-terms?)
         :else
         (assert false "you must supply data in the form of a dataset or a dataset iterator.
 you must also supply whether or not you want to add regularization terms (L1, L2, dropout...)")))

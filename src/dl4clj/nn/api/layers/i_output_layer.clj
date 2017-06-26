@@ -25,11 +25,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/layers/IOutputLaye
   [& {:keys [output-layer full-network-l1 full-network-l2]}]
   (.computeScoreForExamples output-layer full-network-l1 full-network-l2))
 
-(defn get-labels
-  "Get the labels array previously set with set-labels!"
-  [output-layer]
-  (.getLabels output-layer))
-
 (defn set-labels!
   "Set the labels array for this output layer and returns the layer
 

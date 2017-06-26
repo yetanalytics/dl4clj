@@ -1,6 +1,7 @@
 (ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/impl/layer/SparkDl4jLayer.html"}
     dl4clj.spark.dl4j-layer
-  (:import [org.deeplearning4j.spark.impl.layer SparkDl4jLayer]))
+  (:import [org.deeplearning4j.spark.impl.layer SparkDl4jLayer])
+  (:require [datavec.api.records.interface :refer [reset-rr!]]))
 
 (defn new-spark-dl4j-layer
   "creates a layer to be trained by spark given a nn-conf.
@@ -52,7 +53,7 @@
       :as opts}]
   (if (contains? opts :spark-context)
     (.fit spark-layer spark-context rdd)
-    (.fit spark-layer path label-idx record-reader)))
+    (.fit spark-layer path label-idx (reset-rr! record-reader))))
 
 (defn fit-spark-layer-with-ds!
   "fit the spark layer with a rdd which contains a DataSet

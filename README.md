@@ -53,6 +53,12 @@ With Maven:
 </dependency>
 ```
 
+#TODO:
+
+- collapse dl4clj.datasets.datavec and dl4clj.datasets.iterator.iterators into a single ns
+- datavec is record-reader-dataset-iterators, iterators is just dataset-iterators (dont rerequire record readers)
+
+
 ## Usage
 
 ### Layers
@@ -476,10 +482,7 @@ Creating datasets from INDArrays (and creating INDArrays)
                            :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
 
-
-************************************************************************************
-;; shouldnt need to reset this anymore, double check tho
-(def train-iter-normalized (set-pre-processor! :iter (reset-iter! training-rr-ds-iter)
+(def train-iter-normalized (set-pre-processor! :iter training-rr-ds-iter
                                                :pre-processor normalizer))
 
 ;; this applies the transformation to all dataset objects in the iterator
@@ -558,6 +561,7 @@ Multi Layer models
 (def trained-mln (train-mln-with-ds-iter! :mln mln-with-listener
                                           :ds-iter train-mnist-iter
                                           :n-epochs 15))
+
 ;; we now have a trained model that has seen the training dataset 15 times
 ;; - feel free to change this if youre following along
 
@@ -614,6 +618,10 @@ Multi Layer models
 (def fresh-trained-mln (mlb/train-mln-with-lazy-seq! :lazy-seq-data lazy-seq-data
                                                      :mln fresh-mln-to-train
                                                      :n-epochs 10))
+
+;; training using the prebuilt mnsit dataset iterator faster than training
+;; using a lazy-seq generated from that dataset
+;; different of about 40 seconds for the mnist example
 ```
 
 Evaluation of Models
@@ -748,6 +756,7 @@ Evaluation of Models
 Early Stopping (controlling training)
 - it is recommened you start here when designing models
   - gives you more control than just setting the number of epochs
+  - requires dl4j dataset iterators
 
 ``` clojure
 (my.ns
@@ -859,12 +868,6 @@ Early Stopping (controlling training)
 
 (def loaded-model (load-model! :path "resources/tmp/readme/bestModel.bin"
                                :load-updater? true))
-
-
-****************************************************************************
-;; need to double check on if I can use lazy-iters here
-;; trainer, score-calc
-****************************************************************************
 
 ```
 

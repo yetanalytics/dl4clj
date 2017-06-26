@@ -56,10 +56,18 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   [iter]
   (.resetSupported iter))
 
+(defn has-next?
+  "checks to see if there is anymore data in the iterator"
+  [iter]
+  (.hasNext iter))
+
 (defn set-pre-processor!
   "Set a pre processor"
   [& {:keys [iter pre-processor]}]
-  (doto iter (.setPreProcessor pre-processor)))
+  (doto (if (has-next? iter)
+          iter
+          (reset-iter! iter))
+    (.setPreProcessor pre-processor)))
 
 (defn get-total-examples
   "Total examples in the iterator"
@@ -70,8 +78,3 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.ht
   "The number of labels for the dataset"
   [iter]
   (.totalOutcomes iter))
-
-(defn has-next?
-  "checks to see if there is anymore data in the iterator"
-  [iter]
-  (.hasNext iter))
