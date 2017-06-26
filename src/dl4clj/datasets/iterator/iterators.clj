@@ -435,5 +435,6 @@
 (defn pre-process-iter-combined-pp!
   "Pre process a dataset sequentially using a combined pre-processor
    - the pre-processor is attached to the dataset"
-  [& {:keys [dataset-iter dataset]}]
-  (doto dataset-iter (.preProcess dataset)))
+  [& {:keys [iter dataset]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+   (doto ds-iter (.preProcess dataset))))

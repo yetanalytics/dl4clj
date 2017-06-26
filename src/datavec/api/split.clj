@@ -207,7 +207,7 @@
   "creates a new collection input split
    - A simple InputSplit based on a collection of URIs
 
-  coll (coll of URIs), the URIs to import
+  :coll (coll of URIs), the URIs to import
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/CollectionInputSplit.html"
   [& {:keys [coll]}]

@@ -27,7 +27,7 @@
     (dotimes [n n-epochs]
       (while (has-next? ds-iter)
         (fit! :mln mln :iter ds-iter))))
-  mln)q
+  mln)
 
 (defn train-mln-with-lazy-seq!
   "train the supplied multi layer network on the dataset contained within

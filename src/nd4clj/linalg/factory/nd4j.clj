@@ -5,7 +5,6 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [org.nd4j.linalg.api.rng.distribution Distribution]
            [org.nd4j.linalg.api.rng Random]))
-;; (remove-ns 'nd4clj.linalg.factory.nd4j)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
