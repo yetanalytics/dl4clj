@@ -13,7 +13,8 @@
             ListDataSetIterator SingletonMultiDataSetIterator]
            [org.deeplearning4j.datasets.iterator.impl
             CifarDataSetIterator IrisDataSetIterator LFWDataSetIterator
-            MnistDataSetIterator RawMnistDataSetIterator])
+            MnistDataSetIterator RawMnistDataSetIterator]
+           [java.util Random])
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
@@ -198,7 +199,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod iterator :doubles-dataset-iterator [opts]
-  (let [config (:doubles-dataset-iterator opts)
+  (let [config (:doubles-dataset-iter opts)
         {features :features
          labels :labels
          batch-size :batch-size} config]
@@ -206,8 +207,8 @@ you need to suply atleast the mini batch size, number of possible labels and the
                                         :p2 (double-array labels))]
                              batch-size)))
 
-(defmethod iterator :floats-dataset-iterator [opts]
-  (let [config (:floats-dataset-iterator opts)
+(defmethod iterator :floats-dataset-iter [opts]
+  (let [config (:floats-dataset-iter opts)
         {features :features
          labels :labels
          batch-size :batch-size} config]
@@ -215,33 +216,33 @@ you need to suply atleast the mini batch size, number of possible labels and the
                                        :p2 (float-array labels))]
                             batch-size)))
 
-(defmethod iterator :INDArray-dataset-iterator [opts]
-  (let [config (:INDArray-dataset-iterator opts)
+(defmethod iterator :INDArray-dataset-iter [opts]
+  (let [config (:INDArray-dataset-iter opts)
         {features :features
          labels :labels
          batch-size :batch-size} config]
     (INDArrayDataSetIterator. [(new-pair :p1 features :p2 labels)] batch-size)))
 
-(defmethod iterator :iterator-multi-dataset-iterator [opts]
-  (let [config (:iterator-multi-dataset-iterator opts)
+(defmethod iterator :iterator-multi-dataset-iter [opts]
+  (let [config (:iterator-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          batch-size :batch-size} config]
     (IteratorMultiDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
 
-(defmethod iterator :iterator-dataset-iterator [opts]
-  (let [config (:iterator-dataset-iterator opts)
+(defmethod iterator :iterator-dataset-iter [opts]
+  (let [config (:iterator-dataset-iter opts)
         {iter :iter
          batch-size :batch-size} config]
     (IteratorDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
 
-(defmethod iterator :async-multi-dataset-iterator [opts]
-  (let [config (:async-multi-dataset-iterator opts)
+(defmethod iterator :async-multi-dataset-iter [opts]
+  (let [config (:async-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          que-l :que-length} config]
     (AsyncMultiDataSetIterator. (reset-if-not-at-start! iter) que-l)))
 
-(defmethod iterator :moving-window-base-dataset-iterator [opts]
-  (let [config (:moving-window-base-dataset-iterator opts)
+(defmethod iterator :moving-window-base-dataset-iter [opts]
+  (let [config (:moving-window-base-dataset-iter opts)
         {batch :batch-size
          n-examples :n-examples
          data :dataset
@@ -249,8 +250,8 @@ you need to suply atleast the mini batch size, number of possible labels and the
          window-columns :window-columns} config]
     (MovingWindowBaseDataSetIterator. batch n-examples data window-rows window-columns)))
 
-(defmethod iterator :multiple-epochs-iterator [opts]
-  (let [config (:multiple-epochs-iterator opts)
+(defmethod iterator :multiple-epochs-iter [opts]
+  (let [config (:multiple-epochs-iter opts)
         {iter :iter
          q-size :que-size
          t-iterations :total-iterations
@@ -272,20 +273,20 @@ you need to suply atleast the mini batch size, number of possible labels and the
             :else
             (assert false "if you dont supply the number of epochs, you must supply atleast a dataset iterator and the total number of iterations")))))
 
-(defmethod iterator :reconstruction-dataset-iterator [opts]
-  (let [config (:reconstruction-dataset-iterator opts)
+(defmethod iterator :reconstruction-dataset-iter [opts]
+  (let [config (:reconstruction-dataset-iter opts)
         iter (:iter config)]
     (ReconstructionDataSetIterator. (reset-if-not-at-start! iter))))
 
-(defmethod iterator :sampling-dataset-iterator [opts]
-  (let [config (:sampling-dataset-iterator opts)
+(defmethod iterator :sampling-dataset-iter [opts]
+  (let [config (:sampling-dataset-iter opts)
         {ds :sampling-source
          batch-size :batch-size
          n-samples :total-n-samples} config]
     (SamplingDataSetIterator. ds batch-size n-samples)))
 
-(defmethod iterator :existing-dataset-iterator [opts]
-  (let [config (:existing-dataset-iterator opts)
+(defmethod iterator :existing-dataset-iter [opts]
+  (let [config (:existing-dataset-iter opts)
         {iterable :dataset
          n-examples :total-examples
          n-features :n-features
@@ -306,8 +307,8 @@ you need to suply atleast the mini batch size, number of possible labels and the
             :else
             (ExistingDataSetIterator. iterable)))))
 
-(defmethod iterator :async-dataset-iterator [opts]
-  (let [config (:async-dataset-iterator opts)
+(defmethod iterator :async-dataset-iter [opts]
+  (let [config (:async-dataset-iter opts)
         {ds-iter :iter
          que-size :que-size
          que :que} config]
@@ -341,178 +342,117 @@ you need to suply atleast the mini batch size, number of possible labels and the
 ;; default dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod iterator :curves-dataset-iterator [opts]
-  (let [config (:curves-dataset-iterator opts)
+(defmethod iterator :curves-dataset-iter [opts]
+  (let [config (:curves-dataset-iter opts)
         {batch :batch-size
          n-examples :n-examples} config]
     (CurvesDataSetIterator. batch n-examples)))
 
-;; convert to multimethod/userfacing for all other default dataset iterators
-
-
-
-#_(defn new-cifar-data-set-iterator
-  "Load the images from the cifar dataset,
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/CifarDataSetIterator.html
-  and: https://github.com/szagoruyko/cifar.torch
-
-  :batch-size (int), the batch size
-
-  :n-examples (int), the number of examples from the ds to include in the iterator
-
-  :img-dim (vector), desired dimensions of the images
-   - should contain 3 ints
-
-  :train? (boolean), are we training or testing?
-
-  :use-special-pre-process-cifar? (boolean), are we going to use the predefined preprocessor built for this dataset
-   - There is a special preProcessor used to normalize the dataset based on Sergey Zagoruyko example https://github.com/szagoruyko/cifar.torch
-
-  :img-transform (map) config map for an image-transformation (as of writing this doc string, not implemented)
-
-  :n-possible-labels (int), specify the number of possible outputs/tags/classes for a given image"
-  [& {:keys [batch-size n-examples img-dims train?
-             use-special-pre-process-cifar?
-             n-possible-labels img-transform]
-      :as opts}]
-  (let [img (int-array img-dims)]
-   (cond (contains-many? opts :batch-size :n-examples :img-dims :n-possible-labels
+(defmethod iterator :cifar-dataset-iter [opts]
+  (let [config (:cifar-dataset-iter opts)
+        {batch-size :batch-size
+         n-examples :n-examples
+         img-dims :img-dimgs
+         train? :train?
+         use-special-pre-process-cifar? :use-special-pre-process-cifar?
+         n-possible-labels :n-possible-labels
+         img-transform :img-transform} config
+        img (int-array img-dims)]
+    (cond (contains-many? config :batch-size :n-examples :img-dims :n-possible-labels
                         :img-transform :use-special-pre-process-cifar? :train?)
         (CifarDataSetIterator. batch-size n-examples img n-possible-labels
                                img-transform use-special-pre-process-cifar? train?)
-        (contains-many? opts :batch-size :n-examples :img-dims :use-special-pre-process-cifar? :train?)
+        (contains-many? config :batch-size :n-examples :img-dims :use-special-pre-process-cifar? :train?)
         (CifarDataSetIterator. batch-size n-examples img use-special-pre-process-cifar? train?)
-        (contains-many? opts :batch-size :n-examples :img-dims :train?)
+        (contains-many? config :batch-size :n-examples :img-dims :train?)
         (CifarDataSetIterator. batch-size n-examples img train?)
-        (contains-many? opts :batch-size :n-examples :img-dims)
+        (contains-many? config :batch-size :n-examples :img-dims)
         (CifarDataSetIterator. batch-size n-examples img)
-        (contains-many? opts :batch-size :n-examples :train?)
+        (contains-many? config :batch-size :n-examples :train?)
         (CifarDataSetIterator. batch-size n-examples train?)
-        (contains-many? opts :batch-size :img-dims)
+        (contains-many? config :batch-size :img-dims)
         (CifarDataSetIterator. batch-size img)
-        (contains-many? opts :batch-size :n-examples)
+        (contains-many? config :batch-size :n-examples)
         (CifarDataSetIterator. batch-size n-examples)
         :else
-        (assert (and (contains? opts :batch-size)
-                     (or (contains? opts :img-dims)
-                         (contains? opts :n-examples)))
+        (assert (and (contains? config :batch-size)
+                     (or (contains? config :img-dims)
+                         (contains? config :n-examples)))
                 "you must provide atleast a batch size and number of examples or a batch size and the desired demensions of the images"))))
 
-#_(defn new-iris-data-set-iterator
-  "IrisDataSetIterator handles traversing through the Iris Data Set.
+(defmethod iterator :iris-dataset-iter [opts]
+  (let [config (:iris-dataset-iter opts)
+        {batch-size :batch-size
+         n-examples :n-examples} config]
+    (IrisDataSetIterator. batch-size n-examples)))
 
-  :batch-size (int), size of the batch
-
-  :n-examples (int), number of examples to iterator over
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/IrisDataSetIterator.html"
-  [& {:keys [batch-size n-examples]}]
-    (IrisDataSetIterator. batch-size n-examples))
-
-#_(defn new-lfw-data-set-iterator
-  "Creates a dataset iterator for the LFW image dataset.
-
-  :img-dims (int-array), desired dimensions of the images
-
-  :batch-size (int), the batch size
-
-  :n-examples (int), number of examples to take from the dataset
-
-  :use-subset? (boolean), use a subset of the dataset or the whole thing
-
-  :train? (boolean, are we training a net or testing it
-
-  :split-train-test (double), the division between training and testing datasets
-
-  :n-labels (int), the number of possible classifications for a single image
-
-  :rng (anything), by supplying this key when calling this fn, it creates a new
-  instance of java.util.Random
-
-  :label-generator (label generator), call (new-parent-path-label-generator) or
-   (new-pattern-path-label-generator opts) to create a label generator to use
-
-  :image-transform (map), a transform to apply to the images,
-   - as of writing this doc string, this functionality not implemented
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/LFWDataSetIterator.html"
-  [& {:keys [img-dims batch-size n-examples use-subset? train? split-train-test
-             n-labels rng label-generator image-transform]
-      :as opts}]
-  (let [img (int-array img-dims)]
-   (cond (contains-many? opts :batch-size :n-examples :img-dims :n-labels :use-subset?
+(defmethod iterator :lfw-dataset-iter [opts]
+  (let [config (:lfw-dataset-iter opts)
+        {img-dims :img-dims
+         batch-size :batch-size
+         n-examples :n-examples
+         use-subset? :use-subset?
+         train? :train?
+         split-train-test :split-train-test
+         n-labels :n-labels
+         seed :seed
+         label-generator :label-generator
+         image-transform :image-transform} config
+        img (int-array img-dims)
+        rng (new Random seed)]
+    (cond (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
                         :label-generator :train? :split-train-test :rng :image-transform)
         (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
                              label-generator train? split-train-test image-transform
-                             (new Random))
-        (contains-many? opts :batch-size :n-examples :img-dims :n-labels :use-subset?
+                             rng)
+        (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
                         :label-generator :train? :split-train-test :rng)
         (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                             label-generator train? split-train-test (new Random))
-        (contains-many? opts :batch-size :n-examples :img-dims :n-labels :use-subset?
+                             label-generator train? split-train-test rng)
+        (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
                         :train? :split-train-test :rng)
         (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                             train? split-train-test (new Random))
-        (contains-many? opts :batch-size :n-examples :n-labels :train? :split-train-test)
+                             train? split-train-test rng)
+        (contains-many? config :batch-size :n-examples :n-labels :train? :split-train-test)
         (LFWDataSetIterator. batch-size n-examples n-labels train? split-train-test)
-        (contains-many? opts :batch-size :n-examples :img-dims :train? :split-train-test)
+        (contains-many? config :batch-size :n-examples :img-dims :train? :split-train-test)
         (LFWDataSetIterator. batch-size n-examples img train? split-train-test)
-        (contains-many? opts :batch-size :n-examples :img-dims)
+        (contains-many? config :batch-size :n-examples :img-dims)
         (LFWDataSetIterator. batch-size n-examples img)
-        (contains-many? opts :batch-size :img-dims :use-subset?)
+        (contains-many? config :batch-size :img-dims :use-subset?)
         (LFWDataSetIterator. batch-size img use-subset?)
-        (contains-many? opts :batch-size :n-examples)
+        (contains-many? config :batch-size :n-examples)
         (LFWDataSetIterator. batch-size n-examples)
-        (contains? opts :img-dims)
+        (contains? config :img-dims)
         (LFWDataSetIterator. img)
         :else
         (assert false "you must supply atleast the desired image dimensions for the data"))))
 
-#_(defn new-mnist-data-set-iterator
-  "creates a dataset iterator for the Mnist dataset
+(defmethod iterator :mnist-dataset-iter [opts]
+  (let [config (:mnist-dataset-iter opts)
+        {batch-size :batch-size
+         train? :train?
+         seed :seed
+         n-examples :n-examples
+         binarize? :binarize?
+         shuffle? :shuffle?
+         batch :batch} config]
+    (cond (contains-many? config :batch :n-examples :binarize? :train? :shuffle? :seed)
+          (MnistDataSetIterator. batch n-examples binarize? train? shuffle? (long seed))
+          (contains-many? config :batch-size :train? :seed)
+          (MnistDataSetIterator. batch-size train? (int seed))
+          (contains-many? config :batch :n-examples :binarize?)
+          (MnistDataSetIterator. batch n-examples binarize?)
+          (contains-many? config :batch :n-examples)
+          (MnistDataSetIterator. batch n-examples)
+          :else
+          (assert false "you must atleast supply a batch and number of examples"))))
 
-  :batch-size (int), the batch size
-
-  :train? (boolean), training or testing
-
-  :seed (int), int used to randomize the dataset
-
-  :n-examples (int), the overall number of examples
-
-  :binarize? (boolean), whether to binarize mnist or not
-
-  :shuffle? (boolean), whether to shuffle the dataset or not
-
-  :seed (long), random number generator seed to use when shuffling examples
-
-  :batch (int), size of each patch
-  - supplying batch-size will retrieve the entire dataset where as batch will get a subset
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MnistDataSetIterator.html"
-  [& {:keys [batch-size train? seed n-examples binarize? shuffle? rng-seed batch]
-      :as opts}]
-  (cond (contains-many? opts :batch-size :train? :seed)
-        (MnistDataSetIterator. batch-size train? seed)
-        (contains-many? opts :batch :n-examples :binarize? :train? :shuffle? :rng-seed)
-        (MnistDataSetIterator. batch n-examples binarize? train? shuffle? rng-seed)
-        (contains-many? opts :batch :n-examples :binarize?)
-        (MnistDataSetIterator. batch n-examples binarize?)
-        (contains-many? opts :batch :n-examples)
-        (MnistDataSetIterator. batch n-examples)
-        :else
-        (assert false "you must atleast supply a batch and number of examples")))
-
-(defn new-raw-mnist-data-set-iterator
-  "Mnist data with scaled pixels
-
-  :batch (int) size of each patch
-
-  :n-examples (int), the overall number of examples
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/RawMnistDataSetIterator.html"
-  [& {:keys [batch n-examples]}]
-  (RawMnistDataSetIterator. batch n-examples))
+(defmethod iterator :raw-mnist-dataset-iter [opts]
+  (let [config (:raw-mnist-dataset-iter opts)
+        {batch :batch
+         n-examples :n-examples} config]
+    (RawMnistDataSetIterator. batch n-examples)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns
@@ -632,7 +572,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncDataSetIterator.html"
   [& {:keys [iter que-size que]
       :as opts}]
-  (iterator {:async-dataset-iterator opts}))
+  (iterator {:async-dataset-iter opts}))
 
 (defn new-existing-dataset-iterator
   "This wrapper provides DataSetIterator interface to existing datasets or dataset iterators
@@ -652,7 +592,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ExistingDataSetIterator.html"
   [& {:keys [dataset total-examples n-features n-labels labels iter]
       :as opts}]
-  (iterator {:existing-dataset-iterator opts}))
+  (iterator {:existing-dataset-iter opts}))
 
 (defn new-sampling-dataset-iterator
   "A wrapper for a dataset to sample from.
@@ -667,7 +607,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/SamplingDataSetIterator.html"
   [& {:keys [sampling-source batch-size total-n-samples]
       :as opts}]
-  (iterator {:sampling-dataset-iterator opts}))
+  (iterator {:sampling-dataset-iter opts}))
 
 (defn new-reconstruction-dataset-iterator
   "Wraps a dataset iterator, setting the first (feature matrix) as the labels.
@@ -677,7 +617,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ReconstructionDataSetIterator.html"
   [& {:keys [iter]
       :as opts}]
-  (iterator {:reconstruction-dataset-iterator opts}))
+  (iterator {:reconstruction-dataset-iter opts}))
 
 (defn new-multiple-epochs-iterator
   "A dataset iterator for doing multiple passes over a dataset
@@ -695,7 +635,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MultipleEpochsIterator.html"
   [& {:keys [iter que-size total-iterations n-epochs dataset]
       :as opts}]
-  (iterator {:multiple-epochs-iterator opts}))
+  (iterator {:multiple-epochs-iter opts}))
 
 (defn new-moving-window-base-dataset-iterator
   ;; currently can't test this until I figure out the issue im running into with
@@ -716,7 +656,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MovingWindowBaseDataSetIterator.html"
   [& {:keys [batch-size n-examples dataset window-rows window-columns]
       :as opts}]
-  (iterator {:moving-window-base-dataset-iterator opts}))
+  (iterator {:moving-window-base-dataset-iter opts}))
 
 (defn new-async-multi-dataset-iterator
   "Async prefetching iterator wrapper for MultiDataSetIterator implementations
@@ -730,7 +670,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncMultiDataSetIterator.html"
   [& {:keys [multi-dataset-iter que-length]
       :as opts}]
-  (iterator {:async-multi-dataset-iterator opts}))
+  (iterator {:async-multi-dataset-iter opts}))
 
 (defn new-iterator-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -746,7 +686,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorDataSetIterator.html"
   [& {:keys [iter batch-size]
       :as opts}]
-  (iterator {:iterator-dataset-iterator opts}))
+  (iterator {:iterator-dataset-iter opts}))
 
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -762,7 +702,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorMultiDataSetIterator.html"
   [& {:keys [multi-dataset-iter batch-size]
       :as opts}]
-  (iterator {:iterator-multi-dataset-iterator opts}))
+  (iterator {:iterator-multi-dataset-iter opts}))
 
 (defn new-doubles-dataset-iterator
   "creates a dataset iterator which iterates over the supplied features and labels
@@ -778,7 +718,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/DoublesDataSetIterator.html"
   [& {:keys [features labels batch-size]
       :as opts}]
-  (iterator {:doubles-dataset-iterator opts}))
+  (iterator {:doubles-dataset-iter opts}))
 
 (defn new-floats-dataset-iterator
   "creates a dataset iterator which iterates over the supplied iterable
@@ -792,7 +732,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/FloatsDataSetIterator.html"
   [& {:keys [features labels batch-size]
       :as opts}]
-  (iterator {:floats-dataset-iterator opts}))
+  (iterator {:floats-dataset-iter opts}))
 
 (defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
@@ -808,7 +748,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/INDArrayDataSetIterator.html"
   [& {:keys [iterable batch-size]
       :as opts}]
-  (iterator {:INDArray-dataset-iterator opts}))
+  (iterator {:INDArray-dataset-iter opts}))
 
 (defn new-multi-data-set-iterator-adapter
   "Iterator that adapts a DataSetIterator to a MultiDataSetIterator"
@@ -851,4 +791,109 @@ you need to suply atleast the mini batch size, number of possible labels and the
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CurvesDataSetIterator.html"
   [& {:keys [batch-size n-examples]
       :as opts}]
-  (iterator {:curves-dataset-iterator opts}))
+  (iterator {:curves-dataset-iter opts}))
+
+(defn new-cifar-data-set-iterator
+  "Load the images from the cifar dataset,
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/CifarDataSetIterator.html
+  and: https://github.com/szagoruyko/cifar.torch
+
+  :batch-size (int), the batch size
+
+  :n-examples (int), the number of examples from the ds to include in the iterator
+
+  :img-dim (vector), desired dimensions of the images
+   - should contain 3 ints
+
+  :train? (boolean), are we training or testing?
+
+  :use-special-pre-process-cifar? (boolean), are we going to use the predefined preprocessor built for this dataset
+   - There is a special preProcessor used to normalize the dataset based on Sergey Zagoruyko example https://github.com/szagoruyko/cifar.torch
+
+  :img-transform (map) config map for an image-transformation (as of writing this doc string, not implemented)
+
+  :n-possible-labels (int), specify the number of possible outputs/tags/classes for a given image"
+  [& {:keys [batch-size n-examples img-dims train?
+             use-special-pre-process-cifar?
+             n-possible-labels img-transform]
+      :as opts}]
+  (iterator {:cifar-dataset-iter opts}))
+
+(defn new-iris-data-set-iterator
+  "IrisDataSetIterator handles traversing through the Iris Data Set.
+
+  :batch-size (int), size of the batch
+
+  :n-examples (int), number of examples to iterator over
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/IrisDataSetIterator.html"
+  [& {:keys [batch-size n-examples]
+      :as opts}]
+  (iterator {:iris-dataset-iter opts}))
+
+(defn new-lfw-data-set-iterator
+  "Creates a dataset iterator for the LFW image dataset.
+
+  :img-dims (int-array), desired dimensions of the images
+
+  :batch-size (int), the batch size
+
+  :n-examples (int), number of examples to take from the dataset
+
+  :use-subset? (boolean), use a subset of the dataset or the whole thing
+
+  :train? (boolean, are we training a net or testing it
+
+  :split-train-test (double), the division between training and testing datasets
+
+  :n-labels (int), the number of possible classifications for a single image
+
+  :seed (int), number used to keep randomization consistent
+
+  :label-generator (label generator), call (new-parent-path-label-generator) or
+   (new-pattern-path-label-generator opts) to create a label generator to use
+
+  :image-transform (map), a transform to apply to the images,
+   - as of writing this doc string, this functionality not implemented
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/LFWDataSetIterator.html"
+  [& {:keys [img-dims batch-size n-examples use-subset? train? split-train-test
+             n-labels seed label-generator image-transform]
+      :as opts}]
+  (iterator {:lfw-dataset-iter opts}))
+
+(defn new-mnist-data-set-iterator
+  "creates a dataset iterator for the Mnist dataset
+
+  :batch-size (int), the batch size
+
+  :train? (boolean), training or testing
+
+  :seed (int), used to consistently randomize the dataset
+
+  :n-examples (int), the overall number of examples
+
+  :binarize? (boolean), whether to binarize mnist or not
+
+  :shuffle? (boolean), whether to shuffle the dataset or not
+
+  :batch (int), size of each patch
+  - supplying batch-size will retrieve the entire dataset where as batch will get a subset
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MnistDataSetIterator.html"
+  [& {:keys [batch-size train? seed n-examples binarize? shuffle? rng-seed batch]
+      :as opts}]
+  (iterator {:mnist-dataset-iter opts}))
+
+(defn new-raw-mnist-data-set-iterator
+  "Mnist data with scaled pixels
+
+  :batch (int) size of each patch
+
+  :n-examples (int), the overall number of examples
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/RawMnistDataSetIterator.html"
+  [& {:keys [batch n-examples]
+      :as opts}]
+  (iterator {:raw-mnist-dataset-iter opts}))
