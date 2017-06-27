@@ -9,6 +9,7 @@
 ;; double check these fns
 ;; convert to keyword args
 ;; fill out doc strings
+;; move to dl4clj.api.dataset
 
 (defn add-feature-vector
   "With two arguments: Adds a feature for each example on to the current feature vector.

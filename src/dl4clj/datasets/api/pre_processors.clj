@@ -4,15 +4,18 @@ Base interface for all normalizers see: http://nd4j.org/doc/org/nd4j/linalg/data
 
 An interface for data normalizers. Data normalizers compute some sort of statistics over a dataset and scale the data in some way.
 see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalization.html"}
-    nd4clj.linalg.dataset.api.ds-preprocessor
+    dl4clj.datasets.api.pre-processors
   (:import [org.nd4j.linalg.dataset.api DataSetPreProcessor]
            [org.nd4j.linalg.dataset.api.preprocessor Normalizer
-            DataNormalization])
+            DataNormalization]
+           [org.nd4j.linalg.dataset.api.preprocessor
+            ImageFlatteningDataSetPreProcessor
+            ImagePreProcessingScaler
+            NormalizerMinMaxScaler
+            NormalizerStandardize
+            VGG16ImagePreProcessor]
+           [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
   (:require [dl4clj.helpers :refer [reset-if-empty?!]]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; data-set-pre-processor interface
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pre-process-dataset!
   "Pre process a dataset
@@ -22,18 +25,23 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   (.preProcess pre-processor ds)
   ds)
 
+(defn pre-process-iter-combined-pp!
+  "Pre process a dataset sequentially using a combined pre-processor
+   - the pre-processor is attached to the dataset
+
+  returns the iterator for the dataset"
+  [& {:keys [iter dataset]}]
+  (let [ds-iter (reset-if-empty?! iter)]
+    (doto ds-iter (.preProcess dataset))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; normalizer interface
+;; generic normalizer (pre-processor) fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-normalizer-type
   "Get the enum type of this normalizer"
   [normalizer]
   (.getType normalizer))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; data normalization interface
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn fit-iter!
   "Iterates over a dataset accumulating statistics for normalization
@@ -109,3 +117,74 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   (if (contains? opts :labels-mask)
     (.transformLabel normalizer labels labels-mask)
     (.transformLabel normalizer labels)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; min-max-normalization specific fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-labels-max
+  [min-max-pp]
+  (.getLabelMax min-max-pp))
+
+(defn get-labels-min
+  [min-max-pp]
+  (.getLabelMin min-max-pp))
+
+(defn get-max
+  [min-max-pp]
+  (.getMax min-max-pp))
+
+(defn get-min
+  [min-max-pp]
+  (.getMin min-max-pp))
+
+(defn get-target-max
+  [min-max-pp]
+  (.getTargetMax min-max-pp))
+
+(defn get-target-min
+  [min-max-pp]
+  (.getTargetMin min-max-pp))
+
+(defn load-min-max
+  "Load the given min and max form the supplied file(s)
+
+  :files (coll), collection of file paths to be loaded
+
+  :pp (pre-processor). can be the standardizer or the min-max"
+  [& {:keys [pp files]}]
+  (.load pp (array-of :data (map clojure.java.io/as-file files)
+                      :java-type java.io.File)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; standardize specific fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-label-std
+  [standardize-pp]
+  (.getLabelStd standardize-pp))
+
+(defn get-mean
+  [standardize-pp]
+  (.getMean standardize-pp))
+
+(defn get-std
+  [standardize-pp]
+  (.getStd standardize-pp))
+
+(defn get-label-mean
+  [standardize-pp]
+  (.getLabelMean standardize-pp))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; vgg16 specific fn
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn preprocess-features!
+  "preprcess the features
+
+  :features (INDArray), the features
+
+  returns the processed features"
+  [& {:keys [vgg16-pp features]}]
+  (.preProcess vgg16-pp features))

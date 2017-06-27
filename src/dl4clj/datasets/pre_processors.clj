@@ -1,15 +1,13 @@
-(ns nd4clj.linalg.dataset.api.pre-processors
+(ns dl4clj.datasets.pre-processors
   (:import [org.nd4j.linalg.dataset.api.preprocessor
             ImageFlatteningDataSetPreProcessor
             ImagePreProcessingScaler
             NormalizerMinMaxScaler
             NormalizerStandardize
-            VGG16ImagePreProcessor])
+            VGG16ImagePreProcessor]
+           [org.deeplearning4j.datasets.iterator
+            CombinedPreProcessor CombinedPreProcessor$Builder])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; pre-processer creation multimethod
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti pre-processors generic-dispatching-fn)
 
@@ -39,8 +37,8 @@
       (NormalizerMinMaxScaler. a b)
       (NormalizerMinMaxScaler.))))
 
-(defmethod pre-processors :standardize [opts]
-  (let [conf (:standardize opts)
+(defmethod pre-processors :standardize-normalization [opts]
+  (let [conf (:standardize-normalization opts)
         {f-mean :features-mean
          f-std :features-std
          l-mean :labels-mean
@@ -102,7 +100,7 @@
   :labels-std (INDArray), the labels to normalize"
   [& {:keys [features-mean features-std labels-mean labels-std]
       :as opts}]
-  (pre-processors {:standardize opts}))
+  (pre-processors {:standardize-normalization opts}))
 
 
 (defn new-vgg16-image-preprocessor
@@ -111,65 +109,27 @@
   []
   (pre-processors {:vgg16 {}}))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; pre-processer specific fns
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn new-combined-pre-processor
+  "This is special preProcessor, that allows to combine multiple prerpocessors,
+  and apply them to data sequentially.
 
-(defn get-labels-max
-  [min-max-pp]
-  (.getLabelMax min-max-pp))
+   pre-processors (map), {(int) (pre-processor)
+                         (int) (pre-processor-config-map)}
 
-(defn get-labels-min
-  [min-max-pp]
-  (.getLabelMin min-max-pp))
+   - the keys are the desired indexes of the pre-processors (dataset index within the iterator)
+   - values are the pre-processors themselves or configuration maps for creating pre-processors
+   - pre-processors should be fit to a dataset or iterator before being combined (double check on this)
+     - if this is the case, config maps dont make sense
 
-(defn get-max
-  [min-max-pp]
-  (.getMax min-max-pp))
-
-(defn get-min
-  [min-max-pp]
-  (.getMin min-max-pp))
-
-(defn get-target-max
-  [min-max-pp]
-  (.getTargetMax min-max-pp))
-
-(defn get-target-min
-  [min-max-pp]
-  (.getTargetMin min-max-pp))
-
-(defn get-label-mean
-  [standardize-pp]
-  (.getLabelMean standardize-pp))
-
-(defn get-label-std
-  [standardize-pp]
-  (.getLabelStd standardize-pp))
-
-(defn get-mean
-  [standardize-pp]
-  (.getMean standardize-pp))
-
-(defn get-std
-  [standardize-pp]
-  (.getStd standardize-pp))
-
-(defn load-min-max
-  "Load the given min and max form the supplied file(s)
-
-  :files (coll), collection of file paths to be loaded
-
-  :pp (pre-processor). can be the standardizer or the min-max"
-  [& {:keys [pp files]}]
-  (.load pp (array-of :data (map clojure.java.io/as-file files)
-                              :java-type java.io.File)))
-
-(defn preprocess-features!
-  "preprcess the features
-
-  :features (INDArray), the features
-
-  returns the processed features"
-  [& {:keys [vgg16-pp features]}]
-  (.preProcess vgg16-pp features))
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
+  [map-of-pre-processors]
+  (loop [b (CombinedPreProcessor$Builder.)
+         result map-of-pre-processors]
+    (if (empty? result)
+      (.build b)
+      (let [data (first result)
+            [idx pp] data]
+        (recur (doto b (.addPreProcessor idx (if (map? pp)
+                                               (pre-processors pp)
+                                               pp)))
+               (rest result))))))

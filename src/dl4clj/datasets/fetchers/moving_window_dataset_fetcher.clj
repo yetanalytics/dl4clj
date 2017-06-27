@@ -1,7 +1,7 @@
 (ns ^{:doc "Moving window data fetcher. Handles rotation of matrices in all directions to generate more examples.
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MovingWindowDataSetFetcher.html"}
-    dl4clj.datasets.iterator.impl.move-window-data-set-fetcher
+    dl4clj.datasets.fetchers.move-window-data-set-fetcher
   (:import [org.deeplearning4j.datasets.iterator.impl MovingWindowDataSetFetcher]))
 
 ;; can't get this working in tests

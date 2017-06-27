@@ -22,11 +22,11 @@
 
   :shuffle (boolean) whether to shulffle the dataset or not
 
-  :rng-seed (long) seed used for shuffling, shuffles unique per seed"
-  [& {:keys [binarize? train? shuffle? rng-seed]
+  :seed (long) seed used for shuffling, shuffles unique per seed"
+  [& {:keys [binarize? train? shuffle? seed]
       :as opts}]
   (cond (contains-many? opts :binarize? :train? :shuffle? :rng-seed)
-        (MnistDataFetcher. binarize? train? shuffle? rng-seed)
+        (MnistDataFetcher. binarize? train? shuffle? seed)
         (contains? opts :binarize)
         (MnistDataFetcher. binarize?)
         :else

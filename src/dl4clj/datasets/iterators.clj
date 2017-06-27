@@ -22,7 +22,7 @@
             [datavec.api.records.interface :refer [reset-rr!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;multimethod
+;; multimethod
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti iterator
@@ -521,7 +521,6 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (iterator {:seq-rr-dataset-iter opts}))
 
 (defn new-record-reader-multi-dataset-iterator
-  ;; spec this
   "creates a new record reader multi dataset iterator by calling its builder with
   the supplied args.  args are:
 

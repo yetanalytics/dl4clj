@@ -1,8 +1,8 @@
 (ns dl4clj.helpers
-  (:require [nd4clj.linalg.api.ds-iter :refer [get-current-cursor
-                                               reset-iter!
-                                               has-next?
-                                               next-example!]]))
+  (:require [dl4clj.datasets.api.iterators :refer [get-current-cursor
+                                                   reset-iter!
+                                                   has-next?
+                                                   next-example!]]))
 
 (defn reset-if-not-at-start!
   "checks the current cursor of the iterator and if not at 0 resets it"
