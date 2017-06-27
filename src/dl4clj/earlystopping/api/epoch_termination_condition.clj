@@ -1,7 +1,7 @@
 (ns ^{:doc "Interface for termination conditions to be evaluated once per epoch (i.e., once per pass of the full data set), based on a score and epoch number
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/EpochTerminationCondition.html"}
-    dl4clj.earlystopping.interfaces.epoch-termination-condition
+    dl4clj.earlystopping.api.epoch-termination-condition
   (:import [org.deeplearning4j.earlystopping.termination EpochTerminationCondition]))
 
 (defn initialize-epoch!

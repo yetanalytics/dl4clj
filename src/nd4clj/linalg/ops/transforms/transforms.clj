@@ -6,7 +6,7 @@
 
 ;; TODO
 ;; double check to make sure these work
-
+;; move this over to an appropriate dl4clj directory
 
 (defn cosine-sim
   "Cosine similarity"

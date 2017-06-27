@@ -19,7 +19,7 @@
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
-            [datavec.api.records.interface :refer [reset-rr!]]))
+            [dl4clj.datasets.api.record-readers :refer [reset-rr!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod

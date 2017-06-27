@@ -5,15 +5,29 @@
            [org.datavec.api.io.filters BalancedPathFilter RandomPathFilter]
            [org.datavec.api.io.labels PathLabelGenerator ParentPathLabelGenerator
             PatternPathLabelGenerator]
+           [org.datavec.api.writable Writable]
            [org.datavec.api.split InputSplit])
   (:require [dl4clj.utils :refer [array-of]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; path filters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn filter-paths
-  ":path-filter (obj), a path filter object
-   :paths (collection of URIs), uri paths to be filtered"
+  "applies the filtering based on the supplied path-filter
+
+   :path-filter (obj), a path filter object
+
+   :paths (collection of URIs), uri paths to be filtered
+
+  see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/PathFilter.html"
   [& {:keys [path-filter paths]}]
   (.filter path-filter (array-of :data paths
                                  :java-type java.net.URI)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; label generators
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-label-for-path
   "used to infer the label of a file directly from the path of a file
@@ -27,42 +41,9 @@
   [& {:keys [label-generator path]}]
   (.getLabelForPath label-generator path))
 
-(defn get-root-dir
-  "returns the root directory"
-  [split]
-  (.getRootDir split))
-
-(defn get-is
-  "return the input stream"
-  [input-stream-input-split]
-  (.getIs input-stream-input-split))
-
-(defn set-is!
-  "sets the input stream for an input-stream-input-split
-
-  :is is a java.io.InputStream"
-  [& {:keys [input-stream-input-split is]}]
-  (doto input-stream-input-split (.setIs is)))
-
-(defn get-list-string-split-data
-  "returns the string data contained within a string split or a list string split"
-  [list-string-split]
-  (.getData list-string-split))
-
-(defn sample
-  "Samples the locations based on the path-filter and splits
-  the result into an array of input-pplit objects,
-  with sizes proportional to the weights.
-   - you can interact with the returned array like you would a vector
-     - ie. first, second, count ....
-
-  args are:
-  :path-filter (path-filter), call either new-balanced-path-filter or new-random-path-filter
-   -to modify the locations (file paths) in some way (null == as is)
-
-  :weights (coll) to split the locations into multiple InputSplit"
-  [& {:keys [split path-filter weights]}]
-  (.sample split path-filter (double-array weights)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input splits, see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputSplit.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn length
   "Length of the split"
@@ -88,3 +69,92 @@
   "Reset the InputSplit without reinitializing it from scratch."
   [split]
   (doto split (.reset)))
+
+(defn read-fields!
+  "Deserialize the fields of this object from in."
+  [& {:keys [split in]}]
+  (doto split (.readFields in)))
+
+(defn write!
+  "Serialize the fields of this object to out."
+  [& {:keys [split out-put-path]}]
+  (doto split (.write out-put-path)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; base input split, see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/BaseInputSplit.html
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn sample
+  "Samples the locations based on the path-filter and splits
+  the result into an array of input-pplit objects,
+  with sizes proportional to the weights.
+   - you can interact with the returned array like you would a vector
+     - ie. first, second, count ....
+
+  args are:
+  :path-filter (path-filter), call either new-balanced-path-filter or new-random-path-filter
+   -to modify the locations (file paths) in some way (null == as is)
+
+  :weights (coll) to split the locations into multiple InputSplit"
+  [& {:keys [split path-filter weights]}]
+  (.sample split path-filter (double-array weights)))
+
+(defn to-double!
+  "convert writable to double"
+  [writeable]
+  (.toDouble writeable))
+
+(defn to-float!
+  "convert writeable to float"
+  [writeable]
+  (.toFloat writeable))
+
+(defn to-int!
+  "convert writeable to int"
+  [writeable]
+  (.toInt writeable))
+
+(defn to-long!
+  "convert writeable to long"
+  [writeable]
+  (.toLong writeable))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; file split
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-root-dir
+  "returns the root directory
+
+  used with file-split"
+  [split]
+  (.getRootDir split))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input stream input split
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-is
+  "return the input stream
+
+  used with input-stream-input-split"
+  [input-stream-input-split]
+  (.getIs input-stream-input-split))
+
+(defn set-is!
+  "sets the input stream for an input-stream-input-split
+
+  :is is a java.io.InputStream
+
+  used with input-stream-input-split"
+  [& {:keys [input-stream-input-split is]}]
+  (doto input-stream-input-split (.setIs is)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; string splits
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-list-string-split-data
+  "returns the string data contained within a string split or a list string split"
+  [list-string-split]
+  (.getData list-string-split))

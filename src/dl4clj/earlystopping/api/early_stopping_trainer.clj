@@ -1,8 +1,9 @@
 (ns ^{:doc "Interface for early stopping trainers.
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEarlyStoppingTrainer.html"}
-    dl4clj.earlystopping.interfaces.early-stopping-trainer
-  (:import [org.deeplearning4j.earlystopping.trainer IEarlyStoppingTrainer]))
+    dl4clj.earlystopping.api.early-stopping-trainer
+  (:import [org.deeplearning4j.earlystopping.trainer IEarlyStoppingTrainer]
+           [org.deeplearning4j.earlystopping EarlyStoppingResult]))
 
 (defn fit-trainer!
   "Conduct early stopping training
@@ -21,3 +22,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   - see : TBD"
   [& {:keys [trainer listener]}]
   (doto trainer (.setListener listener)))
+
+(defn get-best-model-from-result
+  "returns the model within the early stopping result"
+  [early-stopping-result]
+  (.getBestModel early-stopping-result))

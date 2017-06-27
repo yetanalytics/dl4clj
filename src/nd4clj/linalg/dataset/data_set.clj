@@ -6,6 +6,7 @@
 
 ;; TODO
 ;; expand this ns
+;; move to dl4clj.datasets
 
 (defn data-set
   "Creates a DataSet object with the specified input and output.

@@ -3,6 +3,7 @@
   (:require [dl4clj.utils :refer [contains-many?]]))
 
 ;; come back and create the interface for multidatasets
+;; move over to dl4clj.datasets
 
 (defn new-multi-ds
   "a dataset that contains multiple datasets"

@@ -5,6 +5,7 @@
 
 ;;TODO
 ;; Double check these fns, I did't write them
+;; refactor ns
 
 ;;; Matrix manipulation
 ;;; -------------------

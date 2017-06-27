@@ -1,10 +1,6 @@
 (ns dl4clj.datasets.api.fetchers
   (:import [org.deeplearning4j.datasets.fetchers BaseDataFetcher]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; api fns
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn fetcher-cursor
   "Direct access to a number represenative of iterating through a dataset"
   [fetcher]

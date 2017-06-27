@@ -83,19 +83,27 @@
     (doto buffer (.reset input-data start length))
     (doto buffer (.reset input-data length))))
 
-(defn write!
+(defn write-input-to-output!
   "Writes bytes from an input-buffer directly into the output-buffer
 
   :data-input (java.io.DataInput), some kind of data-input stream/buffer
+
   :length (int), length of the output
-  :output-buffer (output-buffer), an output buffer being written to"
+
+  :output-buffer (output-buffer), an output buffer being written to
+
+  returns the output-buffer"
   [& {:keys [data-input length output-buffer]}]
   (doto output-buffer (.write data-input length)))
 
 (defn write-to!
   "write to a file stream given some output buffer
+
   :output-buffer (output-buffer), an output buffer being written from
-  :output-stream (java.io.OutputStream) where the data is being written to"
+
+  :output-stream (java.io.OutputStream) where the data is being written to
+
+  returns the output-buffer"
   [& {:keys [output-buffer output-stream]}]
   (doto output-buffer (.writeTo output-stream)))
 

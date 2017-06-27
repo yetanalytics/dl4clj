@@ -4,7 +4,7 @@
 requires you to create the listener via gen-class...
  - see: https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-core/src/test/java/org/deeplearning4j/earlystopping/TestEarlyStopping.java
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/listener/EarlyStoppingListener.html"}
-    dl4clj.earlystopping.interfaces.listener
+    dl4clj.earlystopping.api.listener
   (:import [org.deeplearning4j.earlystopping.listener EarlyStoppingListener]))
 
 (defn on-completion!

@@ -10,6 +10,8 @@
 ;; INDArray creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; move this fns over to an appropriate dl4clj directory
+
 (defn vec->indarray
   [data]
   (Nd4j/create (double-array data)))

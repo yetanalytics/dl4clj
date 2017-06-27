@@ -56,15 +56,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
       :as opts}]
   (score-calc {:spark-ds-loss opts}))
 
-(defn calculate-score
-  "used to calculate a score for a neural network.
-  For example, the loss function, test set accuracy, F1"
-  [& {:keys [score-calculator mln]}]
-  (.calculateScore score-calculator mln))
-
-
-
-
 
 ;; the sister fn for computational graphs is not implemented as cgs are not implemented...yet
 
