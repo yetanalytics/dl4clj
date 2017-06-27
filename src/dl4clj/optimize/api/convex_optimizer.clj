@@ -10,6 +10,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (.batchSize optim))
 
 (defn check-terminal-conditions?
+  ;; dont think this is a user facing fn
+  ;; will be removed in the core branch
   "Check termination conditions, sets up a search state
 
   :optim (optimizer), the optimizer
@@ -47,6 +49,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (.optimize optim))
 
 (defn post-step!
+  ;; not a user facing fn
+  ;; will be removed in the core branch
   "After the step has been made, do an action
 
   :line (INDArray)
@@ -56,6 +60,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (doto optim (.postStep line)))
 
 (defn pre-process-line!
+  ;; dont think this is a user facing fn
+  ;; will be removed in the core branch
   "Pre preProcess a line before an iteration
 
   returns the optimizer"
@@ -68,6 +74,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (.score optim))
 
 (defn set-batch-size!
+  ;; this is not a user facing fn
+  ;; will be removed in the core branch
   "set the batch size for the optimizer
 
   :batch-size (int), the batch size
@@ -77,6 +85,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (doto optim (.setBatchSize batch-size)))
 
 (defn set-listeners!
+  ;; dont think this is a user facing fn
+  ;; will be removed in the core branch
   "sets the listeners for the supplied optimizer
 
   :listeners (collection), a collection of listeners
@@ -87,6 +97,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (doto optim (.setListeners listeners)))
 
 (defn set-updater!
+  ;; dont think this is a user facing fn
+  ;; will be removed in the core branch
   "sets the updater for the optimizer
 
   :updater (updater), an updater to add to the optimizer
@@ -96,6 +108,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (doto optim (.setUpdater updater)))
 
 (defn set-up-search-state!
+  ;; not a user facing fn
+  ;; will be removed in the core branch
   "Based on the gradient and score, set up a search state
 
   :gradient (gradient), the gradient used to set up search state
@@ -109,6 +123,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
                                            :p2 score))))
 
 (defn update-gradient-according-to-params!
+  ;; not a user facing fn
+  ;; will be removed in the core branch
   "Update the gradient according to the configuration suc as adagrad, momentum and sparsity
 
   :gradient (gradient), see: dl4clj.nn.gradient.default-gradient

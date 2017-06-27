@@ -1,6 +1,6 @@
 (ns ^{:doc "listener creation namespace.  composes the listeners package from dl4j
 see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/package-summary.html"}
-    dl4clj.optimize.listeners.listeners
+    dl4clj.optimize.listeners
   (:import [org.deeplearning4j.optimize.listeners
             ParamAndGradientIterationListener
             ComposableIterationListener
@@ -257,40 +257,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
     (array-of :data (listeners {:param-and-gradient conf})
               :java-type IterationListener)
     (listeners {:param-and-gradient conf}))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Collection scores iteration listener specific fns
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn export-scores!
-  "exports the scores from the collection scores listener
-  to a file or output stream
-
-  :file (java.io.File), a file to write to
-
-  :delim (str), the delimiter for the file or output stream
-
-  :output-stream (output stream), an output stream to write to
-
-  returns the listener"
-  [& {:keys [listener file delim output-stream]
-      :as opts}]
-  (cond (contains-many? opts :file :delim)
-        (doto listener (.exportScores file delim))
-        (contains-many? opts :output-stream :delim)
-        (doto listener (.exportScores output-stream delim))
-        (contains? opts :file)
-        (doto listener (.exportScores file))
-        (contains? opts :output-stream)
-        (doto listener (.exportScores output-stream))
-        :else
-        (assert false "you must supply alteast a file or output stream to export to")))
-
-(defn get-scores-vs-iter
-  "currently results in a stack over flow error,
-
-  will need to look more into this but I have a feeling
-
-  this is not a user facing method"
-  [listener]
-  (.getScoreVsIter listener))

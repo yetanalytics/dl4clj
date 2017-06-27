@@ -4,6 +4,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TerminationC
   (:import [org.deeplearning4j.optimize.api TerminationCondition]))
 
 (defn terminate?
+  ;; not a user facing fn
+  ;; will be removed in the core branch
   "Whether to terminate based on the given metadata
 
   :cost (double), the current cost of the optimizer

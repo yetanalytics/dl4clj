@@ -4,18 +4,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/IterationLis
   (:import [org.deeplearning4j.optimize.api IterationListener]))
 
 (defn invoke!
+  ;; dont think this is a user facing fn
+  ;; will be removed in core branch
   "changes the invoke field to true
 
   returns the listener"
   [listener]
   (doto listener (.invoke)))
 
-(defn invoked?
-  "Was the listener invoked?"
-  [listener]
-  (.invoked listener))
-
 (defn iteration-done!
+  ;; dont think this is a user facing fn
+  ;; will be removed in core branch
   "Event listener for each iteration
 
   :model (model), A Model is meant for predicting something from data.

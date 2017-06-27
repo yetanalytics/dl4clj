@@ -3,6 +3,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/TrainingList
     dl4clj.optimize.api.training-listener
   (:import [org.deeplearning4j.optimize.api TrainingListener]))
 
+;; not user facing fns
+;; will be removed in the core branch
+
 (defn on-backward-pass!
   "Called once per iteration, after gradients have been calculated and updated gradients
   can be returned by calling (gradient model)

@@ -4,6 +4,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/LineOptimize
   (:import [org.deeplearning4j.optimize.api LineOptimizer]))
 
 (defn line-optimize
+  ;; dont think this is a user facing fn
+  ;; will be removed in the core branch
   "line optimizer
 
   :params (INDArray), the parameters to optimize

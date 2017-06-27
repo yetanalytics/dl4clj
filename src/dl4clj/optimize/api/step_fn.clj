@@ -5,6 +5,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/StepFunction
   (:require [dl4clj.utils :refer [contains-many?]]))
 
 (defn step!
+  ;; not a user facing fn
+  ;; will be removed in the core branch
   "makes a step with the given params, the step-fn is returned
 
   :step-fn (step-fn), the step function

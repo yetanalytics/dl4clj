@@ -10,10 +10,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html"}
    - see: dl4clj.nn.conf.builders.nn-conf-builder
 
   :single-listener (array), a listener object in an array.
-   - see: dl4clj.optimize.listeners.listeners
+   - see: dl4clj.optimize.listeners
 
   :multiple-listeners (collection), collection of listener objects
-   - see: dl4clj.optimize.listeners.listeners
+   - see: dl4clj.optimize.listeners
 
    - clojure data structures can be used
 
