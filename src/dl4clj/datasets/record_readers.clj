@@ -1,5 +1,5 @@
 (ns ^{:doc "see https://deeplearning4j.org/etl-userguide"}
-    datavec.api.records.readers
+    dl4clj.datasets.record-readers
   (:import [org.datavec.api.records.reader BaseRecordReader RecordReader SequenceRecordReader]
            [org.datavec.image.recordreader BaseImageRecordReader ImageRecordReader]
            [org.datavec.api.records.reader.impl.collection CollectionRecordReader]
@@ -20,9 +20,6 @@
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
-
-;; TODO
-;; implement other readers
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method

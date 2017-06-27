@@ -1,10 +1,9 @@
-(ns ^{:doc "implementation of the writeable interface and its subinterface inputsplit
+(ns ^{:doc "implementation of the writeable interface
 
 see: https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.html"}
     datavec.api.writeable
   (:refer-clojure :exclude [reset!])
-  (:import [org.datavec.api.writable Writable]
-           [org.datavec.api.split InputSplit]))
+  (:import [org.datavec.api.writable Writable]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; from the Writeable Interface
@@ -41,33 +40,3 @@ see: https://deeplearning4j.org/datavecdoc/org/datavec/api/writable/Writable.htm
   "convert writeable to long"
   [writeable]
   (.toLong writeable))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; from the InputSplit Interface
-;; see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputSplit.html
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn length
-  "Length of the split"
-  [split]
-  (.length split))
-
-(defn locations
-  "Locations of the splits"
-  [split]
-  (.locations split))
-
-(defn locations-iterator
-  "returns the URI of the iterator assocaited with this filesplit"
-  [split]
-  (.locationsIterator split))
-
-(defn locations-path-iterator
-  "returns the file path of an iterator associated with this filesplit"
-  [split]
-  (.locationsPathIterator split))
-
-(defn reset-input-split!
-  "Reset the InputSplit without reinitializing it from scratch."
-  [split]
-  (doto split (.reset)))

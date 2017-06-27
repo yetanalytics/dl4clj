@@ -1,4 +1,4 @@
-(ns datavec.api.records.interface
+(ns dl4clj.datasets.api.record-readers
   (:import [org.datavec.api.records.reader RecordReader SequenceRecordReader]
            [org.datavec.api.conf Configurable]
            [java.io Closeable])
