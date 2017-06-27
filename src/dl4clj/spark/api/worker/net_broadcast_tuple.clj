@@ -4,6 +4,7 @@
 (defn new-net-broadcast-tuple
   ;; this fn should not need to be used
   ;; gets called behind the scene
+  ;; will be removed in the core branch
   "creation of a simple class for storing configurations,
   parameters and updaters in one class (so they can be broadcast together)
 

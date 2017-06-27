@@ -3,6 +3,7 @@
   (:import [org.deeplearning4j.spark.api TrainingResult]))
 
 (defn set-stats!
+  ;; going to be removed in the core branch
   "sets the stats for a training result
    - not a user facing fn
 

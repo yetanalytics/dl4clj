@@ -10,6 +10,9 @@
             ExecuteWorkerFlatMap])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
 
+;; dont think this is a core ns
+;; will be removed in the core branch
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method constructor calling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

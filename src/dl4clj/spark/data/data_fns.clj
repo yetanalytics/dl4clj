@@ -187,7 +187,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :partition-idx (int), tag for labeling the new datasets created via this fn
 
   :iter (dataset iterator), the iterator which goes through a dataset
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn partition-idx iter]}]
   (let [ds-iter (reset-if-empty?! iter)]
    (if (map? the-fn)
@@ -208,7 +208,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :partition-idx (int), tag for labeling the new datasets created via this fn
 
   :multi-ds-iter (multi-dataset iterator), the iterator which goes through a dataset
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn partition-idx multi-ds-iter]}]
   (let [mds-iter (reset-if-empty?! multi-ds-iter)]
    (if (map? the-fn)
@@ -226,7 +226,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    - config map = {:batch-ds {:batch-size (int)}}
 
   :iter, (iterator), an iterator which wraps a dataset you want batched
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn iter]}]
   (let [ds-iter (reset-if-empty?! iter)]
    (if (map? the-fn)
@@ -242,7 +242,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     - config mpa = {:export-ds {:export-path path (str)}}
 
   :iter (iterator), an iterator which wraps a dataset you want exported
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - see: dl4clj.datasets.iterators
 
   returns a map of the export-fn and ds-iter"
   [& {:keys [the-fn iter]}]
@@ -262,7 +262,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     - config mpa = {:export-multi-ds {:export-path path (str)}}
 
   :iter (iterator), an iterator which wraps a dataset you want exported
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
+   - see: dl4clj.datasets.iterators
 
   returns a map of the export-fn and ds-iter"
   [& {:keys [the-fn iter]}]
@@ -314,7 +314,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     - config map = {:split-ds {}}
 
   :iter (iterator), an iterator which wraps a dataset you want split
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn iter]}]
   (let [ds-iter (reset-if-empty?! iter)]
    (if (map? the-fn)

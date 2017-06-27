@@ -10,7 +10,7 @@
            [org.deeplearning4j.spark.datavec.export StringToDataSetExportFunction])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many?]]
             [dl4clj.constants :as enum]
-            [datavec.api.records.interface :refer [reset-rr!]]
+            [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
             [dl4clj.helpers :refer [reset-if-empty?!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -127,7 +127,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - entry point for creating a dataset iterator in the context of spark
 
   :record-reader (record-reader), reads in the string based on its format
-   - see: datavec.api.records.readers
+   - see: dl4clj.datasets.record-readers
 
   :label-idx (int), Idx of the label column
 
@@ -158,7 +158,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - false = classification task
 
   :pre-processor (pre-processor), a dataset pre-processor
-   - see: nd4clj.linalg.dataset.api.pre-processors
+   - see: dl4clj.datasets.pre-processors
    - clean the data before it is used
 
   the obj that is returned by this fn should be passed to call-datavec-fn! to be used"
@@ -171,7 +171,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
   objects for spark training.
 
   Analogous to new-record-reader-dataset-iterator but in the context of spark.
-   - dl4clj.datasets.datavec
+   - dl4clj.datasets.iterators
 
   :label-idx (int), Idx of the label column
 
@@ -182,7 +182,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - false = classification task
 
   :pre-processor (pre-processor), a dataset pre-processor
-   - see: nd4clj.linalg.dataset.api.pre-processors
+   - see: dl4clj.datasets.pre-processors
    - clean the data before it is used
 
   :writable-converter (writable converter), converts a writable to another data type
@@ -205,7 +205,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    to a dataset obj for spark training.
 
   Analogous to new-seq-record-reader-dataset-iterator but in the context of spark.
-   - dl4clj.datasets.datavec
+   - dl4clj.datasets.iterators
    - Supports loading data from a single source only
 
   :label-idx (int), Idx of the label column
@@ -217,7 +217,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - false = classification task
 
   :pre-processor (pre-processor), a dataset pre-processor
-   - see: nd4clj.linalg.dataset.api.pre-processors
+   - see: dl4clj.datasets.pre-processors
    - clean the data before it is used
 
   :writable-converter (writable converter), converts a writable to another data type
@@ -233,7 +233,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
   to dataset objects for spark training
 
   Analogous to new-seq-record-reader-dataset-iterator but in the context of spark.
-  - dl4clj.datasets.datavec
+  - dl4clj.datasets.iterators
   - Supports loading data from a two sources only
     - supports many-to-one and one-to-many situations
 
@@ -248,7 +248,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - one of :align-end, :align-start, :equal-length
 
   :pre-processor (pre-processor), a dataset pre-processor
-   - see: nd4clj.linalg.dataset.api.pre-processors
+   - see: dl4clj.datasets.pre-processors
    - clean the data before it is used
 
   :writable-converter (writable converter), converts a writable to another data type
@@ -266,7 +266,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
   :output-directory (str), the directory to export to
 
   :record-reader (record-reader), the object containing the string data
-   - see: datavec.api.records.readers
+   - see: dl4clj.datasets.record-readers
 
   :batch-size (int), the size of the minibatch
 
@@ -402,8 +402,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
    - all args are required to create the string-to-ds-export fn
 
   :iter (iterator), an iterator which contains the string data to convert and export
-   - see: dl4clj.datasets.datavec, dl4clj.datasets.iterator.iterators
-   - NOTE: make sure to reset the iter after uses
+   - see: dl4clj.datasets.iterators
 
   returns the iterator and the fn-object"
   [& {:keys [the-fn iter]}]

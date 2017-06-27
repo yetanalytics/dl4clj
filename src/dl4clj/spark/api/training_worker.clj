@@ -3,7 +3,7 @@
 TrainingWorker implementations provide a layer of abstraction for network learning tha should allow for more flexibility/ control over how learning is conducted (including for example asynchronous communication)
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.html"}
-    dl4clj.spark.api.interfaces.training-worker
+    dl4clj.spark.api.training-worker
   (:import [org.deeplearning4j.spark.api TrainingWorker]))
 
 ;; param-avg-worker currently only implementer
@@ -48,7 +48,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
       :or {with-stats? false}}]
   (if (true? with-stats?)
     (.getFinalResultNoDataWithStats worker)
-    (.getFinalResultNoData avg-worker)))
+    (.getFinalResultNoData worker)))
 
 (defn get-initial-model
   "Get the initial model when training a MultiLayerNetwork/SparkDl4jMultiLayer"

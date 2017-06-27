@@ -5,9 +5,8 @@ In principle, a large number of different approches can be used in distributed t
  Each of these different approaches would be implemented as a TrainingMaster; this allows SparkDl4jMultiLayer and SparkComputationGraph to be used with different training methods.
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.html"}
-    dl4clj.spark.api.interfaces.training-master
-  (:import [org.deeplearning4j.spark.api TrainingMaster])
-  (:require [dl4clj.spark.api.interfaces.training-worker :refer [add-hook! remove-hook!]]))
+    dl4clj.spark.api.training-master
+  (:import [org.deeplearning4j.spark.api TrainingMaster]))
 
 ;; param-avg-master currently only implementer
 

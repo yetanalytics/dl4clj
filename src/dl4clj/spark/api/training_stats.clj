@@ -5,7 +5,7 @@ The idea is that for debugging purposes, we want to collect a number of statisti
 The interface here operates essentially as a Map<String,Object>. Note however that SparkTrainingStats instances may be nested: for example a ParameterAveragingTrainingMasterStats may have a CommonSparkTrainingStats instance which may in turn have a ParameterAveragingTrainingWorkerStats instance.
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrainingStats.html"}
-    dl4clj.spark.api.interfaces.training-stats
+    dl4clj.spark.api.training-stats
   (:import [org.deeplearning4j.spark.api.stats SparkTrainingStats]))
 
 (defn add-other-training-stats!

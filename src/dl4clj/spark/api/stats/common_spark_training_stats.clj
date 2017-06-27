@@ -4,6 +4,8 @@
             CommonSparkTrainingStats$Builder]))
 
 (defn new-common-stats-builder
+  ;; not sure if this is a core fn
+  ;; may be removed in core branch
   "A SparkTrainingStats implementation for common stats functionality used by most workers
    - not a user facing fn
 
