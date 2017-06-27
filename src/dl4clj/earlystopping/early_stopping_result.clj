@@ -1,6 +1,5 @@
-(ns ^{:doc "contains the results of the early stopping training
-
-see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.html"}
+(ns ^{:doc "GOING TO BE REMOVED IN THE CORE BRANCH
+contains the results of the early stopping training"}
     dl4clj.earlystopping.early-stopping-result
   (:import [org.deeplearning4j.earlystopping EarlyStoppingResult])
   (:require [dl4clj.constants :as enum]))
@@ -23,7 +22,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
 
   :best-model (nn), the neural network which was the best version of the model
 
-  not a user facing fn, would be used to create custom early stopping results"
+  not a user facing fn, would be used to create custom early stopping results
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.html"
   [& {:keys [termination-reason termination-details
              score-vs-epoch best-model-epoch best-model-score
              total-epochs best-model]}]

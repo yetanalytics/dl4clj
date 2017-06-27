@@ -5,9 +5,7 @@ Users need to specify the following:
 (i) Iteration termination conditions: calculated once for each minibatch. For example, maxTime or invalid (NaN/infinite) scores
 (ii) Epoch termination conditions: calculated once per epoch. For example, maxEpochs or no improvement for N epochs
 (c) Score calculator: what score should be calculated at every epoch? (For example: test set loss or test set accuracy)
-(d) How frequently (ever N epochs) should scores be calculated? (Default: every epoch)
-
-see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingConfiguration.Builder.html"}
+(d) How frequently (ever N epochs) should scores be calculated? (Default: every epoch)"}
     dl4clj.earlystopping.early-stopping-config
   (:import [org.deeplearning4j.earlystopping EarlyStoppingConfiguration$Builder]
            [org.deeplearning4j.earlystopping.termination
@@ -32,16 +30,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
 
   :model-saver (coll), how the model is going to be saved (in memory vs to disk)
    - see: dl4clj.earlystopping.model-saver
+   - needs to be passed within a clojure data structure
 
   :save-last-model? (boolean), wether or not to save the last model run
 
   :score-calculator (score-calc), the calc of the error typically on a testing set
    - see:  dl4clj.earlystopping.score-calc
 
-  :build? (boolean), build the configuration?"
+  :build? (boolean), build the configuration?
+   - defaults to true
 
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingConfiguration.Builder.html"
   [& {:keys [epoch-termination-conditions n-epochs
-           iteration-termination-conditions model-saver
+             iteration-termination-conditions model-saver
              save-last-model? score-calculator build?]
       :or {build? true}
       :as opts}]

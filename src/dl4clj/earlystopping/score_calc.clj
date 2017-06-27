@@ -31,13 +31,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
 ;; user facing fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn new-data-set-loss-calculator
+(defn new-ds-loss-calculator
   "used to calc the total loss for the model on the supplied dataset
 
   :iter (dataset-iterator), supplies the data to calc the loss on.
-   - see: datavec.api.records.readers
+   - see: dl4clj.datasets.iterators
 
-  :average? (boolean), Whether to return the average (sum of loss / N) or just (sum of loss)"
+  :average? (boolean), Whether to return the average (sum of loss / N) or just (sum of loss)
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/DataSetLossCalculator.html"
   [& {:keys [iter average?]
       :as opts}]
   (score-calc {:dataset-loss opts}))
@@ -51,7 +53,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
   :average? (boolean), Whether to return the average (sum of loss / N),
                        or just the sum of the loss
 
-  :spark-context (org.apache.spark.SparkContext), the spark context"
+  :spark-context (org.apache.spark.SparkContext), the spark context
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/earlystopping/SparkDataSetLossCalculator.html"
   [& {:keys [rdd average? spark-context]
       :as opts}]
   (score-calc {:spark-ds-loss opts}))

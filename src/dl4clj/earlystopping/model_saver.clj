@@ -1,5 +1,4 @@
-(ns ^{:doc "ns for saving models.
-see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/package-summary.html"}
+(ns ^{:doc "ns for saving models in an early training context"}
     dl4clj.earlystopping.model-saver
   (:import [org.deeplearning4j.earlystopping.saver
             InMemoryModelSaver
@@ -25,6 +24,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/packa
       (LocalFileModelSaver. dir))))
 
 ;; local file graph no implemented as computational graphs are not implemented
+;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/LocalFileGraphSaver.html
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns for creating model savers

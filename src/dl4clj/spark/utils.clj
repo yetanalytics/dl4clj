@@ -45,7 +45,7 @@
   :logger (org.slf4j.Logger), the logger to use for the warning message"
   [& {:keys [java-spark-context logger]}])
 
-(defn list-paths
+(defn list-paths-spark
   "List of the files in the given directory (path), as a JavaRDD<String>
 
   :java-spark-context (org.apache.spark.api.java.JavaSparkContext), the spark context

@@ -14,6 +14,11 @@
            [org.deeplearning4j.datasets.iterator.impl
             CifarDataSetIterator IrisDataSetIterator LFWDataSetIterator
             MnistDataSetIterator RawMnistDataSetIterator]
+           [org.deeplearning4j.spark.iterator
+            PathSparkDataSetIterator
+            PathSparkMultiDataSetIterator
+            PortableDataStreamDataSetIterator
+            PortableDataStreamMultiDataSetIterator]
            [java.util Random])
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.berkeley :refer [new-pair]]
@@ -455,6 +460,44 @@ you need to suply atleast the mini batch size, number of possible labels and the
     (RawMnistDataSetIterator. batch n-examples)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; spark dataset iterator mulimethods
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod iterator :path-to-ds [opts]
+  (let [config (:path-to-ds opts)
+        {str-paths :string-paths
+         iter :iter} config]
+    (if (contains? config :string-paths)
+      (PathSparkDataSetIterator. str-paths)
+      (PathSparkDataSetIterator. (reset-if-empty?! iter)))))
+
+(defmethod iterator :path-to-multi-ds [opts]
+  (let [config (:path-to-multi-ds opts)
+        {str-paths :string-paths
+         iter :iter} config]
+    (if (contains? config :string-paths)
+      (PathSparkMultiDataSetIterator. str-paths)
+      (PathSparkMultiDataSetIterator. (reset-if-empty?! iter)))))
+
+(defmethod iterator :portable-ds-stream [opts]
+  (let [config (:portable-ds-stream opts)
+        {streams :streams
+         iter :iter} config]
+    (if (contains? config :streams)
+      (PortableDataStreamDataSetIterator. streams)
+      (PortableDataStreamDataSetIterator. (reset-if-empty?! iter)))))
+
+(defmethod iterator :portable-multi-ds-stream [opts]
+  (let [config (:portable-multi-ds-stream opts)
+        {streams :streams
+         iter :iter} config]
+    (if (contains? config :streams)
+      (PortableDataStreamMultiDataSetIterator. streams)
+      (PortableDataStreamMultiDataSetIterator. (reset-if-empty?! iter)))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -541,7 +584,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
 
   :add-input (map) {:reader-name (str) :first-column (int) :last-column (int)}
 
-  :add-output (map) {:reader-name (str) :first-column (int) :last-column (int)}"
+  :add-output (map) {:reader-name (str) :first-column (int) :last-column (int)}
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.Builder.html"
   [& {:keys [alignment-mode batch-size add-seq-reader
              add-reader add-output-one-hot add-output
              add-input-one-hot add-input]
@@ -563,6 +608,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   Note however that due to asynchronous loading of data, (next! iter n) is not supported.
 
   :iter (ds-iterator), a dataset iterator
+   - see: dl4clj.datasets.iterators (this ns)
 
   :que-size (int), the size of the que
 
@@ -587,6 +633,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   :labels (list), a list of labels as strings
 
   :iter (iterator), a dataset iterator
+   - see: dl4clj.datasets.iterators (this ns)
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ExistingDataSetIterator.html"
   [& {:keys [dataset total-examples n-features n-labels labels iter]
@@ -612,6 +659,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   "Wraps a dataset iterator, setting the first (feature matrix) as the labels.
 
   ds-iter (iterator), the iterator to wrap
+   - see: dl4clj.datasets.iterators (this ns)
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ReconstructionDataSetIterator.html"
   [& {:keys [iter]
@@ -622,6 +670,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   "A dataset iterator for doing multiple passes over a dataset
 
   :iter (dataset iterator), an iterator for a dataset
+   - see: dl4clj.datasets.iterators (this ns)
 
   :que-size (int), the size for the multiple iterations (improve this desc)
 
@@ -679,6 +728,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   NOTE: reset method is not supported here.
 
   :iter (iter), an iterator containing datasets
+   - see: dl4clj.datasets.iterators (this ns)
 
   :batch-size (int), the batch size
 
@@ -750,7 +800,12 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (iterator {:INDArray-dataset-iter opts}))
 
 (defn new-multi-data-set-iterator-adapter
-  "Iterator that adapts a DataSetIterator to a MultiDataSetIterator"
+  "Iterator that adapts a DataSetIterator to a MultiDataSetIterator
+
+  :iter (datset-iterator), an iterator for a dataset
+   - see: dl4clj.datasets.iterators (this ns)
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MultiDataSetIteratorAdapter.html"
   [& {:keys [iter]
       :as opts}]
   (iterator {:ds-iter-to-multi-ds-iter opts}))
@@ -795,9 +850,6 @@ you need to suply atleast the mini batch size, number of possible labels and the
 (defn new-cifar-data-set-iterator
   "Load the images from the cifar dataset,
 
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/CifarDataSetIterator.html
-  and: https://github.com/szagoruyko/cifar.torch
-
   :batch-size (int), the batch size
 
   :n-examples (int), the number of examples from the ds to include in the iterator
@@ -812,7 +864,10 @@ you need to suply atleast the mini batch size, number of possible labels and the
 
   :img-transform (map) config map for an image-transformation (as of writing this doc string, not implemented)
 
-  :n-possible-labels (int), specify the number of possible outputs/tags/classes for a given image"
+  :n-possible-labels (int), specify the number of possible outputs/tags/classes for a given image
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/CifarDataSetIterator.html
+  and: https://github.com/szagoruyko/cifar.torch"
   [& {:keys [batch-size n-examples img-dims train?
              use-special-pre-process-cifar?
              n-possible-labels img-transform]
@@ -896,3 +951,79 @@ you need to suply atleast the mini batch size, number of possible labels and the
   [& {:keys [batch n-examples]
       :as opts}]
   (iterator {:raw-mnist-dataset-iter opts}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; spark dataset iterator user facing fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn new-path-spark-ds-iterator
+  "A DataSetIterator that loads serialized DataSet objects
+  from a String that represents the path
+   -note: DataSet objects saved from a DataSet to an output stream
+
+  :string-paths (coll), a collection of string paths representing the location
+   of the data-set streams
+
+  :iter (java.util.Iterator), an iterator for a collection of string paths
+   representing the location of the data-set streams
+
+  you should supply either :string-paths or :iter, if you supply both, will default
+   to using the collection of string paths
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PathSparkDataSetIterator.html"
+  [& {:keys [string-paths iter]
+      :as opts}]
+  (iterator {:path-to-ds opts}))
+
+(defn new-path-spark-multi-ds-iterator
+  "A DataSetIterator that loads serialized MultiDataSet objects
+  from a String that represents the path
+   -note: DataSet objects saved from a MultiDataSet to an output stream
+
+  :string-paths (coll), a collection of string paths representing the location
+   of the data-set streams
+
+  :iter (java.util.Iterator), an iterator for a collection of string paths
+   representing the location of the data-set streams
+
+  you should supply either :string-paths or :iter, if you supply both, will default
+   to using the collection of string paths
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PathSparkMultiDataSetIterator.html"
+  [& {:keys [string-paths iter]
+      :as opts}]
+  (iterator {:path-to-multi-ds opts}))
+
+(defn new-spark-portable-datastream-ds-iterator
+  "A DataSetIterator that loads serialized DataSet objects
+  from a PortableDataStream, usually obtained from SparkContext.binaryFiles()
+   -note: DataSet objects saved from a DataSet to an output stream
+
+  :streams (coll), a collection of portable datastreams
+
+  :iter (java.util.Iterator), an iterator for a collection of portable datastreams
+
+  you should only supply :streams or :iter, if you supply both, will default to
+   using the collection of portable datastreams
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PortableDataStreamDataSetIterator.html"
+  [& {:keys [streams iter]
+      :as opts}]
+  (iterator {:portable-ds-stream opts}))
+
+(defn new-spark-portable-datastream-multi-ds-iterator
+  "A DataSetIterator that loads serialized MultiDataSet objects
+  from a PortableDataStream, usually obtained from SparkContext.binaryFiles()
+   -note: DataSet objects saved from a MultiDataSet to an output stream
+
+  :streams (coll), a collection of portable datastreams
+
+  :iter (java.util.Iterator), an iterator for a collection of portable datastreams
+
+  you should only supply :streams or :iter, if you supply both, will default to
+   using the collection of portable datastreams
+
+  see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PortableDataStreamMultiDataSetIterator.html"
+  [& {:keys [streams iter]
+      :as opts}]
+  (iterator {:portable-multi-ds-stream opts}))
