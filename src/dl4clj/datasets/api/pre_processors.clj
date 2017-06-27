@@ -15,7 +15,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             NormalizerStandardize
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
-  (:require [dl4clj.helpers :refer [reset-if-empty?!]]))
+  (:require [dl4clj.helpers :refer [reset-if-empty?!]]
+            [dl4clj.utils :refer [array-of]]))
 
 (defn pre-process-dataset!
   "Pre process a dataset

@@ -4,8 +4,6 @@
            [org.datavec.image.recordreader BaseImageRecordReader ImageRecordReader]
            [org.datavec.api.records.reader.impl.collection CollectionRecordReader]
            [org.datavec.api.records.reader.impl FileRecordReader]
-           [org.datavec.api.records.reader.factory RecordReaderFactory
-            RecordWriterFactory]
            [org.datavec.api.records.reader.impl.collection CollectionSequenceRecordReader
             ListStringRecordReader]
            [org.datavec.api.records.reader.impl ComposableRecordReader LineRecordReader]
@@ -150,15 +148,6 @@
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/collection/ListStringRecordReader.html"
   []
   (record-reader {:list-string-rr {}}))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; record reader shared interaction fns
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn create-record-writer
-  "Factory for creating RecordWriter instance"
-  [& {:keys [rw where-to-save]}]
-  (.create rw where-to-save))
 
 (comment
 ;; will implement when needed
