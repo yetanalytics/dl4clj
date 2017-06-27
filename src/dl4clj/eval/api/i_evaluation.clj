@@ -1,7 +1,7 @@
 (ns ^{:doc "A general purpose interface for evaluating neural networks
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/IEvaluation.html"}
-    dl4clj.eval.interface.i-evaluation
+    dl4clj.eval.api.i-evaluation
   (:import [org.deeplearning4j.eval IEvaluation])
   (:require [dl4clj.utils :refer [contains-many?]]))
 

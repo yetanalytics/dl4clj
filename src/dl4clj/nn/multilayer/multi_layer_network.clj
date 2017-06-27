@@ -4,7 +4,7 @@
             [dl4clj.nn.conf.constants :as enum]
             [dl4clj.nn.api.model :refer [fit!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?!]]
-            [nd4clj.linalg.api.ds-iter :refer [has-next? next-example!]])
+            [dl4clj.datasets.api.iterators :refer [has-next? next-example!]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
 
