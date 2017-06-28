@@ -19,7 +19,7 @@ Not all of these are fully tested and are most likely going to undergo breaking 
 - Optimize (tested)
 - Spark training/hosting
 
-Support for Computational Graphs will come in a future release
+Support for Computational Graphs and NLP will come in a future release
 
 ## Artifacts
 
@@ -53,41 +53,28 @@ With Maven:
 </dependency>
 ```
 
-#TODO:
-
-- collapse dl4clj.datasets.datavec and dl4clj.datasets.iterator.iterators into a single ns
-- datavec is record-reader-dataset-iterators, iterators is just dataset-iterators (dont rerequire record readers)
-
-
 ## Usage
 
 ### Layers
-
-Creating distributions to sample layer weights from
-
-``` clojure
-
-(ns my.ns
-  (:require [dl4clj.nn.conf.distribution.distribution :as dist]))
-
-(dist/new-normal-distribution :mean 0 :std 1)
-
-(dist/new-binomial-distribution :number-of-trials 5 :probability-of-success 0.50)
-
-```
 
 Creating Layers
 
 ``` clojure
 (ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]))
+  (:require [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.conf.distribution.distribution :as dist]))
 
 (l/activation-layer-builder
- :activation-fn :relu :updater :adam
- :adam-mean-decay 0.2 :adam-var-decay 0.1
- :learning-rate 0.006 :weight-init :distribution
+ :activation-fn :relu
+ :updater :adam
+ :adam-mean-decay 0.2
+ :adam-var-decay 0.1
+ :learning-rate 0.006
+ :weight-init :distribution
  :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
- :layer-name "example layer" :n-in 10 :n-out 1)
+ :layer-name "example layer"
+ :n-in 10
+ :n-out 1)
 
 ```
 
@@ -149,7 +136,9 @@ Creating input pre-processors
  :pre-processors [(new-zero-mean-pre-pre-processor)
                   (new-binominal-sampling-pre-processor)
                   {:cnn-to-feed-forward-pre-processor
-                   {:input-height 2 :input-width 3 :num-channels 4}}])
+                   {:input-height 2
+                    :input-width 3
+                    :num-channels 4}}])
 
 ```
 
@@ -169,34 +158,48 @@ Adding the layers to a neural network configuration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
-                         :seed 123 :iterations 1 :minimize? true
-                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                         :seed 123
+                         :iterations 1
+                         :minimize? true
+                         :use-drop-connect? false
+                         :lr-score-based-decay-rate 0.002
                          :regularization? false
                          :step-fn :default-step-fn
                          :build? true
-                         :layer {:dense-layer {:activation-fn :relu :updater :adam
-                                               :adam-mean-decay 0.2 :adam-var-decay 0.1
-                                               :learning-rate 0.006 :weight-init :xavier
+                         :layer {:dense-layer {:activation-fn :relu
+                                               :updater :adam
+                                               :adam-mean-decay 0.2
+                                               :adam-var-decay 0.1
+                                               :learning-rate 0.006
+                                               :weight-init :xavier
                                                :layer-name "single layer model example"
-                                               :n-in 10 :n-out 20}})
+                                               :n-in 10
+                                               :n-out 20}})
 
 ;; there are several options within a nn-conf map which can be configuration maps
 ;; or calls to fns
 ;; It doesn't matter which option you choose and you don't have to stay consistent
 
 (nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
-                         :seed 123 :iterations 1 :minimize? true
-                         :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                         :seed 123
+                         :iterations 1
+                         :minimize? true
+                         :use-drop-connect? false
+                         :lr-score-based-decay-rate 0.002
                          :regularization? false
                          :step-fn (s-fn/new-default-step-fn)
                          :build? true
                          :layer (l/dense-layer-builder
-                                 :activation-fn :relu :updater :adam
-                                 :adam-mean-decay 0.2 :adam-var-decay 0.1
+                                 :activation-fn :relu
+                                 :updater :adam
+                                 :adam-mean-decay 0.2
+                                 :adam-var-decay 0.1
                                  :dist (dist/new-normal-distribution :mean 0 :std 1)
-                                 :learning-rate 0.006 :weight-init :xavier
+                                 :learning-rate 0.006
+                                 :weight-init :xavier
                                  :layer-name "single layer model example"
-                                 :n-in 10 :n-out 20))
+                                 :n-in 10
+                                 :n-out 20))
 
 ;; these configurations are the same
 
@@ -208,16 +211,27 @@ Adding the layers to a neural network configuration
 
 (def l-builder (nn-conf/nn-conf-builder
                 :optimization-algo :stochastic-gradient-descent
-                :seed 123 :iterations 1 :minimize? true
-                :use-drop-connect? false :lr-score-based-decay-rate 0.002
+                :seed 123
+                :iterations 1
+                :minimize? true
+                :use-drop-connect? false
+                :lr-score-based-decay-rate 0.002
                 :regularization? false
-                :default-activation-fn :sigmoid :default-weight-init :uniform
+                :default-activation-fn :sigmoid
+                :default-weight-init :uniform
                 :layers {0 (l/activation-layer-builder
-                            :activation-fn :relu :updater :adam
-                            :adam-mean-decay 0.2 :adam-var-decay 0.1
-                            :learning-rate 0.006 :weight-init :xavier
-                            :layer-name "example first layer" :n-in 10 :n-out 20)
-                         1 {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
+                            :activation-fn :relu
+                            :updater :adam
+                            :adam-mean-decay 0.2
+                            :adam-var-decay 0.1
+                            :learning-rate 0.006
+                            :weight-init :xavier
+                            :layer-name "example first layer"
+                            :n-in 10
+                            :n-out 20)
+                         1 {:output-layer {:n-in 20
+                                           :n-out 2
+                                           :loss-fn :mse
                                            :layer-name "example output layer"}}}))
 
 ;; here we can add in pre-processors
@@ -228,7 +242,8 @@ Adding the layers to a neural network configuration
 (def multi-layer-conf
   (mlb/multi-layer-config-builder
    :list-builder l-builder
-   :backprop? true :backprop-type :standard
+   :backprop? true
+   :backprop-type :standard
    :pretrain? false
    :input-pre-processors {0 (new-zero-mean-pre-pre-processor)
                           1 {:unit-variance-processor {}}}))
@@ -238,25 +253,38 @@ Adding the layers to a neural network configuration
 (def first-layer-conf
   (nn-conf/nn-conf-builder
    :optimization-algo :stochastic-gradient-descent
-   :seed 123 :iterations 1 :minimize? true
-   :use-drop-connect? false :lr-score-based-decay-rate 0.002
+   :seed 123
+   :iterations 1
+   :minimize? true
+   :use-drop-connect? false
+   :lr-score-based-decay-rate 0.002
    :regularization? false
    :build? true
-   :layer {:dense-layer {:activation-fn :relu :updater :adam
-                         :adam-mean-decay 0.2 :adam-var-decay 0.1
-                         :learning-rate 0.006 :weight-init :xavier
+   :layer {:dense-layer {:activation-fn :relu
+                         :updater :adam
+                         :adam-mean-decay 0.2
+                         :adam-var-decay 0.1
+                         :learning-rate 0.006
+                         :weight-init :xavier
                          :layer-name "first layer"
-                         :n-in 10 :n-out 20}}))
+                         :n-in 10
+                         :n-out 20}}))
 
 (def second-layer-conf
   (nn-conf/nn-conf-builder
    :optimization-algo :stochastic-gradient-descent
-   :seed 123 :iterations 1 :minimize? true
-   :use-drop-connect? false :lr-score-based-decay-rate 0.002
+   :seed 123
+   :iterations 1
+   :minimize? true
+   :use-drop-connect? false
+   :lr-score-based-decay-rate 0.002
    :regularization? false
    :build? true
-   :layer {:output-layer {:n-in 20 :n-out 2 :loss-fn :mse
-                          :layer-name "second layer" :activation-fn :softmax}}))
+   :layer {:output-layer {:n-in 20
+                          :n-out 2
+                          :loss-fn :mse
+                          :layer-name "second layer"
+                          :activation-fn :softmax}}))
 
 (def multi-from-multiple-single
  (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
@@ -272,11 +300,11 @@ Loading data from a file (here its a csv)
 
 ``` clojure
 
-(my.ns (:require [datavec.api.split :as s]
-                 [datavec.api.records.readers :as rr]
-                 [datavec.api.records.interface :refer :all]
-                 [dl4clj.datasets.datavec :as ds-iter]
-                 [nd4clj.linalg.api.ds-iter :refer :all]))
+(my.ns (:require [dl4clj.datasets.input-splits :as s]
+                 [dl4clj.datasets.record-readers :as rr]
+                 [dl4clj.datasets.api.record-readers :refer :all]
+                 [dl4clj.datasets.iterators :as ds-iter]
+                 [dl4clj.datasets.api.iterators :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; file splits (convert the data to records)
@@ -379,9 +407,9 @@ Creating datasets from INDArrays (and creating INDArrays)
  (:require [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
                                                indarray-of-zeros indarray-of-ones
                                                indarray-of-rand]]
-           [nd4clj.linalg.dataset.data-set :refer [data-set]]
-           [nd4clj.linalg.dataset.api.data-set :refer [as-list]]
-           [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]))
+           [dl4clj.datasets.new-datasets :refer [new-ds]]
+           [dl4clj.datasets.api.datasets :refer [as-list]]
+           [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
@@ -439,7 +467,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; data-set creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def ds-with-single-example (data-set :input (vec->indarray [1 2 3 4])
+(def ds-with-single-example (new-ds :input (vec->indarray [1 2 3 4])
                                       :output (vec->indarray [0.0 1.0 0.0])))
 (as-list ds-with-single-example)
 ;; =>
@@ -449,7 +477,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;=================OUTPUT==================
 ;;[0.00, 1.00, 0.00]]]
 
-(def ds-with-multiple-examples (data-set
+(def ds-with-multiple-examples (new-ds
                                 :input (matrix->indarray [[1 2 3 4] [2 4 6 8]])
                                 :output (matrix->indarray [[0.0 1.0 0.0] [0.0 0.0 1.0]])))
 
@@ -475,8 +503,8 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (my.ns
- (:require [nd4clj.linalg.dataset.api.ds-preprocessor :as ds-pp]
-           [nd4clj.linalg.dataset.api.pre-processors :refer :all]))
+ (:require [dl4clj.datasets.pre-processors :as ds-pp]
+           [dl4clj.datasets.api.pre-processors :refer :all]))
 
 (def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
                            :iter training-rr-ds-iter))
@@ -497,12 +525,12 @@ Multi Layer models
 
 ``` clojure
 
-(my.ns (:require [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
-                 [datavec.api.split :refer [new-filesplit]]
-                 [datavec.api.records.readers :refer [new-csv-record-reader]]
-                 [datavec.api.records.interface :refer [initialize-rr!]]
-                 [dl4clj.datasets.datavec :refer [new-record-reader-dataset-iterator]]
-                 [dl4clj.optimize.listeners.listeners :refer [new-score-iteration-listener]]
+(my.ns (:require [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator
+                                                    new-record-reader-dataset-iterator]]
+                 [dl4clj.datasets.input-splits :refer [new-filesplit]]
+                 [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
+                 [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
+                 [dl4clj.optimize.listeners :refer [new-score-iteration-listener]]
                  [dl4clj.nn.conf.builders.nn-conf-builder :refer [nn-conf-builder]]
                  [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
                  [dl4clj.nn.multilayer.multi-layer-network :as mln]
@@ -622,6 +650,7 @@ Multi Layer models
 ;; training using the prebuilt mnsit dataset iterator faster than training
 ;; using a lazy-seq generated from that dataset
 ;; different of about 40 seconds for the mnist example
+;; see if I can improve this via type hints
 ```
 
 Evaluation of Models
@@ -633,8 +662,8 @@ Evaluation of Models
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (my.ns
- (:require [dl4clj.eval.evaluation :refer [new-classification-evaler eval-model-whole-ds
-                                           get-accuracy]]
+ (:require [dl4clj.eval.evaluation :refer [new-classification-evaler]]
+           [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]
            [dl4clj.helpers :refer [new-lazy-iter]]))
 
 (def example-evaler-obj (new-classification-evaler :n-classes 10))
@@ -765,6 +794,7 @@ Early Stopping (controlling training)
            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
            [dl4clj.earlystopping.score-calc :refer [new-data-set-loss-calculator]]
            [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
+           [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
            [dl4clj.utils :refer [load-model!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -901,12 +931,14 @@ How it is done in dl4clj
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
             [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
             [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
             [dl4clj.spark.masters.param-avg :as master]
-            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
-            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
             [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]]
-            [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer fit-spark-layer-with-ds!]]
-            [dl4clj.eval.evaluation :refer [get-stats]]))
+            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
+            [dl4clj.spark.api.dl4j-multi-layer :refer [fit-spark-mln!]]
+            [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer]]
+            [dl4clj.spark.api.dl4j-spark-layer :refer [fit-spark-layer-with-ds!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model

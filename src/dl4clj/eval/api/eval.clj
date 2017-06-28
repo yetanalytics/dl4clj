@@ -4,7 +4,7 @@
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
             ;; this is going to change
             [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
-            [nd4clj.linalg.dataset.api.data-set :refer [get-features]]
+            [dl4clj.datasets.api.datasets :refer [get-features]]
             [dl4clj.helpers :refer [reset-if-empty?! new-lazy-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

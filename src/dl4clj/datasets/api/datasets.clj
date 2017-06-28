@@ -36,7 +36,7 @@
   [& {:keys [ds row idx]}]
   (doto ds (.addRow row idx)))
 
-(defn as-lsit
+(defn as-list
   "Extract each example in the DataSet into its own DataSet object,
   and return all of them as a list"
   [ds]
