@@ -5,11 +5,12 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [com.google.common.base Function]))
 
-;;TODO
-;; double check these fns
-;; convert to keyword args
-;; fill out doc strings
-;; move to dl4clj.api.dataset
+;; these fns can now be found in dl4clj.datasets.api.datasets
+;; leaving this around for now
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; legacy code
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn add-feature-vector
   "With two arguments: Adds a feature for each example on to the current feature vector.
