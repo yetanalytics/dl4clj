@@ -2,11 +2,6 @@
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
   (:require [dl4clj.nn.conf.constants :as enum]))
 
-(defn new-input-type-util
-  "creates a new instance of the input type util class"
-  []
-  (InputTypeUtil.))
-
 (defn get-output-type-cnn-layers
   "returns the output type from cnn layers
 
@@ -36,7 +31,7 @@
              stride padding convolution-mode
              output-depth layer-idx layer-name
              layer-class]}]
-  (.getOutputTypeCnnLayers
+  (InputTypeUtil/getOutputTypeCnnLayers
    (enum/input-types input-type)
    (int-array kernel-size)
    (int-array stride)
@@ -56,7 +51,7 @@
 
   if no preprocessor is required, will return nil"
   [& {:keys [input-type layer-name]}]
-  (.getPreProcessorForInputTypeCnnLayers input-type layer-name))
+  (InputTypeUtil/getPreProcessorForInputTypeCnnLayers input-type layer-name))
 
 (defn get-pre-processor-for-input-type-rnn-layers
   "Utility method for determining the appropriate preprocessor for recurrent layers
@@ -70,4 +65,4 @@
 
   if no preprocessor is required, will return nil"
   [& {:keys [input-type layer-name]}]
-  (.getPreprocessorForInputTypeRnnLayers input-type layer-name))
+  (InputTypeUtil/getPreprocessorForInputTypeRnnLayers input-type layer-name))

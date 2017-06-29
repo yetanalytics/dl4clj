@@ -16,11 +16,11 @@
 
 (defn from-json
   [json]
-  (.fromJson json))
+  (MultiLayerConfiguration/fromJson json))
 
 (defn from-yaml
   [json]
-  (.fromYaml json))
+  (MultiLayerConfiguration/fromYaml json))
 
 (defn get-conf
   ":layer-idx (int), the index of the layer, within the multi-layer-conf, you

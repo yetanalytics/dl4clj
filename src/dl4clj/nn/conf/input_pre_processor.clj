@@ -1,7 +1,8 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
     dl4clj.nn.conf.input-pre-processor
   (:require [dl4clj.nn.conf.constants :as constants]
-            [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]])
+            [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.conf.preprocessor BinomialSamplingPreProcessor
@@ -17,17 +18,17 @@
 (defn backprop
   "Reverse the preProcess during backprop."
   [& {:keys [pp output mini-batch-size]}]
-  (.backprop pp output mini-batch-size))
+  (.backprop pp (vec-or-matrix->indarray output) mini-batch-size))
 
 (defn pre-process
   "Pre preProcess input/activations for a multi layer network"
   [& {:keys [pp input mini-batch-size]}]
-  (.preProcess pp input mini-batch-size))
+  (.preProcess pp (vec-or-matrix->indarray input) mini-batch-size))
 
 (defn feed-forward-mask-array
   [& {:keys [pp mask-array current-mask-state mini-batch-size]}]
   (.feedForwardMaskArray
-   pp mask-array (constants/value-of {:mask-state current-mask-state})
+   pp (vec-or-matrix->indarray mask-array) (constants/value-of {:mask-state current-mask-state})
    mini-batch-size))
 
 (defn get-output-type

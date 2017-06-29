@@ -2,11 +2,6 @@
   (:import [org.deeplearning4j.nn.conf.layers LayerValidation])
   (:require [dl4clj.nn.conf.distribution.distribution :as distribution]))
 
-(defn new-layer-validation
-  "calls the LayerValidation constructor"
-  []
-  (LayerValidation.))
-
 (defn general-validation!
   "validates a layer params are reasonable
 
@@ -35,8 +30,9 @@
   returns nil"
   [& {:keys [layer-name layer use-regularization? use-drop-connect? drop-out
              l2 l2-bias l1 l1-bias dist]}]
-  (.generalValidation layer-name layer use-regularization? use-drop-connect?
-                      drop-out l2 l2-bias l1 l1-bias dist))
+  (LayerValidation/generalValidation layer-name layer use-regularization?
+                                     use-drop-connect? drop-out l2 l2-bias
+                                     l1 l1-bias dist))
 
 (defn updater-validation!
   "Validate the updater configuration - setting the default updater values, if necessary
@@ -61,6 +57,6 @@
   :epsilon (double), the epsilon value set at layer setup"
   [& {:keys [layer-name layer momentum momentum-schedule adam-mean-decay
              adam-var-decay rho rms-decay epsilon]}]
-  (.updaterValidation layer-name layer momentum momentum-schedule
+  (LayerValidation/updaterValidation layer-name layer momentum momentum-schedule
                       adam-mean-decay adam-var-decay rho rms-decay
                       epsilon))

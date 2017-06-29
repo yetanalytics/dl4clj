@@ -9,7 +9,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
             GlobalPoolingLayer GravesBidirectionalLSTM GravesLSTM
             LocalResponseNormalization LossLayer OutputLayer RBM
             RnnOutputLayer Subsampling1DLayer ZeroPaddingLayer])
-  (:require [dl4clj.nn.conf.constants :as enum]))
+  (:require [dl4clj.nn.conf.constants :as enum]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; From Layer
@@ -73,12 +74,14 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 
   :layer-idx (int), the index of the layer within the model
 
-  :layer-param-view (INDArray), the params of the layer
+  :layer-param-view (INDArray or vec), the params of the layer
 
   :initialize-params? (boolean), do you want to initialize the params?"
   [& {:keys [layer conf listener layer-idx
              layer-param-view initialize-params?]}]
-  (.instantiate layer conf listener layer-idx layer-param-view initialize-params?))
+  (.instantiate layer conf listener layer-idx
+                (vec-or-matrix->indarray layer-param-view)
+                initialize-params?))
 
 (defn set-n-in!
   "Set the nIn value (number of inputs, or input depth for CNNs) based on the given input type

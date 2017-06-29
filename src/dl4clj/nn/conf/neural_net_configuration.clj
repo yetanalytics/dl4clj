@@ -13,11 +13,11 @@
 
 (defn from-json
   [json]
-  (.fromJson json))
+  (NeuralNetConfiguration/fromJson json))
 
 (defn from-yaml
   [json]
-  (.fromYaml json))
+  (NeuralNetConfiguration/fromYaml json))
 
 (defn get-l1-by-param
   [& {:keys [nn-conf var-name]}]
