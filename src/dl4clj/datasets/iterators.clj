@@ -24,7 +24,8 @@
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
-            [dl4clj.datasets.api.record-readers :refer [reset-rr!]]))
+            [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod
@@ -226,7 +227,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
         {features :features
          labels :labels
          batch-size :batch-size} config]
-    (INDArrayDataSetIterator. [(new-pair :p1 features :p2 labels)] batch-size)))
+    (INDArrayDataSetIterator. [(new-pair :p1 (vec-or-matrix->indarray features)
+                                         :p2 (vec-or-matrix->indarray labels))]
+                              batch-size)))
 
 (defmethod iterator :iterator-multi-dataset-iter [opts]
   (let [config (:iterator-multi-dataset-iter opts)
@@ -786,16 +789,16 @@ you need to suply atleast the mini batch size, number of possible labels and the
 (defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
 
-  :features (INDArray), an INDArray which acts as inputs
+  :features (vec or INDArray), an INDArray which acts as inputs
    - see: nd4clj.linalg.factory.nd4j
 
-  :labels (INDArray), an INDArray which as the targets
+  :labels (vec or INDArray), an INDArray which as the targets
    - see: nd4clj.linalg.factory.nd4j
 
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/INDArrayDataSetIterator.html"
-  [& {:keys [iterable batch-size]
+  [& {:keys [features labels batch-size]
       :as opts}]
   (iterator {:INDArray-dataset-iter opts}))
 

@@ -7,7 +7,8 @@
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator
             CombinedPreProcessor CombinedPreProcessor$Builder])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defmulti pre-processors generic-dispatching-fn)
 
@@ -43,12 +44,15 @@
          f-std :features-std
          l-mean :labels-mean
          l-std :labels-std} conf]
-    (cond (contains-many? conf :features-mean :features-std :labels-mean :labels-std)
-          (NormalizerStandardize. f-mean f-std l-mean l-std)
+    (let [f-m (vec-or-matrix->indarray f-mean)
+          f-s (vec-or-matrix->indarray f-std)]
+     (cond (contains-many? conf :features-mean :features-std :labels-mean :labels-std)
+           (NormalizerStandardize. f-m f-s (vec-or-matrix->indarray l-mean)
+                                   (vec-or-matrix->indarray l-std))
           (contains-many? conf :features-mean :features-std)
-          (NormalizerStandardize. f-mean f-std)
+          (NormalizerStandardize. f-m f-s)
           :else
-          (NormalizerStandardize.))))
+          (NormalizerStandardize.)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pre-processer creation user facing fns
@@ -91,13 +95,13 @@
   "ormalizes feature values (and optionally label values)
   to have a 0 mean and a standard deviation of 1
 
-  :features-mean (INDArray), the features to normalize
+  :features-mean (vec or INDArray), the features to normalize
 
-  :features-std (INDArray), the features to normalize
+  :features-std (vec or INDArray), the features to normalize
 
-  :labels-mean (INDArray), the labels to normalize
+  :labels-mean (vec or INDArray), the labels to normalize
 
-  :labels-std (INDArray), the labels to normalize"
+  :labels-std (vec or INDArray), the labels to normalize"
   [& {:keys [features-mean features-std labels-mean labels-std]
       :as opts}]
   (pre-processors {:standardize-normalization opts}))
