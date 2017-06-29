@@ -16,7 +16,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
-            [dl4clj.utils :refer [array-of]]))
+            [dl4clj.utils :refer [array-of]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn pre-process-dataset!
   "Pre process a dataset
@@ -66,58 +67,62 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn revert-features!
   "Undo the normalization applied by the normalizer on the features array
 
-  :features (INDArray), nn input
+  :features (vec or INDArray), nn input
 
-  :features-mask (INDArray), mask for the nn-input
+  :features-mask (vec or INDArray), mask for the nn-input
 
   returns the (un)normalized features"
   [& {:keys [normalizer features features-mask]
       :as opts}]
-  (if (contains? opts :features-mask)
-    (.revertFeatures normalizer features features-mask)
-    (.revertFeatures normalizer features)))
+  (let [f (vec-or-matrix->indarray features)]
+   (if (contains? opts :features-mask)
+    (.revertFeatures normalizer f (vec-or-matrix->indarray features-mask))
+    (.revertFeatures normalizer f))))
 
 (defn revert-labels!
   "Undo the normalization applied by the normalizer on the labels array
 
-  :labels (INDArray), nn targets
+  :labels (vec or INDArray), nn targets
 
-  :labels-mask (INDArray), mask for the nn-targets
+  :labels-mask (vec or INDArray), mask for the nn-targets
 
   returns the (un)normalized labels"
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
-  (if (contains? opts :labels-mask)
-    (.revertLabels normalizer labels labels-mask)
-    (.revertLabels normalizer labels)))
+  (let [l (vec-or-matrix->indarray labels)]
+    (if (contains? opts :labels-mask)
+      (.revertLabels normalizer l (vec-or-matrix->indarray labels-mask))
+      (.revertLabels normalizer l))))
 
 (defn transform-features!
   "applies the transform specified by the normalizer to the features
 
-  :features (INDArray), nn input
+  :features (vec or INDArray), nn input
 
-  :features-mask (INDArray), mask for the nn-input
+  :features-mask (vec or INDArray), mask for the nn-input
 
   returns the normalized features"
   [& {:keys [normalizer features features-mask]
       :as opts}]
-  (if (contains? opts :features-mask)
-    (.transform normalizer features features-mask)
-    (.transform normalizer features)))
+  (let [f (vec-or-matrix->indarray features)]
+   (if (contains? opts :features-mask)
+    (.transform normalizer f (vec-or-matrix->indarray features-mask))
+    (.transform normalizer f))))
 
 (defn transform-labels!
   "applies the transform specified by the normalizer to the labels
 
-  :labels (INDArray), nn targets
+  :labels (vec or INDArray), nn targets
 
-  :labels-mask (INDArray), mask for the nn-targets
+  :labels-mask (vec or INDArray), mask for the nn-targets
 
   returns the normalized labels"
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
-  (if (contains? opts :labels-mask)
-    (.transformLabel normalizer labels labels-mask)
-    (.transformLabel normalizer labels)))
+  (let [l (vec-or-matrix->indarray labels)]
+   (if (contains? opts :labels-mask)
+    (.transformLabel normalizer l (vec-or-matrix->indarray labels-mask))
+    (.transformLabel normalizer l))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; min-max-normalization specific fns
@@ -184,8 +189,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn preprocess-features!
   "preprcess the features
 
-  :features (INDArray), the features
+  :features (vec or INDArray), the features
 
   returns the processed features"
   [& {:keys [vgg16-pp features]}]
-  (.preProcess vgg16-pp features))
+  (.preProcess vgg16-pp (vec-or-matrix->indarray features)))

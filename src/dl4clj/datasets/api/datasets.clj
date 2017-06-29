@@ -278,14 +278,14 @@
 (defn set-features!
   "set the features array for the dataset
 
-  :features (vec or matrix), the data you want to set as the features"
+  :features (vec or INDarray), the data you want to set as the features"
   [& {:keys [ds features]}]
   (doto ds (.setFeatures (vec-or-matrix->indarray features))))
 
 (defn set-features-mask-array!
   "set the features mask array for the supplied dataset
 
-  :input-mask (vec or matrix), the mask to be set"
+  :input-mask (vec or INDarray), the mask to be set"
   [& {:keys [ds input-mask]}]
   (doto ds (.setFeaturesMaskArray (vec-or-matrix->indarray input-mask))))
 
@@ -299,14 +299,14 @@
 (defn set-labels!
   "sets the labels for a dataset
 
-  :labels (vec or matrix), the values for the labels"
+  :labels (vec or INDarray), the values for the labels"
   [& {:keys [ds labels]}]
   (doto ds (.setLabels (vec-or-matrix->indarray labels))))
 
 (defn set-labels-mask-array!
   "sets the labels mask array for the dataset
 
-  :mask-array (vec or matrix), the mask array to set"
+  :mask-array (vec or INDarray), the mask array to set"
   [& {:keys [ds mask-array]}]
   (doto ds (.setLabelsMaskArray (vec-or-matrix->indarray mask-array))))
 

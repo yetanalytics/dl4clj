@@ -9,6 +9,8 @@
            [org.datavec.api.split InputSplit])
   (:require [dl4clj.utils :refer [array-of]]))
 
+(java.net.URI/create "foo")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; path filters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -18,12 +20,14 @@
 
    :path-filter (obj), a path filter object
 
-   :paths (collection of URIs), uri paths to be filtered
+   :paths (collection of strings), uri paths to be filtered
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/PathFilter.html"
   [& {:keys [path-filter paths]}]
-  (.filter path-filter (array-of :data paths
-                                 :java-type java.net.URI)))
+  (let [uris (into [] (for [each paths]
+                        (java.net.URI/create each)))]
+   (.filter path-filter (array-of :data uris
+                                 :java-type java.net.URI))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; label generators
