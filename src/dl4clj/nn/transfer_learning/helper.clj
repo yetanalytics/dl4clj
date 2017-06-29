@@ -10,8 +10,11 @@
 
  see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/TransferLearningHelper.html" }
     dl4clj.nn.transfer-learning.helper
-  (:import [org.deeplearning4j.nn.transferlearning TransferLearningHelper])
-  (:require [dl4clj.helpers :refer [reset-iterator!]]))
+  (:import [org.deeplearning4j.nn.transferlearning TransferLearningHelper]
+           [org.nd4j.linalg.api.ndarray INDArray])
+  (:require [dl4clj.helpers :refer [reset-iterator!]]
+            [dl4clj.utils :refer [array-of]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn new-helper
   "creates a new instance of TransferLearningHelper with the supplied opts
@@ -75,9 +78,15 @@
 
   :helper (TransferLearningHelper), created by new-helper
 
-  :featurized-input (INDArray or array of INDArrays), featurized data"
-  [& {:keys [helper featurized-input]}]
-  (.outputFromFeaturized helper featurized-input))
+  :featurized-input (INDArray or vec), featurized data
+
+  :array-of-featurized-input (coll of INDArrays), multiple featurized inputs"
+  [& {:keys [helper featurized-input array-of-featurized-input]
+      :as opts}]
+  (if array-of-featurized-input
+    (.outputFromFeaturized helper (array-of :data array-of-featurized-input
+                                            :java-type INDArray))
+    (.outputFromFeaturized helper (vec-or-matrix->indarray featurized-input))))
 
 (defn unfrozen-mln
   "Returns the unfrozen layers of the MultiLayerNetwork as a multilayernetwork

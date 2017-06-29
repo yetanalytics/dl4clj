@@ -4,16 +4,17 @@
             [dl4clj.nn.conf.constants :as enum]
             [dl4clj.nn.api.model :refer [fit!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
-            [dl4clj.datasets.api.iterators :refer [has-next? next-example!]])
+            [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
 
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
-  some params (INDArray)"
+  some params (INDArray or vec)"
   [& {:keys [conf params]}]
   (if params
-    (MultiLayerNetwork. conf params)
+    (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
     (MultiLayerNetwork. conf)))
 
 (defn train-mln-with-ds-iter!
@@ -55,9 +56,9 @@
 
    :to (int), ending layer idx
 
-   :input (INDArray), the input to propagate through the layers"
+   :input (INDArray or vec), the input to propagate through the layers"
   [& {:keys [mln from to input]}]
-  (.activateSelectedLayers mln from to input))
+  (.activateSelectedLayers mln from to (vec-or-matrix->indarray input)))
 
 (defn activate-from-prev-layer
   "Calculate activation from previous layer including pre processing where necessary
@@ -65,11 +66,12 @@
   :current-layer-idx (int), the index of the current layer
    - you will get the activation from the layer directly before this one
 
-  :input (INDArray), the input to propagate through the layers
+  :input (INDArray or vec), the input to propagate through the layers
 
   :training? (boolean), is this training mode?"
   [& {:keys [mln current-layer-idx input training?]}]
-  (.activationFromPrevLayer mln current-layer-idx input training?))
+  (.activationFromPrevLayer mln current-layer-idx
+                            (vec-or-matrix->indarray input) training?))
 
 (defn clear-layer-mask-arrays!
   "Remove the mask arrays from all layers.
@@ -86,11 +88,11 @@
 
   :training? (boolean), training mode?
 
-  :input (INDArray), the input to propagate through the network for calcing activations"
+  :input (INDArray or vec), the input to propagate through the network for calcing activations"
   [& {:keys [mln training? input]
       :as opts}]
   (if (contains? opts :input)
-    (.computeZ mln input training?)
+    (.computeZ mln (vec-or-matrix->indarray input) training?)
     (.computeZ mln training?)))
 
 (defn get-epsilon
@@ -164,23 +166,26 @@
 
   :train? (boolean), is this training mode?
 
-  :input (INDArray), the input to be propagated through the network
+  :input (INDArray or vec), the input to be propagated through the network
 
-  :features-mask (INDArray), mask for the input features
+  :features-mask (INDArray or vec), mask for the input features
 
-  :labels-mask (INDArray), mask for the labels"
+  :labels-mask (INDArray or vec), mask for the labels"
   [& {:keys [mln train? input features-mask labels-mask]
       :as opts}]
-  (cond (contains-many? opts :input :features-mask :labels-mask)
-        (.feedForward mln input features-mask labels-mask)
+  (let [i (vec-or-matrix->indarray input)]
+   (cond (contains-many? opts :input :features-mask :labels-mask)
+         (.feedForward mln i
+                       (vec-or-matrix->indarray features-mask)
+                       (vec-or-matrix->indarray labels-mask))
         (contains-many? opts :input :train?)
-        (.feedForward mln input train?)
+        (.feedForward mln i train?)
         (contains? opts :input)
-        (.feedForward mln input)
+        (.feedForward mln i)
         (contains? opts :train?)
         (.feedForward mln train?)
         :else
-        (.feedForward mln)))
+        (.feedForward mln))))
 
 (defn feed-forward-to-layer
   "Compute the activations from the input to the specified layer.
@@ -190,19 +195,20 @@
 
   :train? (boolean), are we in training mode?
 
-  :input (INDArray), the input to propagate through the specified layer
+  :input (INDArray or vec), the input to propagate through the specified layer
 
   Note: the returned output list contains the original input at idx 0"
   [& {:keys [mln layer-idx train? input]
           :as opts}]
-  (cond (contains-many? opts :layer-idx :train? :input)
-        (.feedForwardToLayer mln layer-idx input train?)
+  (let [i (vec-or-matrix->indarray input)]
+   (cond (contains-many? opts :layer-idx :train? :input)
+        (.feedForwardToLayer mln layer-idx i train?)
         (contains-many? opts :layer-idx :input)
-        (.feedForwardToLayer mln layer-idx input)
+        (.feedForwardToLayer mln layer-idx i)
         (contains-many? opts :layer-idx :train?)
         (.feedForwardToLayer mln layer-idx train?)
         :else
-        (assert false "you must supply a mln, a layer-idx and either/both train? and input")))
+        (assert false "you must supply a mln, a layer-idx and either/both train? and input"))))
 
 (defn fine-tune!
   "Run SGD based on the given labels
@@ -294,10 +300,10 @@
 (defn initialize-layers!
   "initialize the neuralNets based on the input.
 
-  :input (INDArray), the input matrix for training"
+  :input (INDArray or vec), the input matrix for training"
   [& {:keys [mln input]}]
   (doto mln
-    (.initializeLayers input)))
+    (.initializeLayers (vec-or-matrix->indarray input))))
 
 (defn get-mln-input
   "returns the input/feature matrix for the model"
@@ -320,11 +326,11 @@
    - This mainly affect hyper parameters such as drop out
      where certain things should be applied with activations
 
-  :input (INDArray), the input to label
+  :input (INDArray or vec), the input to label
 
-  :features-mask (INDArray), the mask used for the features
+  :features-mask (INDArray or vec), the mask used for the features
 
-  :labels-mask (INDArray), the mask used for the labels
+  :labels-mask (INDArray or vec), the mask used for the labels
 
   :training-mode (keyword), another way to say if its training or testing mode
 
@@ -332,18 +338,21 @@
   [& {:keys [iter train? input features-mask labels-mask
              training-mode mln]
       :as opts}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-if-empty?! iter)
+        i (vec-or-matrix->indarray input)]
     (cond (contains-many? opts :input :train?
                           :features-mask :labels-mask)
-          (.output mln input train? features-mask labels-mask)
+          (.output mln i train?
+                   (vec-or-matrix->indarray features-mask)
+                   (vec-or-matrix->indarray labels-mask))
           (contains-many? opts :training-mode :input)
-          (.output mln input (enum/value-of {:layer-training-mode training-mode}))
+          (.output mln i (enum/value-of {:layer-training-mode training-mode}))
           (contains-many? opts :train? :input)
-          (.output mln input train?)
+          (.output mln i train?)
           (contains-many? opts :iter :train?)
           (.output mln ds-iter train?)
           (contains? opts :input)
-          (.output mln input)
+          (.output mln i)
           (contains? opts :iter)
           (.output mln ds-iter)
           :else
@@ -370,13 +379,13 @@
   :iter (ds-iter), dataset iterator
    - see: dl4clj.datasets.datavec
 
-  :features (INDArray), training data array"
+  :features (INDArray or vec), training data array"
   [& {:keys [mln layer-idx iter features]
       :as opts}]
   (cond (contains-many? opts :layer-idx :iter)
         (.pretrainLayer mln layer-idx (reset-iterator! iter))
         (contains-many? opts :layer-idx :features)
-        (.pretrainLayer mln layer-idx features)
+        (.pretrainLayer mln layer-idx (vec-or-matrix->indarray features))
         :else
         (assert false "you must supply the layer's index and either a dataset
  iterator or an array of features to pretrain on")))
@@ -390,7 +399,7 @@
 (defn reconstruct
   "reconstructs the input from the output of a given layer
 
-  :layer-output (INDArray), the input to transform
+  :layer-output (INDArray or vec), the input to transform
 
   :layer-idx (int), the layer to output for encoding
 
@@ -399,13 +408,13 @@
   [& {:keys [mln layer-output layer-idx]
       :as opts}]
   (assert (contains-many? opts :layer-output :layer-idx) "you must supply a layer and the input")
-  (.reconstruct mln layer-output layer-idx))
+  (.reconstruct mln (vec-or-matrix->indarray layer-output) layer-idx))
 
 (defn rnn-activate-using-stroed-state
   "returns the activation of the rnn given its most recent state
    - does not modify the RNN layer state, pure fn
 
-  :input (INDArray), the input fed to the rnn
+  :input (INDArray or vec), the input fed to the rnn
 
   :training? (boolean), is this training mode?
 
@@ -418,7 +427,7 @@
   (assert (contains-many? opts :input :training? :store-last-for-tbptt?)
           "you must supply a mln, the input to the model, if this is during training
 or evaluation and if we want to store the previous state for truncated backprop")
-  (.rnnActivateUsingStoredState mln input training? store-last-for-tbptt?))
+  (.rnnActivateUsingStoredState mln (vec-or-matrix->indarray input) training? store-last-for-tbptt?))
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
@@ -455,12 +464,12 @@ a map of the desired state")
    -  The activations for the final step are also stored in the RNN layers for
       use next time this fn is called.
 
-  :input (INDArray), Input to network. May be for one or multiple time steps.
+  :input (INDArray or vec), Input to network. May be for one or multiple time steps.
    - For single time step: input has shape [miniBatchSize,inputSize] or [miniBatchSize,inputSize,1].
        - miniBatchSize=1 for single example.
    - For multiple time steps: [miniBatchSize,inputSize,inputTimeSeriesLength]"
   [& {:keys [mln input]}]
-  (.rnnTimeStep mln input))
+  (.rnnTimeStep mln (vec-or-matrix->indarray input)))
 
 (defn score-examples
   "Calculate the score for each example in a DataSet individually.
@@ -490,19 +499,19 @@ you must also supply whether or not you want to add regularization terms (L1, L2
   "Note that if input isn't nil and the neuralNets are nil,
   this is a way of initializing the neural network, returns the mln
 
-  :input (INDArray), the input to the mln"
+  :input (INDArray or vec), the input to the mln"
   [& {:keys [mln input]}]
   (doto mln
-    (.setInput input)))
+    (.setInput (vec-or-matrix->indarray input))))
 
 (defn set-labels-mln!
   "sets the labels given an array of labels,
   returns the mln.
 
-  :labels (INDArray), the labels to be set"
+  :labels (INDArray or vec), the labels to be set"
   [& {:keys [mln labels]}]
   (doto mln
-    (.setLabels labels)))
+    (.setLabels (vec-or-matrix->indarray labels))))
 
 (defn set-layers!
   "sets the layers of the mln in the order in which they appear in the supplied coll.
@@ -532,22 +541,22 @@ you must also supply whether or not you want to add regularization terms (L1, L2
 (defn set-mask!
   "set the mask, returns the mln
 
-  :mask (INDArray), the mask to set for the mln"
+  :mask (INDArray or vec), the mask to set for the mln"
   [& {:keys [mln mask]}]
   (doto mln
-    (.setMask mask)))
+    (.setMask (vec-or-matrix->indarray mask))))
 
 (defn set-parameters!
   "set the paramters for this model (mln).
    - This is used to manipulate the weights and biases across all neuralNets
      (including the output layer)
 
-  :params (INDArray), a parameter vector equal 1,numParameters
+  :params (INDArray or vec), a parameter vector equal 1,numParameters
 
   returns the mln"
   [& {:keys [mln params]}]
   (doto mln
-    (.setParameters params)))
+    (.setParameters (vec-or-matrix->indarray params))))
 
 (defn set-score!
   "sets the score,
@@ -597,7 +606,7 @@ you must also supply whether or not you want to add regularization terms (L1, L2
 
   :current-layer-idx (int), the current layer
 
-  :input (INDArray), the input
+  :input (INDArray or vec), the input
 
   :training? (boolean), are we in training mode?
 
@@ -606,4 +615,4 @@ you must also supply whether or not you want to add regularization terms (L1, L2
       :as opts}]
   (assert (contains-many? opts :current-layer-idx :input :training?)
           "you must supply the index of the current layer, an input array and if this is for training or evaluation")
-  (.zFromPrevLayer mln current-layer-idx input training?))
+  (.zFromPrevLayer mln current-layer-idx (vec-or-matrix->indarray input) training?))

@@ -14,7 +14,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
 ;; helper fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn replace-n-out
+(defn replace-layer!
   "performs the replacement of n-out for a supplied layer
 
   This fn is called within multi-layer-network-mutater-builder
@@ -123,7 +123,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - required to add layer(s)
    - see dl4clj.nn.transfer-learning.fine-tune-conf
 
-  :n-out-replace (map), {:layer-idx (int) :n-out (int) :dist (distribution)
+  :replacement-layer (map), {:layer-idx (int) :n-out (int) :dist (distribution)
                          :next-dist (distribution) :weight-init (keyword)
                          :next-weight-init (keyword)}
    - see replace-n-out for further details about the args
@@ -142,22 +142,21 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
 
   :build? (boolean), wether or not to build the mutation, defaults to true"
   [& {:keys [mln add-layer add-layers fine-tune-conf
-           n-out-replace remove-last-n-layers
-           remove-output-layer? set-feature-extractor-idx
-           input-pre-processor build? tlb]
+             replacement-layer remove-last-n-layers
+             remove-output-layer? set-feature-extractor-idx
+             input-pre-processor build? tlb]
       :or {build? true}
-    :as opts}]
+      :as opts}]
   (let [b (if (contains? opts :tlb)
             tlb
            (TransferLearning$Builder. mln))]
     (cond-> b
       (contains? opts :fine-tune-conf) (.fineTuneConfiguration fine-tune-conf)
-      (contains? opts :n-out-replace) (replace-n-out n-out-replace)
+      (contains? opts :n-out-replace) (replace-layer! replacement-layer)
       (contains? opts :remove-last-n-layers) (.removeLayersFromOutput remove-last-n-layers)
       (true? remove-output-layer?) .removeOutputLayer
-      ;; refactor so can add multiple layers
       (contains? opts :add-layer) (.addLayer add-layer)
       (contains? opts :add-layers) (add-multiple-layers add-layers)
       (contains? opts :set-feature-extractor-idx) (.setFeatureExtractor set-feature-extractor-idx)
       (contains? opts :input-pre-processor) (set-input-pre-processor! input-pre-processor)
-      (true? build?) .build)))
+      build? .build)))

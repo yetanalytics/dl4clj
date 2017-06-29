@@ -6,7 +6,8 @@ These fns happen behind the scene (when you fit a model)
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.html"}
     dl4clj.nn.updater.layer-updater
   (:import [org.deeplearning4j.nn.updater LayerUpdater])
-  (:require [dl4clj.constants :as enum]))
+  (:require [dl4clj.constants :as enum]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn new-layer-updater
   "creates a new instance of the LayerUpdater class"
@@ -72,15 +73,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
   :layer (layer), a neural network layer
    - see: dl4clj.nn.layers.layer-creation
 
-  :gradient (INDArray), the errors for the layer
+  :gradient (INDArray or vec), the errors for the layer
 
   :param (str), the param to apply the gradient and regularization to
 
   :mini-batch-size (int), the size of the mini-batch
 
   returns the updater"
-  [& {:keys [updater layer gradient-array param mini-batch-size]}]
-  (.postApply updater layer gradient-array param mini-batch-size)
+  [& {:keys [updater layer gradient param mini-batch-size]}]
+  (.postApply updater layer (vec-or-matrix->indarray gradient) param mini-batch-size)
   {:layer layer :updater updater})
 
 (defn get-updater-for-variable
