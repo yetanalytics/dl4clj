@@ -1,13 +1,14 @@
 (ns ^{:doc "Default gradient implementation. Basically lookup table for ndarrays
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradient.html"}
     dl4clj.nn.gradient.default-gradient
-  (:import [org.deeplearning4j.nn.gradient DefaultGradient]))
+  (:import [org.deeplearning4j.nn.gradient DefaultGradient])
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn new-default-gradient
   [& {:keys [flattened-gradient]
       :as opts}]
   (if (contains? opts :flattened-gradient)
-    (DefaultGradient. flattened-gradient)
+    (DefaultGradient. (vec-or-matrix->indarray flattened-gradient))
     (DefaultGradient.)))
 
 (defn clear!
@@ -40,6 +41,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
 (defn set-gradient-for!
   "Update gradient for the given variable; also (optionally) specify the order in which the array should be flattened to a row vector"
   [& {:keys [grad variable new-gradient flattening-order]}]
-  (if flattening-order
-    (doto grad (.setGradientFor variable new-gradient flattening-order))
-    (doto grad (.setGradientFor variable new-gradient))))
+  (let [ng (vec-or-matrix->indarray new-gradient)]
+    (if flattening-order
+      (doto grad (.setGradientFor variable ng flattening-order))
+      (doto grad (.setGradientFor variable ng)))))

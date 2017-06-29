@@ -6,7 +6,8 @@
            [org.deeplearning4j.nn.layers.variational VariationalAutoencoder]
            [org.deeplearning4j.nn.layers.feedforward.rbm RBM])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.constants :as enum]))
+            [dl4clj.nn.conf.constants :as enum]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; base output layer
@@ -15,21 +16,22 @@
 (defn layer-output
   "returns the output of a layer.
 
-  :input (INDArray), the input to the layer
+  :input (INDArray or vec), the input to the layer
 
   :training? (boolean), are we in trianing mode or testing?
 
   multiple layers implement this fn"
   [& {:keys [layer input training?]
       :as opts}]
-  (cond (contains-many? opts :input :training?)
-        (.output layer input training?)
+  (let [i (vec-or-matrix->indarray input)]
+   (cond (contains-many? opts :input :training?)
+        (.output layer i training?)
         (contains? opts :input)
-        (.output layer input)
+        (.output layer i)
         (contains? opts :training?)
         (.output layer training?)
         :else
-        (assert false "you must supply a layer and either some input or training?")))
+        (assert false "you must supply a layer and either some input or training?"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; base pretrain layer
@@ -38,25 +40,28 @@
 (defn get-corrupted-input
   "Corrupts the given input by doing a binomial sampling given the corruption level
 
-  :features is an INDArray of input features to the network
+  :features is an INDArray or vector of input features to the network
 
   :corruption-level (double) amount of corruption to apply."
   [& {:keys [base-pretrain-network features corruption-level]}]
-  (.getCorruptedInput base-pretrain-network features corruption-level))
+  (.getCorruptedInput base-pretrain-network (vec-or-matrix->indarray features)
+                      corruption-level))
 
 (defn sample-hidden-given-visible
   "Sample the hidden distribution given the visible
 
-  :visible is an INDArray of the visibile distribution"
+  :visible is an INDArray or vector of the visibile distribution"
   [& {:keys [base-pretrain-network visible]}]
-  (.sampleHiddenGivenVisible base-pretrain-network visible))
+  (.sampleHiddenGivenVisible base-pretrain-network
+                             (vec-or-matrix->indarray visible)))
 
 (defn sample-visible-given-hidden
   "Sample the visible distribution given the hidden
 
-  :hidden is an INDArray of the hidden distribution"
+  :hidden is an INDArray or vector of the hidden distribution"
   [& {:keys [base-pretrain-network hidden]}]
-  (.sampleVisibleGivenHidden base-pretrain-network hidden))
+  (.sampleVisibleGivenHidden base-pretrain-network
+                             (vec-or-matrix->indarray hidden)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; autoencoders
@@ -65,12 +70,12 @@
 (defn decode
   "decodes an encoded output of an autoencoder"
   [& {:keys [autoencoder layer-output]}]
-  (.decode autoencoder layer-output))
+  (.decode autoencoder (vec-or-matrix->indarray layer-output)))
 
 (defn encode
   "encodes an input to be passed to an autoencoder"
   [& {:keys [autoencoder input training?]}]
-  (.encode autoencoder input training?))
+  (.encode autoencoder (vec-or-matrix->indarray input) training?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rbm
@@ -81,7 +86,7 @@
   returns the expected values and samples of both the visible samples given
   the hidden and the new hidden input and expected values"
   [& {:keys [rbm hidden-input]}]
-  (.gibbhVh rbm hidden-input))
+  (.gibbhVh rbm (vec-or-matrix->indarray hidden-input)))
 
 (defn prop-up
   "Calculates the activation of the visible : sigmoid(v * W + hbias)"
@@ -89,19 +94,20 @@
       :as opts}]
   (assert (contains-many? opts :rbm :visible-input)
           "you must supply a rbm and the visible input")
-  (if (contains? opts :training?)
-    (.propUp rbm visible-input training?)
-    (.propUp rbm visible-input)))
+  (let [vi (vec-or-matrix->indarray visible-input)]
+   (if (contains? opts :training?)
+    (.propUp rbm vi training?)
+    (.propUp rbm vi))))
 
 (defn prop-up-derivative
   "derivative of the prop-up activation"
   [& {:keys [rbm prop-up-vals]}]
-  (.propUpDerivative rbm prop-up-vals))
+  (.propUpDerivative rbm (vec-or-matrix->indarray prop-up-vals)))
 
 (defn prop-down
   "Calculates the activation of the hidden: (activation (h * W + vbias))"
   [& {:keys [rbm hidden-input]}]
-  (.propDown rbm hidden-input))
+  (.propDown rbm (vec-or-matrix->indarray hidden-input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; frozen layer
@@ -135,7 +141,7 @@
 (defn get-shape
   "returns an integer array of the shape after passing through the normalization layer"
   [& {:keys [batch-norm features]}]
-  (.getShape batch-norm features))
+  (.getShape batch-norm (vec-or-matrix->indarray features)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vae
@@ -169,41 +175,41 @@
 
   under the hood, this fn calls reconstructionLogProbability in dl4j land.
 
-  :data (INDArray), the data to calculate the reconstruction probability for
+  :data (INDArray or vec), the data to calculate the reconstruction probability for
 
   :num-samples (int), Number of samples with which to base the reconstruction probability on."
   [& {:keys [vae data num-samples]}]
-  (.reconstructionProbability vae data num-samples))
+  (.reconstructionProbability vae (vec-or-matrix->indarray data) num-samples))
 
 (defn reconstruction-log-probability
   "Return the log reconstruction probability given the specified number of samples.
 
   the docs in reconstruction-probability also apply to this fn."
   [& {:keys [vae data num-samples]}]
-  (.reconstructionLogProbability vae data num-samples))
+  (.reconstructionLogProbability vae (vec-or-matrix->indarray data) num-samples))
 
 (defn generate-random-given-z
   "Given a specified values for the latent space as input (latent space being z in p(z|data)),
   randomly generate output x, where x ~ P(x|z)
 
-  :latent-space-values (INDArray), Values for the latent space.
+  :latent-space-values (INDArray or vec), Values for the latent space.
     - size(1) must equal nOut configuration parameter
 
   :vae (layer), is the variational autoencoder"
   [& {:keys [vae latent-space-values]}]
-  (.generateRandomGivenZ vae latent-space-values))
+  (.generateRandomGivenZ vae (vec-or-matrix->indarray latent-space-values)))
 
 (defn generate-at-mean-given-z
   "Given a specified values for the latent space as input (latent space being z in p(z|data)),
   generate output from P(x|z), where x = E[P(x|z)]
    - i.e., return the mean value for the distribution P(x|z)
 
-  :latent-space-values (INDArray), Values for the latent space.
+  :latent-space-values (INDArray or vec), Values for the latent space.
     - size(1) must equal nOut configuration parameter
 
   :vae (layer), is the variational autoencoder"
   [& {:keys [vae latent-space-values]}]
-  (.generateAtMeanGivenZ vae latent-space-values))
+  (.generateAtMeanGivenZ vae (vec-or-matrix->indarray latent-space-values)))
 
 (defn has-loss-fn?
   "Does the reconstruction distribution have a loss function (such as mean squared error)
@@ -223,6 +229,6 @@
 
   :vae (layer), is the variational autoencoder
 
-  :data (INDArray), the data to calc the reconstruction error on"
+  :data (INDArray or vec), the data to calc the reconstruction error on"
   [& {:keys [vae data]}]
-  (.reconstructionError vae data))
+  (.reconstructionError vae (vec-or-matrix->indarray data)))
