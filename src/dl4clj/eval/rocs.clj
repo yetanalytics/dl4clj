@@ -36,8 +36,9 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
   steps of size 1.0 / threshold-steps
 
   threshold-steps (int), controls the step size for generating the ROC curve"
-  [threshold-steps]
-  (rocs {:binary {:threshold-steps threshold-steps}}))
+  [& {:keys [threshold-steps]
+      :as opts}]
+  (rocs {:binary opts}))
 
 (defn new-multiclass-roc
   "creates a new ROC for multi-class classifiers
@@ -46,5 +47,6 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
   steps of size 1.0 / threshold-steps
 
   threshold-steps (int), controls the step size for generating the ROC curve"
-  [threshold-steps]
-  (rocs {:multi-class {:threshold-steps threshold-steps}}))
+  [& {:keys [threshold-steps]
+      :as opts}]
+  (rocs {:multi-class opts}))

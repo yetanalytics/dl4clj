@@ -7,7 +7,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
 (defn export-roc-charts-to-html-file
   "Given a ROC or ROCMultiClass chart, export the chart to an html file"
   [& {:keys [roc file-path]}]
-  (.exportRocChartsToHtmlFile roc (io/as-file file-path)))
+  (EvaluationTools/exportRocChartsToHtmlFile roc (io/as-file file-path)))
 
 (defn roc-chart-to-html
   "Given a ROC or ROCMultiClass instance, render the ROC chart
@@ -15,5 +15,5 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
   [& {:keys [roc class-labels]
       :as opts}]
   (if (contains? opts :class-labels)
-    (.rocChartToHtml roc class-labels)
-    (.rocChartToHtml roc)))
+    (EvaluationTools/rocChartToHtml roc class-labels)
+    (EvaluationTools/rocChartToHtml roc)))

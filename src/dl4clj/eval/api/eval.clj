@@ -1,34 +1,65 @@
 (ns dl4clj.eval.api.eval
-  (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
+  (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation
+            IEvaluation])
   (:require [dl4clj.utils :refer [contains-many? get-labels]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
             ;; this is going to change
             [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
-            [dl4clj.helpers :refer [reset-iterator! new-lazy-iter]]))
+            [dl4clj.helpers :refer [reset-iterator! new-lazy-iter]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interact with a classification evaluator
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn eval-classification!
-  ;; add doc string
+  "evaluate the output of a network.
+
+  :labels (vec or INDArray), the actual labels of the data (target labels)
+
+  :network-predictions (vec or INDArray), the output of the network
+
+  :mask-array (vec or INDArray), the mask array for the data if there is one
+
+  :record-meta-data (coll) meta data that extends java.io.Serializable
+
+  NOTE: for evaluating classification problems, use eval-classification! in
+   dl4clj.eval.evaluation, (when the evaler is created by new-classification-evaler)"
+  ;; update this docstring
   [& {:keys [labels network-predictions mask-array record-meta-data evaler
              mln features predicted-idx actual-idx]
       :as opts}]
   (assert (contains? opts :evaler) "you must provide an evaler to evaluate a classification task")
-  (cond (contains-many? opts :labels :network-predictions :record-meta-data)
-        (doto evaler (.eval labels network-predictions (into '() record-meta-data)))
+  (let [l (vec-or-matrix->indarray labels)
+        np (vec-or-matrix->indarray network-predictions)]
+   (cond (contains-many? opts :labels :network-predictions :record-meta-data)
+        (doto evaler (.eval l np (into '() record-meta-data)))
         (contains-many? opts :labels :network-predictions :mask-array)
-        (doto evaler (.eval labels network-predictions mask-array))
+        (doto evaler (.eval l np (vec-or-matrix->indarray mask-array)))
         (contains-many? opts :labels :features :mln)
-        (doto evaler (.eval labels features mln))
+        (doto evaler (.eval l (vec-or-matrix->indarray features) mln))
         (contains-many? opts :labels :network-predictions)
-        (doto evaler (.eval labels network-predictions))
+        (doto evaler (.eval l np))
         (contains-many? opts :predicted-idx :actual-idx)
         (doto evaler (.eval predicted-idx actual-idx))
         :else
-        (assert false "you must supply an evaler, the correct labels and the network predicted labels")))
+        (assert false "you must supply an evaler, the correct labels and the network predicted labels"))))
+
+(defn eval-time-series!
+  "evalatues a time series given labels and predictions.
+
+  labels-mask is optional and only applies when there is a mask"
+  [& {:keys [labels predicted labels-mask evaler]
+      :as opts}]
+  (let [l (vec-or-matrix->indarray labels)
+        p (vec-or-matrix->indarray predicted)]
+    (cond (contains? opts :labels-mask)
+          (doto evaler (.evalTimeSeries l p (vec-or-matrix->indarray labels-mask)))
+          (false? (contains? opts :labels-mask))
+          (doto evaler (.evalTimeSeries l p))
+          :else
+          (assert false "you must supply labels-mask and/or labels and predicted values"))))
 
 (defn get-stats
   "Method to obtain the classification report as a String"
@@ -313,3 +344,14 @@
   "return relative squared error"
   [& {:keys [regression-evaler column-idx]}]
   (.relativeSquaredError regression-evaler column-idx))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; general
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn merge!
+  "merges objects that implemented the IEvaluation interface
+
+  evaler and other-evaler can be evaluations, ROCs or MultiClassRocs"
+  [& {:keys [evaler other-evaler]}]
+  (doto evaler (.merge other-evaler)))
