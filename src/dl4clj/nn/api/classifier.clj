@@ -4,7 +4,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   dl4clj.nn.api.classifier
   (:import [org.deeplearning4j.nn.api Classifier])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.helpers :refer [reset-iterator!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn f1-score
   "With two arguments (classifier and dataset):
@@ -12,7 +13,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
 
   With three arguments (classifier, examples and labels):
    - Returns the f1 score for the given examples.
-   - examples and labels should both be INDArrays
+   - examples and labels should both be INDArrays or vectors
     - examples = the data you want to classify
     - labels = the correct classifcation for a a set of examples"
   [& {:keys [classifier dataset examples labels]
@@ -20,7 +21,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   (cond (contains? opts :dataset)
         (.f1Score classifier dataset)
         (contains-many? opts :examples :labels)
-        (.f1Score classifier examples labels)
+        (.f1Score classifier
+                  (vec-or-matrix->indarray examples)
+                  (vec-or-matrix->indarray labels))
         :else
         (assert false "you must supply a classifier and either a dataset or
 examples and their labels")))
@@ -33,9 +36,9 @@ examples and their labels")))
 
   :iter (iterator), an iterator for going through a collection of dataset objects
 
-  :examples = INDArray of input data to be classified
+  :examples = INDArray or vector of input data to be classified
 
-  :labels = INDArray or integer-array of labels for the examples
+  :labels = INDArray or vector of labels for the examples
 
   Returns the classifier after it has been fit"
   [& {:keys [classifier data-set iter examples labels]
@@ -45,7 +48,8 @@ examples and their labels")))
         (contains? opts :dataset-iterator)
         (doto classifier (.fit (reset-iterator! iter)))
         (contains-many? opts :examples :labels)
-        (doto classifier (.fit examples labels))
+        (doto classifier (.fit (vec-or-matrix->indarray examples)
+                               (vec-or-matrix->indarray labels)))
         :else
         (assert false "you must supply a classifier and either a dataset,
  iterator obj, or examples and their labels")))
@@ -53,9 +57,9 @@ examples and their labels")))
 (defn label-probabilities
   "Returns the probabilities for each label for each example row wise
 
-  :examples (INDArray), the examples to classify (one example in each row)"
+  :examples (INDArray or vec), the examples to classify (one example in each row)"
   [& {:keys [classifier examples]}]
-  (.labelProbabilities classifier examples))
+  (.labelProbabilities classifier (vec-or-matrix->indarray examples)))
 
 (defn num-labels
   "Returns the number of possible labels"
@@ -63,14 +67,14 @@ examples and their labels")))
   (.numLabels classifier))
 
 (defn predict
-  "Takes in a list of examples for each row (INDArray), returns a label
+  "Takes in a list of examples for each row (INDArray or vec), returns a label
 
    or
 
   takes a datset of examples for each row, returns a label"
   [& {:keys [classifier examples dataset]
       :as opts}]
-  (cond (contains? opts :examples) (.predict classifier examples)
+  (cond (contains? opts :examples) (.predict classifier (vec-or-matrix->indarray examples))
         (contains? opts :dataset) (.predict classifier dataset)
         :else
         (assert false "you must supply a classifier and either an INDArray of examples or a dataset")))

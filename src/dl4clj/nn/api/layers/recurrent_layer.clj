@@ -2,17 +2,19 @@
 fns are for recurrent layers (LSTM, RecurrentLayer)
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/layers/RecurrentLayer.html"}
     dl4clj.nn.api.layers.recurrent-layer
-  (:import [org.deeplearning4j.nn.api.layers RecurrentLayer]))
+  (:import [org.deeplearning4j.nn.api.layers RecurrentLayer])
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn rnn-activate-using-stored-state
   "Similar to rnnTimeStep, this method is used for activations using the state
   stored in the stateMap as the initialization.
 
-  input (INDArray) of input values to the layer
+  input (INDArray or vec) of input values to the layer
   store-last-for-tbptt? (boolean), save state to be used in tbptt
   training? (boolean) is the model currently in training or not?"
   [& {:keys [rnn-layer input training? store-last-for-tbptt?]}]
-  (.rnnActivateUsingStoredState rnn-layer input training? store-last-for-tbptt?))
+  (.rnnActivateUsingStoredState rnn-layer (vec-or-matrix->indarray input)
+                                training? store-last-for-tbptt?))
 
 (defn rnn-clear-previous-state!
   "Reset/clear the stateMap for rnn-time-step and
@@ -57,14 +59,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/layers/RecurrentLa
   If stateMap is empty, default initialization (usually zeros) is used
   Implementations also update stateMap at the end of this method
 
-  input should be an INDArray of input values to the layer"
+  input should be an INDArray or vector of input values to the layer"
   [& {:keys [rnn-layer input]}]
-  (.rnnTimeStep rnn-layer input))
+  (.rnnTimeStep rnn-layer (vec-or-matrix->indarray input)))
 
 (defn tbptt-backprop-gradient
   "Returns the Truncated BPTT gradient
 
-  epsilon should be an INDArray
+  epsilon should be an INDArray or vec
   tbptt-back-length is an integer"
   [& {:keys [rnn-layer epsilon tbptt-back-length]}]
-  (.tbpttBackpropGradient rnn-layer epsilon tbptt-back-length))
+  (.tbpttBackpropGradient rnn-layer (vec-or-matrix->indarray epsilon)
+                          tbptt-back-length))

@@ -4,7 +4,8 @@
   dl4clj.nn.api.model
   (:import [org.deeplearning4j.nn.api Model])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-if-empty?!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;; add .setBackpropGradientsViewArray and .validateInput
 
@@ -55,25 +56,30 @@
              features features-mask labels-mask
              examples label-idxs]
       :as opts}]
-  (cond (contains-many? opts :features :labels :features-mask :labels-mask)
+  (let [d (vec-or-matrix->indarray data)]
+   (cond (contains-many? opts :features :labels :features-mask :labels-mask)
         (doto mln
-          (.fit features labels features-mask labels-mask))
+          (.fit (vec-or-matrix->indarray features)
+                (vec-or-matrix->indarray labels)
+                (vec-or-matrix->indarray features-mask)
+                (vec-or-matrix->indarray labels-mask)))
         (contains-many? opts :examples :label-idxs)
         (doto mln
-          (.fit examples label-idxs))
+          (.fit (vec-or-matrix->indarray examples)
+                (int-array label-idxs)))
         (contains-many? opts :data :labels)
         (doto mln
-          (.fit data labels))
+          (.fit d (vec-or-matrix->indarray labels)))
         (contains? opts :data)
         (doto mln
-          (.fit data))
+          (.fit d))
         (contains? opts :iter)
         (doto mln
           (.fit (reset-if-empty?! iter)))
         (contains? opts :ds)
         (doto mln (.fit ds))
         :else
-        (doto mln (.fit))))
+        (doto mln (.fit)))))
 
 (defn get-optimizer
   "Returns this models optimizer"
@@ -112,7 +118,7 @@
   "Run one iteration"
   [& {:keys [model input]}]
   (doto model
-    (.iterate input)))
+    (.iterate (vec-or-matrix->indarray input))))
 
 (defn num-params
   "the number of parameters for the model
@@ -166,16 +172,16 @@
       :or {return-model? false}
       :as opts}]
   (cond (and (contains-many? opts :dataset :training?)
-             (true? return-model?))
+             return-model?)
         (doto model (.score dataset training?))
         (contains-many? opts :dataset :training?)
         (.score model dataset training?)
         (and (contains? opts :dataset)
-             (true? return-model?))
+             return-model?)
         (doto model (.score dataset))
         (contains? opts :dataset)
         (.score model dataset)
-        (true? return-model?)
+        return-model?
         (doto model (.score))
         :else
         (.score model)))
@@ -197,17 +203,17 @@
 
   :k (str), the key to set
 
-  :v (INDArray), the value to be set"
+  :v (INDArray or vec), the value to be set"
   [& {:keys [model k v]
       :as opts}]
   (doto model
-    (.setParam k v)))
+    (.setParam k (vec-or-matrix->indarray v))))
 
 (defn set-params!
   "Set the parameters for this model."
   [& {:keys [model params]}]
   (doto model
-    (.setParams params)))
+    (.setParams (vec-or-matrix->indarray params))))
 
 (defn set-param-table!
   "Setter for the param table"
@@ -218,12 +224,13 @@
   "if gradient comes from deafult-gradient-implementation:
    - Update layer weights and biases with gradient change
 
-  if gradient is an INDArray and param-type is supplied:
+  if gradient is an INDArray or vec and param-type is supplied:
    -Perform one update applying the gradient"
   [& {:keys [model gradient param-type]
       :as opts}]
   (assert (contains-many? opts :model :gradient)
           "you must supply a model and a gradient")
-  (if (contains? opts :param-type)
-    (.update model gradient param-type)
-    (.update model gradient)))
+  (let [g (vec-or-matrix->indarray gradient)]
+   (if (contains? opts :param-type)
+    (.update model g param-type)
+    (.update model g))))

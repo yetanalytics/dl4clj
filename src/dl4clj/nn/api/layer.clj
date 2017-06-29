@@ -4,7 +4,8 @@
   dl4clj.nn.api.layer
   (:import [org.deeplearning4j.nn.api Layer])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.constants :as enum]))
+            [dl4clj.nn.conf.constants :as enum]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn activate-layer
   "6 opts for triggering an activation
@@ -12,7 +13,7 @@
 
   2) supply training? (boolean), trigger with the last specified input
 
-  3) supply input (INDArray), initialize the layer with the given input and return
+  3) supply input (INDArray or vec), initialize the layer with the given input and return
    the activation for this layer given this input
 
   4) supply training-mode (keyword), Trigger an activation with the last specified input
@@ -25,23 +26,24 @@
   [& {:keys [model training? input training-mode]
       :as opts}]
   (assert (contains? opts :model) "you must supply a layer to activate or a model with layers")
-  (cond (contains-many? opts :input :training?)
-        (.activate model input training?)
+  (let [i (vec-or-matrix->indarray input)]
+   (cond (contains-many? opts :input :training?)
+        (.activate model i training?)
         (contains-many? opts :input :training-mode)
-        (.activate model input (enum/value-of {:layer-training-mode training-mode}))
+        (.activate model i (enum/value-of {:layer-training-mode training-mode}))
         (contains? opts :input)
-        (.activate model input)
+        (.activate model i)
         (contains? opts :training?)
         (.activate model training?)
         (contains? opts :training-mode)
         (.activate model (enum/value-of {:layer-training-mode training-mode}))
         :else
-        (.activate model)))
+        (.activate model))))
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
 
-   :mask-array (INDArray of mask values),
+   :mask-array (INDArray or vec of mask values),
 
    :mask-state (keyword), either :active or :passthrough
     - :active = apply mask to activations and errors.
@@ -50,15 +52,15 @@
 
   :batch-size (int) the minibatch size to use"
   [& {:keys [layer mask-array mask-state batch-size]}]
-  (.feedForwardMaskArray layer mask-array
+  (.feedForwardMaskArray layer (vec-or-matrix->indarray mask-array)
    (enum/value-of {:mask-state mask-state})
    batch-size))
 
 (defn backprop-gradient
   "Calculate the gradient relative to the error in the next layer
-   epsilon is an INDArray"
+   epsilon is an INDArray or vec"
   [& {:keys [layer epsilon]}]
-  (.backpropGradient layer epsilon))
+  (.backpropGradient layer (vec-or-matrix->indarray epsilon)))
 
 (defn calc-l1
   "Calculate the l1 regularization term. 0.0 if regularization is not used."
@@ -98,7 +100,7 @@
 (defn pre-output
   "returns the raw activations for the supplied layer
 
-  :input (INDArray), the input to the layer
+  :input (INDArray or vec), the input to the layer
 
   :training? (boolean), are we in training or testing mode?
 
@@ -108,14 +110,15 @@
   multiple layers implement this fn"
   [& {:keys [layer input training? training-mode]
       :as opts}]
-  (cond (contains-many? opts :input :training?)
-        (.preOutput layer input training?)
+  (let [i (vec-or-matrix->indarray input)]
+   (cond (contains-many? opts :input :training?)
+        (.preOutput layer i training?)
         (contains-many? opts :input :training-mode)
-        (.preOutput layer input (enum/value-of {:training-mode training-mode}))
+        (.preOutput layer i (enum/value-of {:training-mode training-mode}))
         (contains? opts :training?)
         (.preOutput layer training?)
         (contains? opts :input)
-        (.preOutput opts input)))
+        (.preOutput layer i))))
 
 (defn set-index!
   "Set the layer index and returns the layer.
@@ -128,7 +131,7 @@
   "set the layer's input and return the layer"
   [& {:keys [layer input]}]
   (doto layer
-    (.setInput input)))
+    (.setInput (vec-or-matrix->indarray input))))
 
 (defn set-input-mini-batch-size!
   "Set current/last input mini-batch size and return the layer.
@@ -149,7 +152,7 @@
   mask-array is an INDArray"
   [& {:keys [layer mask-array]}]
   (doto layer
-    (.setMaskArray mask-array)))
+    (.setMaskArray (vec-or-matrix->indarray mask-array))))
 
 (defn transpose
   "Return a transposed copy of the weights/bias

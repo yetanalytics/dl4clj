@@ -2,7 +2,8 @@
 fns are for output layers (those that calculate gradients with respect to a labels array)
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/layers/IOutputLayer.html"}
     dl4clj.nn.api.layers.i-output-layer
-  (:import [org.deeplearning4j.nn.api.layers IOutputLayer]))
+  (:import [org.deeplearning4j.nn.api.layers IOutputLayer])
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn compute-score
   "Compute score after labels and input have been set.
@@ -28,7 +29,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/layers/IOutputLaye
 (defn set-labels!
   "Set the labels array for this output layer and returns the layer
 
-  labels is an INDArray of labels"
+  labels is an INDArray or vec of labels"
   [& {:keys [output-layer labels]}]
   (doto output-layer
-    (.setLabels labels)))
+    (.setLabels (vec-or-matrix->indarray labels))))

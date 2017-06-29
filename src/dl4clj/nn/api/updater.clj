@@ -2,7 +2,8 @@
 see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
     dl4clj.nn.api.updater
   (:import [org.deeplearning4j.nn.api Updater])
-  (:require [dl4clj.utils :refer [contains-many?]]))
+  (:require [dl4clj.utils :refer [contains-many?]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn get-state-view-array
   "returns an INDArray of the state-view of the updater"
@@ -20,7 +21,7 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
   :initialize? (boolean)"
   [& {:keys [updater layer view-array initialize?]}]
   (doto updater
-    (.setStateViewArray layer view-array initialize?)))
+    (.setStateViewArray layer (vec-or-matrix->indarray view-array) initialize?)))
 
 (defn state-size-for-layer
   "Calculate and return the state size for this updater (for the given layer).
