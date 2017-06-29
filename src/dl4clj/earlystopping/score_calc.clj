@@ -6,7 +6,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
             DataSetLossCalculator ScoreCalculator]
            [org.deeplearning4j.spark.earlystopping SparkDataSetLossCalculator])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method
@@ -18,7 +18,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
   (let [conf (:dataset-loss opts)
         {iter :iter
          avg? :average?} conf]
-    (DataSetLossCalculator. (reset-if-empty?! iter) avg?)))
+    (DataSetLossCalculator. (reset-iterator! iter) avg?)))
 
 (defmethod score-calc :spark-ds-loss [opts]
   (let [conf (:spark-ds-loss opts)

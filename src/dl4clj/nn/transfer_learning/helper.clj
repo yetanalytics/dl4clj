@@ -11,7 +11,7 @@
  see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/TransferLearningHelper.html" }
     dl4clj.nn.transfer-learning.helper
   (:import [org.deeplearning4j.nn.transferlearning TransferLearningHelper])
-  (:require [dl4clj.helpers :refer [reset-if-empty?!]]))
+  (:require [dl4clj.helpers :refer [reset-iterator!]]))
 
 (defn new-helper
   "creates a new instance of TransferLearningHelper with the supplied opts
@@ -66,7 +66,7 @@
     (contains? opts :data-set)
     (doto helper (.fitFeaturized data-set))
     (contains? opts :iter)
-    (doto helper (.fitFeaturized (reset-if-empty?! iter)))
+    (doto helper (.fitFeaturized (reset-iterator! iter)))
     :else
     (assert false "you must supply either a data-set or a dat-set iterator")))
 

@@ -25,6 +25,16 @@
     (into-array data)
     (Nd4j/create data)))
 
+(defn vec-or-matrix->indarray
+  [data]
+  ;; is our data already an object?
+  (if (vector? data)
+    ;; no, is it a vector or a matrix?
+    (if (vector? (first data))
+      (matrix->indarray data)
+      (vec->indarray data))
+    data))
+
 (defn indarray-of-zeros
   [& {:keys [rows columns]
       :or {rows 1

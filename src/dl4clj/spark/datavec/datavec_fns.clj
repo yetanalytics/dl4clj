@@ -11,7 +11,7 @@
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many?]]
             [dl4clj.constants :as enum]
             [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method constructor calling
@@ -406,7 +406,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
 
   returns the iterator and the fn-object"
   [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (let [f (datavec-fns the-fn)]
       (do (.call f ds-iter)

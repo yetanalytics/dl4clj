@@ -4,7 +4,7 @@
             EarlyStoppingTrainer BaseEarlyStoppingTrainer]
            [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]))
 
 (defn new-early-stopping-trainer
   "onducting early stopping training locally (single machine), for training a MultiLayerNetwork.
@@ -21,7 +21,7 @@
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/EarlyStoppingTrainer.html"
   [& {:keys [early-stopping-conf mln iter]
       :as opts}]
-  (EarlyStoppingTrainer. early-stopping-conf mln (reset-if-empty?! iter)))
+  (EarlyStoppingTrainer. early-stopping-conf mln (reset-iterator! iter)))
 
 (defn new-spark-early-stopping-trainer
   "object for conducting early stopping training via Spark with

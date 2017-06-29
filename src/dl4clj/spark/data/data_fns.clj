@@ -13,7 +13,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
             BatchDataSetsFunction]
            [org.deeplearning4j.spark.data.shuffle SplitDataSetExamplesPairFlatMapFunction])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method for constructor calling
@@ -189,7 +189,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :iter (dataset iterator), the iterator which goes through a dataset
    - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn partition-idx iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (.call (ds-fns the-fn) (int partition-idx) ds-iter)
     (.call the-fn (int partition-idx) ds-iter))))
@@ -210,7 +210,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :multi-ds-iter (multi-dataset iterator), the iterator which goes through a dataset
    - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn partition-idx multi-ds-iter]}]
-  (let [mds-iter (reset-if-empty?! multi-ds-iter)]
+  (let [mds-iter (reset-iterator! multi-ds-iter)]
    (if (map? the-fn)
     (.call (ds-fns the-fn) (int partition-idx) mds-iter)
     (.call the-fn (int partition-idx) mds-iter))))
@@ -228,7 +228,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :iter, (iterator), an iterator which wraps a dataset you want batched
    - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (.call (ds-fns the-fn) ds-iter)
     (.call the-fn ds-iter))))
@@ -246,7 +246,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   returns a map of the export-fn and ds-iter"
   [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (do (.call (ds-fns the-fn) ds-iter)
         {:export-fn the-fn :iter ds-iter})
@@ -266,7 +266,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   returns a map of the export-fn and ds-iter"
   [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (do (.call (ds-fns the-fn) ds-iter)
         {:export-fn the-fn :iter ds-iter})
@@ -316,7 +316,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :iter (iterator), an iterator which wraps a dataset you want split
    - see: dl4clj.datasets.iterators"
   [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (if (map? the-fn)
     (.call (ds-fns the-fn) ds-iter)
     (.call the-fn ds-iter))))

@@ -55,6 +55,8 @@ With Maven:
 
 ## Usage
 
+TODO verify in scratch that this README is accurate
+
 ### Layers
 
 Creating Layers
@@ -304,7 +306,8 @@ Loading data from a file (here its a csv)
                  [dl4clj.datasets.record-readers :as rr]
                  [dl4clj.datasets.api.record-readers :refer :all]
                  [dl4clj.datasets.iterators :as ds-iter]
-                 [dl4clj.datasets.api.iterators :refer :all]))
+                 [dl4clj.datasets.api.iterators :refer :all]
+                 [dl4clj.helpers :refer [data-from-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; file splits (convert the data to records)
@@ -380,7 +383,7 @@ Loading data from a file (here its a csv)
 
 ;; if we want all the data out of our record-reader-dataset-iterator as a lazy seq
 
-(def lazy-seq-data (data-from-iter rr-ds-iter))
+(def lazy-seq-data (data-from-iter (reset-iter! rr-ds-iter)))
 
 (realized? lazy-seq-data) ;; => false
 
@@ -406,7 +409,7 @@ Creating datasets from INDArrays (and creating INDArrays)
 (my.ns
  (:require [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
                                                indarray-of-zeros indarray-of-ones
-                                               indarray-of-rand]]
+                                               indarray-of-rand vec-or-matrix->indarray]]
            [dl4clj.datasets.new-datasets :refer [new-ds]]
            [dl4clj.datasets.api.datasets :refer [as-list]]
            [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]))
@@ -434,6 +437,26 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;[[1.00, 2.00, 3.00, 4.00],
 ;; [2.00, 4.00, 6.00, 8.00],
 ;; [10.00, 12.00, 0.00, 0.00]]]
+
+;; these fns are built into all functions which take INDArrays as args
+;; all you will have to do is pass a vector or a matrix
+
+;; this is what is going on
+
+(vec-or-matrix->indarray [1 2 3 4])
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x74880372 [1.00, 2.00, 3.00, 4.00]]
+
+(vec-or-matrix->indarray [[1 2 3 4] [5 6 7 8]])
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x2b3a89d5
+;; [[1.00, 2.00, 3.00, 4.00],
+;;  [5.00, 6.00, 7.00, 8.00]]]
+
+;; but you still have the option of passing existing NDArrays
+
+(def example-array (vec-or-matrix->indarray [1 2 3 4]))
+
+(vec-or-matrix->indarray example-array)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x607b03b0 [1.00, 2.00, 3.00, 4.00]]
 
 ;; can create an indarray of all zeros with specified shape
 ;; defaults to :rows = 1 :columns = 1
@@ -467,8 +490,8 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; data-set creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def ds-with-single-example (new-ds :input (vec->indarray [1 2 3 4])
-                                      :output (vec->indarray [0.0 1.0 0.0])))
+(def ds-with-single-example (new-ds :input [1 2 3 4]
+                                    :output [0.0 1.0 0.0]))
 (as-list ds-with-single-example)
 ;; =>
 ;; #object[java.util.ArrayList 0x5d703d12
@@ -478,8 +501,8 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;[0.00, 1.00, 0.00]]]
 
 (def ds-with-multiple-examples (new-ds
-                                :input (matrix->indarray [[1 2 3 4] [2 4 6 8]])
-                                :output (matrix->indarray [[0.0 1.0 0.0] [0.0 0.0 1.0]])))
+                                :input [[1 2 3 4] [2 4 6 8]]
+                                :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
 
 (as-list ds-with-multiple-examples)
 ;; =>

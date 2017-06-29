@@ -3,7 +3,7 @@
   (:require [dl4clj.utils :refer [contains-many? array-of]]
             [dl4clj.nn.conf.constants :as enum]
             [dl4clj.nn.api.model :refer [fit!]]
-            [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?!]]
+            [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer]))
@@ -23,10 +23,10 @@
 
   :n-epochs (int), the number of passes through the dataset"
   [& {:keys [mln iter n-epochs]}]
-  (let [ds-iter (reset-if-empty?! iter)]
-    (dotimes [n n-epochs]
-      (while (has-next? ds-iter)
-        (fit! :mln mln :iter ds-iter))))
+  (dotimes [n n-epochs]
+    (while (has-next? iter)
+      ;; fit handles the iter resetting
+      (fit! :mln mln :iter iter)))
   mln)
 
 (defn train-mln-with-lazy-seq!
@@ -112,7 +112,7 @@
   :top-n (int), N value for top N accuracy evaluation"
   [& {:keys [mln iter labels top-n]
       :as opts}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
    (cond (contains-many? opts :labels-list :top-n)
         (.evaluate mln ds-iter (into '() labels) top-n)
         (contains? opts :labels-list)
@@ -127,7 +127,7 @@
    - see: dl4clj.datasets.datavec"
   ;; update doc
   [& {:keys [mln iter]}]
-  (.evaluateRegression mln (reset-if-empty?! iter)))
+  (.evaluateRegression mln (reset-iterator! iter)))
 
 (defn evaluate-roc
   "Evaluate the network (must be a binary classifier) on the specified data
@@ -139,7 +139,7 @@
   :roc-threshold-steps (int), value needed to call the ROC constructor
    - see: dl4clj.eval.roc.rocs"
   [& {:keys [mln iter roc-threshold-steps]}]
-  (.evaluateROC mln (reset-if-empty?! iter) roc-threshold-steps))
+  (.evaluateROC mln (reset-iterator! iter) roc-threshold-steps))
 
 (defn evaluate-roc-multi-class
   "Evaluate the network on the specified data.
@@ -150,7 +150,7 @@
   :roc-threshold-steps (int), value needed to call the ROCMultiClass constructor
    - see: dl4clj.eval.roc.rocs"
   [& {:keys [mln iter roc-threshold-steps]}]
-  (.evaluateROCMultiClass mln (reset-if-empty?! iter) roc-threshold-steps))
+  (.evaluateROCMultiClass mln (reset-iterator! iter) roc-threshold-steps))
 
 (defn feed-forward
   "if :features-mask and :labels-mask supplied:
@@ -326,7 +326,9 @@
 
   :labels-mask (INDArray), the mask used for the labels
 
-  :training-mode (keyword), another way to say if its training or testing mode"
+  :training-mode (keyword), another way to say if its training or testing mode
+
+  NOTE: this fn only resets the iterator if its empty"
   [& {:keys [iter train? input features-mask labels-mask
              training-mode mln]
       :as opts}]
@@ -356,7 +358,7 @@
   :iter (ds-iter), dataset iterator
    - see: dl4clj.datasets.datavec"
   [& {:keys [mln iter]}]
-  (.pretrain mln (reset-if-empty?! iter)))
+  (.pretrain mln (reset-iterator! iter)))
 
 (defn pre-train-layer!
   "Perform layerwise unsupervised training on a single pre-trainable layer
@@ -372,7 +374,7 @@
   [& {:keys [mln layer-idx iter features]
       :as opts}]
   (cond (contains-many? opts :layer-idx :iter)
-        (.pretrainLayer mln layer-idx (reset-if-empty?! iter))
+        (.pretrainLayer mln layer-idx (reset-iterator! iter))
         (contains-many? opts :layer-idx :features)
         (.pretrainLayer mln layer-idx features)
         :else
@@ -479,7 +481,7 @@ a map of the desired state")
   (cond (contains-many? opts :dataset :add-regularization-terms?)
         (.scoreExamples mln dataset add-regularization-terms?)
         (contains-many? opts :iter :add-regularization-terms?)
-        (.scoreExamples mln (reset-if-empty?! iter) add-regularization-terms?)
+        (.scoreExamples mln (reset-iterator! iter) add-regularization-terms?)
         :else
         (assert false "you must supply data in the form of a dataset or a dataset iterator.
 you must also supply whether or not you want to add regularization terms (L1, L2, dropout...)")))

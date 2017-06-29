@@ -1,5 +1,17 @@
 (ns dl4clj.dev.usr
-  (:require [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+  (:require [dl4clj.datasets.input-splits :as s]
+            [dl4clj.datasets.record-readers :as rr]
+            [dl4clj.datasets.api.record-readers :refer :all]
+            [dl4clj.datasets.iterators :as ds-iter]
+            [dl4clj.datasets.api.iterators :refer :all]
+            [dl4clj.helpers :refer [data-from-iter reset-if-empty?!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
+                                                indarray-of-zeros indarray-of-ones
+                                                indarray-of-rand vec-or-matrix->indarray]]
+            [dl4clj.datasets.new-datasets :refer [new-ds]]
+            [dl4clj.datasets.api.datasets :refer [as-list]]
+            [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]])
+  #_(:require [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
             [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
             [dl4clj.nn.conf.builders.builders :as l]
             ;;[clj-time.core :as t]
@@ -360,3 +372,51 @@
                                           :n-epochs 15)))
 ;; => "Elapsed time: 220454.276825 msecs"
 )
+
+(def poker-path "resources/poker-hand-training.csv")
+
+(def file-split (s/new-filesplit :path poker-path))
+
+(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+                            :input-split file-split))
+
+(println (next-record! csv-rr))
+
+(reset-rr! csv-rr)
+
+(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                 :record-reader csv-rr ;; no need to reset manually, done for you behind the scene
+                 :batch-size 1
+                 :label-idx 10
+                 :n-possible-labels 10))
+
+(def other-rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                       :record-reader csv-rr
+                       :batch-size 1
+                       :label-idx -1
+                       :n-possible-labels 10))
+
+(str (next-example! rr-ds-iter))
+
+(= (next-example! (reset-iter! rr-ds-iter))
+   (next-example! (reset-iter! other-rr-ds-iter)))
+
+(def lazy-seq-data (data-from-iter (reset-iter! rr-ds-iter)))
+
+(def lazy-iter (.iterator lazy-seq-data))
+
+(realized? lazy-seq-data)
+
+(first lazy-seq-data)
+
+(defn reset-iterator!
+  "resets an iterator"
+  [iter]
+  (try (reset-iter! iter)
+       (catch Exception e iter)))
+
+(def example-array (vec-or-matrix->indarray [1 2 3 4]))
+
+[nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+
+(println (vec-or-matrix->indarray example-array))

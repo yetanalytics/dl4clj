@@ -4,7 +4,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   dl4clj.nn.api.classifier
   (:import [org.deeplearning4j.nn.api Classifier])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.helpers :refer [reset-if-empty?!]]))
+            [dl4clj.helpers :refer [reset-iterator!]]))
 
 (defn f1-score
   "With two arguments (classifier and dataset):
@@ -43,7 +43,7 @@ examples and their labels")))
   (cond (contains? opts :data-set)
         (doto classifier (.fit data-set))
         (contains? opts :dataset-iterator)
-        (doto classifier (.fit (reset-if-empty?! iter)))
+        (doto classifier (.fit (reset-iterator! iter)))
         (contains-many? opts :examples :labels)
         (doto classifier (.fit examples labels))
         :else

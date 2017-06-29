@@ -3,8 +3,7 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [java.util Random])
   (:require [dl4clj.utils :refer [array-of contains-many?]]
-            [nd4clj.linalg.factory.nd4j :refer [vec->indarray
-                                                matrix->indarray]]))
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn add-feature-vector!
   "adds a feature vector to a dataset, if :to-add is supplied, the fn adds a
@@ -12,18 +11,20 @@
    this fn expects :feature and :example-idx.  Those args will add the feature
    to the example at the given idx
 
-   :feature (INDArray), the feature vector to add
+   :feature (INDArray or vector), the feature vector to add
 
    :example-idx (int), index of the example you want to add the feature vector to
 
-   :to-add (INDArray), need to test to clarify
+   :to-add (INDArray or vector), need to test to clarify
 
   returns the supplied dataset"
   [& {:keys [ds feature example-idx to-add]
       :as opts}]
-  (if (contains? opts :to-add)
-        (doto ds (.addFeatureVector to-add))
-        (doto ds (.addFeatureVector feature example-idx))))
+  (let [f (vec-or-matrix->indarray features)
+        ta (vec-or-matrix->indarray to-add)]
+   (if (contains? opts :to-add)
+        (doto ds (.addFeatureVector ta))
+        (doto ds (.addFeatureVector f example-idx)))))
 
 (defn add-row!
   "adds a dataset object to an existing datset object as a new row
@@ -126,7 +127,7 @@
 (defn get-label-names
   "return the label for a single index or for a collection of indexes
 
-  :idx (int or vec), the idex(es) of labels you want the name(s) of
+  :idx (int, vec or INDArray), the idex(es) of labels you want the name(s) of
 
   :as-list? (boolean), do you want all of the label names as a list?
 
@@ -136,7 +137,7 @@
   (cond
     (true? as-list?) (.getLabelNamesList ds)
     (int? idx) (.getLabelName ds idx)
-    (coll? idx) (.getLabelNames ds (vec->indarray idx))
+    (coll? idx) (.getLabelNames ds (vec-or-matrix->indarray idx))
     :else
     (.getLabels ds)))
 
@@ -233,6 +234,8 @@
   "Sample with/without replacement and a given/random rng"
   [& {:keys [ds n-samples with-replacement? seed]
       :as opts}]
+  ;; this is the wrong type of random
+  ;; test to see if it will still work with util.Random, kinda doubt it
   (let [rng (new Random seed)]
    (cond (contains-many? opts :n-samples :with-replacement? :seed)
          (.sample ds n-samples rng with-replacement?)
@@ -277,14 +280,14 @@
 
   :features (vec or matrix), the data you want to set as the features"
   [& {:keys [ds features]}]
-  (doto ds (.setFeatures (matrix->indarray features))))
+  (doto ds (.setFeatures (vec-or-matrix->indarray features))))
 
 (defn set-features-mask-array!
   "set the features mask array for the supplied dataset
 
   :input-mask (vec or matrix), the mask to be set"
   [& {:keys [ds input-mask]}]
-  (doto ds (.setFeaturesMaskArray (matrix->indarray input-mask))))
+  (doto ds (.setFeaturesMaskArray (vec-or-matrix->indarray input-mask))))
 
 (defn set-label-names!
   "sets the label names
@@ -298,14 +301,14 @@
 
   :labels (vec or matrix), the values for the labels"
   [& {:keys [ds labels]}]
-  (doto ds (.setLabels (matrix->indarray labels))))
+  (doto ds (.setLabels (vec-or-matrix->indarray labels))))
 
 (defn set-labels-mask-array!
   "sets the labels mask array for the dataset
 
   :mask-array (vec or matrix), the mask array to set"
   [& {:keys [ds mask-array]}]
-  (doto ds (.setLabelsMaskArray (matrix->indarray mask-array))))
+  (doto ds (.setLabelsMaskArray (vec-or-matrix->indarray mask-array))))
 
 (defn set-new-number-of-labels!
   "sets a new number of labels for the dataset"

@@ -4,19 +4,18 @@
                                                    has-next?
                                                    next-example!]]))
 
-(defn reset-if-not-at-start!
-  "checks the current cursor of the iterator and if not at 0 resets it"
-  [iter]
-  (if (not= 0 (get-current-cursor iter))
-    (reset-iter! iter)
-    iter))
-
 (defn reset-if-empty?!
   "resets an iterator if we are at the end"
   [iter]
   (if (false? (has-next? iter))
     (reset-iter! iter)
     iter))
+
+(defn reset-iterator!
+  "resets an iterator, won't reset a lazy iter but will return it"
+  [iter]
+  (try (reset-iter! iter)
+       (catch Exception e iter)))
 
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"

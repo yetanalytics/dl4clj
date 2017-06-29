@@ -232,19 +232,19 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:iterator-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          batch-size :batch-size} config]
-    (IteratorMultiDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
+    (IteratorMultiDataSetIterator. (reset-iterator! iter) batch-size)))
 
 (defmethod iterator :iterator-dataset-iter [opts]
   (let [config (:iterator-dataset-iter opts)
         {iter :iter
          batch-size :batch-size} config]
-    (IteratorDataSetIterator. (reset-if-not-at-start! iter) batch-size)))
+    (IteratorDataSetIterator. (reset-iterator! iter) batch-size)))
 
 (defmethod iterator :async-multi-dataset-iter [opts]
   (let [config (:async-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          que-l :que-length} config]
-    (AsyncMultiDataSetIterator. (reset-if-not-at-start! iter) que-l)))
+    (AsyncMultiDataSetIterator. (reset-iterator! iter) que-l)))
 
 (defmethod iterator :moving-window-base-dataset-iter [opts]
   (let [config (:moving-window-base-dataset-iter opts)
@@ -264,24 +264,24 @@ you need to suply atleast the mini batch size, number of possible labels and the
          ds :dataset} config]
     (if (contains? config :n-epochs)
       (cond (contains-many? config :iter :que-size)
-            (MultipleEpochsIterator. n-epochs (reset-if-not-at-start! iter) q-size)
+            (MultipleEpochsIterator. n-epochs (reset-iterator! iter) q-size)
             (contains? config :iter)
-            (MultipleEpochsIterator. n-epochs (reset-if-not-at-start! iter))
+            (MultipleEpochsIterator. n-epochs (reset-iterator! iter))
             (contains? config :dataset)
             (MultipleEpochsIterator. n-epochs ds)
             :else
             (assert false "if you provide the number of epochs, you also need to provide either an iterator or a dataset"))
       (cond (contains-many? config :iter :que-size :total-iterations)
-            (MultipleEpochsIterator. (reset-if-not-at-start! iter) q-size t-iterations)
+            (MultipleEpochsIterator. (reset-iterator! iter) q-size t-iterations)
             (contains-many? config :iter :total-iterations)
-            (MultipleEpochsIterator. (reset-if-not-at-start! iter) t-iterations)
+            (MultipleEpochsIterator. (reset-iterator! iter) t-iterations)
             :else
             (assert false "if you dont supply the number of epochs, you must supply atleast a dataset iterator and the total number of iterations")))))
 
 (defmethod iterator :reconstruction-dataset-iter [opts]
   (let [config (:reconstruction-dataset-iter opts)
         iter (:iter config)]
-    (ReconstructionDataSetIterator. (reset-if-not-at-start! iter))))
+    (ReconstructionDataSetIterator. (reset-iterator! iter))))
 
 (defmethod iterator :sampling-dataset-iter [opts]
   (let [config (:sampling-dataset-iter opts)
@@ -303,8 +303,8 @@ you need to suply atleast the mini batch size, number of possible labels and the
             "you must supply a dataset or a dataset iterator")
     (if (contains? config :iter)
       (if (contains? config :labels)
-        (ExistingDataSetIterator. (reset-if-not-at-start! ds-iter) labels)
-        (ExistingDataSetIterator. (reset-if-not-at-start! ds-iter)))
+        (ExistingDataSetIterator. (reset-iterator! ds-iter) labels)
+        (ExistingDataSetIterator. (reset-iterator! ds-iter)))
       (cond (contains-many? config :dataset :total-examples :n-features :n-labels)
             (ExistingDataSetIterator. iterable n-examples n-features n-labels)
             (contains-many? config :dataset :labels)
@@ -317,7 +317,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
         {ds-iter :iter
          que-size :que-size
          que :que} config]
-    (let [i (reset-if-not-at-start! ds-iter)]
+    (let [i (reset-iterator! ds-iter)]
       (cond (contains-many? config :que :que-size :iter)
             (AsyncDataSetIterator. i que-size que)
             (contains-many? config :iter :que-size)
@@ -328,7 +328,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
             (assert false "you must atleast provide a dataset iterator")))))
 
 (defmethod iterator :ds-iter-to-multi-ds-iter [opts]
-  (let [iter (reset-if-not-at-start! (:iter (:ds-iter-to-multi-ds-iter opts)))]
+  (let [iter (reset-iterator! (:iter (:ds-iter-to-multi-ds-iter opts)))]
     (MultiDataSetIteratorAdapter. iter)))
 
 (defmethod iterator :list-ds-iter [opts]
@@ -469,7 +469,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          iter :iter} config]
     (if (contains? config :string-paths)
       (PathSparkDataSetIterator. str-paths)
-      (PathSparkDataSetIterator. (reset-if-empty?! iter)))))
+      (PathSparkDataSetIterator. (reset-iterator! iter)))))
 
 (defmethod iterator :path-to-multi-ds [opts]
   (let [config (:path-to-multi-ds opts)
@@ -477,7 +477,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          iter :iter} config]
     (if (contains? config :string-paths)
       (PathSparkMultiDataSetIterator. str-paths)
-      (PathSparkMultiDataSetIterator. (reset-if-empty?! iter)))))
+      (PathSparkMultiDataSetIterator. (reset-iterator! iter)))))
 
 (defmethod iterator :portable-ds-stream [opts]
   (let [config (:portable-ds-stream opts)
@@ -485,7 +485,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          iter :iter} config]
     (if (contains? config :streams)
       (PortableDataStreamDataSetIterator. streams)
-      (PortableDataStreamDataSetIterator. (reset-if-empty?! iter)))))
+      (PortableDataStreamDataSetIterator. (reset-iterator! iter)))))
 
 (defmethod iterator :portable-multi-ds-stream [opts]
   (let [config (:portable-multi-ds-stream opts)
@@ -493,7 +493,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          iter :iter} config]
     (if (contains? config :streams)
       (PortableDataStreamMultiDataSetIterator. streams)
-      (PortableDataStreamMultiDataSetIterator. (reset-if-empty?! iter)))))
+      (PortableDataStreamMultiDataSetIterator. (reset-iterator! iter)))))
 
 
 

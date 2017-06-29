@@ -5,7 +5,7 @@
             ;; this is going to change
             [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
-            [dl4clj.helpers :refer [reset-if-empty?! new-lazy-iter]]))
+            [dl4clj.helpers :refer [reset-iterator! new-lazy-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interact with a classification evaluator
@@ -56,7 +56,7 @@
       :as opts}]
   (let [ds-iter (if (contains? opts :lazy-data)
                   (new-lazy-iter lazy-data)
-                  (reset-if-empty?! iter))]
+                  (reset-iterator! iter))]
     (while (has-next? ds-iter)
       (let [nxt (next-example! ds-iter)
             prediction (output :mln mln :input (get-features nxt))]

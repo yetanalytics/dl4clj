@@ -15,7 +15,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             NormalizerStandardize
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
-  (:require [dl4clj.helpers :refer [reset-if-empty?!]]
+  (:require [dl4clj.helpers :refer [reset-iterator!]]
             [dl4clj.utils :refer [array-of]]))
 
 (defn pre-process-dataset!
@@ -32,7 +32,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
   returns the iterator for the dataset"
   [& {:keys [iter dataset]}]
-  (let [ds-iter (reset-if-empty?! iter)]
+  (let [ds-iter (reset-iterator! iter)]
     (doto ds-iter (.preProcess dataset))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -49,7 +49,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
   returns the fit normalizer"
   [& {:keys [normalizer iter]}]
-  (doto normalizer (.fit (reset-if-empty?! iter))))
+  (doto normalizer (.fit (reset-iterator! iter))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.

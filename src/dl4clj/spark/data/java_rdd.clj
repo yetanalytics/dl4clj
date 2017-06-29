@@ -2,7 +2,7 @@
     dl4clj.spark.data.java-rdd
   (:import [org.apache.spark.api.java JavaRDD JavaSparkContext]
            [org.apache.spark SparkConf])
-  (:require [dl4clj.helpers :refer [data-from-iter reset-if-empty?!]]))
+  (:require [dl4clj.helpers :refer [data-from-iter reset-iterator!]]))
 
 (defn new-java-spark-context
   "creates a java spark context from a spark conf
@@ -84,7 +84,7 @@
   "given a spark context and an iterator, creates a javaRDD from the
   data in the iterator"
   [& {:keys [spark-context iter num-slices]}]
-  (let [data (data-from-iter (reset-if-empty?! iter))]
+  (let [data (data-from-iter (reset-iterator! iter))]
     (parallelize :spark-context spark-context
                  :data data
                  :num-slices num-slices)))

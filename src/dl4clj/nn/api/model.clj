@@ -48,7 +48,9 @@
   (.conf model))
 
 (defn fit!
-  "Fit/train the model"
+  "Fit/train the model
+
+  if you supply an iterator, it is only reset if it is at the end of the collection"
   [& {:keys [mln ds iter data labels
              features features-mask labels-mask
              examples label-idxs]
