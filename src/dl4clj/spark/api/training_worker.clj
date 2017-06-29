@@ -46,7 +46,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
    - should be set to true when spark training stats are being collected"
   [& {:keys [worker with-stats?]
       :or {with-stats? false}}]
-  (if (true? with-stats?)
+  (if with-stats?
     (.getFinalResultNoDataWithStats worker)
     (.getFinalResultNoData worker)))
 
@@ -71,7 +71,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   otherwise returns a pair containing the stats"
   [& {:keys [data-set mln is-last? with-stats? worker]
       :or {with-stats? false}}]
-  (if (true? with-stats?)
+  (if with-stats?
     (.processMinibatchWithStats worker data-set mln is-last?)
     (do (.processMinibatch worker data-set mln is-last?)
         {:mln mln :worker worker})))

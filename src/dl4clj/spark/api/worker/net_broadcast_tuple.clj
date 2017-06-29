@@ -1,5 +1,6 @@
 (ns dl4clj.spark.api.worker.net-broadcast-tuple
-  (:import [org.deeplearning4j.spark.api.worker NetBroadcastTuple]))
+  (:import [org.deeplearning4j.spark.api.worker NetBroadcastTuple])
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn new-net-broadcast-tuple
   ;; this fn should not need to be used
@@ -13,10 +14,12 @@
      - requires a nn-conf with multiple layers
      - see: dl4clj.nn.conf.builders.nn-conf-builder
 
-  :params (INDArray), the parameters of the mln
+  :params (INDArray or vec), the parameters of the mln
    - see: (params) in dl4clj.nn.api.model
 
-  :updater-state (INDArray), the state of the updater attached to the mln-conf
+  :updater-state (INDArray or vec), the state of the updater attached to the mln-conf
    - see: (get-state-view-array) in dl4clj.nn.api.updater"
   [& {:keys [mln-conf params updater-state]}]
-  (NetBroadcastTuple. mln-conf params updater-state))
+  (NetBroadcastTuple. mln-conf
+                      (vec-or-matrix->indarray params)
+                      (vec-or-matrix->indarray updater-state)))
