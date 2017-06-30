@@ -373,7 +373,8 @@
 ;; => "Elapsed time: 220454.276825 msecs"
 )
 
-(def poker-path "resources/poker-hand-training.csv")
+(comment
+ (def poker-path "resources/poker-hand-training.csv")
 
 (def file-split (s/new-filesplit :path poker-path))
 
@@ -420,3 +421,4 @@
 [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
 
 (println (vec-or-matrix->indarray example-array))
+)

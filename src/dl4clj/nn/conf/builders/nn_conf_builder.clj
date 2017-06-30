@@ -1,5 +1,5 @@
 (ns dl4clj.nn.conf.builders.nn-conf-builder
-  (:require [dl4clj.nn.conf.distribution.distribution :as distribution]
+  (:require [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.nn.conf.builders.builders :as layer-builders]
             [dl4clj.nn.conf.builders.multi-layer-builders :as multi-layer]
             [dl4clj.nn.conf.step-fns :as step-functions]

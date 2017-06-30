@@ -94,6 +94,7 @@
             1 (activation-layer-builder {opts-keys opts-values})}}
 
   see the builders ns for layer opts"
+  ;; refactor this to use tail recursion
   [nn-conf-builder layers]
   (let [b (.list nn-conf-builder)
         max-idx (+ 1 (last (sort (map first layers))))]

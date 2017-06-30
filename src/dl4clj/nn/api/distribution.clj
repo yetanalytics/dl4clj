@@ -1,4 +1,4 @@
-(ns dl4clj.nn.conf.distribution.api-fns
+(ns dl4clj.nn.api.distribution
   (:import [org.deeplearning4j.nn.conf.distribution BinomialDistribution
             NormalDistribution UniformDistribution GaussianDistribution]))
 
