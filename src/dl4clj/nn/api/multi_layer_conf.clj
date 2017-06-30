@@ -1,5 +1,5 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/MultiLayerConfiguration.html"}
-    dl4clj.nn.conf.multi-layer-configuration
+    dl4clj.nn.api.multi-layer-conf
   (:import [org.deeplearning4j.nn.conf MultiLayerConfiguration]))
 
 (defn to-json

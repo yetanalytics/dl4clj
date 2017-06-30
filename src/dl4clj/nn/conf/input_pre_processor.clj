@@ -1,8 +1,6 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
     dl4clj.nn.conf.input-pre-processor
-  (:require [dl4clj.nn.conf.constants :as constants]
-            [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]])
+  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.conf.preprocessor BinomialSamplingPreProcessor
@@ -10,36 +8,6 @@
             ZeroMeanAndUnitVariancePreProcessor ZeroMeanPrePreProcessor
             CnnToFeedForwardPreProcessor CnnToRnnPreProcessor FeedForwardToCnnPreProcessor
             FeedForwardToRnnPreProcessor RnnToFeedForwardPreProcessor]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; api fns
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn backprop
-  "Reverse the preProcess during backprop."
-  [& {:keys [pp output mini-batch-size]}]
-  (.backprop pp (vec-or-matrix->indarray output) mini-batch-size))
-
-(defn pre-process
-  "Pre preProcess input/activations for a multi layer network"
-  [& {:keys [pp input mini-batch-size]}]
-  (.preProcess pp (vec-or-matrix->indarray input) mini-batch-size))
-
-(defn feed-forward-mask-array
-  [& {:keys [pp mask-array current-mask-state mini-batch-size]}]
-  (.feedForwardMaskArray
-   pp (vec-or-matrix->indarray mask-array) (constants/value-of {:mask-state current-mask-state})
-   mini-batch-size))
-
-(defn get-output-type
-  "For a given type of input to this preprocessor, what is the type of the output?
-
-  :input-type (map), the input to the cnn layer
-  - {:convolutional {:height 1 :width 1 :depth 1}}
-   - {:recurrent {:size 10}}
-  - only 2 examples, see dl4clj.nn.conf.constants"
-  [& {:keys [pp input-type]}]
-  (.getOutputType pp (constants/input-types input-type)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method hevy lifting (constructor calling)
