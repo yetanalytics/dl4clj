@@ -7,6 +7,31 @@
             [dl4clj.nn.conf.constants :as enum]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+(defn initializer
+  "returns a param initializer for this layer"
+  [layer]
+  (.initializer layer))
+
+(defn instantiate
+  "returns the instantiated layer
+
+  :layer (layer), the layer set in the nn-conf
+
+  :conf (nn-conf), a single layer neural network configuration
+
+  :listener (coll), a collection of listeners for the layer
+
+  :layer-idx (int), the index of the layer within the model
+
+  :layer-param-view (INDArray or vec), the params of the layer
+
+  :initialize-params? (boolean), do you want to initialize the params?"
+  [& {:keys [layer conf listener layer-idx
+             layer-param-view initialize-params?]}]
+  (.instantiate layer conf listener layer-idx
+                (vec-or-matrix->indarray layer-param-view)
+                initialize-params?))
+
 (defn activate-layer
   "6 opts for triggering an activation
   1) only supply the layer, Trigger an activation with the last specified input
@@ -39,6 +64,26 @@
         (.activate model (enum/value-of {:layer-training-mode training-mode}))
         :else
         (.activate model))))
+
+(defn layer-output
+  "returns the output of a layer.
+
+  :input (INDArray or vec), the input to the layer
+
+  :training? (boolean), are we in trianing mode or testing?
+
+  multiple layers implement this fn"
+  [& {:keys [layer input training?]
+      :as opts}]
+  (let [i (vec-or-matrix->indarray input)]
+    (cond (contains-many? opts :input :training?)
+          (.output layer i training?)
+          (contains? opts :input)
+          (.output layer i)
+          (contains? opts :training?)
+          (.output layer training?)
+          :else
+          (assert false "you must supply a layer and either some input or training?"))))
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
@@ -164,3 +209,63 @@
   "Returns the layer type"
   [layer]
   (.type layer))
+
+(defn get-l1-by-param
+  "Get the L1 coefficient for the given parameter."
+  [& {:keys [layer param-name]}]
+  (.getL1ByParam layer param-name))
+
+(defn get-l2-by-param
+  "Get the L2 coefficient for the given parameter."
+  [& {:keys [layer param-name]}]
+  (.getL2ByParam layer param-name))
+
+(defn get-learning-rate-by-param
+  "Get the (initial) learning rate coefficient for the given parameter."
+  [& {:keys [layer param-name]}]
+  (.getLearningRateByParam layer param-name))
+
+(defn get-output-type
+  "returns the output type of the provided layer given the layer input type
+
+  :layer-idx (int), the index of the layer within its model
+
+  :input-type (map), the input to the cnn layer
+   - {:convolutional {:height 1 :width 1 :depth 1}}
+   - {:recurrent {:size 10}}
+  - only 2 examples, see dl4clj.nn.conf.constants"
+  [& {:keys [layer layer-idx input-type]}]
+  (.getOutputType layer layer-idx (enum/input-types input-type)))
+
+(defn get-pre-processor-for-input-type
+  "For the given type of input to this layer, what preprocessor (if any) is required?
+
+  :input-type (map), the input to the cnn layer
+   - {:convolutional {:height 1 :width 1 :depth 1}}
+   - {:recurrent {:size 10}}
+  - only 2 examples, see dl4clj.nn.conf.constants"
+  [& {:keys [layer input-type]}]
+  (.getPreProcessorForInputType layer (enum/input-types input-type)))
+
+(defn get-updater-by-param
+  "Get the updater for the given parameter."
+  [& {:keys [layer param-name]}]
+  (.getUpdaterByParam layer param-name))
+
+(defn set-n-in!
+  "Set the nIn value (number of inputs, or input depth for CNNs) based on the given input type
+
+  :input-type (map), the input to the cnn layer
+   - {:convolutional {:height 1 :width 1 :depth 1}}
+   - {:recurrent {:size 10}}
+  - only 2 examples, see dl4clj.nn.conf.constants
+
+  :override? (boolean), do you want to override the current n-in?
+
+  returns the layer"
+  [& {:keys [layer input-type override?]}]
+  (doto layer (.setNIn (enum/input-types input-type) override?)))
+
+(defn reset-layer-default-config
+  [layer]
+  (.resetLayerDefaultConfig layer))

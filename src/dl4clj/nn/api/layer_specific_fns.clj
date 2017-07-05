@@ -1,37 +1,53 @@
-(ns dl4clj.nn.layers.layer-specific-fns
-  (:import [org.deeplearning4j.nn.layers BaseOutputLayer
+(ns ^{:doc "see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/Layer.html
+and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-frame.html"}
+    dl4clj.nn.api.layer-specific-fns
+  (:import [org.deeplearning4j.nn.conf.layers BaseOutputLayer
+            CenterLossOutputLayer SubsamplingLayer]
+           [org.deeplearning4j.nn.layers
             BasePretrainNetwork FrozenLayer LossLayer]
            [org.deeplearning4j.nn.layers.feedforward.autoencoder AutoEncoder]
+           [org.deeplearning4j.nn.layers.feedforward.rbm RBM]
            [org.deeplearning4j.nn.layers.normalization BatchNormalization]
-           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder]
-           [org.deeplearning4j.nn.layers.feedforward.rbm RBM])
-  (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.constants :as enum]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder])
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [dl4clj.utils :refer [contains-many?]]
+            [dl4clj.nn.conf.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; base output layer
+;; From BaseOutputlayer
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn layer-output
-  "returns the output of a layer.
+(defn get-loss-fn
+  [output-layer]
+  (.getLossFn output-layer))
 
-  :input (INDArray or vec), the input to the layer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; From CenterLossOutputLayer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  :training? (boolean), are we in trianing mode or testing?
+(defn get-alpha
+  [center-loss-output-layer]
+  (.getAlpha center-loss-output-layer))
 
-  multiple layers implement this fn"
-  [& {:keys [layer input training?]
-      :as opts}]
-  (let [i (vec-or-matrix->indarray input)]
-   (cond (contains-many? opts :input :training?)
-        (.output layer i training?)
-        (contains? opts :input)
-        (.output layer i)
-        (contains? opts :training?)
-        (.output layer training?)
-        :else
-        (assert false "you must supply a layer and either some input or training?"))))
+(defn get-gradient-check
+  [center-loss-output-layer]
+  (.getGradientCheck center-loss-output-layer))
+
+(defn get-lambda
+  [center-loss-output-layer]
+  (.getLambda center-loss-output-layer))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; From SubsamplingLayer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-eps
+  [subsampling-layer]
+  (.getEps subsampling-layer))
+
+(defn get-pnorm
+  [subsampling-layer]
+  (.getPnorm subsampling-layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; base pretrain layer

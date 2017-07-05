@@ -1,5 +1,5 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/NeuralNetConfiguration.html"}
-  dl4clj.nn.conf.neural-net-configuration
+  dl4clj.nn.api.nn-conf
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration]))
 
 (defn add-variable!
