@@ -8,7 +8,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
            [org.deeplearning4j.nn.layers.feedforward.autoencoder AutoEncoder]
            [org.deeplearning4j.nn.layers.feedforward.rbm RBM]
            [org.deeplearning4j.nn.layers.normalization BatchNormalization]
-           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder])
+           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder]
+           [org.deeplearning4j.nn.api.layers RecurrentLayer]
+           [org.deeplearning4j.nn.api.layers IOutputLayer])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
             [dl4clj.utils :refer [contains-many?]]
             [dl4clj.nn.conf.constants :as enum]))
@@ -48,6 +50,39 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 (defn get-pnorm
   [subsampling-layer]
   (.getPnorm subsampling-layer))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; output layers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn compute-score
+  "Compute score after labels and input have been set.
+
+  output-layer is the output layer in question
+  full-network-l1 (double) is the l1 regularization term for the model the layer is apart of
+  full-network-l2 (double) is the l2 regularization term for the model the layer is aprt of
+   -note: it is okay for L1 and L2 to be set to 0.0 if regularization was not used
+  training? (boolean) are we traing the model or testing it?"
+  [& {:keys [output-layer full-network-l1 full-network-l2 training?]}]
+  (.computeScore output-layer full-network-l1 full-network-l2 training?))
+
+(defn compute-score-for-examples
+  "Compute the score for each example individually, after labels and input have been set.
+
+  output-layer is the output layer in question
+  full-network-l1 (double) is the l1 regularization term for the model the layer is apart of
+  full-network-l2 (double) is the l2 regularization term for the model the layer is aprt of
+   -note: it is okay for L1 and L2 to be set to 0.0 if regularization was not used"
+  [& {:keys [output-layer full-network-l1 full-network-l2]}]
+  (.computeScoreForExamples output-layer full-network-l1 full-network-l2))
+
+(defn set-labels!
+  "Set the labels array for this output layer and returns the layer
+
+  labels is an INDArray or vec of labels"
+  [& {:keys [output-layer labels]}]
+  (doto output-layer
+    (.setLabels (vec-or-matrix->indarray labels))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; base pretrain layer
@@ -248,3 +283,74 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   :data (INDArray or vec), the data to calc the reconstruction error on"
   [& {:keys [vae data]}]
   (.reconstructionError vae (vec-or-matrix->indarray data)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; recurrent layers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn rnn-activate-using-stored-state
+  "Similar to rnnTimeStep, this method is used for activations using the state
+  stored in the stateMap as the initialization.
+
+  input (INDArray or vec) of input values to the layer
+  store-last-for-tbptt? (boolean), save state to be used in tbptt
+  training? (boolean) is the model currently in training or not?"
+  [& {:keys [rnn-layer input training? store-last-for-tbptt?]}]
+  (.rnnActivateUsingStoredState rnn-layer (vec-or-matrix->indarray input)
+                                training? store-last-for-tbptt?))
+
+(defn rnn-clear-previous-state!
+  "Reset/clear the stateMap for rnn-time-step and
+  tBpttStateMap for rnn-activate-using-stored-state
+
+  returns the rnn-layer"
+  [rnn-layer]
+  (doto rnn-layer
+    (.rnnClearPreviousState)))
+
+(defn rnn-get-prev-state
+  "Returns a shallow copy of the RNN stateMap (that contains the stored history
+  for use in fns such as rnn-time-step"
+  [rnn-layer]
+  (.rnnGetPreviousState rnn-layer))
+
+(defn rnn-get-tbptt-state
+  "Get the RNN truncated backpropagations through time (TBPTT) state for the recurrent layer."
+  [rnn-layer]
+  (.rnnGetTBPTTState rnn-layer))
+
+(defn rnn-set-tbptt-state!
+  "Set the RNN truncated backpropagations through time (TBPTT) state for the recurrent layer.
+  and returns the layer
+
+  state is a map of {string indArray}"
+  [& {:keys [rnn-layer state]}]
+  (doto rnn-layer
+    (.rnnSetTBPTTState state)))
+
+(defn rnn-set-prev-state!
+  "Set the stateMap (stored history) and return the layer.
+
+  state is a map of {string indArray}"
+  [& {:keys [rnn-layer state]}]
+  (doto rnn-layer
+    (.rnnSetPreviousState state)))
+
+(defn rnn-time-step
+  "Do one or more time steps using the previous time step state stored in stateMap.
+  Can be used to efficiently do forward pass one or n-steps at a time (instead of doing forward pass always from t=0)
+  If stateMap is empty, default initialization (usually zeros) is used
+  Implementations also update stateMap at the end of this method
+
+  input should be an INDArray or vector of input values to the layer"
+  [& {:keys [rnn-layer input]}]
+  (.rnnTimeStep rnn-layer (vec-or-matrix->indarray input)))
+
+(defn tbptt-backprop-gradient
+  "Returns the Truncated BPTT gradient
+
+  epsilon should be an INDArray or vec
+  tbptt-back-length is an integer"
+  [& {:keys [rnn-layer epsilon tbptt-back-length]}]
+  (.tbpttBackpropGradient rnn-layer (vec-or-matrix->indarray epsilon)
+                          tbptt-back-length))

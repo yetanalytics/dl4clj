@@ -1,14 +1,16 @@
 (ns dl4clj.clustering.kmeans-clustering
-  (:import [org.deeplearning4j.clustering.kmeans KMeansClustering])
-  (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.clustering.algorithm.base-clustering-algorithm :refer :all]))
+  (:import [org.deeplearning4j.clustering.kmeans KMeansClustering]
+           [org.nd4j.linalg.api.ops.impl.accum.distances CosineSimilarity EuclideanDistance
+            ManhattanDistance])
+  (:require [dl4clj.utils :refer [contains-many?]]))
 
-(defn set-up
+(defn set-up-kmeans
+  "distance-fn is one of: 'cosinesimilarity', 'euclidean', 'manhattan'"
   [& {:keys [n-clusters distance-fn min-distribution-variation-rate
              allow-empty-clusters? max-iterations]
       :as opts}]
   (assert (contains-many? opts :n-clusters :distance-fn) "you must supply the number of clusters and a distance function")
-  (if (contains? opts :max-iteration-count)
-    (.setup n-clusters max-iterations distance-fn)
-    (.setup n-clusters min-distribution-variation-rate
-            distance-fn allow-empty-clusters?)))
+  (if (contains? opts :max-iterations)
+    (KMeansClustering/setup (int n-clusters) (int max-iterations) distance-fn)
+    (KMeansClustering/setup (int n-clusters) (double min-distribution-variation-rate)
+                            distance-fn allow-empty-clusters?)))

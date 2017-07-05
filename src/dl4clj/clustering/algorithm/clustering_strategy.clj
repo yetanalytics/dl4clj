@@ -42,9 +42,3 @@
 (defn strategy-of-this-type?
   [& {:keys [clustering-strategy strategy-type]}]
   (.isStrategyOfType clustering-strategy strategy-type))
-
-(defn value-of
-  [strat-type]
-  (if (= strat-type :fixed-cluster-count)
-    (ClusteringStrategyType/FIXED_CLUSTER_COUNT)
-    (ClusteringStrategyType/OPTIMIZATION)))

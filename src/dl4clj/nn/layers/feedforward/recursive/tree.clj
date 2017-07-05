@@ -7,6 +7,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/feedforward/aut
   (:import [org.deeplearning4j.nn.layers.feedforward.autoencoder.recursive Tree])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; going to be removed for core
+;; but brought back once NLP is implemented
+
 (defn new-tree
   "creates a new tree if supplied a list of tokens (strings), another tree, or
   a tree parent and a list of strings as the children (tokens)

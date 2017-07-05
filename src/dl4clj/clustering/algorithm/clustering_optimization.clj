@@ -2,27 +2,11 @@
   (:import [org.deeplearning4j.clustering.algorithm.optimisation
             ClusteringOptimization
             ClusteringOptimizationType])
-  (:require [dl4clj.utils :refer [type-checking]]))
-
-(defn value-of
-  [optimization-type]
-  (cond
-    (= optimization-type :minimize-avg-point-to-center)
-    (ClusteringOptimizationType/MINIMIZE_AVERAGE_POINT_TO_CENTER_DISTANCE)
-    (= optimization-type :minimize-avg-point-to-point)
-    (ClusteringOptimizationType/MINIMIZE_AVERAGE_POINT_TO_POINT_DISTANCE)
-    (= optimization-type :minimize-max-point-to-center)
-    (ClusteringOptimizationType/MINIMIZE_MAXIMUM_POINT_TO_CENTER_DISTANCE)
-    (= optimization-type :minimize-max-point-to-point)
-    (ClusteringOptimizationType/MINIMIZE_MAXIMUM_POINT_TO_POINT_DISTANCE)
-    (= optimization-type :minimize-per-cluster-point-count)
-    (ClusteringOptimizationType/MINIMIZE_PER_CLUSTER_POINT_COUNT)
-    :else
-    (assert false "you must supply a valid optimization-type")))
+  (:require [dl4clj.constants :refer [value-of]]))
 
 (defn new-clustering-optimization
   [& {:keys [optimization-type value]}]
-  (ClusteringOptimization. (value-of optimization-type)
+  (ClusteringOptimization. (value-of {:clustering-optimization optimization-type})
                            value))
 
 (defn get-type

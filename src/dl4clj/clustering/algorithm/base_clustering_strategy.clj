@@ -1,6 +1,5 @@
 (ns dl4clj.clustering.algorithm.base-clustering-strategy
-  (:import [org.deeplearning4j.clustering.algorithm.strategy BaseClusteringStrategy])
-  (:require [dl4clj.clustering.algorithm.clustering-strategy :refer :all]))
+  (:import [org.deeplearning4j.clustering.algorithm.strategy BaseClusteringStrategy]))
 
 (defn set-initial-cluster-count!
   [& {:keys [cluster-strat cluster-count]}]

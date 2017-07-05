@@ -1,7 +1,5 @@
 (ns dl4clj.clustering.algorithm.optimisation-strategy
-  (:import [org.deeplearning4j.clustering.algorithm.strategy OptimisationStrategy])
-  (:require [dl4clj.clustering.algorithm.clustering-strategy :refer :all]
-            [dl4clj.clustering.algorithm.base-clustering-strategy :refer :all]))
+  (:import [org.deeplearning4j.clustering.algorithm.strategy OptimisationStrategy]))
 
 (defn get-clustering-optimization-val
   [clustering-optim]

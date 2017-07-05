@@ -1,8 +1,8 @@
 (ns dl4clj.clustering.algorithm.base-clustering-algorithm
-  (:import [org.deeplearning4j.clustering.algorithm BaseClusteringAlgorithm])
-  (:require [dl4clj.utils :refer [type-checking]]))
+  (:import [org.deeplearning4j.clustering.algorithm BaseClusteringAlgorithm]))
+
 ;; implement clustering specific types in util
-;; apply type-checking to the fns here
+
 (defn apply-to
   "applies a clustering algorithm to a collection of points"
   [& {:keys [cluster-algo points]}]

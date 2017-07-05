@@ -9,9 +9,10 @@
     (ClusterSet. distance-fn)
     (ClusterSet.)))
 
-(defn add-new-cluster-with-center
+(defn add-new-cluster-with-center!
   [& {:keys [cluster-set center-point]}]
-  (.addNewClusterWithCenter cluster-set center-point))
+  (.addNewClusterWithCenter cluster-set center-point)
+  cluster-set)
 
 (defn classify-point
   [& {:keys [cluster-set point move-cluster-center?]
@@ -79,7 +80,7 @@
   [cluster-set]
   (.removeEmptyClusters cluster-set))
 
-(defn remove-points!
+(defn remove-points-from-cluster-set!
   [cluster-set]
   (doto cluster-set (.removePoints)))
 

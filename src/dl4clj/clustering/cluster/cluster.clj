@@ -23,11 +23,11 @@
   [& {:keys [cluster point]}]
   (.getDistanceToCenter cluster point))
 
-(defn get-id
+(defn get-cluster-id
   [cluster]
   (.getId cluster))
 
-(defn get-label
+(defn get-cluster-label
   [cluster]
   (.getLabel cluster))
 
@@ -39,15 +39,21 @@
   [cluster]
   (.getPoints cluster))
 
-(defn is-empty?
+(defn empty-cluster?
   [cluster]
   (.isEmpty cluster))
 
 (defn remove-point!
+  ;; doesnt work if you set a clusters label and id
+  ;; need to look into this even tho should
+  ;; promote imutability whenever possible
   [& {:keys [cluster point-id]}]
   (doto cluster (.removePoint point-id)))
 
 (defn remove-points!
+  ;; doesnt work if you set a clusters label and id
+  ;; need to look into this even tho should
+  ;; promote imutability whenever possible
   [cluster]
   (doto cluster (.removePoints)))
 
@@ -55,14 +61,24 @@
   [& {:keys [cluster point]}]
   (doto cluster (.setCenter point)))
 
-(defn set-id!
+(defn set-cluster-id!
   [& {:keys [cluster id]}]
   (doto cluster (.setId id)))
 
-(defn set-label!
+(defn set-cluster-label!
   [& {:keys [cluster label]}]
   (doto cluster (.setLabel label)))
 
-(defn set-points!
+#_(defn set-points!
+  ;; causes a down stream error
   [& {:keys [cluster points]}]
   (doto cluster (.setPoints points)))
+
+(defn set-points!
+  [& {:keys [cluster points]}]
+  (loop [c cluster
+         ps! points]
+    (if (empty? ps!)
+      c
+      (recur (add-point! :cluster c :point (first ps!))
+             (rest ps!)))))

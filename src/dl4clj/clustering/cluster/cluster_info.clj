@@ -1,6 +1,10 @@
 (ns dl4clj.clustering.cluster.cluster-info
   (:import [org.deeplearning4j.clustering.cluster.info ClusterInfo]))
 
+;; not sure the workflow of how cluster info gets the info from the cluster
+;; this might happen behind the scenes but I think this is something a user
+;; has to set up
+
 (defn new-cluster-info-obj
   [& {:keys [thread-safe?]
       :as opts}]

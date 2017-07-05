@@ -1,6 +1,8 @@
 (ns dl4clj.clustering.cluster.cluster-set-info
   (:import [org.deeplearning4j.clustering.cluster.info ClusterSetInfo]))
 
+;; same considerations from cluster-info apply here
+
 (defn new-cluster-set-info-obj
   [& {:keys [thread-safe?]
       :as opts}]
