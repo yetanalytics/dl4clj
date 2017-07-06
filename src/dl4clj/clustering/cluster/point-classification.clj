@@ -5,7 +5,7 @@
   [& {:keys [cluster distance-from-center new-location?]}]
   (PointClassification. cluster distance-from-center new-location?))
 
-(defn get-cluster
+(defn get-cluster-from-class
   [point-classification]
   (.getCluster point-classification))
 

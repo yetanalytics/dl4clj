@@ -4,6 +4,9 @@
             [dl4clj.clustering.cluster.cluster :refer :all]
             [dl4clj.clustering.cluster.point :refer :all]
             [dl4clj.clustering.cluster.cluster-set :refer :all]
+            [dl4clj.clustering.cluster.point-classification :refer [get-cluster-from-class
+                                                                    get-distance-from-center
+                                                                    new-location?]]
             ;; making my life easier
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -249,6 +252,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; classify points-with-meta in a cluster-with-meta in a cluster set
+;; point classification
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;set-points! now works
 
@@ -279,11 +283,21 @@
                   (set-cluster-label! :cluster c :label "second cluster")
                   (set-cluster-id! :cluster c :id "c2"))
       cs (set-clusters! :cluster-set (new-cluster-set :distance-fn "manhattan")
-                        :clusters (list cluster-1 cluster-2))]
-  (try (classify-point :point (new-point :data [4 8 12 16])
-                         :cluster-set cs
-                         :move-cluster-center? false)
-         (catch Exception e (str e))))
+                        :clusters (list cluster-1 cluster-2))
+      point-class (try (classify-point :point (new-point :data [4 8 12 16])
+                                       :cluster-set cs
+                                       :move-cluster-center? false)
+                       (catch Exception e (str e)))]
+  (is (= (second (get-clusters cs))
+         (dl4clj.berkeley/get-first
+          (nerest-cluster-to-point :cluster-set cs
+                                   :point (new-point :data [4 8 12 16])))))
+  (get-point-distribution cs)
+  ;; point classification
+  (is (= (get-cluster-from-class point-class)
+         (second (get-clusters cs))))
+  (is (= 20.0 (get-distance-from-center point-class)))
+  (is (= true (new-location? point-class))))
 
 ;; no meta and manualy add-point (no meta and add points still errors)
 ;; this one works
