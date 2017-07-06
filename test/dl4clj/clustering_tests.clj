@@ -361,6 +361,10 @@
        (catch Exception e (str e))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;adding cluster info and cluster-set-info
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; combine the clustering info namespaces
 
 
 ;; cluster set = cluster-set-with-labeled-clusters

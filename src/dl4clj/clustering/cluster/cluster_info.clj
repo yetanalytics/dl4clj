@@ -5,6 +5,9 @@
 ;; this might happen behind the scenes but I think this is something a user
 ;; has to set up
 
+;; should be combined with cluster-set-info
+;; you can only add info to clusters via that class
+
 (defn new-cluster-info-obj
   [& {:keys [thread-safe?]
       :as opts}]

@@ -2,6 +2,8 @@
   (:import [org.deeplearning4j.clustering.cluster PointClassification]))
 
 (defn new-point-classification
+  ;; should not need to call this
+  ;; point classifications are created from the cluster set fns
   [& {:keys [cluster distance-from-center new-location?]}]
   (PointClassification. cluster distance-from-center new-location?))
 
