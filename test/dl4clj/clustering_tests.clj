@@ -7,6 +7,9 @@
             [dl4clj.clustering.cluster.point-classification :refer [get-cluster-from-class
                                                                     get-distance-from-center
                                                                     new-location?]]
+            [dl4clj.clustering.cluster.cluster-info :refer :all]
+            [dl4clj.clustering.cluster.cluster-set-info :refer :all]
+            [dl4clj.clustering.cluster.cluster-utils :refer :all]
             ;; making my life easier
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -229,22 +232,22 @@
       [c-1 c-2] clusters]
   (get-cluster-id c-1))
 
-(dl4clj.berkeley/get-first
+#_(dl4clj.berkeley/get-first
  (nerest-cluster-to-point
   :cluster-set cluster-set-with-labeled-clusters
   :point (new-point :data [1 2 3 4])))
 
-(classify-point :point (new-point :data [1 2 3 4])
+#_(classify-point! :point (new-point :data [1 2 3 4])
                 :cluster-set (add-new-cluster-with-center!
                               :cluster-set (new-cluster-set :distance-fn "euclidean")
                               :center-point center-point)
                 :move-cluster-center? false)
 
-(classify-point :point (new-point :data [1 2 3 4])
+#_(classify-point! :point (new-point :data [1 2 3 4])
                 :cluster-set cluster-set-with-labeled-clusters
                 :move-cluster-center? true)
 
-(get-point-distribution cluster-set-with-labeled-clusters)
+#_(get-point-distribution cluster-set-with-labeled-clusters)
 
 ;; points
 ;;all-args-point
@@ -284,11 +287,11 @@
                   (set-cluster-id! :cluster c :id "c2"))
       cs (set-clusters! :cluster-set (new-cluster-set :distance-fn "manhattan")
                         :clusters (list cluster-1 cluster-2))
-      point-class (try (classify-point :point (new-point :data [4 8 12 16])
+      point-class (try (classify-point! :point (new-point :data [4 8 12 16])
                                        :cluster-set cs
                                        :move-cluster-center? false)
                        (catch Exception e (str e)))]
-  (is (= (second (get-clusters cs))
+  #_(is (= (second (get-clusters cs))
          (dl4clj.berkeley/get-first
           (nerest-cluster-to-point :cluster-set cs
                                    :point (new-point :data [4 8 12 16])))))
@@ -316,7 +319,7 @@
                   (add-point! :cluster c :point p4))
       cs (set-clusters! :cluster-set (new-cluster-set :distance-fn "manhattan")
                         :clusters (list cluster-1 cluster-2))]
-  (try (classify-point :point (new-point :data [4 8 12 16])
+  (try (classify-point! :point (new-point :data [4 8 12 16])
                   :cluster-set cs
                   :move-cluster-center? false)
        (catch Exception e (str e))))
@@ -355,16 +358,88 @@
                   (add-point! :cluster c :point p4))
       cs (set-clusters! :cluster-set (new-cluster-set :distance-fn "manhattan")
                         :clusters (list cluster-1 cluster-2))]
-  (try (classify-point :point (new-point :data [4 8 12 16])
+  (try (classify-point! :point (new-point :data [4 8 12 16])
                   :cluster-set cs
                   :move-cluster-center? false)
        (catch Exception e (str e))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;adding cluster info and cluster-set-info
+;;adding cluster info and cluster-set-info + calc stats for the info objs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; combine the clustering info namespaces
+
+
+(let [;; points for the clusters
+      p1 (new-point :data [-1]
+                    :label "p1"
+                    :id "p1")
+      p2 (new-point :data [2]
+                    :label "p2"
+                    :id "p2")
+      p3 (new-point :data [-5]
+                    :label "p3"
+                    :id "p3")
+      p4 (new-point :data [3]
+                    :label "p4"
+                    :id "p4")
+      p5 (new-point :data [0 1]
+                    :label "p5"
+                    :id "p5")
+      p6 (new-point :data [-2 -4]
+                    :label "p6"
+                    :id "p6")
+      ;; center point for the clusters
+      c1 (new-point :data [0]
+                    :label "origin"
+                    :id "c1")
+      c2 (new-point :data [2]
+                    :label "middle"
+                    :id "c2")
+      c3 (new-point :data [1 2]
+                    :label "single cluster center"
+                    :id "c3")
+      ;; make the clusters
+      cluster-1 (as-> (new-cluster :center-point c1 :distance-fn "euclidean") c
+                  (set-points! :cluster c :points (list p1 p2))
+                  (set-cluster-label! :cluster c :label "first cluster")
+                  (set-cluster-id! :cluster c :id "cluster-1"))
+      cluster-2 (as-> (new-cluster :center-point c2 :distance-fn "euclidean") c
+                  (set-points! :cluster c :points (list p3 p4))
+                  (set-cluster-label! :cluster c :label "second cluster")
+                  (set-cluster-id! :cluster c :id "cluster-2"))
+      cluster-3 (as-> (new-cluster :center-point c3 :distance-fn "euclidean") c
+                  (set-points! :cluster c :points (list p5 p6))
+                  (set-cluster-label! :cluster c :label "stand alone")
+                  (set-cluster-id! :cluster c :id "cluster-3"))
+      ;; create a cluster set from cluster-1/2
+      cs (set-clusters! :cluster-set (new-cluster-set :distance-fn "euclidean")
+                        :clusters (list cluster-1 cluster-2))
+      ;; create a cluster-set-info obj for our cluster set
+      cluster-set-info (compute-cluster-set-info! cs)
+      ;; cluster info for the clusters in our cluster set
+
+      {c1-info "cluster-1"
+       c2-info "cluster-2"} (get-clusters-info cluster-set-info)
+
+      ;; cluster info for our standalone cluster
+      c3-info (compute-cluster-infos! :cluster cluster-3 :distance-fn "euclidean")]
+
+  (is (= "cluster-2"
+         (-> (get-most-spread-out-clusters
+              :cluster-set cs :cluster-set-info cluster-set-info :n 1)
+             first
+             get-cluster-id)))
+  (is (= 2 (count (get-clusters-where-max-distance-from-center-greater-than
+                   :cluster-set cs :cluster-set-info cluster-set-info
+                   :max-distance 1.0))))
+
+  (is (= 2 (count (get-clusters-where-avg-distance-from-center-greater-than
+                   :cluster-set cs :cluster-set-info cluster-set-info
+                   :max-avg-distance 0.5))))
+  )
+
+
 
 
 ;; cluster set = cluster-set-with-labeled-clusters

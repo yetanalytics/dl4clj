@@ -14,9 +14,10 @@
   [& {:keys [info cluster-id]}]
   (.addClusterInfo info cluster-id))
 
-(defn get-avg-point-distance-from-cluster-center
-  [cluster-set-info]
-  (.getAveragePointDistanceFromClusterCenter cluster-set-info))
+(defn initialize
+  ;; looks like the main fn to call
+  [& {:keys [cluster-set thread-safe?]}]
+  (ClusterSetInfo/initialize cluster-set thread-safe?))
 
 (defn get-cluster-info
   [& {:keys [cluster-set-info cluster-id]}]
@@ -25,6 +26,10 @@
 (defn get-clusters-info
   [cluster-set-info]
   (.getClustersInfos cluster-set-info))
+
+(defn get-avg-point-distance-from-cluster-center
+  [cluster-set-info]
+  (.getAveragePointDistanceFromClusterCenter cluster-set-info))
 
 (defn get-distance-between-cluster-centers
   [cluster-set-info]
@@ -41,10 +46,6 @@
 (defn get-n-points
   [cluster-set-info]
   (.getPointsCount cluster-set-info))
-
-(defn initialize
-  [& {:keys [cluster-set thread-safe?]}]
-  (.initialize cluster-set thread-safe?))
 
 (defn remove-cluster-infos!
   [& {:keys [cluster-set-info clusters]}]

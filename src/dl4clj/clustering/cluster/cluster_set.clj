@@ -14,7 +14,7 @@
   (.addNewClusterWithCenter cluster-set center-point)
   cluster-set)
 
-(defn classify-point
+(defn classify-point!
   [& {:keys [cluster-set point move-cluster-center?]
       :as opts}]
   (assert (contains-many? opts :cluster-set :point)

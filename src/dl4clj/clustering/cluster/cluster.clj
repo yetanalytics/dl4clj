@@ -75,10 +75,11 @@
   (doto cluster (.setPoints points)))
 
 (defn set-points!
-  [& {:keys [cluster points]}]
+  [& {:keys [cluster points move-center?]
+      :or {move-center? true}}]
   (loop [c cluster
          ps! points]
     (if (empty? ps!)
       c
-      (recur (add-point! :cluster c :point (first ps!))
+      (recur (add-point! :cluster c :point (first ps!) :move-center? move-center?)
              (rest ps!)))))

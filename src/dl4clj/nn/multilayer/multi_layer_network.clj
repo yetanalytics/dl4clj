@@ -58,16 +58,34 @@
 
    :lazy-seq-data (lazy-seq), a lazy-seq of dataset objects
     - created by data-from-iter in: dl4clj.helpers"
+
+  ;; test this
   [& {:keys [lazy-seq-data mln n-epochs]}]
   (dotimes [n n-epochs]
+    (loop [_ mln
+           accum! lazy-seq-data]
+      ;; this could never complete
+      ;; rest always returns a seq
+      (if (not (empty? accum!))
+        (let [data (first accum!)]
+          (recur (fit! :mln mln :data data)
+                 (rest accum!)))
+        mln)))
+
+  #_(dotimes [n n-epochs]
+    ;; look into avoiding creation of lazy iter and just recursively going through
+    ;; lazy seq
+
     ;; dont know of a more effecient way of doing this
     ;; you cant reset a lazy-seq-iter so i just make a new one
     ;; prob why training takes non-neglegible amount of time
-    (let [iter (new-lazy-iter lazy-seq-data)]
+
+
+
+    #_(let [iter (new-lazy-iter lazy-seq-data)]
       (while (has-next? iter)
         (let [nxt (next-example! iter)]
-          (fit! :mln mln :data nxt)))))
-  mln)
+          (fit! :mln mln :data nxt))))))
 
 (defn pre-train!
   "Perform layerwise pretraining on all pre-trainable layers in the network (VAEs, RBMs, Autoencoders, etc)
