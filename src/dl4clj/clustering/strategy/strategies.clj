@@ -3,6 +3,10 @@
             OptimisationStrategy])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi method for obj creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defmulti clustering-strategy generic-dispatching-fn)
 
 (defmethod clustering-strategy :fixed-cluster-count [opts]
@@ -16,6 +20,10 @@
         {cluster-count :cluster-count
          distance-fn :distance-fn} conf]
     (OptimisationStrategy/setup cluster-count distance-fn)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; user facing fns, still need doc strings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-fixed-cluster-count-strategy
   ""
