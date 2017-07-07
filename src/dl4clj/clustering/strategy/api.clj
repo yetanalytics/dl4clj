@@ -104,16 +104,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-clustering-optimisation!
-  ;; sets the clustering optimization based on the supplied type and value
+  "sets the clustering optimization based on the supplied type and value"
   [& {:keys [clustering-optim-strat optim-type value]}]
   (.optimize clustering-optim-strat optim-type value))
 
 (defn optimize-when-iteration-count-multiple-of!
-  ;; sets the clustering optimisation application condition to be a fixed iteration count condition
+  "sets the clustering optimisation application condition to be a fixed iteration count condition"
   [& {:keys [clustering-optim-strat multiple]}]
   (.optimizeWhenIterationCountMultipleOf clustering-optim-strat multiple))
 
 (defn optimize-when-point-dist-variation-rate-less-than!
-  ;; sets the clustering optimisation application condition to be a convergence condition based on the variation rate
+  "sets the clustering optimisation application condition to be a convergence condition based on the variation rate"
   [& {:keys [clustering-optim-strat rate]}]
   (.optimizeWhenPointDistributionVariationRateLessThan clustering-optim-strat rate))

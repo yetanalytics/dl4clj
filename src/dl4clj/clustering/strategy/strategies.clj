@@ -26,13 +26,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-fixed-cluster-count-strategy
-  ""
+  "Creates a clustering strategy with the strategy type set to fixed-cluster-count
+
+  :cluster-count (int), the number of clusters (in the cluster-set)
+   this strategy will be applied to
+
+  :distance-fn (str), the fn used to calculate the distance between points/clusters
+   - one of: 'cosinesimilarity', 'euclidean', 'manhattan'"
   [& {:keys [cluster-count distance-fn]
       :as opts}]
   (clustering-strategy {:fixed-cluster-count opts}))
 
 (defn new-optimization-strategy
-  ""
+  "Creates a clustering strategy with the strategy type set to optimization
+
+  :cluster-count (int), the number of clusters (in the cluster-set)
+   this strategy will be applied to
+
+  :distance-fn (str), the fn used to calculate the distance between points/clusters
+   - one of: 'cosinesimilarity', 'euclidean', 'manhattan'"
   [& {:keys [cluster-count distance-fn]
       :as opts}]
   (clustering-strategy {:optimization opts}))
