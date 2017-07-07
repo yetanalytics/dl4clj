@@ -1,4 +1,4 @@
-(ns dl4clj.clustering.algorithm.clustering-optimization
+(ns dl4clj.clustering.optimization.clustering-optimization
   (:import [org.deeplearning4j.clustering.algorithm.optimisation
             ClusteringOptimization
             ClusteringOptimizationType])
@@ -8,7 +8,6 @@
   [& {:keys [optimization-type value]}]
   (ClusteringOptimization. (value-of {:clustering-optimization optimization-type})
                            value))
-;; used by apply optimization in clustering utils
 
 (defn get-type
   [clustering-optimization]
