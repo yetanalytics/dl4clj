@@ -1,4 +1,4 @@
-(ns dl4clj.clustering.algorithm.iteration-history
+(ns dl4clj.clustering.iteration.history
   (:import [org.deeplearning4j.clustering.algorithm.iteration IterationHistory]))
 
 (defn new-iteration-history
@@ -14,14 +14,9 @@
   [& {:keys [iteration-history iteration-idx]}]
   (.getIterationInfo iteration-history iteration-idx))
 
-(defn get-iteration-infos
-  ;; look into if this is still a thing
-  [iteration-history]
-  (.getIterationInfos iteration-history))
-
 (defn get-most-recent-cluster-set-info
-  [cluster-set]
-  (.getMostRecentClusterSetInfo cluster-set))
+  [iteration-history]
+  (.getMostRecentClusterSetInfo iteration-history))
 
 (defn get-most-recent-iteration-info
   [iteration-history]

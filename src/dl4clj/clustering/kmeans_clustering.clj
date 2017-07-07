@@ -1,5 +1,6 @@
 (ns dl4clj.clustering.kmeans-clustering
   (:import [org.deeplearning4j.clustering.kmeans KMeansClustering]
+           ;; dont think this import is necessary
            [org.nd4j.linalg.api.ops.impl.accum.distances CosineSimilarity EuclideanDistance
             ManhattanDistance])
   (:require [dl4clj.utils :refer [contains-many?]]))
