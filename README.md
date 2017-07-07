@@ -5,19 +5,15 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 ## Features
 
 Not all of these are fully tested and are most likely going to undergo breaking changes
-- the tested features are stable for now and should stay that way.
-- even in the tested name spaces, there remain some functions which are either
-  - broken
-  - misunderstood
-  - not tested
+- TESTS ARE BROKEN, THEY POINT TO OLD NAMESPACES
 
-- Clustering
+- Clustering (testing in progress)
 - Datasets (tested)
 - Early Stopping (tested)
 - Eval/Evaluation (tested)
 - Neural Networks DSL (tested)
 - Optimize (tested)
-- Spark training/hosting
+- Spark training/hosting (not tested)
 
 Support for Computational Graphs and NLP will come in a future release
 
@@ -55,7 +51,9 @@ With Maven:
 
 ## Usage
 
-TODO verify in scratch that this README is accurate
+TODO
+- verify in scratch that this README is accurate
+- add in clustering workflow/examples
 
 ### Layers
 
@@ -1118,26 +1116,23 @@ Finish tests of currently implemented classes/interfaces
 Refactor overall structure of this project
 - ensure consistency in stlye (multimethods for heavy lifting and fns for use)
 - ensure no cascading config maps
-- seperation of interfaces from the classes/namespaces that implement/use them
+- seperation of interfaces from the classes/namespaces that implement/use them (api namespaces)
 - general refinement
 
-Improve examples
+Improve examples within src
 - minimal importing
 - replace method calls with fn calls
 
 Update doc strings
 - content and formatting
 
-Fix built-in dl4j logging
-
-ND4j and Datavec implementations
-- some of this has already been done but is no where close to complete
-
 Update release section
 
 Spark and Kafka streaming
+- test and add examples
 
 Parallelism (single machine)
+- implement
 
 ## Packages to implement:
 

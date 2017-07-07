@@ -198,6 +198,7 @@
 
 (defmethod value-of :clustering-optimization [opts]
   (let [optim (:clustering-optimization opts)]
+    ;; I dont see implementations within dl4j src for all of these types
     (cond
       (= optim :minimize-avg-point-to-center)
       (ClusteringOptimizationType/MINIMIZE_AVERAGE_POINT_TO_CENTER_DISTANCE)

@@ -8,6 +8,7 @@
   [& {:keys [optimization-type value]}]
   (ClusteringOptimization. (value-of {:clustering-optimization optimization-type})
                            value))
+;; used by apply optimization in clustering utils
 
 (defn get-type
   [clustering-optimization]

@@ -10,6 +10,7 @@
             [dl4clj.clustering.cluster.cluster-info :refer :all]
             [dl4clj.clustering.cluster.cluster-set-info :refer :all]
             [dl4clj.clustering.cluster.cluster-utils :refer :all]
+            [dl4clj.clustering.algorithm.base-clustering-algorithm :refer :all]
             ;; making my life easier
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -448,6 +449,16 @@
 (def kmeans-clustering (set-up-kmeans :n-clusters 2
                                       :distance-fn "euclidean"
                                       :max-iterations 2))
+
+(apply-to-points :cluster-algo kmeans-clustering :points (list (new-point :data [-1]
+                                                                          :label "p1"
+                                                                          :id "p1")
+                                                               (new-point :data [2]
+                                                                          :label "p2"
+                                                                          :id "p2")))
+
+
+
 
 (def other-kmeans (set-up-kmeans :n-clusters 2 :min-distribution-variation-rate 0.2
                                  :distance-fn "manhattan" :allow-empty-clusters? true))

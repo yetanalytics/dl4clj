@@ -1,6 +1,10 @@
 (ns dl4clj.clustering.algorithm.optimisation-strategy
   (:import [org.deeplearning4j.clustering.algorithm.strategy OptimisationStrategy]))
 
+(defn new-optimisation-strat
+  [& {:keys [initial-cluster-count distance-fn]}]
+  (.setup initial-cluster-count distance-fn))
+
 (defn get-clustering-optimization-val
   [clustering-optim]
   (.getClusteringOptimizationValue clustering-optim))
@@ -28,7 +32,3 @@
 (defn optimize-when-point-dist-variation-rate-less-than
   [& {:keys [clustering-optim rate]}]
   (.optimizeWhenPointDistributionVariationRateLessThan clustering-optim rate))
-
-(defn setup
-  [& {:keys [initial-cluster-count distance-fn]}]
-  (.setup initial-cluster-count distance-fn))
