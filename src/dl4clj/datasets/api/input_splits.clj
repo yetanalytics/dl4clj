@@ -9,8 +9,6 @@
            [org.datavec.api.split InputSplit])
   (:require [dl4clj.utils :refer [array-of]]))
 
-(java.net.URI/create "foo")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; path filters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

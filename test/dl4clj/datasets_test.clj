@@ -1,26 +1,21 @@
 (ns dl4clj.datasets-test
   (:refer-clojure :exclude [reset! rand])
   (:require [clojure.test :refer :all]
-            [dl4clj.datasets.datavec :refer :all]
-            [dl4clj.datasets.rearrange :refer :all]
-            [dl4clj.datasets.fetchers.default-dataset-fetchers :refer :all]
-            [dl4clj.datasets.fetchers.base-data-fetcher :refer :all]
-            [dl4clj.datasets.iterator.iterators :refer :all]
-            [dl4clj.datasets.iterator.impl.default-datasets :refer :all]
-            [dl4clj.datasets.iterator.impl.list-data-set-iterator :refer :all]
-            [dl4clj.datasets.iterator.impl.move-window-data-set-fetcher :refer :all]
-            [dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter :refer :all]
-            [dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator :refer :all]
-            [datavec.api.split :refer :all]
-            [nd4clj.linalg.dataset.api.pre-processors :refer :all]
-            [nd4clj.linalg.api.ds-iter :refer :all]
-            [nd4clj.linalg.dataset.api.ds-preprocessor :refer :all]
-            [datavec.api.writeable :refer :all]
-            [datavec.api.records.readers :refer :all]
-            [datavec.api.records.interface :refer :all]
             [dl4clj.utils :refer [array-of get-labels]]
-            [nd4clj.linalg.dataset.data-set :refer [data-set]]
-            [nd4clj.linalg.factory.nd4j :refer [rand]])
+            [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand]]
+            [dl4clj.datasets.fetchers.default-dataset-fetchers :refer :all]
+            [dl4clj.datasets.default-datasets :refer :all]
+            [dl4clj.datasets.api.fetchers :refer :all]
+            [dl4clj.datasets.iterators :refer :all]
+            [dl4clj.datasets.api.iterators :refer :all]
+            [dl4clj.datasets.input-splits :refer :all]
+            [dl4clj.datasets.api.input-splits :refer :all]
+            [dl4clj.datasets.new-datasets :refer :all]
+            [dl4clj.datasets.api.datasets :refer :all]
+            [dl4clj.datasets.pre-processors :refer :all]
+            [dl4clj.datasets.api.pre-processors :refer :all]
+            [dl4clj.datasets.record-readers :refer :all]
+            [dl4clj.datasets.api.record-readers :refer :all])
   ;; image transforms have not been implemented so importing this default one for testing
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
@@ -95,25 +90,27 @@
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :rng 123))))
+                                            :use-subset? true :seed 123))))
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :rng 123))))
+                                            :use-subset? true :seed 123))))
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :rng 123
+                                            :use-subset? true :seed 123
                                             :label-generator (new-parent-path-label-generator)))))
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :rng 123
+                                            :use-subset? true :seed 123
                                             :label-generator (new-parent-path-label-generator)
                                             :img-transform (ColorConversionTransform.)))))
+
+    ;; left off here
 
     ;;mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
@@ -133,21 +130,22 @@
 
     ;; dl4clj.datasets.iterator.impl.list-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
-           (type (new-list-data-set-iterator
-                  :data-set [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]))))
+           (type (new-list-dataset-iterator
+                  :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]))))
     (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
-           (type (new-list-data-set-iterator
-                  :data-set [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
+           (type (new-list-dataset-iterator
+                  :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
                   :batch 6))))
 
     ;; dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter
     (is (= org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter
            (type (new-multi-data-set-iterator-adapter
+                  :iter
                   (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))
 
     ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
-           (type (new-singleton-multi-data-set-iterator
+           (type (new-singleton-multi-dataset-iterator
                   (next-example!
                    (reset-fetcher!
                     (new-multi-data-set-iterator-adapter
@@ -192,16 +190,7 @@
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-feature-matrix (next-example! (reset-iter! iter-w-labels))))))
-      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-      (is (= (type cifar-iter) (type (train-cifar-iter! cifar-iter))))
-      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter))))
-      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter
-                                                       :n-examples 100))))
-      (is (= (type cifar-iter) (type (test-cifar-iter! :iter cifar-iter
-                                                       :n-examples 100
-                                                       :batch-size 5)))))))
+             (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
 
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
@@ -240,30 +229,28 @@
             (filter-paths :path-filter (new-random-path-filter :rng (new java.util.Random)
                                                                :extensions [".txt"]
                                                                :max-paths 2)
-                          :paths [(java.net.URI/create "foo")]))))))
-
-
+                          :paths ["foo"]))))))
 
 (deftest file-split-testing
   (testing "base level io stuffs"
     ;; file split
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/poker/"))))
+           (type (new-filesplit :path "resources/"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/poker/"
+           (type (new-filesplit :path "resources/"
                                 :rng-seed (new java.util.Random)))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/poker/"
+           (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/poker/"
+           (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"
                                 :recursive? true))))
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/poker/"
+           (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"
                                 :rng-seed (new java.util.Random)))))
-    (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/poker/")))))
+    (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/")))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
@@ -271,12 +258,12 @@
                                                     (new java.net.URI "baz")]))))
 
     ;; input stream input split
-    (with-open [data (clojure.java.io/input-stream "resources/poker/poker-hand-testing.csv")
-                other-data (clojure.java.io/input-stream "resources/poker/poker-hand-training.csv")]
+    (with-open [data (clojure.java.io/input-stream "resources/poker-hand-testing.csv")
+                other-data (clojure.java.io/input-stream "resources/poker-hand-training.csv")]
       (is (= org.datavec.api.split.InputStreamInputSplit
              (type (new-input-stream-input-split
                     :in-stream data
-                    :file-path "resources/poker/poker-hand-testing.csv"))))
+                    :file-path "resources/poker-hand-testing.csv"))))
       (is (= org.datavec.api.split.InputStreamInputSplit
              (type (new-input-stream-input-split
                     :in-stream data))))
@@ -403,7 +390,7 @@
     (let [rr (new-file-record-reader)
           init-rr (initialize-rr! :rr rr :input-split
                                   (new-filesplit
-                                   :path "resources/poker/poker-hand-testing.csv"))]
+                                   :path "resources/poker-hand-testing.csv"))]
       ;; these tests do not cover the entire ns but the most imporant fns
       (is (= java.lang.Boolean (type (has-next-record? init-rr))))
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
@@ -433,10 +420,11 @@
     ;; dl4clj.datasets.iterator.iterators
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
           pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
-                         :ds-iter iter)
+                         :iter iter)
           pp2 (fit-iter! :normalizer (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1)
-                         :ds-iter iter)
+                         :iter iter)
           multi-iter (new-multi-data-set-iterator-adapter
+                      :iter
                       (new-mnist-data-set-iterator :batch 5 :n-examples 100))]
       (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
              (type (new-combined-pre-processor {0 pp1 1 pp2}))))
@@ -449,7 +437,7 @@
              (type (new-existing-dataset-iterator :dataset-iterator iter))))
       (is (= org.deeplearning4j.datasets.iterator.SamplingDataSetIterator
              (type
-              (new-sampling-dataset-iterator :sampling-source iris-ds
+              (new-sampling-dataset-iterator :sampling-source (new-iris-ds)
                                              :batch-size 10
                                              :total-n-samples 10))))
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
@@ -471,15 +459,18 @@
                                                  :labels [0.4 0.8]
                                                  :batch-size 2))))
       (is (= org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator
-             (type (new-INDArray-dataset-iterator :features (rand [2])
-                                                :labels (rand [2])
-                                                :batch-size 2)))))))
+             (type (new-INDArray-dataset-iterator :features [1 2]
+                                                  :labels [2 2]
+                                                  :batch-size 2)))))))
 
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
     ;; dl4clj.datasets.datavec
-    (let [rr (new-csv-record-reader)
-          seq-rr (new-csv-seq-record-reader)]
+    (let [fs (new-filesplit :path "resources/poker-hand-training.csv")
+          rr (initialize-rr! :rr (new-csv-record-reader)
+                             :input-split file-split)
+          seq-rr (initialize-rr! :rr (new-csv-seq-record-reader)
+                                 :input-split file-split)]
       (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
              (type
               (new-record-reader-dataset-iterator :record-reader rr

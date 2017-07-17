@@ -20,7 +20,7 @@
   returns the supplied dataset"
   [& {:keys [ds feature example-idx to-add]
       :as opts}]
-  (let [f (vec-or-matrix->indarray features)
+  (let [f (vec-or-matrix->indarray feature)
         ta (vec-or-matrix->indarray to-add)]
    (if (contains? opts :to-add)
         (doto ds (.addFeatureVector ta))

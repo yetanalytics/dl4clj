@@ -360,7 +360,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:cifar-dataset-iter opts)
         {batch-size :batch-size
          n-examples :n-examples
-         img-dims :img-dimgs
+         img-dims :img-dims
          train? :train?
          use-special-pre-process-cifar? :use-special-pre-process-cifar?
          n-possible-labels :n-possible-labels
@@ -407,7 +407,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
          label-generator :label-generator
          image-transform :image-transform} config
         img (int-array img-dims)
-        rng (new Random seed)]
+        rng (if (contains? config :seed)
+              (new Random seed)
+              (new Random 123))]
     (cond (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
                         :label-generator :train? :split-train-test :rng :image-transform)
         (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
@@ -435,6 +437,8 @@ you need to suply atleast the mini batch size, number of possible labels and the
         (LFWDataSetIterator. img)
         :else
         (assert false "you must supply atleast the desired image dimensions for the data"))))
+
+(LFWDataSetIterator. (int-array [1 2 3]))
 
 (defmethod iterator :mnist-dataset-iter [opts]
   (let [config (:mnist-dataset-iter opts)
