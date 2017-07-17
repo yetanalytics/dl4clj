@@ -468,9 +468,9 @@
     ;; dl4clj.datasets.datavec
     (let [fs (new-filesplit :path "resources/poker-hand-training.csv")
           rr (initialize-rr! :rr (new-csv-record-reader)
-                             :input-split file-split)
+                             :input-split fs)
           seq-rr (initialize-rr! :rr (new-csv-seq-record-reader)
-                                 :input-split file-split)]
+                                 :input-split fs)]
       (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
              (type
               (new-record-reader-dataset-iterator :record-reader rr

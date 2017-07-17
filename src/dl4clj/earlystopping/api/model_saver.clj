@@ -2,7 +2,8 @@
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingModelSaver.html"}
     dl4clj.earlystopping.api.model-saver
-  (:import [org.deeplearning4j.earlystopping EarlyStoppingModelSaver]))
+  (:import [org.deeplearning4j.earlystopping EarlyStoppingModelSaver])
+  (:require [dl4clj.earlystopping.model-saver :refer [model-saver-type]]))
 
 (defn get-best-model
   "Retrieve the best model that was previously saved
