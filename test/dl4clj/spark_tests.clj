@@ -1,85 +1,74 @@
 (ns dl4clj.spark-tests
-  (:refer-clojure :exclude [rand])
   (:require [clojure.test :refer :all]
             [dl4clj.spark.data.data-fns :refer :all]
             [dl4clj.spark.datavec.datavec-fns :refer :all]
 
             ;; other fns used for testing
-            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-iris-data-set-iterator]]
+            [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator
+                                               new-existing-dataset-iterator]]
             ;; reseting the iter
-            [nd4clj.linalg.api.ds-iter :refer [reset-iter!
-                                               has-next?
-                                               data-from-iter
-                                               next-example!]]
+            [dl4clj.datasets.api.iterators :refer [reset-iter!
+                                                   has-next?
+                                                   next-example!]]
+            [dl4clj.helpers :refer [data-from-iter
+                                    reset-iterator!]]
             ;; multi-ds
             [nd4clj.linalg.dataset.multi-ds :refer [new-multi-ds]]
 
             [nd4clj.linalg.dataset.data-set :refer [data-set]]
-            [nd4clj.linalg.dataset.api.data-set :refer [iterator]]
+            [dl4clj.datasets.api.datasets :refer [new-ds-iter]]
 
             ;; data for multi-ds
-            [nd4clj.linalg.factory.nd4j :refer [rand]]
+            [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand]]
 
             ;; used in multi-ds-iter
             [dl4clj.utils :refer [array-of]]
 
             ;; need record readers
-            [datavec.api.records.readers :refer [new-csv-record-reader
-                                                 new-csv-nlines-seq-record-reader]]
-            ;; string iterator
-            [dl4clj.datasets.iterator.iterators :refer [new-existing-dataset-iterator]]
-            [dl4clj.datasets.iterator.impl.list-data-set-iterator :refer :all]
+            [dl4clj.datasets.record-readers :refer [new-csv-record-reader
+                                                    new-csv-nlines-seq-record-reader]]
 
             ;; ds pre-processor
-            [nd4clj.linalg.dataset.api.pre-processors :refer [new-min-max-normalization-ds-preprocessor]]
+            [dl4clj.datasets.pre-processors :refer [new-min-max-normalization-ds-preprocessor]]
 
             ;; string split
-            [datavec.api.split :refer [new-string-split
-                                       get-list-string-split-data]]
-            [dl4clj.spark.data.dataset-provider :refer [spark-context-to-dataset-rdd]]
-            )
+            [dl4clj.datasets.input-splits :refer [new-string-split]]
+
+            [dl4clj.datasets.api.input-splits :refer [get-list-string-split-data]]
+
+            [dl4clj.spark.data.dataset-provider :refer [spark-context-to-dataset-rdd]])
   (:import [org.nd4j.linalg.dataset.api.iterator TestMultiDataSetIterator]
            [org.nd4j.linalg.dataset.api MultiDataSet]
            [org.apache.spark SparkConf]
-           [org.apache.spark.api.java JavaRDD JavaSparkContext]
-           ))
+           [org.apache.spark.api.java JavaRDD JavaSparkContext]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns and defs used in testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
+
 ;; this way of making an iter from an existing multi-dataset needs to
 ;; be migrated over to the multi-dataset ns or have its own
+
 (def multi-ds-iter (TestMultiDataSetIterator.
                     2
-                    (array-of :data (new-multi-ds :features (rand [2 4]) :labels (rand [2 2]))
+                    (array-of :data (new-multi-ds
+                                     :features (indarray-of-rand :rows 2 :columsn 4)
+                                     :labels (indarray-of-rand :rows 2 :columns 2))
                               :java-type MultiDataSet)))
-
-(defn reset-iter?!
-  [iter]
-  (if (false? (has-next? iter))
-    (reset-iter! iter)
-    iter))
-
-(defn reset-multi-ds-iter?!
-  "this will eventually make its way into the multi-ds-iter interface"
-  [m-ds-iter]
-  (if (.hasNext m-ds-iter)
-    m-ds-iter
-    (doto m-ds-iter .reset)))
 
 (defn consistent-ds-save
   [iter]
   (-> iter
-      reset-iter?!
+      reset-iterator!
       .next
       (.save (clojure.java.io/as-file "resources/tests/spark/test-save.bin"))))
 
 (defn consistent-multi-ds-save
   [multi-iter]
   (-> multi-iter
-      reset-multi-ds-iter?!
+      reset-iterator!
       .next
       (.save (clojure.java.io/as-file "resources/tests/spark/test-save-multi.bin"))))
 
@@ -121,46 +110,46 @@
                            :batch-size 1
                            :export-path "resources/tests/spark/")
                   :partition-idx 1
-                  :ds-iter (reset-iter?! iris-iter)))))
+                  :iter (reset-iterator! iris-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-batch-and-export-ds-fn!
                   :the-fn {:batch-and-export-ds
                            {:batch-size 1
                             :export-path "resources/tests/spark/"}}
                   :partition-idx 2
-                  :ds-iter (reset-iter?! iris-iter)))))
+                  :iter (reset-iterator! iris-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-batch-and-export-multi-ds-fn!
                   :the-fn (new-batch-and-export-multi-ds-fn
                            :batch-size 1
                            :export-path "resources/tests/spark/")
                   :partition-idx 3
-                  :multi-ds-iter (reset-multi-ds-iter?! multi-ds-iter)))))
+                  :multi-ds-iter (reset-iterator! multi-ds-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-batch-and-export-multi-ds-fn!
                   :the-fn {:batch-and-export-multi-ds
                            {:batch-size 1
                             :export-path "resources/tests/spark/"}}
                   :partition-idx 4
-                  :multi-ds-iter (reset-multi-ds-iter?! multi-ds-iter)))))
+                  :multi-ds-iter (reset-iterator! multi-ds-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-batch-ds-fn! :the-fn (new-batch-ds-fn :batch-size 1)
-                                    :ds-iter (reset-iter?! iris-iter)))))
+                                    :iter (reset-iterator! iris-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-batch-ds-fn! :the-fn {:batch-ds {:batch-size 1}}
-                                    :ds-iter (reset-iter?! iris-iter)))))
+                                    :iter (reset-iterator! iris-iter)))))
     (is (= '(:export-fn :iter)
            (keys (call-ds-export-fn! :the-fn (new-ds-export-fn :export-path "resources/tests/spark/only-export/")
-                                     :ds-iter (reset-iter?! iris-iter)))))
+                                     :iter (reset-iterator! iris-iter)))))
     (is (= '(:export-fn :iter)
            (keys (call-ds-export-fn! :the-fn {:export-ds {:export-path "resources/tests/spark/only-export/"}}
-                                     :ds-iter (reset-iter?! iris-iter)))))
+                                     :iter (reset-iterator! iris-iter)))))
     (is (= '(:export-fn :iter)
            (keys (call-ds-export-fn! :the-fn (new-multi-ds-export-fn :export-path "resources/tests/spark/only-export/")
-                                     :ds-iter (reset-multi-ds-iter?! multi-ds-iter)))))
+                                     :iter (reset-iterator! multi-ds-iter)))))
     (is (= '(:export-fn :iter)
            (keys (call-ds-export-fn! :the-fn {:export-multi-ds {:export-path "resources/tests/spark/only-export/"}}
-                                     :ds-iter (reset-multi-ds-iter?! multi-ds-iter)))))
+                                     :iter (reset-iterator! multi-ds-iter)))))
     (is (= org.nd4j.linalg.dataset.DataSet
            (type (do (consistent-ds-save iris-iter)
                      (call-path-to-ds-fn! :the-fn (new-path-to-ds-fn)
@@ -180,16 +169,16 @@
                                                 :path "resources/tests/spark/test-save-multi.bin")))))
     (is (= java.util.ArrayList$Itr
            (type (call-split-ds-fn! :the-fn (new-split-ds-fn)
-                                    :ds-iter (reset-iter?! iris-iter)))))
+                                    :iter (reset-iterator! iris-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-split-ds-fn! :the-fn {:split-ds {}}
-                                    :ds-iter (reset-iter?! iris-iter)))))
+                                    :iter (reset-iterator! iris-iter)))))
     (is (= java.util.ArrayList$Itr
            (type (call-split-ds-with-appended-key! :the-fn (new-split-ds-with-appended-key :max-key-idx 12)
-                                                   :ds (.next (reset-iter?! iris-iter))))))
+                                                   :ds (.next (reset-iterator! iris-iter))))))
     (is (= java.util.ArrayList$Itr
            (type (call-split-ds-with-appended-key! :the-fn {:split-ds-rand {:max-key-idx 12}}
-                                                   :ds (.next (reset-iter?! iris-iter))))))))
+                                                   :ds (.next (reset-iterator! iris-iter))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; datavec-fns creation and calling
