@@ -1,43 +1,41 @@
 (ns dl4clj.eval-test
-  (:require [dl4clj.eval.confusion-matrix :refer :all]
-            [clojure.test :refer :all]
-            [dl4clj.eval.eval-tools :refer :all]
-            [dl4clj.eval.eval-utils :refer :all]
+  (:require [clojure.test :refer :all]
             [dl4clj.eval.evaluation :refer :all]
-            [dl4clj.eval.interface.i-evaluation :refer :all]
-            [dl4clj.eval.roc.rocs :refer :all]
+            [dl4clj.eval.api.eval :refer :all]
+            [dl4clj.eval.rocs :refer :all]
+            [dl4clj.eval.confusion-matrix :refer [new-confusion-matrix]]
+            [dl4clj.eval.api.confusion-matrix :refer :all]
             ;; requireing early stopping ns for minimal training
-            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator
-                                                                    get-feature-matrix]]
-            [nd4clj.linalg.api.ds-iter :refer [next-example! reset-iter!]]
-            [dl4clj.earlystopping.early-stopping-trainer :refer :all]
-            [dl4clj.earlystopping.termination-conditions :refer :all]
-            [dl4clj.earlystopping.early-stopping-config :refer :all]
-            [dl4clj.earlystopping.early-stopping-result :refer :all]
-            [dl4clj.earlystopping.model-saver :refer :all]
-            [dl4clj.earlystopping.score-calc :refer :all]
-            [dl4clj.earlystopping.interfaces.early-stopping-trainer :refer [fit-trainer!]]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn]
+            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
+            [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
             [dl4clj.utils :refer [get-labels]]
-            [dl4clj.nn.multilayer.multi-layer-network :as ml]))
+            [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
+            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
+            [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
+            [dl4clj.earlystopping.api.early-stopping-trainer :refer [get-best-model-from-result]]
+            [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
+            [dl4clj.earlystopping.termination-conditions :refer :all]
+            [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
+            [dl4clj.datasets.api.iterators :refer [reset-iter! next-example!]]
+            [dl4clj.datasets.api.datasets :refer [get-features]]
+            [dl4clj.nn.multilayer.multi-layer-network :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ;; fully train a network, save it and then import it here for testing
 ;; this set up doesn't produce any predictions bc of low training
-(def mln (ml/new-multi-layer-network
-          :conf (nn/nn-conf-builder
+(def mln (new-multi-layer-network
+          :conf (nn-conf-builder
                  :seed 123
                  :optimization-algo :stochastic-gradient-descent
                  :iterations 1
-                 :learning-rate 0.006
-                 :updater :nesterovs
-                 :momentum 0.9
-                 :regularization true
-                 :l2 1e-4
+                 :defult-learning-rate 0.006
+                 :default-updater :nesterovs
+                 :default-momentum 0.9
+                 :regularization? true
+                 :default-l2 1e-4
                  :build? true
                  :layers {0 {:dense-layer {:n-in 784
                                            :n-out 1000
@@ -58,15 +56,15 @@
                                              :binarize? false :shuffle? true))
 
 (def es-conf (new-early-stopping-config
-              :epoch-termination-conditions (new-max-epochs-termination-condition 1)
+              :epoch-termination-conditions (new-max-epochs-termination-condition :max-n 1)
               :iteration-termination-conditions (new-max-time-iteration-termination-condition
                                                  :max-time-val 60
                                                  :max-time-unit :seconds)
               :n-epochs 1
               :model-saver (new-in-memory-saver)
               :save-last-model? true
-              :score-calculator (new-data-set-loss-calculator
-                                 :ds-iter mnist-test
+              :score-calculator (new-ds-loss-calculator
+                                 :iter mnist-test
                                  :average? true)))
 
 
@@ -74,7 +72,7 @@
                  (fit-trainer! (new-early-stopping-trainer
                                 :early-stopping-conf es-conf
                                 :mln mln
-                                :training-dataset-iterator mnist-train))))
+                                :iter mnist-train))))
 ;; don't think that will work for binary-rocs, so i will have to look into dl4j unit tests for rocs
 ;; to find a default dataset to use
 
@@ -117,17 +115,14 @@
                                         :precision 1))))
 
     ;; ROC evaluation
-    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc 2))))
-    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc 2))))
-
-    ;; eval utils
-    (is (= org.deeplearning4j.eval.EvaluationUtils (type (new-evaluation-utils))))))
+    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2))))
+    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2))))))
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
     (let [data (next-example! (reset-iter! mnist-test))
-          features (get-feature-matrix data)
-          mln-output (ml/output :mln es-trained :input features)
+          features (get-features data)
+          mln-output (output :mln es-trained :input features)
           evalr (new-classification-evaler)
           labels (get-labels data)
           evaler-with-data (eval-classification! :evaler evalr :features features
@@ -241,7 +236,7 @@
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
     (let [data (next-example! (reset-iter! mnist-test))
-          features (get-feature-matrix data)
+          features (get-features data)
           evalr (new-classification-evaler)
           labels (get-labels data)
           evaler-with-data (eval-classification! :evaler evalr :features features

@@ -229,8 +229,10 @@ you must also supply whether or not you want to add regularization terms (L1, L2
   [& {:keys [iter train? input features-mask labels-mask
              training-mode mln]
       :as opts}]
-  (let [ds-iter (reset-if-empty?! iter)
-        i (vec-or-matrix->indarray input)]
+  (let [ds-iter (if (contains? opts :iter)
+                  (reset-if-empty?! iter))
+        i (if (contains? opts :input)
+            (vec-or-matrix->indarray input))]
     (cond (contains-many? opts :input :train?
                           :features-mask :labels-mask)
           (.output mln i train?
