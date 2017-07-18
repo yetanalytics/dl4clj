@@ -1,25 +1,27 @@
 (ns dl4clj.optimize-tests
-  (:refer-clojure :exclude [rand max])
   (:require [dl4clj.optimize.solver :refer :all]
-            [dl4clj.optimize.solvers.optimizers :refer :all]
+            [dl4clj.optimize.optimizers :refer :all]
+            [dl4clj.optimize.listeners :refer :all]
             [dl4clj.optimize.step-functions.step-fns :refer :all]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn]
-            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-            [dl4clj.nn.conf.builders.builders :as l]
-            [dl4clj.optimize.listeners.listeners :refer :all]
-            [clojure.test :refer :all]
-            [dl4clj.optimize.api.convex-optimizer :refer :all]
-            [dl4clj.utils :refer [array-of]]
             [dl4clj.optimize.termination.terminations :refer :all]
-            [dl4clj.nn.layers.layer-creation :refer [new-layer]]
-            [nd4clj.linalg.factory.nd4j :refer :all]
-            [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
-            [dl4clj.nn.gradient.default-gradient :refer [new-default-gradient]]
+            [dl4clj.optimize.api.convex-optimizer :refer :all]
+            [dl4clj.optimize.api.iteration-listener :refer :all]
             [dl4clj.optimize.api.line-optimizer :refer :all]
+            [dl4clj.optimize.api.listeners :refer :all]
+            [dl4clj.optimize.api.optimizers :refer :all]
             [dl4clj.optimize.api.step-fn :refer :all]
             [dl4clj.optimize.api.termination-condition :refer :all]
-            [dl4clj.optimize.api.iteration-listener :refer :all]
-            [nd4clj.linalg.factory.nd4j :refer [rand]]
+            [dl4clj.optimize.api.training-listener :refer :all]
+            ;; utils
+            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
+            [dl4clj.nn.conf.builders.nn-conf-builder :as nn]
+            [dl4clj.nn.conf.builders.builders :as l]
+            [clojure.test :refer :all]
+            [dl4clj.utils :refer [array-of]]
+            [dl4clj.nn.layers.layer-creation :refer [new-layer]]
+            [dl4clj.nn.updater.layer-updater :refer [new-layer-updater]]
+            [dl4clj.nn.gradient.default-gradient :refer [new-default-gradient]]
+            [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand vec-or-matrix->indarray]]
             [clojure.java.io :as io])
   (:import [org.deeplearning4j.optimize.api IterationListener]
            [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
@@ -33,16 +35,16 @@
    :seed 123
    :optimization-algo :stochastic-gradient-descent
    :iterations 1
-   :learning-rate 0.006
-   :updater :nesterovs
-   :momentum 0.9
+   :default-learning-rate 0.006
+   :default-updater :nesterovs
    :build? true
-   :regularization true
-   :l2 1e-4
+   :regularization? true
+   :default-l2 1e-4
    :layer {:graves-lstm
            {:n-in 10
             :n-out 1000
             :updater :rmsprop
+            :rms-decay 0.9
             :activation :tanh
             :weight-init :distribution
             :dist {:uniform {:lower -0.08, :upper 0.08}}}}))
@@ -52,13 +54,13 @@
    :seed 123
    :iterations 1
    :optimization-algo :stochastic-gradient-descent
-   :learning-rate 1e-2
-   :updater :rmsprop
-   :rms-decay 0.95
-   :weight-init :xavier
-   :regularization true
+   :default-learning-rate 1e-2
+   :default-updater :rmsprop
+   :default-rms-decay 0.95
+   :default-weight-init :xavier
+   :regularization? true
    :build? true
-   :l2 1e-4
+   :default-l2 1e-4
    :layer {:variational-auto-encoder {:activation-fn :leaky-relu
                                       :encoder-layer-sizes [256 256]
                                       :decoder-layer-sizes [256 256]
@@ -397,25 +399,25 @@
       ;; determined by the termination-condition passed in the creation of the optimizer
       (is (= java.lang.Boolean (type (check-terminal-conditions?
                                       :optim conj-grad-optim
-                                      :gradient (row-vector [1 2 3 4 5])
+                                      :gradient (vec-or-matrix->indarray [1 2 3 4 5])
                                       :old-score 10.2
                                       :score 5.5
                                       :iteration 2))))
       (is (= java.lang.Boolean (type (check-terminal-conditions?
                                       :optim lbfgs-optim
-                                      :gradient (row-vector [1 2 3 4 5])
+                                      :gradient (vec-or-matrix->indarray [1 2 3 4 5])
                                       :old-score 10.2
                                       :score 5.5
                                       :iteration 2))))
       (is (= java.lang.Boolean (type (check-terminal-conditions?
                                       :optim line-grad-optim
-                                      :gradient (row-vector [1 2 3 4 5])
+                                      :gradient (vec-or-matrix->indarray [1 2 3 4 5])
                                       :old-score 10.2
                                       :score 5.5
                                       :iteration 2))))
       (is (= java.lang.Boolean (type (check-terminal-conditions?
                                       :optim stoch-grad-optim
-                                      :gradient (row-vector [1 2 3 4 5])
+                                      :gradient (vec-or-matrix->indarray [1 2 3 4 5])
                                       :old-score 10.2
                                       :score 5.5
                                       :iteration 2))))
@@ -457,10 +459,10 @@
 
       (is (= (type line-grad-optim)
              (type (post-step! :optim line-grad-optim
-                               :line (row-vector [1 2 3 4 5])))))
+                               :line (vec-or-matrix->indarray [1 2 3 4 5])))))
       (is (= (type stoch-grad-optim)
              (type (post-step! :optim stoch-grad-optim
-                               :line (row-vector [1 2 3 4 5])))))
+                               :line (vec-or-matrix->indarray [1 2 3 4 5])))))
 
       (is (= (type line-grad-optim)  (type (pre-process-line! line-grad-optim))))
       (is (= (type stoch-grad-optim)  (type (pre-process-line! stoch-grad-optim))))
