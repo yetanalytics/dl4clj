@@ -26,9 +26,10 @@
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-zeros]]
             [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
             [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
-            [dl4clj.datasets.api.datasets :refer [get-features]]
+            [dl4clj.datasets.api.datasets :refer [get-features get-example]]
             [dl4clj.eval.evaluation :refer [new-classification-evaler]]
-            [dl4clj.eval.api.eval :refer [eval-classification! get-stats]]
+            [dl4clj.eval.api.eval :refer [eval-classification! get-stats
+                                          eval-model-whole-ds]]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -902,13 +903,13 @@
     (let [l-builder (nn-conf-builder :seed 123
                                      :optimization-algo :stochastic-gradient-descent
                                      :iterations 1
-                                     :learning-rate 0.006
-                                     :updater :nesterovs
-                                     :momentum 0.9
+                                     :default-learning-rate 0.006
+                                     :default-updater :nesterovs
+                                     :default-momentum 0.9
                                      :regularization? true
-                                     :l2 1e-4
+                                     :default-l2 1e-4
                                      :build? false
-                                     :gradient-normalization :renormalize-l2-per-layer
+                                     :default-gradient-normalization :renormalize-l2-per-layer
                                      :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                                  :n-in 784
                                                  :n-out 1000
@@ -927,10 +928,10 @@
           mln (new-multi-layer-network :conf mln-conf)
           init-mln (initialize! :mln mln :ds (new-mnist-ds))
           mnist-iter (new-mnist-data-set-iterator :batch-size 128 :train? true :seed 123)
-          input (get-features (get (new-mnist-ds) 0))
-          eval (new-classification-evaler :n-columns 10)
+          input (get-features (get-example :ds (new-mnist-ds) :idx 0))
+          eval (new-classification-evaler :n-classes 10)
           init-no-ds (init! :model mln)
-          evaled (eval-classification! :mln init-no-ds :iter mnist-iter :evaler eval)]
+          evaled (eval-model-whole-ds :mln init-no-ds :iter mnist-iter :evaler eval)]
       ;;other-input (get-mln-input :mln init-mln)
       ;;^ this currently crashes all of emacs
       ;; need a fitted mln for (is (= "" (type (get-epsilon :mln ...))))
@@ -958,7 +959,7 @@
              (type (compute-z :mln init-mln :training? true :input input))))
       (is (= java.util.ArrayList
              (type (compute-z :mln init-mln :training? true))))
-      (is (= java.lang.String (type (get-stats :evaler (:evaler evaled)))))
+      (is (= java.lang.String (type (get-stats :evaler evaled))))
       (is (= org.deeplearning4j.eval.Evaluation
              (type (evaluate-classification :mln init-no-ds :iter mnist-iter))))
       (is (= org.deeplearning4j.eval.Evaluation
@@ -1020,13 +1021,12 @@
 
 (deftest transfer-learning-tests
   (testing "the transfer learning fns"
-    (let [nn-conf (nn-conf-builder :global-activation-fn :relu
+    (let [nn-conf (nn-conf-builder :default-activation-fn :relu
                                    :step-fn :negative-gradient-step-fn
-                                   :updater :none
-                                   :use-drop-connect true
-                                   :drop-out 0.2
-                                   :weight-init :xavier-uniform
-                                   :gradient-normalization :none
+                                   :default-updater :none
+                                   :use-drop-connect? false
+                                   :default-weight-init :xavier-uniform
+                                   :default-gradient-normalization :none
                                    :build? true
                                    :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                            :n-in 10
@@ -1041,12 +1041,12 @@
           l-builder (nn-conf-builder :seed 123
                                      :optimization-algo :stochastic-gradient-descent
                                      :iterations 1
-                                     :learning-rate 0.006
-                                     :updater :nesterovs
-                                     :momentum 0.9
+                                     :default-learning-rate 0.006
+                                     :default-updater :nesterovs
+                                     :default-momentum 0.9
                                      :regularization? false
                                      :build? false
-                                     :gradient-normalization :none
+                                     :default-gradient-normalization :none
                                      :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                                  :n-in 784
                                                  :n-out 1000
@@ -1064,7 +1064,8 @@
                                                :build? true)
           mln (init! :model (new-multi-layer-network :conf mln-conf))
           helper (new-helper :mln mln :frozen-til 0)
-          featurized (featurize :helper helper :data-set (get (new-mnist-ds) 0))
+          featurized (featurize :helper helper :data-set (get-example :ds (new-mnist-ds)
+                                                                      :idx 0))
           featurized-input (get-features featurized)
           tlb (transfer-learning-builder
                :mln (init!
@@ -1076,12 +1077,12 @@
                                       :seed 123
                                       :optimization-algo :stochastic-gradient-descent
                                       :iterations 1
-                                      :learning-rate 0.006
-                                      :updater :nesterovs
-                                      :momentum 0.9
+                                      :default-learning-rate 0.006
+                                      :default-updater :nesterovs
+                                      :default-momentum 0.9
                                       :regularization? false
                                       :build? false
-                                      :gradient-normalization :none
+                                      :default-gradient-normalization :none
                                       :layers {0 (dense-layer-builder
                                                   :n-in 10
                                                   :n-out 100
@@ -1137,8 +1138,8 @@
              (type (transfer-learning-builder
                     :mln mln
                     :fine-tune-conf fine-tune-conf
-                    :n-out-replace {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform}
                     :remove-output-layer? true
+                    :replacement-layer {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform}
                     :remove-last-n-layers 1
                     :add-layer (dl4clj.nn.conf.builders.builders/output-layer-builder
                             :n-in 100

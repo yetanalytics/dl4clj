@@ -579,22 +579,26 @@
       (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step))))
 
       ;; supplying the step fn, features and the line
-      (is (= (type gradient-step) (type (step! :step-fn gradient-step
-                                               :features (rand [2 2])
-                                               :line (rand [2 2])))))
-      (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step
-                                               :features (rand [2 2])
-                                               :line (rand [2 2])))))
+      (is (= (type gradient-step)
+             (type (step! :step-fn gradient-step
+                          :features (indarray-of-rand :rows 2 :columns 2)
+                          :line (indarray-of-rand :rows 2 :columns 2)))))
+      (is (= (type neg-gradient-step)
+             (type (step! :step-fn neg-gradient-step
+                          :features (indarray-of-rand :rows 2 :columns 2)
+                          :line (indarray-of-rand :rows 2 :columns 2)))))
 
       ;; supplying the step fn, features, line and step value
-      (is (= (type gradient-step) (type (step! :step-fn gradient-step
-                                               :features (rand [2 2])
-                                               :line (rand [2 2])
-                                               :step 1.0))))
-      (is (= (type neg-gradient-step) (type (step! :step-fn neg-gradient-step
-                                                   :features (rand [2 2])
-                                                   :line (rand [2 2])
-                                                   :step 1.0)))))))
+      (is (= (type gradient-step)
+             (type (step! :step-fn gradient-step
+                          :features (indarray-of-rand :rows 2 :columns 2)
+                          :line (indarray-of-rand :rows 2 :columns 2)
+                          :step 1.0))))
+      (is (= (type neg-gradient-step)
+             (type (step! :step-fn neg-gradient-step
+                          :features (indarray-of-rand :rows 2 :columns 2)
+                          :line (indarray-of-rand :rows 2 :columns 2)
+                          :step 1.0)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; termination condition api return type testing
@@ -607,7 +611,7 @@
           norm-2 (termination-condition {:norm-2 {:gradient-tolerance 5.0}})
           zero-dir (termination-condition {:zero-direction {}})
           param  (array-of :java-type java.lang.Object
-                           :data (rand [1]))]
+                           :data (indarray-of-rand :rows 1))]
       (is (= java.lang.Boolean (type (terminate? :term-cond eps
                                                  :cost 2.0
                                                  :old-cost 5.0

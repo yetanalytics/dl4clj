@@ -29,7 +29,7 @@
            (type (mnist-fetcher :binarize? true))))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type
-            (mnist-fetcher :binarize? true :train? true :shuffle? true :rng-seed 123))))
+            (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123))))
     ;; dl4clj.datasets.fetchers.base-data-fetcher
     (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
@@ -146,9 +146,11 @@
     ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
            (type (new-singleton-multi-dataset-iterator
+                  :multi-dataset
                   (next-example!
                    (reset-fetcher!
                     (new-multi-data-set-iterator-adapter
+                     :iter
                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
 
 (deftest ds-iteration-interaction-fns-test
@@ -338,7 +340,7 @@
       (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
              (type (locations-iterator f-split))))
-      (is (= org.nd4j.linalg.collection.CompactHeapStringList$CompactHeapStringListIterator
+      (is (= java.util.Collections$1
              (type (locations-path-iterator f-split))))
       (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
@@ -429,27 +431,27 @@
       (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
              (type (new-combined-pre-processor {0 pp1 1 pp2}))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
-             (type (new-async-dataset-iterator :dataset-iterator iter))))
+             (type (new-async-dataset-iterator :iter iter))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
-             (type (new-async-dataset-iterator :dataset-iterator iter
+             (type (new-async-dataset-iterator :iter iter
                                                 :que-size 10))))
       (is (= org.deeplearning4j.datasets.iterator.ExistingDataSetIterator
-             (type (new-existing-dataset-iterator :dataset-iterator iter))))
+             (type (new-existing-dataset-iterator :iter iter))))
       (is (= org.deeplearning4j.datasets.iterator.SamplingDataSetIterator
              (type
               (new-sampling-dataset-iterator :sampling-source (new-iris-ds)
                                              :batch-size 10
                                              :total-n-samples 10))))
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
-             (type (new-reconstruction-dataset-iterator iter))))
+             (type (new-reconstruction-dataset-iterator :iter iter))))
       (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
              (type (new-async-multi-dataset-iterator
-                    :multi-dataset-iterator multi-iter
+                    :multi-dataset-iter multi-iter
                     :que-length 10))))
       (is (= org.deeplearning4j.datasets.iterator.IteratorDataSetIterator
-             (type (new-iterator-dataset-iterator :dataset iter :batch-size 10))))
+             (type (new-iterator-dataset-iterator :iter iter :batch-size 10))))
       (is (= org.deeplearning4j.datasets.iterator.MultipleEpochsIterator
-             (type (new-multiple-epochs-iterator :dataset-iterator iter :n-epochs 1))))
+             (type (new-multiple-epochs-iterator :iter iter :n-epochs 1))))
       (is (= org.deeplearning4j.datasets.iterator.DoublesDataSetIterator
              (type (new-doubles-dataset-iterator :features [0.2 0.4]
                                               :labels [0.4 0.8]

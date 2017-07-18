@@ -83,7 +83,7 @@
   you should supply either a dl4j dataset-iterator (:iter) or a lazy-seq (:lazy-data), not both
 
   returns the evaluation object"
-  [& {:keys [mln eval-obj iter lazy-data]
+  [& {:keys [mln evaler iter lazy-data]
       :as opts}]
   (let [ds-iter (if (contains? opts :lazy-data)
                   (new-lazy-iter lazy-data)
@@ -92,11 +92,11 @@
       (let [nxt (next-example! ds-iter)
             prediction (output :mln mln :input (get-features nxt))]
         (eval-classification!
-         :evaler eval-obj
+         :evaler evaler
          :labels (get-labels nxt)
          :network-predictions prediction))))
-  (println (get-stats :evaler eval-obj))
-  eval-obj)
+  (println (get-stats :evaler evaler))
+  evaler)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; classification evaluator interaction fns

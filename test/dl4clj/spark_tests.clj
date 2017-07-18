@@ -3,6 +3,14 @@
             [dl4clj.spark.data.data-fns :refer :all]
             [dl4clj.spark.datavec.datavec-fns :refer :all]
 
+            ;; file split for data
+
+            [dl4clj.datasets.input-splits :refer [new-filesplit]]
+
+            ;; record reader init
+
+            [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
+
             ;; other fns used for testing
             [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator
                                                new-existing-dataset-iterator]]
@@ -51,12 +59,13 @@
 ;; this way of making an iter from an existing multi-dataset needs to
 ;; be migrated over to the multi-dataset ns or have its own
 
-(def multi-ds-iter (TestMultiDataSetIterator.
-                    2
-                    (array-of :data (new-multi-ds
-                                     :features (indarray-of-rand :rows 2 :columsn 4)
-                                     :labels (indarray-of-rand :rows 2 :columns 2))
-                              :java-type MultiDataSet)))
+(def multi-ds-iter
+  (TestMultiDataSetIterator.
+   2
+   (array-of :data (new-multi-ds
+                    :features (indarray-of-rand :rows 2 :columsn 4)
+                    :labels (indarray-of-rand :rows 2 :columns 2))
+             :java-type MultiDataSet)))
 
 (defn consistent-ds-save
   [iter]
@@ -72,7 +81,10 @@
       .next
       (.save (clojure.java.io/as-file "resources/tests/spark/test-save-multi.bin"))))
 
-(def csv-rr (new-csv-record-reader))
+(def fs (new-filesplit :path "resources/poker-hand-training.csv"))
+
+(def csv-rr (initialize-rr! :rr (new-csv-record-reader)
+                            :input-split fs))
 
 (def poker-training-file-byte-size
   (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))
@@ -205,7 +217,7 @@
                                              :spark-alignment-mode :equal-length))))
     (is (= org.deeplearning4j.spark.datavec.export.StringToDataSetExportFunction
            (type (new-string-to-ds-export-fn :output-directory "resources/tests/spark/export/"
-                                             :record-reader (new-csv-record-reader)
+                                             :record-reader csv-rr
                                              :batch-size 1
                                              :regression? false
                                              :label-idx 10
@@ -214,9 +226,11 @@
 (deftest calling-datavec-spark-fns
   (testing "the calling of the datavec spark fns"
     (is (= org.nd4j.linalg.dataset.DataSet
-           (type (call-record-reader-fn! :the-fn (new-record-reader-fn :record-reader csv-rr
-                                                                       :label-idx 10
-                                                                       :n-labels 10)
+           (type (call-record-reader-fn!
+                  :the-fn
+                  (new-record-reader-fn :record-reader csv-rr
+                                        :label-idx 10
+                                        :n-labels 10)
                                          :string-ds (slurp "resources/poker-spark-test.csv")))))
     (is (= org.nd4j.linalg.dataset.DataSet
            (type (call-record-reader-fn! :the-fn {:record-reader-fn {:record-reader csv-rr
@@ -227,7 +241,8 @@
            (keys (call-string-to-ds-export-fn!
                   :the-fn (new-string-to-ds-export-fn
                            :output-directory "resources/tests/spark/export/"
-                           :record-reader (new-csv-record-reader)
+                           :record-reader (initialize-rr! :rr (new-csv-record-reader)
+                                                          :input-split fs)
                            :batch-size 1
                            :regression? false
                            :label-idx 10

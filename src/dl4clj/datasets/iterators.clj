@@ -113,9 +113,9 @@
                      (contains? config :features-reader))
                 (contains? config :record-reader))
             "you must supply a record reader or a pair of labels/features readers")
-    (let [r (reset-rr! rr)
-          features-r (reset-rr! features-reader)
-          labels-r (reset-rr! labels-reader)]
+    (let [r (if rr (reset-rr! rr))
+          features-r (if features-reader (reset-rr! features-reader))
+          labels-r (if labels-reader (reset-rr! labels-reader))]
      (if (contains-many? config :labels-reader :features-reader)
       (cond (contains-many? config :mini-batch-size :n-possible-labels
                             :regression? :alignment-mode)
@@ -204,7 +204,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
 ;; dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod iterator :doubles-dataset-iterator [opts]
+(defmethod iterator :doubles-dataset-iter [opts]
   (let [config (:doubles-dataset-iter opts)
         {features :features
          labels :labels

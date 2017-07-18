@@ -152,7 +152,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
            (TransferLearning$Builder. mln))]
     (cond-> b
       (contains? opts :fine-tune-conf) (.fineTuneConfiguration fine-tune-conf)
-      (contains? opts :n-out-replace) (replace-layer! replacement-layer)
+      (contains? opts :replacement-layer) (replace-layer! replacement-layer)
       (contains? opts :remove-last-n-layers) (.removeLayersFromOutput remove-last-n-layers)
       (true? remove-output-layer?) .removeOutputLayer
       (contains? opts :add-layer) (.addLayer add-layer)
