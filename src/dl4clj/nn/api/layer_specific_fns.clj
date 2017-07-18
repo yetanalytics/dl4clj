@@ -308,7 +308,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (doto rnn-layer
     (.rnnClearPreviousState)))
 
-(defn rnn-get-prev-state
+(defn rnn-layer-get-prev-state
   "Returns a shallow copy of the RNN stateMap (that contains the stored history
   for use in fns such as rnn-time-step"
   [rnn-layer]
@@ -328,7 +328,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (doto rnn-layer
     (.rnnSetTBPTTState state)))
 
-(defn rnn-set-prev-state!
+(defn rnn-layer-set-prev-state!
   "Set the stateMap (stored history) and return the layer.
 
   state is a map of {string indArray}"
@@ -336,7 +336,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (doto rnn-layer
     (.rnnSetPreviousState state)))
 
-(defn rnn-time-step
+(defn rnn-layer-time-step
   "Do one or more time steps using the previous time step state stored in stateMap.
   Can be used to efficiently do forward pass one or n-steps at a time (instead of doing forward pass always from t=0)
   If stateMap is empty, default initialization (usually zeros) is used

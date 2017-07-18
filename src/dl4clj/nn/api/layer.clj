@@ -210,17 +210,17 @@
   [layer]
   (.type layer))
 
-(defn get-l1-by-param
+(defn get-l1-by-param-layer
   "Get the L1 coefficient for the given parameter."
   [& {:keys [layer param-name]}]
   (.getL1ByParam layer param-name))
 
-(defn get-l2-by-param
+(defn get-l2-by-param-layer
   "Get the L2 coefficient for the given parameter."
   [& {:keys [layer param-name]}]
   (.getL2ByParam layer param-name))
 
-(defn get-learning-rate-by-param
+(defn get-learning-rate-by-param-layer
   "Get the (initial) learning rate coefficient for the given parameter."
   [& {:keys [layer param-name]}]
   (.getLearningRateByParam layer param-name))

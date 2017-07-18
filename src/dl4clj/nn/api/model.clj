@@ -26,7 +26,7 @@
   [model]
   (.batchSize model))
 
-(defn clear!
+(defn clear-model!
   "Clear input"
   [model]
   (doto model
@@ -91,7 +91,7 @@
   [& {:keys [model param]}]
   (.getParam model param))
 
-(defn gradient
+(defn calc-gradient
   "Calculate a gradient"
   [model]
   (.gradient model))

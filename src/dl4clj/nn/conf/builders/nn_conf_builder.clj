@@ -153,16 +153,17 @@
           :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform"
   [& {:keys [default-activation-fn default-adam-mean-decay default-adam-var-decay
              default-bias-init default-bias-learning-rate default-dist default-drop-out
-             default-epsilon default-gradient-normalization default-gradient-normalization-threshold
-             default-l1 default-l2 default-l1-bias default-l2-bias layer layers
-             default-learning-rate default-learning-rate-policy default-learning-rate-schedule
+             default-epsilon default-gradient-normalization
+             default-gradient-normalization-threshold default-l1 default-l2
+             default-l1-bias default-l2-bias default-learning-rate
+             default-learning-rate-policy default-learning-rate-schedule
              default-momentum default-momentum-after default-rho default-rms-decay
              default-updater default-weight-init nn-builder
              ;; nn conf args
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate
-             regularization? seed step-fn convolution-mode build?]
+             regularization? seed step-fn convolution-mode layer layers build?]
       :or {build? false
            nn-builder (NeuralNetConfiguration$Builder.)}
       :as opts}]

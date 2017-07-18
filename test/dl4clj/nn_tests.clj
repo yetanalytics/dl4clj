@@ -1,31 +1,34 @@
 (ns dl4clj.nn-tests
-  (:refer-clojure :exclude [get rand])
   (:require [dl4clj.nn.conf.builders.builders :refer :all]
             [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
             [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
+            [dl4clj.nn.api.multi-layer-network :refer :all]
             [dl4clj.nn.multilayer.multi-layer-network :refer :all]
-            [dl4clj.nn.conf.input-pre-processor :refer :all]
-            [dl4clj.constants :refer :all]
-            [dl4clj.nn.conf.distribution.distribution :refer :all]
-            [dl4clj.nn.conf.step-fns :refer :all]
+            [dl4clj.nn.conf.distributions :refer :all]
             [dl4clj.nn.conf.variational.dist-builders :refer :all]
-            [dl4clj.nn.layers.layer-creation :refer :all]
+            [dl4clj.nn.conf.step-fns :refer :all]
+            [dl4clj.constants :refer :all]
             [dl4clj.nn.gradient.default-gradient :refer :all]
             [dl4clj.nn.params.param-initializers :refer :all]
+            [dl4clj.nn.layers.layer-creation :refer :all]
+            [dl4clj.nn.api.layer :refer :all]
+            [dl4clj.nn.api.layer-specific-fns :refer :all]
+            [dl4clj.nn.api.model :refer :all]
+            [dl4clj.nn.conf.input-pre-processor :refer :all]
             [dl4clj.nn.transfer-learning.fine-tune-conf :refer :all]
             [dl4clj.nn.transfer-learning.helper :refer :all]
             [dl4clj.nn.transfer-learning.transfer-learning :refer :all]
             [dl4clj.nn.updater.layer-updater :refer :all]
             [dl4clj.nn.updater.multi-layer-updater :refer :all]
-            [dl4clj.nn.conf.neural-net-configuration :refer [set-learning-rate-by-param! add-variable!]]
-            [nd4clj.linalg.factory.nd4j :refer [zeros rand]]
-            [dl4clj.nn.api.model :refer [set-param-table! init! set-param!]]
-            [dl4clj.datasets.datavec :refer [mnist-ds]]
-            [nd4clj.linalg.dataset.api.data-set :refer [get get-feature-matrix]]
-            [dl4clj.datasets.iterator.impl.default-datasets :refer [new-mnist-data-set-iterator]]
-            [dl4clj.eval.evaluation :refer [new-classification-evaler get-stats]]
+            [dl4clj.nn.api.nn-conf :refer :all]
+            ;; helper fns
             [dl4clj.utils :refer [array-of get-labels]]
-            [nd4clj.linalg.api.ds-iter :refer [reset-iter!]]
+            [nd4clj.linalg.factory.nd4j :refer [indarray-of-zeros]]
+            [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
+            [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
+            [dl4clj.datasets.api.datasets :refer [get-features]]
+            [dl4clj.eval.evaluation :refer [new-classification-evaler]]
+            [dl4clj.eval.api.eval :refer [eval-classification! get-stats]]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,10 +56,7 @@
     (is (= org.deeplearning4j.nn.conf.distribution.NormalDistribution
            (type (new-normal-distribution :mean 0 :std 1))))
     (is (= org.deeplearning4j.nn.conf.distribution.GaussianDistribution
-           (type (new-gaussian-distribution :mean 0.0 :std 1))))
-    (is (= org.deeplearning4j.nn.conf.distribution.BinomialDistribution
-           (type (new-binomial-distribution :number-of-trials 2
-                                            :probability-of-success 0.5))))))
+           (type (new-gaussian-distribution :mean 0.0 :std 1))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; reconstruction distribution
@@ -125,7 +125,8 @@
   (testing "the creation and manipulation of gradients"
     (let [grad-with-var (set-gradient-for! :grad (new-default-gradient)
                                            :variable "foo"
-                                           :new-gradient (zeros [2 2]))]
+                                           :new-gradient (indarray-of-zeros
+                                                          :rows 2 :columns 2))]
      (is (= org.deeplearning4j.nn.gradient.DefaultGradient
            (type (new-default-gradient))))
     (is (= org.deeplearning4j.nn.gradient.DefaultGradient
@@ -628,7 +629,7 @@
                     (set-param-table!
                      :model (new-layer
                              :nn-conf (quick-nn-conf activation-layer-conf))
-                     :param-table-map {"foo" (zeros [1])}))))))))
+                     :param-table-map {"foo" (indarray-of-zeros :rows 1)}))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf-builder
@@ -652,7 +653,8 @@
              :seed 123
              :step-fn (new-gradient-step-fn)
              :convolution-mode :strict
-             :learning-rate-policy :poly
+             :lr-policy-power 0.1
+             :default-learning-rate-policy :poly
              :build? true))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
            (type
@@ -660,7 +662,7 @@
              :iterations 1
              :lr-policy-decay-rate 0.3
              :lr-policy-power 0.4
-             :learning-rate-policy :poly
+             :default-learning-rate-policy :poly
              :max-num-line-search-iterations 6
              :mini-batch? true
              :minimize? true
@@ -674,14 +676,14 @@
              :build? false))))
     (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
            (type
-               (nn-conf-builder :global-activation-fn :relu
+               (nn-conf-builder :default-activation-fn :relu
                                 :step-fn :negative-gradient-step-fn
-                                :updater :none
-                                :use-drop-connect true
-                                :drop-out 0.2
-                                :weight-init :xavier-uniform
+                                :default-updater :none
+                                :use-drop-connect? true
+                                :default-drop-out 0.2
+                                :default-weight-init :xavier-uniform
                                 :build? true
-                                :gradient-normalization :renormalize-l2-per-layer
+                                :default-gradient-normalization :renormalize-l2-per-layer
                                 :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                             :n-in 100
                                             :n-out 1000
@@ -694,34 +696,35 @@
                                                           :gradient-normalization :none}}}))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$ListBuilder
            (type
-               (nn-conf-builder :global-activation-fn :relu
+               (nn-conf-builder :default-activation-fn :relu
                                 :step-fn :negative-gradient-step-fn
-                                :updater :none
-                                :use-drop-connect true
-                                :drop-out 0.2
-                                :weight-init :xavier-uniform
+                                :default-updater :none
+                                :use-drop-connect? true
+                                :default-drop-out 0.2
+                                :default-weight-init :xavier-uniform
                                 :build? false
-                                :gradient-normalization :renormalize-l2-per-layer
+                                :default-gradient-normalization :renormalize-l2-per-layer
                                 :layers {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                             :n-in 100
                                             :n-out 1000
                                             :layer-name "first layer"
                                             :activation-fn :tanh
-                                            :gradient-normalization :none )
+                                            :gradient-normalization :none)
                                          1 {:dense-layer {:n-in 1000
                                                           :n-out 10
                                                           :layer-name "second layer"
                                                           :activation-fn :tanh
                                                           :gradient-normalization :none}}}))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+           ;; show that the activation fn changes
            (type
-               (nn-conf-builder :global-activation-fn :relu
+               (nn-conf-builder :default-activation-fn :relu
                                 :step-fn :negative-gradient-step-fn
-                                :updater :none
-                                :use-drop-connect true
-                                :drop-out 0.2
-                                :weight-init :xavier-uniform
-                                :gradient-normalization :renormalize-l2-per-layer
+                                :default-updater :none
+                                :use-drop-connect? true
+                                :default-drop-out 0.2
+                                :default-weight-init :xavier-uniform
+                                :default-gradient-normalization :renormalize-l2-per-layer
                                 :build? true
                                 :layer (dl4clj.nn.conf.builders.builders/dense-layer-builder
                                           :n-in 100
@@ -922,12 +925,12 @@
                                                :pretrain? false
                                                :build? true)
           mln (new-multi-layer-network :conf mln-conf)
-          init-mln (initialize! :mln mln :ds mnist-ds)
+          init-mln (initialize! :mln mln :ds (new-mnist-ds))
           mnist-iter (new-mnist-data-set-iterator :batch-size 128 :train? true :seed 123)
-          input (get-feature-matrix (get mnist-ds 0))
+          input (get-features (get (new-mnist-ds) 0))
           eval (new-classification-evaler :n-columns 10)
           init-no-ds (init! :model mln)
-          evaled (do-evaluation :mln init-no-ds :iter mnist-iter :evaluation eval)]
+          evaled (eval-classification! :mln init-no-ds :iter mnist-iter :evaler eval)]
       ;;other-input (get-mln-input :mln init-mln)
       ;;^ this currently crashes all of emacs
       ;; need a fitted mln for (is (= "" (type (get-epsilon :mln ...))))
@@ -990,7 +993,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (output :mln init-mln :input input))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (output :mln init-no-ds :iter (reset-iter! mnist-iter)))))
+             (type (output :mln init-no-ds :iter mnist-iter))))
       (is (= (type mln) (type (print-config mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (reconstruct :mln mln
@@ -998,10 +1001,10 @@
                                                       :layer-idx 0 :mln mln :input input))
                                 :layer-idx 1))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (score-examples :mln init-no-ds :iter (reset-iter! mnist-iter)
+             (type (score-examples :mln init-no-ds :iter mnist-iter
                                    :add-regularization-terms? false))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (score-examples :mln init-mln :dataset mnist-ds
+             (type (score-examples :mln init-mln :dataset (new-mnist-ds)
                                    :add-regularization-terms? false))))
       (is (= java.lang.String (type (summary init-mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
@@ -1061,8 +1064,8 @@
                                                :build? true)
           mln (init! :model (new-multi-layer-network :conf mln-conf))
           helper (new-helper :mln mln :frozen-til 0)
-          featurized (featurize :helper helper :data-set (get mnist-ds 0))
-          featurized-input (get-feature-matrix featurized)
+          featurized (featurize :helper helper :data-set (get (new-mnist-ds) 0))
+          featurized-input (get-features featurized)
           tlb (transfer-learning-builder
                :mln (init!
                      :model
