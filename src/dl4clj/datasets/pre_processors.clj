@@ -86,7 +86,10 @@
 
   :min-val (double), the low end of the scale
 
-  :max-val (double), the high end of the scale"
+  :max-val (double), the high end of the scale
+
+  WARNING, there is something misunderstood about this preprocessor.
+   - come back and investigate why the max range and min range are not being properly set"
   [& {:keys [min-val max-val]
       :as opts}]
   (pre-processors {:min-max-normalization opts}))

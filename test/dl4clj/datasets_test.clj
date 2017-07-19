@@ -423,7 +423,7 @@
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
           pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
                          :iter iter)
-          pp2 (fit-iter! :normalizer (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1)
+          pp2 (fit-iter! :normalizer (new-standardize-normalization-ds-preprocessor)
                          :iter iter)
           multi-iter (new-multi-data-set-iterator-adapter
                       :iter

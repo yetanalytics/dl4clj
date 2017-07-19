@@ -437,7 +437,7 @@
                                      :gradient-normalization :none
                                      :gradient-normalization-threshold 0.9
                                      :layer-name "foo18"
-                                     :updater :none
+                                     :updater :rmsprop
                                      :learning-rate 0.1 :learning-rate-policy :inverse
                                      :learning-rate-schedule {0 0.2 1 0.5}
                                      :weight-init :distribution)
@@ -603,7 +603,7 @@
       ;; the set valuess are set to nil
       (is (= org.deeplearning4j.nn.conf.layers.GlobalPoolingLayer
              (type global-pooling-layer-conf)))
-      (is (= :global-pooling (layer-type {:nn-conf (quick-nn-conf global-pooling-layer-conf)})))
+      (println "\n example layer validation warnings \n")
       (is (= org.deeplearning4j.nn.layers.pooling.GlobalPoolingLayer
              (type (new-layer :nn-conf (quick-nn-conf global-pooling-layer-conf)))))
 
@@ -931,6 +931,7 @@
           input (get-features (get-example :ds (new-mnist-ds) :idx 0))
           eval (new-classification-evaler :n-classes 10)
           init-no-ds (init! :model mln)
+          _ (println "\n example evaluation stats \n")
           evaled (eval-model-whole-ds :mln init-no-ds :iter mnist-iter :evaler eval)]
       ;;other-input (get-mln-input :mln init-mln)
       ;;^ this currently crashes all of emacs
@@ -989,6 +990,7 @@
       (is (= 2 (get-n-layers init-mln)))
       (is (= org.deeplearning4j.nn.layers.OutputLayer (type (get-output-layer init-mln))))
       (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (get-updater init-mln))))
+      (println "\n example summary of a Multi Layer Network \n")
       (is (= (type mln) (type (initialize-layers! :mln mln :input input))))
       (is (true? (is-init-called? mln)))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray

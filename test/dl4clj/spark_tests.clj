@@ -54,6 +54,8 @@
 ;; helper fns and defs used in testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def hadoop-home-dir (System/setProperty "hadoop.home.dir" "/"))
+
 (def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
 
 ;; this way of making an iter from an existing multi-dataset needs to
