@@ -32,6 +32,26 @@
                                           eval-model-whole-ds]]
             [clojure.test :refer :all]))
 
+
+`(nn-conf-builder :seed 12345 :default-momentum 0.75 :default-l2 0.2
+                  :default-activation-fn :tanh :convolution-mode :same
+                  :default-dist {:normal {:mean 0 :std 1}}
+                  :default-gradient-normalization :clip-l2-per-layer
+                  ;;:default-learning-rate-policy :inverse
+                  :optimization-algo :lbfgs
+                  :step-fn :negative-default-step-fn
+                  :default-updater :nesterovs
+                  :default-weight-init :xavier
+                  :layer {:dense-layer {:n-in 10
+                                        :layer-name "ex layer"}}
+                  :layers {0 {:dense-layer {:n-in 10
+                                            :n-out 20
+                                            :layer-name "1st layer"}}
+                           1 {:dense-layer {:n-in 20
+                                            :n-out 5
+                                            :layer-name "2nd layer"}}}
+                  :build? false)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fn for layer creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

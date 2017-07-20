@@ -56,6 +56,7 @@
       :or {build? true}
       :as opts}]
   (let [b (if (contains? opts :list-builder)
+            ;; need to figure out how to quote the value of list-builder not the symbol list-builder
             list-builder
             (MultiLayerConfiguration$Builder.))
         confz (if (coll? nn-confs)

@@ -14,6 +14,15 @@
     (is (= '([1 0] [2 1] [3 2] [4 3]) (indexed [1 2 3 4])))
     ))
 
+(deftest builder-fn-tests
+  (testing "the build fn"
+    (is (= '(doto "foo" (.aMethod "some value") (.someMethod {:some-config {:more-config "opts"}}))
+           (builder-fn "foo" {:first-join  '.aMethod
+                              :second-op '.someMethod}
+                       {:first-join  "some value"
+                        :second-op {:some-config {:more-config "opts"}}})))
+    (is (= {:foo "zab" :bar "bell"} (replace-map-vals {:foo "baz" :bar "bell"} {:foo "zab"})))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; constants, value-of, input-type
 ;; dl4clj.constants

@@ -72,6 +72,9 @@
   `(multi-layer/list-builder ~builder ~layers))
 
 (defn nn-conf-builder
+  ;; when build is false and this is passed to multi-layer-builder
+  ;; should i not eval, and eval there?
+
   "creates a nn-conf based on the supplied args.  There are two types of args here:
    1) network args
       - these are params that affect the network as a whole instead of just at the layer level
@@ -81,13 +84,12 @@
       - will replace layer params that were not set at the layer level
       - args from layer.builder, the base class for all layers
 
-  If you only supply one or no layer, will be a neuralnetconfiguration
-  if you supply layers, will be a multilayerconfiguration
+  If you only supply one or no layer, will return a neural net configuration
+  if you supply layers, will return a multi layer configuration
+   - you should only supply a config for one of these options
+     (layer or layers not both)
 
   Params for the neural network are:
-
-  :nn-builder (nn-conf-builder), a preexisting nn-conf-builder.  If not supplied,
-   a fresh builder will be used
 
   :iterations (int) Number of optimization iterations
 
@@ -122,24 +124,23 @@
    Only applies for line search optimizers: Line Search SGD, Conjugate Gradient, LBFGS
    one of: :default-step-fn (default), :negative-default-step-fn :gradient-step-fn (for SGD),
    :negative-gradient-step-fn
-   - can also be the object created by one of the new-fns
-   - ie. (new-default-step-fn)
 
   :convolution-mode (keyword), one of: :strict, :truncate, :same
    - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
 
   :build? (boolean), defaults to false, builds the nn-conf
    - defaults to false because the resulting list builder is needed when passing
-     the result of this fn to multi-layer-config-builder.  If there are no additional
-     params you want to added the configuration (from multi-layer-config-builder) then
-     set built? to true
+     the result of this fn to multi-layer-config-builder.
+
+   - If there are no additional params you want added to the configuration
+     (from multi-layer-config-builder) then set built? to true
 
   :layer {:layer-type {config-opts vals}} map of layer config params.
     see dl4clj.nn.conf.builders.builders
     :layer will be ignored if :layers is supplied, layer only creates a single layer
 
   :layers {idx (int) {:layer-type {config-opts vals}}}
-   see dl4clj.nn.conf.builders.builders
+   see dl4clj.nn.conf.builders.builders and tests for examples
 
   Params for layers are:
 
@@ -148,7 +149,6 @@
    opts are :cube, :elu, :hard-sigmoid, :hard-tanh, :identity, :leaky-relu
             :relu, :r-relu, :sigmoid, :soft-max, :soft-plus, :soft-sign, :tanh
             :rational-tanh
-    - does replace non-specified activation fns in layers
 
   :default-adam-mean-decay (double) Mean decay rate for Adam updater
 
@@ -159,9 +159,9 @@
   :default-bias-learning-rate (double) Bias learning rate
 
   :default-dist (map) distribution to sample initial weights from, one of:
-        binomial-distribution {:binomial {:number-of-trails int :probability-of-success double}}
-        normal-distribution {:normal {:mean double :std double}}
-        uniform-distribution {:uniform {:lower double :upper double}}
+        binomial-distribution = {:binomial {:number-of-trails int :probability-of-success double}}
+        normal-distribution = {:normal {:mean double :std double}}
+        uniform-distribution = {:uniform {:lower double :upper double}}
 
   :default-drop-out (double) Dropout probability
 
@@ -217,16 +217,16 @@
              default-l1-bias default-l2-bias default-learning-rate
              default-learning-rate-policy default-learning-rate-schedule
              default-momentum default-momentum-after default-rho default-rms-decay
-             default-updater default-weight-init nn-builder
+             default-updater default-weight-init
              ;; nn conf args
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate
              regularization? seed step-fn convolution-mode layer layers build?]
-      :or {build? false
-           nn-builder '(NeuralNetConfiguration$Builder.)}
+      :or {build? false}
       :as opts}]
-  (let [a (if default-activation-fn
+  (let [nn-builder '(NeuralNetConfiguration$Builder.)
+        a (if default-activation-fn
            (value-of-helper :activation-fn default-activation-fn))
         c-m (if convolution-mode
              (value-of-helper :convolution-mode convolution-mode))
@@ -266,28 +266,9 @@
       (.build updated-b)
       updated-b)))
 
-
-
-#_(nn-conf-builder :seed 12345 :default-momentum 0.75 :default-l2 0.2
-                  :default-activation-fn :tanh :convolution-mode :same
-                  :default-dist {:normal {:mean 0 :std 1}}
-                  :default-gradient-normalization :clip-l2-per-layer
-                  ;;:default-learning-rate-policy :inverse
-                  :optimization-algo :lbfgs
-                  :step-fn :negative-default-step-fn
-                  :default-updater :nesterovs
-                  :default-weight-init :xavier
-                  #_:layer #_{:dense-layer {:n-in 10
-                                        :layer-name "ex layer"}}
-                  #_:layers #_{0 {:dense-layer {:n-in 10
-                                            :n-out 20
-                                            :layer-name "1st layer"}}
-                           1 {:dense-layer {:n-in 20
-                                            :n-out 5
-                                            :layer-name "2nd layer"}}}
-                  :build? false)
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; old way of doing things.  will be removed
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn nn-conf-builder*
   "creates a nn-conf based on the supplied args.  There are two types of args here:
