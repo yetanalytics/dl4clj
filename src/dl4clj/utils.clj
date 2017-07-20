@@ -1,6 +1,22 @@
 (ns dl4clj.utils
   (:import [org.deeplearning4j.util ModelSerializer]))
 
+(defn builder-fn
+  [builder method-map args]
+  (let [ks (keys (dissoc args :build?))
+        fn-chain (for [each ks
+                       :let [v (each args)]]
+              (list (each method-map) v))]
+    #_(conj fn-chain b '..)
+    (conj fn-chain builder 'doto)))
+
+(defn replace-map-vals
+  [og-map replacement-map]
+  (let [replacement-keys (keys replacement-map)
+        og-without-replacement-keys (dissoc og-map replacement-keys)
+        updated-map (merge og-without-replacement-keys replacement-map)]
+    updated-map))
+
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
 
