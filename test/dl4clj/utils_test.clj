@@ -1,7 +1,8 @@
 (ns dl4clj.utils-test
   (:require [clojure.test :refer :all]
             [dl4clj.utils :refer :all]
-            [dl4clj.constants :refer :all]))
+            [dl4clj.constants :refer :all]
+            [clojure.core.match :refer [match]]))
 
 (deftest util-tests
   (testing "the fns in utils"
@@ -23,7 +24,10 @@
               (.aMethodRequiresOutputOfFnTakesKeyword (a-fn-to-call :some-keyword))
               (.aMethodWhichNeedsManyArgs "first val" "second val" "third val")
               (.aMethodWhichNeedsMap {0 0.2, 1 0.4})
-              (.aMethodWhichNeedsNestedMap {:foo {0 0.2, 1 0.4}}))
+              (.aMethodWhichNeedsNestedMap {:foo {0 0.2, 1 0.4}})
+              (.aMethodWhichGetCalledMannyTimes 7 (a-fn-to-call {:some-config {:more-config "opts"}}))
+              (.aMethodWhichGetCalledMannyTimes 5 (a-fn-to-call {:other-config {:more-config "opts"}}))
+              )
            (builder-fn
             "foo"
             {:boolean-arg             '.aMethodBooleanArg
@@ -32,7 +36,12 @@
              :fn-needs-keyword        '.aMethodRequiresOutputOfFnTakesKeyword
              :multi-arg               '.aMethodWhichNeedsManyArgs
              :method-needs-map        '.aMethodWhichNeedsMap
-             :method-needs-nested-map '.aMethodWhichNeedsNestedMap}
+             :method-needs-nested-map '.aMethodWhichNeedsNestedMap
+             :method-multi-call       '.aMethodWhichGetCalledMannyTimes
+             :one-arg-multi-call      '.aMethodCalledManyTimesOneArg
+             :foo                     '.aTestMethod
+             :baz                     '.orderingTestMethod
+             :qux                     '.anotherOrderingTest}
 
             {:boolean-arg             true
              :number-arg              0.2
@@ -40,8 +49,44 @@
              :fn-needs-keyword        '(a-fn-to-call :some-keyword)
              :multi-arg               ["first val" "second val" "third val"]
              :method-needs-map        {0 0.2 1 0.4}
-             :method-needs-nested-map {:foo {0 0.2 1 0.4}}})))
+             :method-needs-nested-map {:foo {0 0.2 1 0.4}}
+             :method-multi-call [[7 '(a-fn-to-call {:some-config {:more-config "opts"}})]
+                                 [5 '(a-fn-to-call {:other-config {:more-config "opts"}})]]
+             })))
     (is (= {:foo "zab" :bar "bell"} (replace-map-vals {:foo "baz" :bar "bell"} {:foo "zab"})))))
+
+(defn arg-matching*
+  [pattern]
+  (match [pattern]
+         [(_ :guard boolean?)] :boolean
+         [(_ :guard number?)] :number
+         [(_ :guard map?)] :map ;; have this dispatch to determine if nested or not
+         [[(_ :guard vector?) & _]] :vec-of-vecs
+         [[& _]] :vec-of-args
+         [([(_ :guard symbol?) (_ :guard keyword?)] :seq)] :fn-take-keyword
+         [([(_ :guard symbol?) (_ :guard map?)] :seq)] :fn-take-map
+         :else "no matching pattern"))
+
+(deftest clojure-core-match-test
+  (testing "how to use core.match for builder fn"
+    (let [b true
+          n 0.2
+          fn-call-with-config '(a-fn-to-call {:some-config {:more-config "opts"}})
+          fn-call-keyword '(a-fn-to-call :some-keyword)
+          multi-arg ["first val" "second val" "third val"]
+          needs-map {0 0.2 1 0.4}
+          needs-nested-map {:foo {0 0.2 1 0.4}}
+          multi-call [[7 '(a-fn-to-call {:some-config {:more-config "opts"}})]
+                      [5 '(a-fn-to-call {:other-config {:more-config "opts"}})]]]
+      (is (= :boolean (arg-matching* b)))
+      (is (= :number (arg-matching* n)))
+      (is (= :fn-take-keyword (arg-matching* fn-call-keyword)))
+      (is (= :fn-take-map (arg-matching* fn-call-with-config)))
+      (is (= :map (arg-matching* needs-map)))
+      (is (= :vec-of-vecs (arg-matching* multi-call)))
+      (is (= :vec-of-args (arg-matching* multi-arg)))
+      (is (= :map (arg-matching* needs-nested-map)))
+      (is (= "no matching pattern" (arg-matching* '()))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

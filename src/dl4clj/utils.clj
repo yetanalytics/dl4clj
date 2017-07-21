@@ -1,31 +1,62 @@
 (ns dl4clj.utils
-  (:import [org.deeplearning4j.util ModelSerializer]
-           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+  (:require [clojure.core.match :refer [match]])
+  (:import [org.deeplearning4j.util ModelSerializer]))
 
 (defn multi-arg-helper
-  [args]
-  (if (false? (vector? args))
-    args
-    (reverse (into '()
-                   (for [each args]
-                     each)))))
+  [m args]
+  (reverse
+   (into `(~m)
+         (for [each args]
+           each))))
+
+(defn multi-method-call-helper
+  [m args]
+  (for [each args]
+    (multi-arg-helper m each)))
+
+(defn collapse-methods-types
+  [fn-chain]
+  (let [methods-called-once (for [each fn-chain]
+                              (match [each]
+                                     [([(_ :guard #(not (list? %))) & _] :seq)]
+                                     each
+                                     :else nil))
+
+        only-methods-called-once (filter #(not (nil? %)) methods-called-once)
+
+        ordered-mco  (reverse only-methods-called-once)
+
+        multiple-calls (for [each fn-chain]
+                         (match [each]
+                                [([(_ :guard list?) & _] :seq)]
+                                (reverse each)
+                                :else nil))
+
+        only-multiple-calls (filter #(not (nil? %)) multiple-calls)
+
+        ordered-mc (map reverse only-multiple-calls)]
+    #_(println "\n" ordered-mco "\n")
+    #_(println "\n" ordered-mc "\n")
+    (loop [accum! ordered-mco
+           from! ordered-mc]
+      (if (empty? from!)
+        (reverse accum!)
+        (recur (into accum! (first from!))
+               (rest from!))))))
 
 (defn flatten*
   [method-call]
   (let [[m args] method-call]
-    #_(println "this is what I get: " method-call)
-    ;; there is probably a better way to do this via pattern matching
-    ;; talk to henk about this tomorrow
-    (if (and (coll? args) ;; eliminates numbers/keywords/booleans
-             (not (map? args)) ;; protects against a method needing a map
-             (not= 1 (count args)) ;; protects against a method neededing a nested map
-             (not (keyword? (second args))) ;; elminates fns which need to a keyword to eval
-             (not (map? (second args)))) ;; elminates fns which need a config map to eval
-      (reverse
-       (into `(~m)
-             (for [each args]
-               each)))
-      `(~m ~args))))
+    (match [args]
+           [(_ :guard boolean?)] `(~m ~args)
+           [(_ :guard number?)] `(~m ~args)
+           [(_ :guard map?)] `(~m ~args)
+           [[(_ :guard vector?) & _]] (multi-method-call-helper m args)
+           [[& _]] (multi-arg-helper m args)
+           [([(_ :guard symbol?) (_ :guard keyword?)] :seq)] `(~m ~args)
+           [([(_ :guard symbol?) (_ :guard map?)] :seq)] `(~m ~args)
+           :else "no matching pattern")))
+
 
 (defn builder-fn
   [builder method-map args]
@@ -35,26 +66,9 @@
                    ;; it works
                    #_(list (each method-map) v)
 
-                   ;; dev
-                   (flatten* (list (each method-map) (multi-arg-helper v)))
-
-                   ;; doesnt work
-                   #_(flatten* (list (each method-map) (multi-arg-helper v))))]
-    (conj fn-chain builder 'doto)))
-
-(defn builder-fn-repeated-method-call
-  [builder method-map args]
-  (let [ks (keys (dissoc args :build?))
-        k (first ks)
-        vs (vals args)
-        fn-chain (for [ds vs
-                       each ds
-                       :let [m (k method-map)]]
-                   (flatten* (vector m (multi-arg-helper each))))]
-    (conj fn-chain builder 'doto)))
-
-
-
+                   ;; dev, ordering issues
+                   (flatten* (list (each method-map) v)))]
+    (conj (collapse-methods-types fn-chain) builder 'doto)))
 
 (defn replace-map-vals
   [og-map replacement-map]

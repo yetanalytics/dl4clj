@@ -20,4 +20,5 @@
                  [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"]
                  [org.apache.spark/spark-core_2.11 "2.1.0"]
                  [org.deeplearning4j/dl4j-streaming_2.11 "0.8.0_spark_2"]
+                 [org.clojure/core.match "0.3.0-alpha4"]
                  [cheshire "5.7.1"]])
