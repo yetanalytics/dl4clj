@@ -16,12 +16,33 @@
 
 (deftest builder-fn-tests
   (testing "the build fn"
-    (is (= '(doto "foo" (.aMethod "some value") (.someMethod {:some-config {:more-config "opts"}}))
-           (builder-fn "foo" {:first-join  '.aMethod
-                              :second-op '.someMethod}
-                       {:first-join  "some value"
-                        :second-op {:some-config {:more-config "opts"}}})))
+    (is (= '(doto "foo"
+              (.aMethodBooleanArg true)
+              (.aMethodNumberArg 0.2)
+              (.aMethodRequiresOutputOfFnTakesConfigMap (a-fn-to-call {:some-config {:more-config "opts"}}))
+              (.aMethodRequiresOutputOfFnTakesKeyword (a-fn-to-call :some-keyword))
+              (.aMethodWhichNeedsManyArgs "first val" "second val" "third val")
+              (.aMethodWhichNeedsMap {0 0.2, 1 0.4})
+              (.aMethodWhichNeedsNestedMap {:foo {0 0.2, 1 0.4}}))
+           (builder-fn
+            "foo"
+            {:boolean-arg             '.aMethodBooleanArg
+             :number-arg              '.aMethodNumberArg
+             :fn-needs-map            '.aMethodRequiresOutputOfFnTakesConfigMap
+             :fn-needs-keyword        '.aMethodRequiresOutputOfFnTakesKeyword
+             :multi-arg               '.aMethodWhichNeedsManyArgs
+             :method-needs-map        '.aMethodWhichNeedsMap
+             :method-needs-nested-map '.aMethodWhichNeedsNestedMap}
+
+            {:boolean-arg             true
+             :number-arg              0.2
+             :fn-needs-map            '(a-fn-to-call {:some-config {:more-config "opts"}})
+             :fn-needs-keyword        '(a-fn-to-call :some-keyword)
+             :multi-arg               ["first val" "second val" "third val"]
+             :method-needs-map        {0 0.2 1 0.4}
+             :method-needs-nested-map {:foo {0 0.2 1 0.4}}})))
     (is (= {:foo "zab" :bar "bell"} (replace-map-vals {:foo "baz" :bar "bell"} {:foo "zab"})))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; constants, value-of, input-type

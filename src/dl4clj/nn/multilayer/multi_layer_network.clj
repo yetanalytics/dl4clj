@@ -6,7 +6,8 @@
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]])
-  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
+  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly

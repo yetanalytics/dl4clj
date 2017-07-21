@@ -6,7 +6,8 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   dl4clj.nn.conf.distributions
   (:import [org.deeplearning4j.nn.conf.distribution
             Distribution UniformDistribution NormalDistribution BinomialDistribution
-            Distributions GaussianDistribution])
+            Distributions GaussianDistribution]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder])
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,7 +41,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
     (BinomialDistribution. n-trials prob-success)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; user facing fns
+;; user facing fns (may be removed with the change to how nns are built)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-uniform-distribution

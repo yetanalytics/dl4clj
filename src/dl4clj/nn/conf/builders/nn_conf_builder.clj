@@ -221,12 +221,12 @@
              ;; nn conf args
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
-             use-drop-connect? optimization-algo lr-score-based-decay-rate
+             use-drop-connect? optimization-algo lr-score-based-decay-rate nn-builder
              regularization? seed step-fn convolution-mode layer layers build?]
-      :or {build? false}
+      :or {build? false
+           nn-builder `(NeuralNetConfiguration$Builder.)}
       :as opts}]
-  (let [nn-builder '(NeuralNetConfiguration$Builder.)
-        a (if default-activation-fn
+  (let [a (if default-activation-fn
            (value-of-helper :activation-fn default-activation-fn))
         c-m (if convolution-mode
              (value-of-helper :convolution-mode convolution-mode))
@@ -261,6 +261,7 @@
                     (multi-layer/list-builder
                      (eval (builder-fn nn-builder method-map (dissoc updated-opts :layers)))
                      ls)
+                    #_(builder-fn nn-builder method-map updated-opts)
                     (eval (builder-fn nn-builder method-map updated-opts)))]
     (if build?
       (.build updated-b)

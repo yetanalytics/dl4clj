@@ -48,7 +48,8 @@
   (:import [org.nd4j.linalg.dataset.api.iterator TestMultiDataSetIterator]
            [org.nd4j.linalg.dataset.api MultiDataSet]
            [org.apache.spark SparkConf]
-           [org.apache.spark.api.java JavaRDD JavaSparkContext]))
+           [org.apache.spark.api.java JavaRDD JavaSparkContext]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns and defs used in testing

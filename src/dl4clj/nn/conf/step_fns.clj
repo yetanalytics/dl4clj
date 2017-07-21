@@ -4,7 +4,8 @@
             DefaultStepFunction
             GradientStepFunction
             NegativeDefaultStepFunction
-            NegativeGradientStepFunction]))
+            NegativeGradientStepFunction]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn

@@ -18,7 +18,8 @@
             [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
             [dl4clj.datasets.api.iterators :refer [reset-iter! next-example!]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
-            [dl4clj.nn.multilayer.multi-layer-network :refer :all]))
+            [dl4clj.nn.multilayer.multi-layer-network :refer :all])
+  (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing
@@ -31,7 +32,7 @@
                  :seed 123
                  :optimization-algo :stochastic-gradient-descent
                  :iterations 1
-                 :defult-learning-rate 0.006
+                 :default-learning-rate 0.006
                  :default-updater :nesterovs
                  :default-momentum 0.9
                  :regularization? true

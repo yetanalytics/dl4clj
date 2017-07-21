@@ -5,7 +5,8 @@
             CompositeReconstructionDistribution$Builder
             ExponentialReconstructionDistribution
             GaussianReconstructionDistribution])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many?]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? builder-fn
+                                  builder-fn-repeated-method-call]]
             [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,36 +46,53 @@
                                each))]
     (loop [builder (CompositeReconstructionDistribution$Builder.)
            distz! data-in-vec]
-      ;; look in the distribution data structure to determine
-      ;; if the distribution if a config map or an existing distribution
-      (if (contains? (second (first distz!)) :dist)
-        ;; we are dealing with an existing distribution
-        (let [data (second (first distz!))
-              ;; get required data
-              {dist :dist
-               dist-size :dist-size} data]
-          (cond (empty? distz!)
-                ;; we have gone through all our distributions
-                (.build builder)
-                :else
-                ;; we add the distribution to the builder
-                (recur (.addDistribution builder dist-size dist)
-                       (rest distz!))))
-        ;; we are dealing with a distribution config map
-        (let [the-dist (first distz!)
-              ;; get the data
-              [dist-idx dist-data] the-dist
-              dist-conf (first dist-data)
-              [dist-type dist-opts] dist-conf
-              dist-size (:dist-size dist-opts)]
-          (cond (empty? distz!)
-                ;; we have gone through all our distributions
+      (let [the-dist (first distz!)
+            ;; get the data
+            [dist-idx dist-data] the-dist
+            dist-conf (first dist-data)
+            [dist-type dist-opts] dist-conf
+            dist-size (:dist-size dist-opts)]
+        (cond (empty? distz!)
+              ;; we have gone through all our distributions
               (.build builder)
               :else
               (recur
                ;; we create the distribution and add it to the builder
                (.addDistribution builder dist-size (distributions {dist-type dist-opts}))
-               (rest distz!))))))))
+               (rest distz!)))))))
+
+;; come back and finish this
+
+#_(defn test-composite
+  [opts]
+ (let [conf (:composite opts)]
+   (for [each conf
+         :let [
+               dist-type (keys each)
+               dist-opts (vals each)
+               [data] dist-opts
+               size (:dist-size data)
+               a-fn (:activation-fn data)
+               #_[dist-fn dist-size] #_dist-opts]]
+     a-fn)))
+
+#_(test-composite
+ {:composite
+  {0 {:bernoulli {:activation-fn :sigmoid
+               :dist-size     5}}
+   1 {:exponential {:activation-fn :sigmoid
+                 :dist-size     3}}
+   2 {:gaussian {:activation-fn :hard-tanh
+              :dist-size     1}}
+   3 {:bernoulli {:activation-fn :sigmoid
+               :dist-size     4}}
+   4 {:bernoulli {:dist-size     4}}}})
+
+#_(builder-fn-repeated-method-call
+ `(CompositeReconstructionDistribution$Builder.)
+ {:add '.addDistribution}
+ {:add {5 '(distributions {:bernoulli {:activation-fn :sigmoid}})
+        7 '(distributions {:bernoulli {:activation-fn :sigmoid}})}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns which provide documentation on distribution creation

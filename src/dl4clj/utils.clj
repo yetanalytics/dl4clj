@@ -1,14 +1,60 @@
 (ns dl4clj.utils
-  (:import [org.deeplearning4j.util ModelSerializer]))
+  (:import [org.deeplearning4j.util ModelSerializer]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+
+(defn multi-arg-helper
+  [args]
+  (if (false? (vector? args))
+    args
+    (reverse (into '()
+                   (for [each args]
+                     each)))))
+
+(defn flatten*
+  [method-call]
+  (let [[m args] method-call]
+    #_(println "this is what I get: " method-call)
+    ;; there is probably a better way to do this via pattern matching
+    ;; talk to henk about this tomorrow
+    (if (and (coll? args) ;; eliminates numbers/keywords/booleans
+             (not (map? args)) ;; protects against a method needing a map
+             (not= 1 (count args)) ;; protects against a method neededing a nested map
+             (not (keyword? (second args))) ;; elminates fns which need to a keyword to eval
+             (not (map? (second args)))) ;; elminates fns which need a config map to eval
+      (reverse
+       (into `(~m)
+             (for [each args]
+               each)))
+      `(~m ~args))))
 
 (defn builder-fn
   [builder method-map args]
   (let [ks (keys (dissoc args :build?))
         fn-chain (for [each ks
                        :let [v (each args)]]
-              (list (each method-map) v))]
-    #_(conj fn-chain b '..)
+                   ;; it works
+                   #_(list (each method-map) v)
+
+                   ;; dev
+                   (flatten* (list (each method-map) (multi-arg-helper v)))
+
+                   ;; doesnt work
+                   #_(flatten* (list (each method-map) (multi-arg-helper v))))]
     (conj fn-chain builder 'doto)))
+
+(defn builder-fn-repeated-method-call
+  [builder method-map args]
+  (let [ks (keys (dissoc args :build?))
+        k (first ks)
+        vs (vals args)
+        fn-chain (for [ds vs
+                       each ds
+                       :let [m (k method-map)]]
+                   (flatten* (vector m (multi-arg-helper each))))]
+    (conj fn-chain builder 'doto)))
+
+
+
 
 (defn replace-map-vals
   [og-map replacement-map]

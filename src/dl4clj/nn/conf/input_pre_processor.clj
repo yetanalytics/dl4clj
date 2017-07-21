@@ -3,6 +3,7 @@
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]
            [org.deeplearning4j.nn.conf.preprocessor BinomialSamplingPreProcessor
             ComposableInputPreProcessor UnitVarianceProcessor RnnToCnnPreProcessor
             ZeroMeanAndUnitVariancePreProcessor ZeroMeanPrePreProcessor

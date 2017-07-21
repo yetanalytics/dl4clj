@@ -24,7 +24,8 @@
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand vec-or-matrix->indarray]]
             [clojure.java.io :as io])
   (:import [org.deeplearning4j.optimize.api IterationListener]
-           [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
+           [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing

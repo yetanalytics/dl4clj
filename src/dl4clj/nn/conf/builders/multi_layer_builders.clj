@@ -80,7 +80,7 @@
       (contains? opts :pretrain?) (.pretrain pretrain?)
       (contains? opts :tbptt-back-length) (.tBPTTBackwardLength tbptt-back-length)
       (contains? opts :tbptt-fwd-length) (.tBPTTForwardLength tbptt-fwd-length)
-      (true? build?) (.build))))
+      (true? build?) .build)))
 
 (defn list-builder
   ;; could refactor to be recursive (no counters)

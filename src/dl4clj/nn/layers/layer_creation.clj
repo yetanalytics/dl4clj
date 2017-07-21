@@ -15,7 +15,8 @@
             LocalResponseNormalization]
            [org.deeplearning4j.nn.layers.recurrent
             GravesBidirectionalLSTM GravesLSTM RnnOutputLayer FwdPassReturn]
-           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder])
+           [org.deeplearning4j.nn.layers.variational VariationalAutoencoder]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder])
   (:require [dl4clj.nn.api.multi-layer-conf :refer [to-json]]
             [cheshire.core :refer [decode-strict]]
             [dl4clj.utils :refer [generic-dispatching-fn camel-to-dashed]]))

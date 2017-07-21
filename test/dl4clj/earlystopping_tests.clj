@@ -13,7 +13,7 @@
             [dl4clj.earlystopping.api.listener :refer :all]
             ;; namespaces I need to test the above namespaces
             [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
-            [dl4clj.nn.conf.builders.nn-conf-builder :refer [nn-conf-builder]]
+            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
             [dl4clj.nn.api.model :refer [init! score!]]
             [dl4clj.datasets.iterators :refer [new-record-reader-dataset-iterator
                                                new-mnist-data-set-iterator]]
@@ -23,7 +23,8 @@
             [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
             [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
             [clojure.test :refer :all])
-  (:import [java.nio.charset Charset]))
+  (:import [java.nio.charset Charset]
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objs needed in multiple tests

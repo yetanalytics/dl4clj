@@ -14,6 +14,7 @@
     Convolution1DLayer$Builder DropoutLayer$Builder GlobalPoolingLayer$Builder
     Layer$Builder Subsampling1DLayer$Builder ZeroPaddingLayer$Builder
     SubsamplingLayer$BaseSubsamplingBuilder]
+   [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]
    [org.deeplearning4j.nn.conf.layers.variational VariationalAutoencoder$Builder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
