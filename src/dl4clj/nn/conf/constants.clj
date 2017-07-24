@@ -1,4 +1,4 @@
-(ns dl4clj.nn.conf.constants
+(ns dl4clj.nn.conf.constants-delete
   (:require [clojure.string :as s]
             [dl4clj.utils :refer :all])
   (:import [org.deeplearning4j.nn.conf GradientNormalization LearningRatePolicy
@@ -14,9 +14,10 @@
            [org.nd4j.linalg.lossfunctions LossFunctions LossFunctions$LossFunction]
            [org.nd4j.linalg.convolution Convolution$Type]
            [org.deeplearning4j.datasets.datavec RecordReaderMultiDataSetIterator$AlignmentMode
-            SequenceRecordReaderDataSetIterator$AlignmentMode]
-           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+            SequenceRecordReaderDataSetIterator$AlignmentMode]))
 
+
+(comment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -133,3 +134,4 @@
       (= typez :recurrent)
       (InputType/recurrent size))))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/inputs/InputType.html
+)
