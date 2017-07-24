@@ -6,7 +6,7 @@
             ExponentialReconstructionDistribution
             GaussianReconstructionDistribution])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? builder-fn
-                                  builder-fn-repeated-method-call]]
+                                  eval-and-build]]
             [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,57 +42,14 @@
 (defmethod distributions :composite [opts]
   (let [conf (:composite opts)
         dists (:distributions-to-add conf)
-        data-in-vec (into [] (for [each dists]
-                               each))]
-    (loop [builder (CompositeReconstructionDistribution$Builder.)
-           distz! data-in-vec]
-      (let [the-dist (first distz!)
-            ;; get the data
-            [dist-idx dist-data] the-dist
-            dist-conf (first dist-data)
-            [dist-type dist-opts] dist-conf
-            dist-size (:dist-size dist-opts)]
-        (cond (empty? distz!)
-              ;; we have gone through all our distributions
-              (.build builder)
-              :else
-              (recur
-               ;; we create the distribution and add it to the builder
-               (.addDistribution builder dist-size (distributions {dist-type dist-opts}))
-               (rest distz!)))))))
-
-;; come back and finish this
-
-#_(defn test-composite
-  [opts]
- (let [conf (:composite opts)]
-   (for [each conf
-         :let [
-               dist-type (keys each)
-               dist-opts (vals each)
-               [data] dist-opts
-               size (:dist-size data)
-               a-fn (:activation-fn data)
-               #_[dist-fn dist-size] #_dist-opts]]
-     a-fn)))
-
-#_(test-composite
- {:composite
-  {0 {:bernoulli {:activation-fn :sigmoid
-               :dist-size     5}}
-   1 {:exponential {:activation-fn :sigmoid
-                 :dist-size     3}}
-   2 {:gaussian {:activation-fn :hard-tanh
-              :dist-size     1}}
-   3 {:bernoulli {:activation-fn :sigmoid
-               :dist-size     4}}
-   4 {:bernoulli {:dist-size     4}}}})
-
-#_(builder-fn-repeated-method-call
- `(CompositeReconstructionDistribution$Builder.)
- {:add '.addDistribution}
- {:add {5 '(distributions {:bernoulli {:activation-fn :sigmoid}})
-        7 '(distributions {:bernoulli {:activation-fn :sigmoid}})}})
+        m-calls (into []
+                      (for [each dists
+                            :let [k (first (keys each))
+                                  data (k each)
+                                  dist-size (:dist-size data)]]
+                        [dist-size `(distributions {~k ~data})]))]
+    (eval-and-build (builder-fn `(CompositeReconstructionDistribution$Builder.) {:to-add '.addDistribution}
+                                {:to-add m-calls}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns which provide documentation on distribution creation
@@ -102,14 +59,10 @@
   "creates a new composite reconstruction distributions
    - a combination of multiple reconstruction distributions
 
-  distributions-to-add (map) {unique-place-holder-1 distribution
-                               unique-place-holder-2 distribution ...}
-   - distribution can take the form of:
-      {dist-type (keyword) {dist-opts :dist-size int}}
-      - when you want to create a new distribution with supplied dist-type/opts
-     or
-      {:dist built-distribution :dist-size int}
-      - when you want to add a preexisting distribution to the composite
+  distributions-to-add (vector) [{dist1 config} {dist2 config}]
+   - distribution take the form of:
+      {dist-type (keyword) {:activation-fn keyword :dist-size int}}
+      - see other fns for avialable activation fns (optional config)
 
   - distribution params pairs (:dist-size needs to be specifed in both cases)
      - :dist-tyye (keyword) the type of distribution you want to add to your composition
@@ -118,22 +71,13 @@
      - :dist-opts (map), the map of options required for constructing a distribution
         - see the desired distribution new fn for required options
 
-     - :dist (object), the dl4j distribution object
-
      - :dist-size (int), number of values to be modelled by the supplied distribution (inclusive)
 
-  - unique-place-holder (any-type), could be an int, string, double, long ...,
-      just needs to be unique to the distribution that follows
-       - this value is not used in computation but is needed for uniqueness per dist
-       - recomend just using incrementing integers (0,1,2,3,...)
+  ex. args: [{:bernoulli {:activation-fn :tanh :dist-size 5}}
+             {:bernoulli {:dist-size 10}}]
+   would result in the code to create a composite distribution containing both distributions specified above
 
-  ex. args: :distributions-to-add {0 {:dist some-existing-dist-dl4j-object
-                                      :dist-size size-of-existing-dist-object}
-                                   1 {:bernoulli {:activation-fn :tanh
-                                                  :dist-size 5}}}
-   would result in a composite distribution containing both distributions specified above
-
-  if still confused, see the example at the bottom of this namespace"
+  the result will need to be evaluated and built at the proper time"
   [distributions-to-add]
   (distributions {:composite {:distributions-to-add distributions-to-add}}))
 

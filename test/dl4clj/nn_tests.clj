@@ -618,7 +618,11 @@
                  :pre-train-iterations 1 :visible-bias-init 2
                  :decoder-layer-sizes [5 9]
                  :encoder-layer-sizes [7 2]
-                 :reconstruction-distribution {:gaussian {:activation-fn :tanh}}
+                 :reconstruction-distribution {:composite
+                                               {:distributions-to-add
+                                                [{:gaussian {:activation-fn :tanh
+                                                             :dist-size 5}}
+                                                 {:bernoulli {:dist-size 1}}]}}
                  :vae-loss-fn {:output-activation-fn :sigmoid :loss-fn :mse}
                  :num-samples 2 :pzx-activation-function :tanh
                  :activation-fn :relu

@@ -60,6 +60,7 @@
   order of args is not preserved.
 
   Implementations of this fn need to account for order of method calls if needed"
+  ;; need to make note of required data structure for indicating a single method gets called multiple times
   [builder method-map args]
   (let [ks (keys (dissoc args :build?))
         fn-chain (for [each ks
@@ -76,6 +77,14 @@
         og-without-replacement-keys (dissoc og-map replacement-keys)
         updated-map (merge og-without-replacement-keys replacement-map)]
     updated-map))
+
+(defn eval-and-build
+  "evaluates the doto data structure created by builder-fn and builts the resulting object"
+  [doto-ds]
+  (.build (eval doto-ds)))
+
+
+
 
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
