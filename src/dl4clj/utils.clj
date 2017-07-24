@@ -16,29 +16,23 @@
 
 (defn collapse-methods-types
   [fn-chain]
-  (let [methods-called-once (for [each fn-chain]
-                              (match [each]
-                                     [([(_ :guard #(not (list? %))) & _] :seq)]
-                                     each
-                                     :else nil))
-
-        only-methods-called-once (filter #(not (nil? %)) methods-called-once)
-
-        ordered-mco  (reverse only-methods-called-once)
-
-        multiple-calls (for [each fn-chain]
-                         (match [each]
-                                [([(_ :guard list?) & _] :seq)]
-                                (reverse each)
-                                :else nil))
-
-        only-multiple-calls (filter #(not (nil? %)) multiple-calls)
-
-        ordered-mc (map reverse only-multiple-calls)]
-    #_(println "\n" ordered-mco "\n")
-    #_(println "\n" ordered-mc "\n")
-    (loop [accum! ordered-mco
-           from! ordered-mc]
+  (let [method-types (loop [single-calls! '()
+                            multi-calls! '()
+                            take-from! fn-chain]
+                       (if (empty? take-from!)
+                         {:same single-calls!
+                          :distinct multi-calls!}
+                         (let [data (first take-from!)
+                               single-or-multi? (match [data]
+                                                       [([(_ :guard list?) & _] :seq)] true
+                                                       :else false)]
+                           (if single-or-multi?
+                             (recur (into single-calls! data) multi-calls! (rest take-from!))
+                             (recur single-calls! (conj multi-calls! data) (rest take-from!))))))
+        repeated-method (list (reverse (:same method-types)))
+        unique-methods (:distinct method-types)]
+    (loop [accum! unique-methods
+           from! repeated-method]
       (if (empty? from!)
         (reverse accum!)
         (recur (into accum! (first from!))
@@ -48,25 +42,18 @@
   [method-call]
   (let [[m args] method-call]
     (match [args]
-           [(_ :guard boolean?)] `(~m ~args)
-           [(_ :guard number?)] `(~m ~args)
-           [(_ :guard map?)] `(~m ~args)
            [[(_ :guard vector?) & _]] (multi-method-call-helper m args)
            [[& _]] (multi-arg-helper m args)
-           [([(_ :guard symbol?) (_ :guard keyword?)] :seq)] `(~m ~args)
-           [([(_ :guard symbol?) (_ :guard map?)] :seq)] `(~m ~args)
-           :else "no matching pattern")))
-
+           :else `(~m ~args))))
 
 (defn builder-fn
   [builder method-map args]
   (let [ks (keys (dissoc args :build?))
         fn-chain (for [each ks
                        :let [v (each args)]]
-                   ;; it works
-                   #_(list (each method-map) v)
-
-                   ;; dev, ordering issues
+                   ;; ignoring ordering issues for now, don't think it will be a problem
+                   ;; for the problem domain, the only order that matters can be account for
+                   ;; in the implementaiton of the builder, ie. .build should always come last
                    (flatten* (list (each method-map) v)))]
     (conj (collapse-methods-types fn-chain) builder 'doto)))
 

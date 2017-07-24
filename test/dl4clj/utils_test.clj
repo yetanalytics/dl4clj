@@ -12,8 +12,7 @@
     (is (= "fooBar" (camelize "foo bar")))
     (is (= "FooBar" (camelize "Foo Bar")))
     (is (= "foo-bar" (camel-to-dashed "fooBar")))
-    (is (= '([1 0] [2 1] [3 2] [4 3]) (indexed [1 2 3 4])))
-    ))
+    (is (= '([1 0] [2 1] [3 2] [4 3]) (indexed [1 2 3 4])))))
 
 (deftest builder-fn-tests
   (testing "the build fn"
@@ -37,12 +36,7 @@
              :multi-arg               '.aMethodWhichNeedsManyArgs
              :method-needs-map        '.aMethodWhichNeedsMap
              :method-needs-nested-map '.aMethodWhichNeedsNestedMap
-             :method-multi-call       '.aMethodWhichGetCalledMannyTimes
-             :one-arg-multi-call      '.aMethodCalledManyTimesOneArg
-             :foo                     '.aTestMethod
-             :baz                     '.orderingTestMethod
-             :qux                     '.anotherOrderingTest}
-
+             :method-multi-call       '.aMethodWhichGetCalledMannyTimes}
             {:boolean-arg             true
              :number-arg              0.2
              :fn-needs-map            '(a-fn-to-call {:some-config {:more-config "opts"}})
@@ -51,16 +45,28 @@
              :method-needs-map        {0 0.2 1 0.4}
              :method-needs-nested-map {:foo {0 0.2 1 0.4}}
              :method-multi-call [[7 '(a-fn-to-call {:some-config {:more-config "opts"}})]
-                                 [5 '(a-fn-to-call {:other-config {:more-config "opts"}})]]
-             })))
+                                 [5 '(a-fn-to-call {:other-config {:more-config "opts"}})]]})))
+    (is (= '("method" "arg1" "arg2") (multi-arg-helper "method" ["arg1" "arg2"])))
+    (is (= '(("method" "call1") ("method" "call2" "call2b"))
+           (multi-method-call-helper "method" [["call1"] ["call2" "call2b"]])))
+    (is (= '(("another method" "another arg")
+             ("single method call" "first arg" "second arg")
+             ("method" "call2" "call2b")
+             ("method" "call1"))
+           (collapse-methods-types '(("another method" "another arg")
+                                     ("single method call" "first arg" "second arg")
+                                     (("method" "call2" "call2b") ("method" "call1"))))))
     (is (= {:foo "zab" :bar "bell"} (replace-map-vals {:foo "baz" :bar "bell"} {:foo "zab"})))))
 
 (defn arg-matching*
+  "this is the previously used pattern match for flatten*.
+  - the change was the same operation was used on all patterns except for
+  [[(_ :guard vector?) & _]] and [[& _]]"
   [pattern]
   (match [pattern]
          [(_ :guard boolean?)] :boolean
          [(_ :guard number?)] :number
-         [(_ :guard map?)] :map ;; have this dispatch to determine if nested or not
+         [(_ :guard map?)]
          [[(_ :guard vector?) & _]] :vec-of-vecs
          [[& _]] :vec-of-args
          [([(_ :guard symbol?) (_ :guard keyword?)] :seq)] :fn-take-keyword
