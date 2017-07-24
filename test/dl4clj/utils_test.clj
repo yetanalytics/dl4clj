@@ -46,7 +46,7 @@
              :method-needs-nested-map {:foo {0 0.2 1 0.4}}
              :method-multi-call [[7 '(a-fn-to-call {:some-config {:more-config "opts"}})]
                                  [5 '(a-fn-to-call {:other-config {:more-config "opts"}})]]})))
-    (is (= '("method" "arg1" "arg2") (multi-arg-helper "method" ["arg1" "arg2"])))
+    (is (= '("method" "arg1" "arg2" "arg3") (multi-arg-helper "method" ["arg1" "arg2" "arg3"])))
     (is (= '(("method" "call1") ("method" "call2" "call2b"))
            (multi-method-call-helper "method" [["call1"] ["call2" "call2b"]])))
     (is (= '(("another method" "another arg")

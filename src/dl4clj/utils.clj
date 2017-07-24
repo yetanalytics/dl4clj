@@ -3,6 +3,8 @@
   (:import [org.deeplearning4j.util ModelSerializer]))
 
 (defn multi-arg-helper
+  "takes elements from the args data structure and puts in a
+  list which contains the method."
   [m args]
   (reverse
    (into `(~m)
@@ -10,11 +12,13 @@
            each))))
 
 (defn multi-method-call-helper
+  "creates a list of method args for each data structure in args"
   [m args]
   (for [each args]
     (multi-arg-helper m each)))
 
 (defn collapse-methods-types
+  "combines the chain of method calls into a single data structure"
   [fn-chain]
   (let [method-types (loop [single-calls! '()
                             multi-calls! '()
@@ -24,11 +28,14 @@
                           :distinct multi-calls!}
                          (let [data (first take-from!)
                                single-or-multi? (match [data]
-                                                       [([(_ :guard list?) & _] :seq)] true
+                                                       [([(_ :guard list?) & _] :seq)]
+                                                       true
                                                        :else false)]
                            (if single-or-multi?
                              (recur (into single-calls! data) multi-calls! (rest take-from!))
                              (recur single-calls! (conj multi-calls! data) (rest take-from!))))))
+        ;; we have our unique methods and repeated methods seperated out
+        ;; allows us to control the shape of the end data structure
         repeated-method (list (reverse (:same method-types)))
         unique-methods (:distinct method-types)]
     (loop [accum! unique-methods
@@ -39,6 +46,7 @@
                (rest from!))))))
 
 (defn flatten*
+  "multimethod like dipatching based on structural patterns"
   [method-call]
   (let [[m args] method-call]
     (match [args]
@@ -47,6 +55,11 @@
            :else `(~m ~args))))
 
 (defn builder-fn
+  "creates a data structure looking like (doto builder (method args) (method args)...)
+
+  order of args is not preserved.
+
+  Implementations of this fn need to account for order of method calls if needed"
   [builder method-map args]
   (let [ks (keys (dissoc args :build?))
         fn-chain (for [each ks
