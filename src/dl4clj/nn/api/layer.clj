@@ -4,7 +4,7 @@
   dl4clj.nn.api.layer
   (:import [org.deeplearning4j.nn.api Layer])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.constants :as enum]
+            [dl4clj.constants :as enum]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn initializer

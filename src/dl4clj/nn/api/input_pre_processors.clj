@@ -1,6 +1,6 @@
 (ns dl4clj.nn.api.input-pre-processors
   (:import [org.deeplearning4j.nn.conf InputPreProcessor])
-  (:require [dl4clj.nn.conf.constants :as constants]
+  (:require [dl4clj.constants :as constants]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn backprop

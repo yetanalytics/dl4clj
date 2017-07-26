@@ -1,7 +1,7 @@
 (ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
     dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.constants :as enum]
+            [dl4clj.constants :as enum]
             [dl4clj.nn.api.model :refer [fit!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]

@@ -3,15 +3,18 @@
             [dl4clj.nn.conf.builders.builders :as layer-builders]
             [dl4clj.nn.conf.builders.multi-layer-builders :as multi-layer]
             [dl4clj.nn.conf.step-fns :as step-functions]
-            [dl4clj.nn.conf.constants :as constants]
+            [dl4clj.constants :as constants]
+            [dl4clj.helpers :refer [value-of-helper
+                                    distribution-helper
+                                    step-fn-helper]]
             [dl4clj.utils :refer [builder-fn replace-map-vals]])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder
-            ComputationGraphConfiguration$GraphBuilder]
+            MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
-(def method-map
+(def method-map-nn-conf-builder
   {:default-activation-fn                    '.activation
    :default-adam-mean-decay                  '.adamMeanDecay
    :default-adam-var-decay                   '.adamVarDecay
@@ -50,22 +53,6 @@
    :use-drop-connect?                        '.useDropConnect
    :default-weight-init                      '.weightInit
    :layer                                    '.layer})
-
-(defn value-of-helper
-  [k v]
-  `(constants/value-of {~k ~v}))
-
-(defn distribution-helper
-  [opts]
-  `(distribution/distribution ~opts))
-
-(defn step-fn-helper
-  [opts]
-  `(step-functions/step-fn ~opts))
-
-(defn layer-builder-helper
-  [opts]
-  `(layer-builders/builder ~opts))
 
 (defn multi-layer-helper
   [builder layers]
@@ -222,7 +209,7 @@
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate nn-builder
-             regularization? seed step-fn convolution-mode layer layers build?]
+             regularization? seed step-fn convolution-mode layer layers build? eval?]
       :or {build? false
            nn-builder `(NeuralNetConfiguration$Builder.)}
       :as opts}]
@@ -246,23 +233,23 @@
             (value-of-helper :weight-init default-weight-init))
         l (if layer
             (layer-builder-helper layer))
-        obj-opts (into {} (filter val {:default-activation-fn a
-                                       :convolution-mode c-m
-                                       :default-dist d
-                                       :default-gradient-normalization g-norm
-                                       :default-learning-rate-policy lr-p
-                                       :optimization-algo o-a
-                                       :step-fn s-f
-                                       :default-updater u
-                                       :default-weight-init w
-                                       :layer l}))
+        obj-opts {:default-activation-fn a
+                  :convolution-mode c-m
+                  :default-dist d
+                  :default-gradient-normalization g-norm
+                  :default-learning-rate-policy lr-p
+                  :optimization-algo o-a
+                  :step-fn s-f
+                  :default-updater u
+                  :default-weight-init w
+                  :layer l}
         updated-opts (replace-map-vals opts obj-opts)
         updated-b (if-let [ls layers]
                     (multi-layer/list-builder
-                     (eval (builder-fn nn-builder method-map (dissoc updated-opts :layers)))
+                     (eval (builder-fn nn-builder method-map-nn-conf-builder (dissoc updated-opts :layers)))
                      ls)
                     #_(builder-fn nn-builder method-map updated-opts)
-                    (eval (builder-fn nn-builder method-map updated-opts)))]
+                    (eval (builder-fn nn-builder method-map-nn-conf-builder updated-opts)))]
     (if build?
       (.build updated-b)
       updated-b)))

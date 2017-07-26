@@ -97,14 +97,15 @@
     (is (= org.deeplearning4j.nn.conf.layers.variational.CompositeReconstructionDistribution
            (type (distributions
                   {:composite
-                   {0 {:bernoulli {:activation-fn :sigmoid
-                                   :dist-size     5}}
-                    1 {:exponential {:activation-fn :sigmoid
-                                     :dist-size     3}}
-                    2 {:gaussian {:activation-fn :hard-tanh
-                                  :dist-size     1}}
-                    3 {:bernoulli {:activation-fn :sigmoid
-                                   :dist-size     4}}}}))))))
+                   {:distributions-to-add
+                    [{:bernoulli {:activation-fn :sigmoid
+                                  :dist-size     5}}
+                     {:exponential {:activation-fn :sigmoid
+                                    :dist-size     3}}
+                     {:gaussian {:activation-fn :hard-tanh
+                                 :dist-size     1}}
+                     {:bernoulli {:activation-fn :sigmoid
+                                  :dist-size     4}}]}}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; step functions for use in nn-conf creation
@@ -217,6 +218,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; activation layer
+
+#_(.build (eval (builder {:activation-layer
+          {:n-in 10 :n-out 2 :activation-fn :relu
+           :bias-init 0.7 :bias-learning-rate 0.1
+           :dist {:normal {:mean 0 :std 1}}
+           :drop-out 0.2 :epsilon 0.3
+           :gradient-normalization :none
+           :gradient-normalization-threshold 0.9
+           :layer-name "foo" :learning-rate 0.1
+           :learning-rate-policy :inverse
+           :learning-rate-schedule {0 0.2 1 0.5}
+           :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+           :updater :nesterovs :weight-init :distribution}})))
+
 
 (deftest activation-layer-test
   (testing "the creation of a activation layer from a nn-conf"

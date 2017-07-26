@@ -2,6 +2,29 @@
   (:require [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.util ModelSerializer]))
 
+(defn pre-processor-helper
+  [pps]
+  (into {}
+        (for [each pps
+              :let [[idx pp] each]]
+          {idx `(pre-process/pre-processors ~pp)})))
+
+(defn value-of-helper
+  [k v]
+  `(constants/value-of {~k ~v}))
+
+(defn distribution-helper
+  [opts]
+  `(distribution/distribution ~opts))
+
+(defn step-fn-helper
+  [opts]
+  `(step-functions/step-fn ~opts))
+
+(defn input-type-helper
+  [input-type]
+  `(constants/input-types ~input-type))
+
 (defn multi-arg-helper
   "takes elements from the args data structure and puts in a
   list which contains the method."
@@ -73,9 +96,10 @@
 
 (defn replace-map-vals
   [og-map replacement-map]
-  (let [replacement-keys (keys replacement-map)
+  (let [rm (into {} (filter val replacement-map))
+        replacement-keys (keys rm)
         og-without-replacement-keys (dissoc og-map replacement-keys)
-        updated-map (merge og-without-replacement-keys replacement-map)]
+        updated-map (merge og-without-replacement-keys rm)]
     updated-map))
 
 (defn eval-and-build

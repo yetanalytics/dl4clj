@@ -1,12 +1,61 @@
 (ns dl4clj.nn.conf.builders.multi-layer-builders
   (:require [dl4clj.nn.conf.builders.builders :as bb]
-            [dl4clj.nn.conf.input-pre-processor :as pre-process]
-            [dl4clj.nn.conf.constants :as constants])
+            [dl4clj.utils :refer [builder-fn replace-map-vals]]
+            [dl4clj.helpers :refer [pre-processor-helper
+                                    value-of-helper input-type-helper]]
+            [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
+(def method-map-mlb
+  {:backprop?            '.backprop
+   :backprop-type        '.backpropType
+   :nn-confs             '.confs ;; this one might have to be handled seperatly
+   :input-pre-processors '.inputPreProcessors
+   :input-type           '.setInputType
+   :pretrain?            '.pretrain
+   :tbptt-back-length    '.tBPTTBackwardLength
+   :tbptt-fwd-length     '.tBPTTForwardLength})
+
+(defn nn-confs-helper
+  [confs]
+  (reverse
+   (match [confs]
+          [[_ & _]] (into '() confs)
+          :else (into '() [confs]))))
+
 (defn multi-layer-config-builder
+  [& {:keys [list-b nn-confs backprop? backprop-type
+             input-pre-processors input-type pretrain?
+             tbptt-back-length tbptt-fwd-length build?]
+      :or {build? true
+           list-builder `(MultiLayerConfiguration$Builder.)}
+      :as opts}]
+  (let [pps (if input-pre-processors
+              (pre-processor-helper input-pre-processors))
+        bp-type (if backprop-type
+                  (value-of-helper :backprop-type backprop-type))
+        input-t (if input-type
+                  (input-type-helper input-type))
+        obj-opts {:input-pre-processors pps
+                  :backprop-type bp-type
+                  :input-type input-t}
+        updated-opts (replace-map-vals (dissoc opts :nn-confs :list-b) obj-opts)
+
+        ;; going to turn the mln from nn-confs into its own fn
+
+        ;;fn-chain (builder-fn list-builder method-map-mlb updated-opts)
+        #_add-confs #_(if nn-confs
+                    (.confs (eval fn-chain)
+                            (nn-confs-helper nn-confs))
+                    (eval fn-chain))]
+    (eval (builder-fn `(~list-b) method-map-mlb updated-opts))
+    #_(if build?
+      (.build add-confs)
+      add-confs)))
+
+#_(defn multi-layer-config-builder*
   "creates and builds a multi layer neural network configuration.
 
   you must either supply :list-builder or :confs
@@ -19,9 +68,11 @@
   :list-builder (nn-conf-list-builder) the result of nn-conf-builder
    - when you supply the :layers key and :built? is set to false (default)
 
-  :nn-confs (coll), a collection of built neural net configurations
+  :nn-confs (coll), a collection of BUILT neural net configurations
    - needs to be single layer neural network configurations
    - when you call nn-conf-builder and supply :layer and :build? true
+   - can either be a single conf or a collection of confs
+     - order of confs within the collection is perserved
 
   :backprop? (boolean) whether to do backprop or not
 

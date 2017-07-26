@@ -1,8 +1,9 @@
 (ns ^{:doc "see https://deeplearning4j.org/glossary for param descriptions"}
     dl4clj.nn.conf.builders.builders
   (:require [dl4clj.nn.conf.distributions :as distribution]
-            [dl4clj.nn.conf.constants :as constants]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+            [dl4clj.constants :as constants]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals]]
+            [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
@@ -31,6 +32,120 @@
 
 ;; implement
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/BasePretrainNetwork.Builder.html
+
+(def layer-method-map
+  {:activation-fn                    '.activation
+   :adam-mean-decay                  '.adamMeanDecay
+   :adam-var-decay                   '.adamVarDecay
+   :bias-init                        '.biasInit
+   :bias-learning-rate               '.biasLearningRate
+   :dist                             '.dist
+   :drop-out                         '.dropOut
+   :epsilon                          '.epsilon
+   :gradient-normalization           '.gradientNormalization
+   :gradient-normalization-threshold '.gradientNormalizationThreshold
+   :l1                               '.l1
+   :l1-bias                          '.l1Bias
+   :l2                               '.l2
+   :l2-bias                          '.l2Bias
+   :layer-name                       '.name
+   :learning-rate                    '.learningRate
+   :learning-rate-policy             '.learningRateDecayPolicy
+   :learning-rate-schedule           '.learningRateSchedule
+   :momentum                         '.momentum
+   :momentum-after                   '.momentumAfter
+   :rho                              '.rho
+   :rms-decay                        '.rmsDecay
+   :updater                          '.updater
+   :weight-init                      '.weightInit
+   :n-in                             '.nIn
+   :n-out                            '.nOut
+   :loss-fn                          '.lossFunction
+   :visible-bias-init                '.visibleBiasInit
+   :pre-train-iterations             '.preTrainIterations
+   :beta                             '.beta
+   :gamma                            '.gamma
+   :eps                              '.eps
+   :decay                            '.decay
+   :lock-gamma-beta?                 '.lockGammaBeta
+   :mini-batch?                      '.minibatch
+   :gradient-check?                  '.gradientCheck
+   :alpha                            '.alpha
+   :lambda                           '.lambda
+   :corruption-level                 '.corruptionLevel
+   :sparsity                         '.sparsity
+   :hidden-unit                      '.hiddenUnit
+   :visible-unit                     '.visibleUnit
+   :k                                '.k
+   :forget-gate-bias-init            '.forgetGateBiasInit
+   :n                                '.n
+   :decoder-layer-sizes              '.decoderLayerSizes
+   :encoder-layer-sizes              '.encoderLayerSizes
+   :num-samples                      '.numSamples
+   :pzx-activation-function          '.pzxActivationFunction
+   :collapse-dimensions?             '.collapseDimensions
+   :pnorm                            '.pnorm
+   :pooling-dimensions               '.poolingDimensions
+   :gate-activation-fn               '.gateActivationFunction
+   :reconstruction-distribution      '.reconstructionDistribution
+   :vae-loss-fn                      '.lossFunction})
+
+
+
+(defn any-layer-builder*
+  [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
+                        bias-init bias-learning-rate dist drop-out epsilon
+                        gradient-normalization gradient-normalization-threshold
+                        l1 l1-bias l2 l2-bias layer-name learning-rate learning-rate-policy
+                        learning-rate-schedule momentum momentum-after rho
+                        rms-decay updater weight-init n-in n-out loss-fn
+                        visible-bias-init pre-train-iterations
+                        beta gamma eps decay lock-gamma-beta? mini-batch?
+                        gradient-check? alpha lambda corruption-level
+                        sparsity hidden-unit visible-unit k forget-gate-bias-init
+                        eps n pooling-type decoder-layer-sizes
+                        encoder-layer-sizes num-samples pzx-activation-function
+                        collapse-dimensions? pnorm pooling-dimensions eps
+                        gate-activation-fn reconstruction-distribution
+                        vae-loss-fn build?]
+                 :or {build? true}
+                 :as opts}]
+  (let [a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
+        d (if dist (distribution-helper dist))
+        g-norm (if gradient-normalization (value-of-helper :gradient-normalization gradient-normalization))
+        lrp (if learning-rate-policy (value-of-helper :learning-rate-policy learning-rate-policy))
+        u (if updater (value-of-helper :updater updater))
+        w-init (if weight-init (value-of-helper :weight-init weight-init))
+        l-fn (if loss-fn (value-of-helper :loss-fn loss-fn))
+        vis-unit (if visible-unit (value-of-helper :visible-unit visible-unit))
+        hid-unit (if hidden-unit (value-of-helper :hidden-unit hidden-unit))
+        gate-a-fn (if gate-activation-fn (value-of-helper :activation-fn gate-activation-fn))
+        vae-lfn (if vae-loss-fn '((value-of-helper :activation-fn
+                                                   (:output-activation-fn
+                                                    vae-loss-fn))
+                                  (value-of-helper :loss-fn
+                                                   (:loss-fn vae-loss-fn))))
+        pzx-a-fn (if pzx-activation-function (value-of-helper :activation-fn pzx-activation-function))
+        obj-opts {:activation-fn a-fn
+                  :dist d
+                  :gradient-normalization g-norm
+                  :learning-rate-policy lrp
+                  :updater u
+                  :weight-init w-init
+                  :loss-fn l-fn
+                  :visible-unit vis-unit
+                  :hidden-unit hid-unit
+                  :gate-activation-fn gate-a-fn
+                  :vae-loss-fn vae-lfn}
+        updated-opts (replace-map-vals opts obj-opts)
+        fn-chain (builder-fn builder-type layer-method-map updated-opts)]
+    fn-chain
+    )
+
+  )
+
+#_(builder {:activation-layer {:activation-fn :relu}})
+
 (defn any-layer-builder
   "creates any type of layer given a builder and param map
 
@@ -231,7 +346,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod builder :activation-layer [opts]
-  (any-layer-builder (ActivationLayer$Builder.) (:activation-layer opts)))
+  (any-layer-builder* `(ActivationLayer$Builder.) (:activation-layer opts)))
 
 (defmethod builder :center-loss-output-layer [opts]
   (any-layer-builder (CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
