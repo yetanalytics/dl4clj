@@ -3,10 +3,10 @@
             [dl4clj.helpers :refer [value-of-helper
                                     distribution-helper
                                     step-fn-helper
-                                    layer-builder-helper
+                                    #_layer-builder-helper
                                     pre-processor-helper
                                     input-type-helper]]
-            [dl4clj.utils :refer [builder-fn replace-map-vals]])
+            [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build]])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder
@@ -101,8 +101,6 @@
             (value-of-helper :updater default-updater))
         w (if default-weight-init
             (value-of-helper :weight-init default-weight-init))
-        l (if layer
-            (layer-builder-helper layer))
         pps (if input-pre-processors
               (pre-processor-helper input-pre-processors))
         bp-type (if backprop-type
@@ -117,21 +115,46 @@
                       :optimization-algo o-a
                       :step-fn s-f
                       :default-updater u
-                      :default-weight-init w
-                      :layer l}
-        ;;list-builder-opts
+                      :default-weight-init w}
+        ;; builder with args
+        updated-opts (replace-map-vals (dissoc opts :layers :layer) nn-conf-opts)
+        nn-conf-b (builder-fn nn-builder method-map-nn-builder updated-opts)
+
+
+        ;; the layer or layers
+        l (if layer
+            (builder-fn nn-conf-b {:add-layer '.layer}
+                        {:add-layer `(eval-and-build (layer-builders/builder ~layer))}))
+
+        ls (if layers
+             (builder-fn `(.list ~nn-conf-b) {:add-layers '.layer}
+                         {:add-layers (into [] (for [each layers
+                                                     :let [[idx layer] each]]
+                                                 [idx `(eval-and-build (layer-builders/builder ~layer))]))}))
+
         mln-conf-opts {:input-pre-processors pps
                        :backprop-type bp-type
                        :input-type input-t}
-        updated-opts (replace-map-vals (dissoc opts :layers) obj-opts)
-        nn-conf-b (builder-fn nn-builder method-map-nn-builder updated-opts)
-        ;; wraping builds in sub levels of calls to be evaled
-        l-builder
+
         ]
-    (builder-fn nn-builder method-map-nn-builder updated-opts)))
+
+    (if l
+      l
+      ls)
+    #_(test-layers nn-conf-b layers)
+
+    #_(if layer
+      (.layer (eval (builder-fn nn-builder method-map-nn-builder updated-opts))
+              (.build (eval (layer-builders/builder layer)))))
+
+    #_(eval (layer-builders/builder layer))
+
+    #_(.layer (eval (builder-fn nn-builder method-map-nn-builder updated-opts))
+            l)))
+
 
 ;; go down and refactor the layer level
-#_(nn-builder :default-activation-fn :relu
+(eval-and-build (nn-builder :default-activation-fn :relu
             :step-fn :negative-gradient-step-fn
             :default-updater :none
             :use-drop-connect? true
@@ -139,11 +162,21 @@
             :default-weight-init :xavier-uniform
             :build? false
             :default-gradient-normalization :renormalize-l2-per-layer
-            :layer {:dense-layer {:n-in 100
-                                  :n-out 1000
-                                  :layer-name "first layer"
-                                  :activation-fn :tanh
-                                  :gradient-normalization :none}})
+            #_:layers #_{0 {:activation-layer {:n-in 100
+                                           :n-out 1000
+                                           :layer-name "first layer"
+                                           :activation-fn :tanh
+                                           :gradient-normalization :none}}
+                     1 {:activation-layer {:n-in 1000
+                                           :n-out 10
+                                           :layer-name "second layer"
+                                           :activation-fn :tanh
+                                           :gradient-normalization :none}}}
+            :layer {:activation-layer {:n-in 100
+                                           :n-out 1000
+                                           :layer-name "first layer"
+                                           :activation-fn :tanh
+                                           :gradient-normalization :none}}))
 
 (defn test-layers
   [nn-conf-builder layers]
@@ -155,15 +188,15 @@
                 {:add-layers calls})))
 
 (.build (eval (test-layers `(NeuralNetConfiguration$Builder.) {0 {:dense-layer {:n-in 100
-                                                                  :n-out 1000
-                                                                  :layer-name "first layer"
-                                                                  :activation-fn :tanh
-                                                                  :gradient-normalization :none}}
-                                                 1 {:dense-layer {:n-in 1000
-                                                                  :n-out 10
-                                                                  :layer-name "second layer"
-                                                                  :activation-fn :tanh
-                                                                  :gradient-normalization :none}}})))
+                                                                                :n-out 1000
+                                                                                :layer-name "first layer"
+                                                                                :activation-fn :tanh
+                                                                                :gradient-normalization :none}}
+                                                               1 {:dense-layer {:n-in 1000
+                                                                                :n-out 10
+                                                                                :layer-name "second layer"
+                                                                                :activation-fn :tanh
+                                                                                :gradient-normalization :none}}})))
 
 #_(multi-layer-config-builder
  :list-b (nn-conf-builder :default-activation-fn :relu

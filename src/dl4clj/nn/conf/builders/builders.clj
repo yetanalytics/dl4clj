@@ -144,7 +144,7 @@
 
   )
 
-#_(builder {:activation-layer {:activation-fn :relu}})
+(builder {:activation-layer {:activation-fn :relu}})
 
 (defn any-layer-builder
   "creates any type of layer given a builder and param map
