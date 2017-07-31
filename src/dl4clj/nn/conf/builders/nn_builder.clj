@@ -6,7 +6,8 @@
                                     #_layer-builder-helper
                                     pre-processor-helper
                                     input-type-helper]]
-            [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build]])
+            [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build]]
+            [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
             NeuralNetConfiguration$ListBuilder
@@ -51,14 +52,24 @@
    :default-updater                          '.updater
    :use-drop-connect?                        '.useDropConnect
    :default-weight-init                      '.weightInit
-   :layer                                    '.layer
    :layers                                   '.layer
    ;; multi layer methods
-   :backprop?                                '.backprop
+  ;; :backprop?                                '.backprop
+  ;; :backprop-type                            '.backpropType
+  ;; :input-pre-processors                     '.inputPreProcessors
+  ;; :input-type                               '.setInputType
+  ;; :pretrain?                                '.pretrain
+  ;; :tbptt-back-length                        '.tBPTTBackwardLength
+  ;; :tbptt-fwd-length                         '.tBPTTForwardLength
+   })
+
+(def multi-layer-methods
+  {:backprop?                                '.backprop
    :backprop-type                            '.backpropType
    :input-pre-processors                     '.inputPreProcessors
    :input-type                               '.setInputType
    :pretrain?                                '.pretrain
+   :conf                                     '.confs
    :tbptt-back-length                        '.tBPTTBackwardLength
    :tbptt-fwd-length                         '.tBPTTForwardLength})
 
@@ -116,41 +127,49 @@
                       :step-fn s-f
                       :default-updater u
                       :default-weight-init w}
-        ;; builder with args
-        updated-opts (replace-map-vals (dissoc opts :layers :layer) nn-conf-opts)
-        nn-conf-b (builder-fn nn-builder method-map-nn-builder updated-opts)
-
-
-        ;; the layer or layers
-        l (if layer
-            (builder-fn nn-conf-b {:add-layer '.layer}
-                        {:add-layer `(eval-and-build (layer-builders/builder ~layer))}))
-
-        ls (if layers
-             (builder-fn `(.list ~nn-conf-b) {:add-layers '.layer}
-                         {:add-layers (into [] (for [each layers
-                                                     :let [[idx layer] each]]
-                                                 [idx `(eval-and-build (layer-builders/builder ~layer))]))}))
 
         mln-conf-opts {:input-pre-processors pps
                        :backprop-type bp-type
                        :input-type input-t}
 
-        ]
+        ;; opts*
+        opts* (dissoc opts :layers :layer :backprop? :backprop-type :input-pre-processors
+                      :input-type :pretrain? :tbptt-back-length :tbptt-fwd-length)
 
-    (if l
-      l
-      ls)
-    #_(test-layers nn-conf-b layers)
+        ;; builder with args
+        updated-opts (replace-map-vals opts* nn-conf-opts)
+        nn-conf-b (builder-fn nn-builder method-map-nn-builder updated-opts)
 
-    #_(if layer
-      (.layer (eval (builder-fn nn-builder method-map-nn-builder updated-opts))
-              (.build (eval (layer-builders/builder layer)))))
+        builder-with-layers (if layers
+                              (if (keyword? (first (keys layers)))
+                                `(.layer ~nn-builder (eval-and-build (layer-builders/builder ~layers)))
+                                (builder-fn `(.list ~nn-conf-b) {:add-layers '.layer}
+                                            {:add-layers
+                                             (into [] (for [each layers
+                                                            :let [[idx layer] each]]
+                                                        [idx `(eval-and-build (layer-builders/builder ~layer))]))}))
+                              nn-conf-b)
 
-    #_(eval (layer-builders/builder layer))
-
-    #_(.layer (eval (builder-fn nn-builder method-map-nn-builder updated-opts))
-            l)))
+        mln-conf-opts* (into {}
+                             (filter val
+                                     (cond-> mln-conf-opts
+                                       (contains? opts :backprop?)
+                                       (assoc :backprop? backprop?)
+                                       (contains? opts :pretrain?)
+                                       (assoc :pretrain? pretrain?)
+                                       (contains? opts :tbptt-back-length)
+                                       (assoc :tbptt-back-length tbptt-back-length)
+                                       (contains? opts :tbptt-fwd-length)
+                                       (assoc :tbptt-fwd-length tbptt-fwd-length))))]
+    (cond (keyword? (first (keys layers)))
+          (builder-fn `(MultiLayerConfiguration$Builder.) multi-layer-methods
+                      (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers))))
+          (integer? (first (keys layers)))
+          (builder-fn builder-with-layers multi-layer-methods mln-conf-opts*)
+          (empty? mln-conf-opts*) builder-with-layers
+          :else
+          (builder-fn `(MultiLayerConfiguration$Builder.) multi-layer-methods
+                      (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers)))))))
 
 
 ;; go down and refactor the layer level
@@ -162,7 +181,13 @@
             :default-weight-init :xavier-uniform
             :build? false
             :default-gradient-normalization :renormalize-l2-per-layer
-            #_:layers #_{0 {:activation-layer {:n-in 100
+            :layers {:activation-layer {:n-in 1000
+                                        :n-out 10
+                                        :layer-name "second layer"
+                                        :activation-fn :tanh
+                                        :gradient-normalization :none}}
+
+            #_{0 {:activation-layer {:n-in 100
                                            :n-out 1000
                                            :layer-name "first layer"
                                            :activation-fn :tanh
@@ -172,22 +197,32 @@
                                            :layer-name "second layer"
                                            :activation-fn :tanh
                                            :gradient-normalization :none}}}
-            :layer {:activation-layer {:n-in 100
-                                           :n-out 1000
-                                           :layer-name "first layer"
-                                           :activation-fn :tanh
-                                           :gradient-normalization :none}}))
+             ;;:backprop-type :standard
+             ;;:pretrain? true
+            ;;:backprop? true
+            ))
 
+;; make a fn for mln from confs
+
+
+
+;; not used
 (defn test-layers
   [nn-conf-builder layers]
-  (let [b `(.list ~nn-conf-builder)
+  (let [b`(.list ~nn-conf-builder)
         calls (into [] (for [each layers
                              :let [[idx layer] each]]
                          [idx `(layer-builders/builder ~layer)]))]
     (builder-fn b {:add-layers '.layer}
                 {:add-layers calls})))
 
-(.build (eval (test-layers `(NeuralNetConfiguration$Builder.) {0 {:dense-layer {:n-in 100
+(#(match [%]
+         [('doto nested-arg :seq)]
+         :else "I dont match"
+         )
+ '(doto (.list (doto "foo"))))
+
+#_(.build (eval (test-layers `(NeuralNetConfiguration$Builder.) {0 {:dense-layer {:n-in 100
                                                                                 :n-out 1000
                                                                                 :layer-name "first layer"
                                                                                 :activation-fn :tanh
