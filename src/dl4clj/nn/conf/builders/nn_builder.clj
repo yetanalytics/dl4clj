@@ -3,7 +3,6 @@
             [dl4clj.helpers :refer [value-of-helper
                                     distribution-helper
                                     step-fn-helper
-                                    #_layer-builder-helper
                                     pre-processor-helper
                                     input-type-helper]]
             [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build]]
@@ -51,17 +50,7 @@
    :step-fn                                  '.stepFunction
    :default-updater                          '.updater
    :use-drop-connect?                        '.useDropConnect
-   :default-weight-init                      '.weightInit
-   :layers                                   '.layer
-   ;; multi layer methods
-  ;; :backprop?                                '.backprop
-  ;; :backprop-type                            '.backpropType
-  ;; :input-pre-processors                     '.inputPreProcessors
-  ;; :input-type                               '.setInputType
-  ;; :pretrain?                                '.pretrain
-  ;; :tbptt-back-length                        '.tBPTTBackwardLength
-  ;; :tbptt-fwd-length                         '.tBPTTForwardLength
-   })
+   :default-weight-init                      '.weightInit})
 
 (def multi-layer-methods
   {:backprop?                                '.backprop
@@ -94,7 +83,8 @@
              tbptt-back-length tbptt-fwd-length]
       :or {nn-builder `(NeuralNetConfiguration$Builder.)}
       :as opts}]
-  (let [a (if default-activation-fn
+  (let [;; set up code for value of and other objects/enums
+        a (if default-activation-fn
            (value-of-helper :activation-fn default-activation-fn))
         c-m (if convolution-mode
              (value-of-helper :convolution-mode convolution-mode))
@@ -118,6 +108,7 @@
                   (value-of-helper :backprop-type backprop-type))
         input-t (if input-type
                   (input-type-helper input-type))
+        ;; u
         nn-conf-opts {:default-activation-fn a
                       :convolution-mode c-m
                       :default-dist d
@@ -130,11 +121,17 @@
 
         mln-conf-opts {:input-pre-processors pps
                        :backprop-type bp-type
-                       :input-type input-t}
+                       :input-type input-t
+                       :backprop? backprop?
+                       :pretrain? pretrain?
+                       :tbptt-back-length tbptt-back-length
+                       :tbptt-fwd-length tbptt-fwd-length}
 
         ;; opts*
         opts* (dissoc opts :layers :layer :backprop? :backprop-type :input-pre-processors
                       :input-type :pretrain? :tbptt-back-length :tbptt-fwd-length)
+
+        mln-conf-opts* (into {} (filter val mln-conf-opts))
 
         ;; builder with args
         updated-opts (replace-map-vals opts* nn-conf-opts)
@@ -150,7 +147,7 @@
                                                         [idx `(eval-and-build (layer-builders/builder ~layer))]))}))
                               nn-conf-b)
 
-        mln-conf-opts* (into {}
+        #_mln-conf-opts* #_(into {}
                              (filter val
                                      (cond-> mln-conf-opts
                                        (contains? opts :backprop?)
@@ -161,6 +158,7 @@
                                        (assoc :tbptt-back-length tbptt-back-length)
                                        (contains? opts :tbptt-fwd-length)
                                        (assoc :tbptt-fwd-length tbptt-fwd-length))))]
+
     (cond (keyword? (first (keys layers)))
           (builder-fn `(MultiLayerConfiguration$Builder.) multi-layer-methods
                       (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers))))
@@ -181,7 +179,7 @@
             :default-weight-init :xavier-uniform
             :build? false
             :default-gradient-normalization :renormalize-l2-per-layer
-            :layers {:activation-layer {:n-in 1000
+            #_:layers #_{:activation-layer {:n-in 1000
                                         :n-out 10
                                         :layer-name "second layer"
                                         :activation-fn :tanh
@@ -203,60 +201,3 @@
             ))
 
 ;; make a fn for mln from confs
-
-
-
-;; not used
-(defn test-layers
-  [nn-conf-builder layers]
-  (let [b`(.list ~nn-conf-builder)
-        calls (into [] (for [each layers
-                             :let [[idx layer] each]]
-                         [idx `(layer-builders/builder ~layer)]))]
-    (builder-fn b {:add-layers '.layer}
-                {:add-layers calls})))
-
-(#(match [%]
-         [('doto nested-arg :seq)]
-         :else "I dont match"
-         )
- '(doto (.list (doto "foo"))))
-
-#_(.build (eval (test-layers `(NeuralNetConfiguration$Builder.) {0 {:dense-layer {:n-in 100
-                                                                                :n-out 1000
-                                                                                :layer-name "first layer"
-                                                                                :activation-fn :tanh
-                                                                                :gradient-normalization :none}}
-                                                               1 {:dense-layer {:n-in 1000
-                                                                                :n-out 10
-                                                                                :layer-name "second layer"
-                                                                                :activation-fn :tanh
-                                                                                :gradient-normalization :none}}})))
-
-#_(multi-layer-config-builder
- :list-b (nn-conf-builder :default-activation-fn :relu
-                                 :step-fn :negative-gradient-step-fn
-                                 :default-updater :none
-                                 :use-drop-connect? true
-                                 :default-drop-out 0.2
-                                 :default-weight-init :xavier-uniform
-                                 :build? false
-                                 :default-gradient-normalization :renormalize-l2-per-layer
-                                 :layers {0 {:dense-layer {:n-in 100
-                                                           :n-out 1000
-                                                           :layer-name "first layer"
-                                                           :activation-fn :tanh
-                                                           :gradient-normalization :none}}
-                                          1 {:dense-layer {:n-in 1000
-                                                           :n-out 10
-                                                           :layer-name "second layer"
-                                                           :activation-fn :tanh
-                                                           :gradient-normalization :none}}})
- ;;:nn-confs nn-conf
- :backprop? true
- :build? false
- :backprop-type :standard
- :input-pre-processors {0 {:zero-mean-pre-pre-processor {}}
-                        1 {:unit-variance-processor {}}}
- :input-type {:feed-forward {:size 100}}
- :pretrain? false)
