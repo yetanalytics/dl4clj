@@ -108,7 +108,7 @@
                   (value-of-helper :backprop-type backprop-type))
         input-t (if input-type
                   (input-type-helper input-type))
-        ;; u
+        ;; updated config maps with code for creating java objs
         nn-conf-opts {:default-activation-fn a
                       :convolution-mode c-m
                       :default-dist d
@@ -127,51 +127,54 @@
                        :tbptt-back-length tbptt-back-length
                        :tbptt-fwd-length tbptt-fwd-length}
 
-        ;; opts*
+        ;; remove mln opts and layer opts
+        ;; the mln methods should not be added until after the code
+        ;; for the nn-conf builder is created
+        ;; layers need to be treated after other nn-conf opts methods care created
+
         opts* (dissoc opts :layers :layer :backprop? :backprop-type :input-pre-processors
                       :input-type :pretrain? :tbptt-back-length :tbptt-fwd-length)
 
         mln-conf-opts* (into {} (filter val mln-conf-opts))
 
-        ;; builder with args
+        ;; map of methods to values/code to create objects
         updated-opts (replace-map-vals opts* nn-conf-opts)
+
+        ;; use that map to set up the nn-conf builder code
         nn-conf-b (builder-fn nn-builder method-map-nn-builder updated-opts)
 
+        ;; add in layers or just return the nn-conf builder
         builder-with-layers (if layers
+                              ;; did the user pass us any layers to create?
                               (if (keyword? (first (keys layers)))
+                                ;; only a single layer
                                 `(.layer ~nn-builder (eval-and-build (layer-builders/builder ~layers)))
+                                ;; multiple layers
                                 (builder-fn `(.list ~nn-conf-b) {:add-layers '.layer}
                                             {:add-layers
                                              (into [] (for [each layers
                                                             :let [[idx layer] each]]
                                                         [idx `(eval-and-build (layer-builders/builder ~layer))]))}))
-                              nn-conf-b)
-
-        #_mln-conf-opts* #_(into {}
-                             (filter val
-                                     (cond-> mln-conf-opts
-                                       (contains? opts :backprop?)
-                                       (assoc :backprop? backprop?)
-                                       (contains? opts :pretrain?)
-                                       (assoc :pretrain? pretrain?)
-                                       (contains? opts :tbptt-back-length)
-                                       (assoc :tbptt-back-length tbptt-back-length)
-                                       (contains? opts :tbptt-fwd-length)
-                                       (assoc :tbptt-fwd-length tbptt-fwd-length))))]
-
-    (cond (keyword? (first (keys layers)))
+                              ;; no layers
+                              nn-conf-b)]
+    (eval-and-build
+     ;; refactor condition tree
+     (cond (keyword? (first (keys layers)))
+          ;; if we only had one layer, need to use a mln builder to add mln opts
           (builder-fn `(MultiLayerConfiguration$Builder.) multi-layer-methods
                       (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers))))
+          ;; if we had multiple layers, evaled code will create the multi-layer-conf builder
           (integer? (first (keys layers)))
           (builder-fn builder-with-layers multi-layer-methods mln-conf-opts*)
+          ;; if we didnt get passed any mln-conf methods, just return the builder with layers added
           (empty? mln-conf-opts*) builder-with-layers
           :else
+          ;; we were just passed options for setting up a 0 layer nn-conf and options for setting up a mln
+          ;; it is assumed that the user will add layers to this mln later
           (builder-fn `(MultiLayerConfiguration$Builder.) multi-layer-methods
-                      (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers)))))))
+                      (assoc mln-conf-opts* :conf `(~list (eval-and-build ~builder-with-layers))))))))
 
-
-;; go down and refactor the layer level
-(eval-and-build (nn-builder :default-activation-fn :relu
+#_(nn-builder :default-activation-fn :relu
             :step-fn :negative-gradient-step-fn
             :default-updater :none
             :use-drop-connect? true
@@ -180,24 +183,24 @@
             :build? false
             :default-gradient-normalization :renormalize-l2-per-layer
             #_:layers #_{:activation-layer {:n-in 1000
-                                        :n-out 10
-                                        :layer-name "second layer"
-                                        :activation-fn :tanh
-                                        :gradient-normalization :none}}
+                                            :n-out 10
+                                            :layer-name "second layer"
+                                            :activation-fn :tanh
+                                            :gradient-normalization :none}}
 
             #_{0 {:activation-layer {:n-in 100
-                                           :n-out 1000
-                                           :layer-name "first layer"
-                                           :activation-fn :tanh
-                                           :gradient-normalization :none}}
-                     1 {:activation-layer {:n-in 1000
-                                           :n-out 10
-                                           :layer-name "second layer"
-                                           :activation-fn :tanh
-                                           :gradient-normalization :none}}}
-             ;;:backprop-type :standard
-             ;;:pretrain? true
+                                     :n-out 1000
+                                     :layer-name "first layer"
+                                     :activation-fn :tanh
+                                     :gradient-normalization :none}}
+               1 {:activation-layer {:n-in 1000
+                                     :n-out 10
+                                     :layer-name "second layer"
+                                     :activation-fn :tanh
+                                     :gradient-normalization :none}}}
+            ;;:backprop-type :standard
+            ;;:pretrain? true
             ;;:backprop? true
-            ))
-
+            )
+;; TODO
 ;; make a fn for mln from confs

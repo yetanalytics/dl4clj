@@ -4,7 +4,8 @@
             [dl4clj.constants :as constants]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
-            [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist])
+            [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist]
+            [clojure.core.match :refer [match]])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
     OutputLayer$Builder RnnOutputLayer$Builder AutoEncoder$Builder
@@ -29,9 +30,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn heavy lifting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; implement
-;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/BasePretrainNetwork.Builder.html
 
 (def layer-method-map
   {:activation-fn                    '.activation
@@ -92,7 +90,7 @@
 
 
 
-(defn any-layer-builder*
+(defn any-layer-builder
   [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
                         gradient-normalization gradient-normalization-threshold
@@ -110,7 +108,8 @@
                         vae-loss-fn build?]
                  :or {build? true}
                  :as opts}]
-  (let [a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
+  (let [;; create code for creating java objects at eval time
+        a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
         d (if dist (distribution-helper dist))
         g-norm (if gradient-normalization (value-of-helper :gradient-normalization gradient-normalization))
         lrp (if learning-rate-policy (value-of-helper :learning-rate-policy learning-rate-policy))
@@ -126,6 +125,7 @@
                                   (value-of-helper :loss-fn
                                                    (:loss-fn vae-loss-fn))))
         pzx-a-fn (if pzx-activation-function (value-of-helper :activation-fn pzx-activation-function))
+        ;; update our methods with the code for creating java objects
         obj-opts {:activation-fn a-fn
                   :dist d
                   :gradient-normalization g-norm
@@ -137,16 +137,12 @@
                   :hidden-unit hid-unit
                   :gate-activation-fn gate-a-fn
                   :vae-loss-fn vae-lfn}
-        updated-opts (replace-map-vals opts obj-opts)
-        fn-chain (builder-fn builder-type layer-method-map updated-opts)]
-    fn-chain
-    )
+        updated-opts (replace-map-vals opts obj-opts)]
+    ;; create our code
+    (builder-fn builder-type layer-method-map updated-opts)))
 
-  )
 
-(builder {:activation-layer {:activation-fn :relu}})
-
-(defn any-layer-builder
+#_(defn any-layer-builder
   "creates any type of layer given a builder and param map
 
   params shared between all layers:
@@ -346,76 +342,98 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod builder :activation-layer [opts]
-  (any-layer-builder* `(ActivationLayer$Builder.) (:activation-layer opts)))
+  (any-layer-builder `(ActivationLayer$Builder.) (:activation-layer opts)))
 
 (defmethod builder :center-loss-output-layer [opts]
-  (any-layer-builder (CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
+  (any-layer-builder `(CenterLossOutputLayer$Builder.) (:center-loss-output-layer opts)))
 
 (defmethod builder :output-layer [opts]
-  (any-layer-builder (OutputLayer$Builder.) (:output-layer opts)))
+  (any-layer-builder `(OutputLayer$Builder.) (:output-layer opts)))
 
 (defmethod builder :rnn-output-layer [opts]
-  (any-layer-builder (RnnOutputLayer$Builder.) (:rnn-output-layer opts)))
+  (any-layer-builder `(RnnOutputLayer$Builder.) (:rnn-output-layer opts)))
 
 (defmethod builder :auto-encoder [opts]
-  (any-layer-builder (AutoEncoder$Builder.) (:auto-encoder opts)))
+  (any-layer-builder `(AutoEncoder$Builder.) (:auto-encoder opts)))
 
 (defmethod builder :rbm [opts]
-  (any-layer-builder (RBM$Builder.) (:rbm opts)))
+  (any-layer-builder `(RBM$Builder.) (:rbm opts)))
 
 (defmethod builder :graves-bidirectional-lstm [opts]
-  (any-layer-builder (GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm opts)))
+  (any-layer-builder `(GravesBidirectionalLSTM$Builder.) (:graves-bidirectional-lstm opts)))
 
 (defmethod builder :graves-lstm [opts]
-  (any-layer-builder (GravesLSTM$Builder.) (:graves-lstm opts)))
+  (any-layer-builder `(GravesLSTM$Builder.) (:graves-lstm opts)))
 
 (defmethod builder :batch-normalization [opts]
-  (any-layer-builder (BatchNormalization$Builder.) (:batch-normalization opts)))
+  (any-layer-builder `(BatchNormalization$Builder.) (:batch-normalization opts)))
 
 (defmethod builder :convolutional-layer [opts]
   (let [conf (:convolutional-layer opts)
         {kernel-size :kernel-size
          stride :stride
-         padding :padding} conf
-        b (cond (contains-many? conf :padding :stride :kernel-size)
-                (ConvolutionLayer$Builder. (int-array kernel-size)
-                                           (int-array stride)
-                                           (int-array padding))
-                (contains-many? conf :kernel-size :stride)
-                (ConvolutionLayer$Builder. (int-array kernel-size)
-                                           (int-array stride))
-                (contains? conf :kernel-size)
-                (ConvolutionLayer$Builder. (int-array kernel-size))
-                :else
-                (ConvolutionLayer$Builder.))]
-    (any-layer-builder b (:convolutional-layer opts))))
+         padding :padding} conf]
+    (match [conf]
+           ;; do i want to add in guards/printlns for notifying the user they screwed up?
+           ;; curently letting anything through and assuming the user provided the correct type of values
+           [{:padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(ConvolutionLayer$Builder. (int-array ~kernel-size)
+                                        (int-array ~stride)
+                                        (int-array ~padding))
+            (dissoc conf :kernel-size :stride :padding))
+           [{:stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(ConvolutionLayer$Builder. (int-array ~kernel-size)
+                                        (int-array ~stride))
+            (dissoc conf :kernel-size :stride))
+           [{:kernel-size _}]
+           (any-layer-builder
+            `(ConvolutionLayer$Builder. (int-array ~kernel-size))
+            (dissoc conf :kernel-size))
+           :else
+           (any-layer-builder `(ConvolutionLayer$Builder.) conf))))
 
 (defmethod builder :convolution-1d-layer [opts]
   (let [conf (:convolution-1d-layer opts)
         {kernel-size :kernel-size
          stride :stride
-         padding :padding} conf
-        b (cond (contains-many? conf :padding :stride :kernel-size)
-                (Convolution1DLayer$Builder.  kernel-size
-                                              stride
-                                              padding)
-                (contains-many? conf :kernel-size :stride)
-                (Convolution1DLayer$Builder.  kernel-size
-                                              stride)
-                (contains? conf :kernel-size)
-                (Convolution1DLayer$Builder.  kernel-size)
-                :else
-                (Convolution1DLayer$Builder.))]
-    (any-layer-builder b (:convolution-1d-layer opts))))
+         padding :padding} conf]
+    (match [conf]
+           [{:padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Convolution1DLayer$Builder ~kernel-size
+                                         ~stride
+                                         ~padding)
+            (dissoc conf :kernel-size :stride :padding))
+           [{:stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Convolution1DLayer$Builder ~kernel-size
+                                         ~stride)
+            (dissoc conf :kernel-size :stride))
+           [{:kernel-size _}]
+           (any-layer-builder
+            `(Convolution1DLayer$Builder ~kernel-size)
+            (dissoc conf :kernel-size))
+           :else
+           (any-layer-builder
+            `(Convolution1DLayer$Builder)
+            conf))))
 
 (defmethod builder :dense-layer [opts]
-  (any-layer-builder (DenseLayer$Builder.) (:dense-layer opts)))
+  (any-layer-builder `(DenseLayer$Builder.) (:dense-layer opts)))
 
 (defmethod builder :embedding-layer [opts]
-  (any-layer-builder (EmbeddingLayer$Builder.) (:embedding-layer opts)))
+  (any-layer-builder `(EmbeddingLayer$Builder.) (:embedding-layer opts)))
 
 (defmethod builder :local-response-normalization [opts]
-  (any-layer-builder (LocalResponseNormalization$Builder.) (:local-response-normalization opts)))
+  (any-layer-builder `(LocalResponseNormalization$Builder.) (:local-response-normalization opts)))
 
 (defmethod builder :subsampling-layer [opts]
   (let [conf (:subsampling-layer opts)
@@ -427,24 +445,49 @@
         s (int-array stride)
         p (int-array padding)
         pt (if (keyword? pooling-type)
-             (constants/value-of {:pool-type pooling-type}))
-        b (cond (contains-many? conf :pooling-type :padding :stride :kernel-size)
-                (SubsamplingLayer$Builder. pt k-s s p)
-                (contains-many? conf :padding :stride :kernel-size)
-                (SubsamplingLayer$Builder. k-s s p)
-                (contains-many? conf :pooling-type :kernel-size :stride)
-                (SubsamplingLayer$Builder. pt k-s s)
-                (contains-many? conf :kernel-size :stride)
-                (SubsamplingLayer$Builder. k-s s)
-                (contains-many? conf :kernel-size :pooling-type)
-                (SubsamplingLayer$Builder. pt k-s)
-                (contains? conf :kernel-size)
-                (SubsamplingLayer$Builder. k-s)
-                (contains? conf :pooling-type)
-                (SubsamplingLayer$Builder. pt)
-                :else
-                (SubsamplingLayer$Builder.))]
-    (any-layer-builder b (:subsampling-layer opts))))
+             `(constants/value-of {:pool-type ~pooling-type}))]
+    (match [conf]
+           [{:pooling-type _
+             :padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~pt ~k-s ~s ~p)
+            (dissoc conf :pooling-type :padding :stride :kernel-size))
+           [{:padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~k-s ~s ~p)
+            (dissoc conf :padding :stride :kernel-size))
+           [{:pooling-type _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~pt ~k-s ~s)
+            (dissoc conf :pooling-type :stride :kernel-size))
+           [{:stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~k-s ~s)
+            (dissoc conf :stride :kernel-size))
+           [{:pooling-type _
+             :kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~pt ~k-s)
+            (dissoc conf :pooling-type :kernel-size))
+           [{:kernel-size _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~k-s)
+            (dissoc conf :kernel-size))
+           [{:pooling-type _}]
+           (any-layer-builder
+            `(SubsamplingLayer$Builder. ~pt)
+            (dissoc conf :pooling-type))
+           :else
+           (any-layer-builder
+            `(SubsamplingLayer$Builder.)
+            conf))))
 
 (defmethod builder :subsampling-1d-layer [opts]
   (let [conf (:subsampling-1d-layer opts)
@@ -453,56 +496,95 @@
          padding :padding
          pooling-type :pooling-type} conf
         pt (if (keyword? pooling-type)
-             (constants/value-of {:pool-type pooling-type}))
-        b (cond (contains-many? conf :pooling-type :padding :stride :kernel-size)
-                (Subsampling1DLayer$Builder. pt kernel-size stride padding)
-                (contains-many? conf :padding :stride :kernel-size)
-                (Subsampling1DLayer$Builder. kernel-size stride padding)
-                (contains-many? conf :pooling-type :kernel-size :stride)
-                (Subsampling1DLayer$Builder. pt kernel-size stride)
-                (contains-many? conf :kernel-size :stride)
-                (Subsampling1DLayer$Builder. kernel-size stride)
-                (contains-many? conf :kernel-size :pooling-type)
-                (Subsampling1DLayer$Builder. pt kernel-size)
-                (contains? conf :kernel-size)
-                (Subsampling1DLayer$Builder. kernel-size)
-                (contains? conf :pooling-type)
-                (Subsampling1DLayer$Builder. pt)
-                :else
-                (Subsampling1DLayer$Builder.))]
-    (any-layer-builder b (:subsampling-1d-layer opts))))
+             `(constants/value-of {:pool-type ~pooling-type}))]
+    (match [conf]
+           [{:pooling-type _
+             :padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~pt ~kernel-size ~stride ~padding)
+            (dissoc conf :pooling-type :padding :stride :kernel-size))
+           [{:padding _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~kernel-size ~stride ~padding)
+            (dissoc conf :padding :stride :kernel-size))
+           [{:pooling-type _
+             :stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~pt ~kernel-size ~stride)
+            (dissoc conf :pooling-type :stride :kernel-size))
+           [{:stride _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~kernel-size ~stride)
+            (dissoc conf :stride :kernel-size))
+           [{:pooling-type _
+             :kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~pt ~kernel-size)
+            (dissoc conf :pooling-type :kernel-size))
+           [{:kernel-size _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~kernel-size)
+            (dissoc conf :kernel-size))
+           [{:pooling-type _}]
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder. ~pt)
+            (dissoc conf :pooling-type))
+           :else
+           (any-layer-builder
+            `(Subsampling1DLayer$Builder.)
+            conf))))
 
 (defmethod builder :variational-auto-encoder [opts]
-  (any-layer-builder (VariationalAutoencoder$Builder.) (:variational-auto-encoder opts)))
+  (any-layer-builder `(VariationalAutoencoder$Builder.) (:variational-auto-encoder opts)))
 
 (defmethod builder :loss-layer [opts]
-  (any-layer-builder (LossLayer$Builder.) (:loss-layer opts)))
+  (any-layer-builder `(LossLayer$Builder.) (:loss-layer opts)))
 
 (defmethod builder :dropout-layer [opts]
-  (let [d-out (:drop-out (:dropout-layer opts))]
-    (any-layer-builder (DropoutLayer$Builder. d-out) (:dropout-layer opts))))
+  (let [conf (:dropout-layer opts)
+        {d-out :drop-out} conf
+        conf* (dissoc conf :drop-out)]
+    (any-layer-builder `(DropoutLayer$Builder. ~d-out) conf*)))
 
 (defmethod builder :global-pooling-layer [opts]
-  (let [pooling-type (:pooling-type (:global-pooling-layer opts))
-        b (if (keyword? pooling-type)
-            (GlobalPoolingLayer$Builder. (constants/value-of {:pool-type pooling-type}))
-            (GlobalPoolingLayer$Builder.))]
-    (any-layer-builder b (:global-pooling-layer opts))))
+  (let [conf (:global-pooling-layer opts)
+        {pooling-type :pooling-type} conf]
+    (match [conf]
+           [{:pooling-type (_ :guard keyword?)}]
+           (any-layer-builder
+            `(GlobalPoolingLayer$Builder. (constants/value-of {:pool-type ~pooling-type}))
+            (dissoc conf :pooling-type))
+           :else
+           (any-layer-builder
+            `(GlobalPoolingLayer$Builder.) conf))))
 
 (defmethod builder :zero-padding-layer [opts]
-  (let [data (:zero-padding-layer opts)
+  (let [conf (:zero-padding-layer opts)
         {:keys [pad-top pad-bot pad-left pad-right
-                pad-height pad-width padding]} data]
-    (cond
-      (contains-many? data :pad-top :pad-bot :pad-left :pad-right)
-      (any-layer-builder (ZeroPaddingLayer$Builder. pad-top pad-bot pad-left pad-right)
-                         (:zero-padding-layer opts))
-      (contains-many? data :pad-height :pad-width)
-      (any-layer-builder (ZeroPaddingLayer$Builder. pad-height pad-width)
-                         (:zero-padding-layer opts))
-      :else
-      (any-layer-builder (ZeroPaddingLayer$Builder. (int-array padding))
-                         (:zero-padding-layer opts)))))
+                pad-height pad-width padding]} conf]
+    (match [conf]
+           [{:pad-top _
+             :pad-bot _
+             :pad-left _
+             :pad-right _}]
+           (any-layer-builder
+            `(ZeroPaddingLayer$Builder. ~pad-top ~pad-bot ~pad-left ~pad-right)
+            (dissoc conf :pad-top :pad-bot :pad-left :pad-right))
+           [{:pad-height _
+             :pad-width _}]
+           (any-layer-builder
+            `(ZeroPaddingLayer$Builder. ~pad-height ~pad-width)
+            (dissoc conf :pad-height :pad-width))
+           :else
+           (any-layer-builder
+            `(ZeroPaddingLayer$Builder. (int-array ~padding))
+            (dissoc conf :padding)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns based on multimethod for documentation purposes
