@@ -8,6 +8,8 @@
             NeuralNetConfiguration$ListBuilder MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
+;; this ns can be deleted
+
 (def method-map-mlb
   {:backprop?            '.backprop
    :backprop-type        '.backpropType

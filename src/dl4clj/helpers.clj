@@ -8,6 +8,16 @@
             [dl4clj.nn.conf.step-fns :as step-functions]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]))
 
+;; update helpers to accept fn calls (the ones that can)
+;; not just config maps
+;; should just be somthing like
+#_(match [input]
+         [(_ :guard seq?)] `(eval passed-in-fn)
+         :else
+         do whatever was already being done)
+;; this may have to be within a forloop in some cases
+;; like when the input is a collection of to-be java objects
+
 (defn pre-processor-helper
   [pps]
   (into {}

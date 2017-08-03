@@ -14,6 +14,9 @@
             MultiLayerConfiguration$Builder]
            [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
+
+;; this ns can be deleted
+
 (def method-map-nn-conf-builder
   {:default-activation-fn                    '.activation
    :default-adam-mean-decay                  '.adamMeanDecay

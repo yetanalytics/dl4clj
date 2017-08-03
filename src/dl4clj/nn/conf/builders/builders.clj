@@ -459,6 +459,9 @@
             `(ZeroPaddingLayer$Builder. (int-array ~padding))
             (dissoc conf :padding)))))
 
+(defmethod builder :default [opts]
+  :layer-not-implemented)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns based on multimethod for documentation purposes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
