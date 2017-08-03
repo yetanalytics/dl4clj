@@ -91,58 +91,6 @@
 
 
 (defn any-layer-builder
-  [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
-                        bias-init bias-learning-rate dist drop-out epsilon
-                        gradient-normalization gradient-normalization-threshold
-                        l1 l1-bias l2 l2-bias layer-name learning-rate learning-rate-policy
-                        learning-rate-schedule momentum momentum-after rho
-                        rms-decay updater weight-init n-in n-out loss-fn
-                        visible-bias-init pre-train-iterations
-                        beta gamma eps decay lock-gamma-beta? mini-batch?
-                        gradient-check? alpha lambda corruption-level
-                        sparsity hidden-unit visible-unit k forget-gate-bias-init
-                        eps n pooling-type decoder-layer-sizes
-                        encoder-layer-sizes num-samples pzx-activation-function
-                        collapse-dimensions? pnorm pooling-dimensions eps
-                        gate-activation-fn reconstruction-distribution
-                        vae-loss-fn build?]
-                 :or {build? true}
-                 :as opts}]
-  (let [;; create code for creating java objects at eval time
-        a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
-        d (if dist (distribution-helper dist))
-        g-norm (if gradient-normalization (value-of-helper :gradient-normalization gradient-normalization))
-        lrp (if learning-rate-policy (value-of-helper :learning-rate-policy learning-rate-policy))
-        u (if updater (value-of-helper :updater updater))
-        w-init (if weight-init (value-of-helper :weight-init weight-init))
-        l-fn (if loss-fn (value-of-helper :loss-fn loss-fn))
-        vis-unit (if visible-unit (value-of-helper :visible-unit visible-unit))
-        hid-unit (if hidden-unit (value-of-helper :hidden-unit hidden-unit))
-        gate-a-fn (if gate-activation-fn (value-of-helper :activation-fn gate-activation-fn))
-        vae-lfn (if vae-loss-fn '((value-of-helper :activation-fn
-                                                   (:output-activation-fn
-                                                    vae-loss-fn))
-                                  (value-of-helper :loss-fn
-                                                   (:loss-fn vae-loss-fn))))
-        pzx-a-fn (if pzx-activation-function (value-of-helper :activation-fn pzx-activation-function))
-        ;; update our methods with the code for creating java objects
-        obj-opts {:activation-fn a-fn
-                  :dist d
-                  :gradient-normalization g-norm
-                  :learning-rate-policy lrp
-                  :updater u
-                  :weight-init w-init
-                  :loss-fn l-fn
-                  :visible-unit vis-unit
-                  :hidden-unit hid-unit
-                  :gate-activation-fn gate-a-fn
-                  :vae-loss-fn vae-lfn}
-        updated-opts (replace-map-vals opts obj-opts)]
-    ;; create our code
-    (builder-fn builder-type layer-method-map updated-opts)))
-
-
-#_(defn any-layer-builder
   "creates any type of layer given a builder and param map
 
   params shared between all layers:
@@ -212,7 +160,6 @@
   :weight-init (keyword) Weight initialization scheme
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
           :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size"
-
   [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
                         gradient-normalization gradient-normalization-threshold
@@ -230,112 +177,38 @@
                         vae-loss-fn build?]
                  :or {build? true}
                  :as opts}]
-  (let [r-d (if (map? reconstruction-distribution)
-              (reconstruction-dist/distributions
-               reconstruction-distribution)
-              reconstruction-distribution)]
-   (cond-> builder-type
-    ;; all layers
-    (contains? opts :activation-fn) (.activation (constants/value-of {:activation-fn activation-fn}))
-    (contains? opts :adam-mean-decay) (.adamMeanDecay adam-mean-decay)
-    (contains? opts :adam-var-decay) (.adamVarDecay adam-var-decay)
-    (contains? opts :bias-init) (.biasInit bias-init)
-    (contains? opts :bias-learning-rate) (.biasLearningRate bias-learning-rate)
-    (contains? opts :dist) (.dist (if (map? dist) (distribution/distribution dist)
-                                      dist))
-    (contains? opts :drop-out) (.dropOut drop-out)
-    (contains? opts :epsilon) (.epsilon epsilon)
-    (contains? opts :gradient-normalization) (.gradientNormalization
-                                              (constants/value-of
-                                               {:gradient-normalization gradient-normalization}))
-    (contains? opts :gradient-normalization-threshold) (.gradientNormalizationThreshold
-                                                        gradient-normalization-threshold)
-    (contains? opts :l1) (.l1 l1)
-    (contains? opts :l1-bias) (.l1Bias l1-bias)
-    (contains? opts :l2) (.l2 l2)
-    (contains? opts :l2-bias) (.l2Bias l2-bias)
-    (contains? opts :layer-name) (.name layer-name)
-    (contains? opts :learning-rate) (.learningRate learning-rate)
-    (contains? opts :learning-rate-policy) (.learningRateDecayPolicy
-                                            (constants/value-of
-                                             {:learning-rate-policy
-                                              learning-rate-policy}))
-    (contains? opts :learning-rate-schedule) (.learningRateSchedule learning-rate-schedule)
-    (contains? opts :momentum) (.momentum momentum)
-    (contains? opts :momentum-after) (.momentumAfter momentum-after)
-    (contains? opts :rho) (.rho rho)
-    (contains? opts :rms-decay) (.rmsDecay rms-decay)
-    (contains? opts :updater) (.updater (constants/value-of {:updater updater}))
-    (contains? opts :weight-init) (.weightInit (constants/value-of
-                                                {:weight-init weight-init}))
-    ;; added by feed forward layers
-    (contains? opts :n-in) (.nIn n-in)
-    (contains? opts :n-out) (.nOut n-out)
-
-    ;; added by output layers
-    (contains? opts :loss-fn) (.lossFunction (constants/value-of {:loss-fn loss-fn}))
-
-    ;; added by base pretrain network
-    (contains? opts :visible-bias-init) (.visibleBiasInit visible-bias-init)
-    (contains? opts :pre-train-iterations) (.preTrainIterations pre-train-iterations)
-
-    ;; added by batch normilization
-    (contains? opts :beta) (.beta beta)
-    (contains? opts :decay) (.decay decay)
-    (contains? opts :eps) (.eps eps)
-    (contains? opts :gamma) (.gamma gamma)
-    (contains? opts :lock-gamma-beta?) (.lockGammaBeta lock-gamma-beta?)
-    (contains? opts :mini-batch?) (.minibatch mini-batch?)
-
-    ;; added by global pooling layers
-    (contains? opts :pooling-dimensions) (.poolingDimensions (int-array pooling-dimensions))
-    (contains? opts :collapse-dimensions) (.collapseDimensions collapse-dimensions?)
-    (contains? opts :pnorm) (.pnorm pnorm)
-
-    ;; center-loss adds these
-    (contains? opts :alpha) (.alpha alpha)
-    (contains? opts :gradient-check?) (.gradientCheck gradient-check?)
-    (contains? opts :lambda) (.lambda lambda)
-
-    ;; autoencoders add these
-    ;; set when the constructor is first being called
-    (contains? opts :corruption-level) (.corruptionLevel corruption-level)
-    (contains? opts :sparsity) (.sparsity sparsity)
-
-    ;; RBMs add these
-    ;; also use sparsity
-    (contains? opts :visible-unit) (.visibleUnit (constants/value-of
-                                                  {:visible-unit visible-unit}))
-    (contains? opts :hidden-unit) (.hiddenUnit (constants/value-of
-                                                {:hidden-unit hidden-unit}))
-    (contains? opts :k) (.k k)
-
-    ;; Graves LSTM add these
-    (contains? opts :forget-gate-bias-init) (.forgetGateBiasInit forget-gate-bias-init)
-    (contains? opts :gate-activation-fn) (.gateActivationFunction (constants/value-of
-                                                                   {:activation-fn gate-activation-fn}))
-
-    ;; added by local response normalization
-    ;; also uses k, beta, alpha
-    (contains? opts :n) (.n n)
-
-    ;; added by VAEs
-    (contains? opts :decoder-layer-sizes) (.decoderLayerSizes (int-array decoder-layer-sizes))
-    (contains? opts :encoder-layer-sizes) (.encoderLayerSizes (int-array encoder-layer-sizes))
-    (contains? opts :num-samples) (.numSamples num-samples)
-    (contains? opts :vae-loss-fn) (.lossFunction (constants/value-of
-                                                  {:activation-fn
+  (let [;; create code for creating java objects at eval time
+        a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
+        d (if dist (distribution-helper dist))
+        g-norm (if gradient-normalization (value-of-helper :gradient-normalization gradient-normalization))
+        lrp (if learning-rate-policy (value-of-helper :learning-rate-policy learning-rate-policy))
+        u (if updater (value-of-helper :updater updater))
+        w-init (if weight-init (value-of-helper :weight-init weight-init))
+        l-fn (if loss-fn (value-of-helper :loss-fn loss-fn))
+        vis-unit (if visible-unit (value-of-helper :visible-unit visible-unit))
+        hid-unit (if hidden-unit (value-of-helper :hidden-unit hidden-unit))
+        gate-a-fn (if gate-activation-fn (value-of-helper :activation-fn gate-activation-fn))
+        vae-lfn (if vae-loss-fn '((value-of-helper :activation-fn
                                                    (:output-activation-fn
-                                                    vae-loss-fn)})
-                                                 (constants/value-of
-                                                  {:loss-fn
-                                                   (:loss-fn vae-loss-fn)}))
-
-    (contains? opts :reconstruction-distribution) (.reconstructionDistribution r-d)
-    (contains? opts :pzx-activation-function) (.pzxActivationFunction
-                                               (constants/value-of
-                                                {:activation-fn pzx-activation-function}))
-    (true? build?) (.build))))
+                                                    vae-loss-fn))
+                                  (value-of-helper :loss-fn
+                                                   (:loss-fn vae-loss-fn))))
+        pzx-a-fn (if pzx-activation-function (value-of-helper :activation-fn pzx-activation-function))
+        ;; update our methods with the code for creating java objects
+        obj-opts {:activation-fn a-fn
+                  :dist d
+                  :gradient-normalization g-norm
+                  :learning-rate-policy lrp
+                  :updater u
+                  :weight-init w-init
+                  :loss-fn l-fn
+                  :visible-unit vis-unit
+                  :hidden-unit hid-unit
+                  :gate-activation-fn gate-a-fn
+                  :vae-loss-fn vae-lfn}
+        updated-opts (replace-map-vals opts obj-opts)]
+    ;; create our code
+    (builder-fn builder-type layer-method-map updated-opts)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods
