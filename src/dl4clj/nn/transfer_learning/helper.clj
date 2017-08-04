@@ -14,7 +14,8 @@
            [org.nd4j.linalg.api.ndarray INDArray])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
             [dl4clj.utils :refer [array-of]]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [clojure.core.match :refer [match]]))
 
 (defn new-helper
   "creates a new instance of TransferLearningHelper with the supplied opts
@@ -29,7 +30,7 @@
   otherwise expects a mln where some layers are already frozen"
   [& {:keys [mln frozen-til]
       :as opts}]
-  (if (contains? opts :frozen-til)
+  (if frozen-til
     (TransferLearningHelper. mln frozen-til)
     (TransferLearningHelper. mln)))
 
@@ -65,13 +66,11 @@
   returns the helper"
   [& {:keys [helper data-set iter]
    :as opts}]
-  (cond
-    (contains? opts :data-set)
-    (doto helper (.fitFeaturized data-set))
-    (contains? opts :iter)
-    (doto helper (.fitFeaturized (reset-iterator! iter)))
-    :else
-    (assert false "you must supply either a data-set or a dat-set iterator")))
+  (match [opts]
+         [{:helper _ :data-set _}] (doto helper (.fitFeaturized data-set))
+         [{:helper _ :iter _}] (doto helper (.fitFeaturized (reset-iterator! iter)))
+         :else
+         (assert false "you must supply either a data-set or a dat-set iterator")))
 
 (defn output-from-featurized
   "Use to get the output from a featurized input
