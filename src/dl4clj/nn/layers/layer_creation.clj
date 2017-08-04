@@ -43,63 +43,63 @@
 (defmethod create-layer :activation [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (ActivationLayer. nn-conf input)
       (ActivationLayer. nn-conf))))
 
 (defmethod create-layer :dropout [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (DropoutLayer. nn-conf input)
       (DropoutLayer. nn-conf))))
 
 (defmethod create-layer :loss [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-      (if (contains? opts :input)
+      (if input
         (LossLayer. nn-conf input)
         (LossLayer. nn-conf))))
 
 (defmethod create-layer :output [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (OutputLayer. nn-conf input)
       (OutputLayer. nn-conf))))
 
 (defmethod create-layer :center-loss-output-layer [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (CenterLossOutputLayer. nn-conf input)
       (CenterLossOutputLayer. nn-conf))))
 
 (defmethod create-layer :subsampling1d [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (Subsampling1DLayer. nn-conf input)
       (Subsampling1DLayer. nn-conf))))
 
 (defmethod create-layer :subsampling [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (SubsamplingLayer. nn-conf input)
       (SubsamplingLayer. nn-conf))))
 
 (defmethod create-layer :convolution1d [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (Convolution1DLayer. nn-conf input)
       (Convolution1DLayer. nn-conf))))
 
 (defmethod create-layer :convolution [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (ConvolutionLayer. nn-conf input)
       (ConvolutionLayer. nn-conf))))
 
@@ -110,14 +110,14 @@
 (defmethod create-layer :auto-encoder [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (AutoEncoder. nn-conf input)
       (AutoEncoder. nn-conf))))
 
 (defmethod create-layer :dense [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (DenseLayer. nn-conf input)
       (DenseLayer. nn-conf))))
 
@@ -128,7 +128,7 @@
 (defmethod create-layer :rbm [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (RBM. nn-conf input)
       (RBM. nn-conf))))
 
@@ -143,28 +143,28 @@
 (defmethod create-layer :local-response-normalization [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (LocalResponseNormalization. nn-conf input)
       (LocalResponseNormalization. nn-conf))))
 
 (defmethod create-layer :graves-bidirectional-lstm [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (GravesBidirectionalLSTM. nn-conf input)
       (GravesBidirectionalLSTM. nn-conf))))
 
 (defmethod create-layer :graves-lstm [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (GravesLSTM. nn-conf input)
       (GravesLSTM. nn-conf))))
 
 (defmethod create-layer :rnnoutput [opts]
   (let [{nn-conf :nn-conf
          input :input} opts]
-    (if (contains? opts :input)
+    (if input
       (RnnOutputLayer. nn-conf input)
       (RnnOutputLayer. nn-conf))))
 

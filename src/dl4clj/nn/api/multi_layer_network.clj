@@ -2,6 +2,7 @@
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer])
   (:require [dl4clj.utils :refer [contains-many? array-of]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn activate-selected-layers
@@ -48,7 +49,7 @@
   :input (INDArray or vec), the input to propagate through the network for calcing activations"
   [& {:keys [mln training? input]
       :as opts}]
-  (if (contains? opts :input)
+  (if input
     (.computeZ mln (vec-or-matrix->indarray input) training?)
     (.computeZ mln training?)))
 
@@ -77,18 +78,19 @@
   [& {:keys [mln train? input features-mask labels-mask]
       :as opts}]
   (let [i (vec-or-matrix->indarray input)]
-   (cond (contains-many? opts :input :features-mask :labels-mask)
-         (.feedForward mln i
-                       (vec-or-matrix->indarray features-mask)
-                       (vec-or-matrix->indarray labels-mask))
-        (contains-many? opts :input :train?)
-        (.feedForward mln i train?)
-        (contains? opts :input)
-        (.feedForward mln i)
-        (contains? opts :train?)
-        (.feedForward mln train?)
-        :else
-        (.feedForward mln))))
+    (match [opts]
+           [{:mln _ :input _ :features-mask _ :labels-mask _}]
+           (.feedForward mln i
+                         (vec-or-matrix->indarray features-mask)
+                         (vec-or-matrix->indarray labels-mask))
+           [{:mln _ :input _ :train? _}]
+           (.feedForward mln i train?)
+           [{:mln _ :input _}]
+           (.feedForward mln i)
+           [{:mln _ :train? _}]
+           (.feedForward mln train?)
+           :else
+           (.feedForward mln))))
 
 (defn feed-forward-to-layer
   "Compute the activations from the input to the specified layer.
@@ -104,14 +106,15 @@
   [& {:keys [mln layer-idx train? input]
       :as opts}]
   (let [i (vec-or-matrix->indarray input)]
-    (cond (contains-many? opts :layer-idx :train? :input)
-          (.feedForwardToLayer mln layer-idx i train?)
-          (contains-many? opts :layer-idx :input)
-          (.feedForwardToLayer mln layer-idx i)
-          (contains-many? opts :layer-idx :train?)
-          (.feedForwardToLayer mln layer-idx train?)
-          :else
-          (assert false "you must supply a mln, a layer-idx and either/both train? and input"))))
+    (match [opts]
+           [{:mln _ :layer-idx _ :train? _ :input _}]
+           (.feedForwardToLayer mln layer-idx i train?)
+           [{:mln _ :layer-idx _ :input _}]
+           (.feedForwardToLayer mln layer-idx i)
+           [{:mln _ :layer-idx _ :train? _}]
+           (.feedForwardToLayer mln layer-idx train?)
+           :else
+           (assert false "you must supply a mln, a layer-idx and either/both train? and input"))))
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"
@@ -131,12 +134,13 @@
   :layer-name (str), the name of the layer you want to get from the mln"
   [& {:keys [mln layer-idx layer-name]
       :as opts}]
-  (cond (contains? opts :layer-idx)
-        (.getLayer mln layer-idx)
-        (contains? opts :layer-name)
-        (.getLayer mln layer-name)
-        :else
-        (assert false "you must supply a mln and either the layer's name or index")))
+  (match [opts]
+         [{:mln _ :layer-idx _}]
+         (.getLayer mln layer-idx)
+         [{:mln _ :layer-name _}]
+         (.getLayer mln layer-name)
+         :else
+         (assert false "you must supply a mln and either the layer's name or index")))
 
 (defn get-layer-names
   "return a list of the layer names in the mln"

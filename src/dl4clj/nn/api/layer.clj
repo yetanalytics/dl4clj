@@ -5,6 +5,7 @@
   (:import [org.deeplearning4j.nn.api Layer])
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.constants :as enum]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn initializer
@@ -50,20 +51,20 @@
    -both 4 and 5 initialize the layer with the given input and return the activation for this layer given this input"
   [& {:keys [model training? input training-mode]
       :as opts}]
-  (assert (contains? opts :model) "you must supply a layer to activate or a model with layers")
   (let [i (vec-or-matrix->indarray input)]
-   (cond (contains-many? opts :input :training?)
-        (.activate model i training?)
-        (contains-many? opts :input :training-mode)
-        (.activate model i (enum/value-of {:layer-training-mode training-mode}))
-        (contains? opts :input)
-        (.activate model i)
-        (contains? opts :training?)
-        (.activate model training?)
-        (contains? opts :training-mode)
-        (.activate model (enum/value-of {:layer-training-mode training-mode}))
-        :else
-        (.activate model))))
+    (match [opts]
+           [{:model _ :input _ :training? _}]
+           (.activate model i training?)
+           [{:model _ :input _ :training-mode _}]
+           (.activate model i (enum/value-of {:layer-training-mode training-mode}))
+           [{:model _ :input _}]
+           (.activate model i)
+           [{:model _ :training? _}]
+           (.activate model training?)
+           [{:model _ :training-mode _}]
+           (.activate model (enum/value-of {:layer-training-mode training-mode}))
+           :else
+           (.activate model))))
 
 (defn layer-output
   "returns the output of a layer.
@@ -76,14 +77,15 @@
   [& {:keys [layer input training?]
       :as opts}]
   (let [i (vec-or-matrix->indarray input)]
-    (cond (contains-many? opts :input :training?)
-          (.output layer i training?)
-          (contains? opts :input)
-          (.output layer i)
-          (contains? opts :training?)
-          (.output layer training?)
-          :else
-          (assert false "you must supply a layer and either some input or training?"))))
+    (match [opts]
+           [{:layer _ :input _ :training? _}]
+           (.output layer i training?)
+           [{:layer _ :input _ }]
+           (.output layer i)
+           [{:layer _ :training? _}]
+           (.output layer training?)
+           :else
+           (assert false "you must supply a layer and either some input or training?"))))
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
@@ -156,14 +158,15 @@
   [& {:keys [layer input training? training-mode]
       :as opts}]
   (let [i (vec-or-matrix->indarray input)]
-   (cond (contains-many? opts :input :training?)
-        (.preOutput layer i training?)
-        (contains-many? opts :input :training-mode)
-        (.preOutput layer i (enum/value-of {:training-mode training-mode}))
-        (contains? opts :training?)
-        (.preOutput layer training?)
-        (contains? opts :input)
-        (.preOutput layer i))))
+    (match [opts]
+           [{:layer _ :input _ :training? _}]
+           (.preOutput layer i training?)
+           [{:layer _ :input _ :training-mode _}]
+           (.preOutput layer i (enum/value-of {:training-mode training-mode}))
+           [{:layer _ :training? _}]
+           (.preOutput layer training?)
+           [{:layer _ :input _ }]
+           (.preOutput layer i))))
 
 (defn set-index!
   "Set the layer index and returns the layer.

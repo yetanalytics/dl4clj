@@ -5,6 +5,7 @@
   (:import [org.deeplearning4j.nn.api Model])
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.helpers :refer [reset-if-empty?!]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;; add .setBackpropGradientsViewArray and .validateInput
@@ -52,34 +53,36 @@
   "Fit/train the model
 
   if you supply an iterator, it is only reset if it is at the end of the collection"
-  [& {:keys [mln ds iter data labels
+  [& {:keys [mln dataset iter data labels
              features features-mask labels-mask
              examples label-idxs]
       :as opts}]
   (let [d (vec-or-matrix->indarray data)]
-   (cond (contains-many? opts :features :labels :features-mask :labels-mask)
-        (doto mln
-          (.fit (vec-or-matrix->indarray features)
-                (vec-or-matrix->indarray labels)
-                (vec-or-matrix->indarray features-mask)
-                (vec-or-matrix->indarray labels-mask)))
-        (contains-many? opts :examples :label-idxs)
-        (doto mln
-          (.fit (vec-or-matrix->indarray examples)
-                (int-array label-idxs)))
-        (contains-many? opts :data :labels)
-        (doto mln
-          (.fit d (vec-or-matrix->indarray labels)))
-        (contains? opts :data)
-        (doto mln
-          (.fit d))
-        (contains? opts :iter)
-        (doto mln
-          (.fit (reset-if-empty?! iter)))
-        (contains? opts :ds)
-        (doto mln (.fit ds))
-        :else
-        (doto mln (.fit)))))
+    (match [opts]
+           [{:mln _ :features _ :labels _ :features-mask _ :labels-mask _}]
+           (doto mln
+             (.fit (vec-or-matrix->indarray features)
+                   (vec-or-matrix->indarray labels)
+                   (vec-or-matrix->indarray features-mask)
+                   (vec-or-matrix->indarray labels-mask)))
+           [{:mln _ :examples _ :label-idxs _}]
+           (doto mln
+             (.fit (vec-or-matrix->indarray examples)
+                   (int-array label-idxs)))
+           [{:mln _ :data _ :labels _}]
+           (doto mln
+             (.fit d (vec-or-matrix->indarray labels)))
+           ;; this might be the same thing as just examples?
+           [{:mln _ :data _}]
+           (doto mln
+             (.fit d))
+           [{:mln _ :iter _}]
+           (doto mln
+             (.fit (reset-if-empty?! iter)))
+           [{:mln _ :dataset _}]
+           (doto mln (.fit dataset))
+           :else
+           (doto mln .fit))))
 
 (defn get-optimizer
   "Returns this models optimizer"
@@ -105,9 +108,11 @@
   "initialize the model"
   [& {:keys [model params clone-param-array?]
       :as opts}]
-  (if (contains-many? opts :params :clone-param-array?)
-    (doto model (.init params clone-param-array?))
-    (doto model (.init))))
+  (match [opts]
+         [{:model _ :params _ :clone-param-array? _}]
+         (doto model (.init params clone-param-array?))
+         :else
+         (doto model .init)))
 
 (defn input
   "returns the input/feature matrix for the model"
@@ -126,11 +131,9 @@
      of the weights for the various neuralNets and output layer"
   [& {:keys [model backwards?]
       :as opts}]
-  (assert (contains? opts :model) "you must supply a model")
-  (cond (contains? opts :backwards?)
-        (.numParams model backwards?)
-        :else
-        (.numParams model)))
+  (if backwards?
+    (.numParams model backwards?)
+    (.numParams model)))
 
 (defn params
   "Returns a 1 x m vector where the vector is composed of a flattened vector
@@ -138,7 +141,7 @@
   and output layer"
   [& {:keys [model backward-only?]
       :as opts}]
-  (if (contains? opts :backward-only?)
+  (if backward-only?
     (.params model backward-only?)
     (.params model)))
 
@@ -146,10 +149,8 @@
   "The param table"
   [& {:keys [model backprop-params-only?]
       :as opts}]
-  (assert (contains? opts :model) "you must supply a model")
-  (cond (contains? opts :backprop-params-only?)
+  (if backprop-params-only?
         (.paramTable model backprop-params-only?)
-        :else
         (.paramTable model)))
 
 (defn score!
@@ -171,20 +172,23 @@
   [& {:keys [model dataset training? return-model?]
       :or {return-model? false}
       :as opts}]
-  (cond (and (contains-many? opts :dataset :training?)
-             return-model?)
-        (doto model (.score dataset training?))
-        (contains-many? opts :dataset :training?)
-        (.score model dataset training?)
-        (and (contains? opts :dataset)
-             return-model?)
-        (doto model (.score dataset))
-        (contains? opts :dataset)
-        (.score model dataset)
-        return-model?
-        (doto model (.score))
-        :else
-        (.score model)))
+  (match [opts]
+         [{:model _ :dataset _ :training? _ :return-model? true}]
+         (doto model (.score dataset training?))
+         [{:model _ :dataset _ :training? _ :return-model? false}]
+         (.score model dataset training?)
+         [{:model _ :dataset _ :training? _}]
+         (.score model dataset training?)
+         [{:model _ :dataset _ :return-model? true}]
+         (doto model (.score dataset))
+         [{:model _ :dataset _ :return-model? false}]
+         (.score model dataset)
+         [{:model _ :dataset _}]
+         (.score model dataset)
+         [{:model _ :return-model? true}]
+         (doto model (.score))
+         :else
+         (.score model)))
 
 (defn set-conf!
   "Setter for the configuration"
@@ -228,9 +232,7 @@
    -Perform one update applying the gradient"
   [& {:keys [model gradient param-type]
       :as opts}]
-  (assert (contains-many? opts :model :gradient)
-          "you must supply a model and a gradient")
   (let [g (vec-or-matrix->indarray gradient)]
-   (if (contains? opts :param-type)
-    (.update model g param-type)
-    (.update model g))))
+    (if param-type
+      (.update model g param-type)
+      (.update model g))))

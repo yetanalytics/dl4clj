@@ -7,7 +7,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
 (defn new-default-gradient
   [& {:keys [flattened-gradient]
       :as opts}]
-  (if (contains? opts :flattened-gradient)
+  (if flattened-gradient
     (DefaultGradient. (vec-or-matrix->indarray flattened-gradient))
     (DefaultGradient.)))
 

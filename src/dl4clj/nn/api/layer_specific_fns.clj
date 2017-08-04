@@ -13,6 +13,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
            [org.deeplearning4j.nn.api.layers IOutputLayer])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
             [dl4clj.utils :refer [contains-many?]]
+            [clojure.core.match :refer [match]]
             [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -146,7 +147,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (assert (contains-many? opts :rbm :visible-input)
           "you must supply a rbm and the visible input")
   (let [vi (vec-or-matrix->indarray visible-input)]
-   (if (contains? opts :training?)
+   (if training?
     (.propUp rbm vi training?)
     (.propUp rbm vi))))
 
@@ -171,15 +172,14 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   :training-mode (keyword) one of :training or :testing"
   [& {:keys [frozen-layer training? training-mode]
       :as opts}]
-  (assert (contains? opts :frozen-layer) "you must supply a frozen layer")
-  (cond (contains? opts :training?)
-        (doto frozen-layer
-          (.logTestMode training?))
-        (contains? opts :training-mode)
-        (doto frozen-layer
-          (.logTestMode (enum/value-of {:layer-training-mode training-mode})))
-        :else
-        (assert false "you must supply training? or training-mode")))
+  (match [opts]
+         [{:frozen-layer _ :training? _}]
+         (doto frozen-layer (.logTestMode training?))
+         [{:frozen-layer _ :training-mode _}]
+         (doto frozen-layer
+           (.logTestMode (enum/value-of {:layer-training-mode training-mode})))
+         :else
+         (assert false "you must supply training? or training-mode")))
 
 (defn get-inside-layer
   [frozen-layer]

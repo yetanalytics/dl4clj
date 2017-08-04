@@ -121,12 +121,12 @@
   :features (INDArray or vec), training data array"
   [& {:keys [mln layer-idx iter features]
       :as opts}]
-  (cond (contains-many? opts :layer-idx :iter)
-        (.pretrainLayer mln layer-idx (reset-iterator! iter))
-        (contains-many? opts :layer-idx :features)
-        (.pretrainLayer mln layer-idx (vec-or-matrix->indarray features))
-        :else
-        (assert false "you must supply the layer's index and either a dataset
+  (match [opts]
+         [{:mln _ :layer-idx _ :iter _}]
+         (.pretrainLayer mln layer-idx (reset-iterator! iter))
+         [{:mln _ :layer-idx _ :features _}]
+         (.pretrainLayer mln layer-idx (vec-or-matrix->indarray features))
+         :else (assert false "you must supply the layer's index and either a dataset
  iterator or an array of features to pretrain on")))
 
 (defn fine-tune!
@@ -152,12 +152,13 @@
   [& {:keys [mln iter labels top-n]
       :as opts}]
   (let [ds-iter (reset-iterator! iter)]
-    (cond (contains-many? opts :labels-list :top-n)
-          (.evaluate mln ds-iter (into '() labels) top-n)
-          (contains? opts :labels-list)
-          (.evaluate mln ds-iter (into '() labels))
-          :else
-          (.evaluate mln ds-iter))))
+    (match [opts]
+           [{:mln _ :ds-iter _ :labels-list _ :top-n _}]
+           (.evaluate mln ds-iter (into '() labels) top-n)
+           [{:mln _ :ds-iter _ :labels-list _}]
+           (.evaluate mln ds-iter (into '() labels))
+           :else
+           (.evaluate mln ds-iter))))
 
 (defn evaluate-regression
   "Evaluate the network for regression performance
@@ -206,12 +207,12 @@
    - see: dl4clj.datasets.iterators"
   [& {:keys [mln dataset add-regularization-terms? iter]
       :as opts}]
-  (cond (contains-many? opts :dataset :add-regularization-terms?)
-        (.scoreExamples mln dataset add-regularization-terms?)
-        (contains-many? opts :iter :add-regularization-terms?)
-        (.scoreExamples mln (reset-iterator! iter) add-regularization-terms?)
-        :else
-        (assert false "you must supply data in the form of a dataset or a dataset iterator.
+  (match [opts]
+         [{:mln _ :dataset _ :add-regularization-terms? _}]
+         (.scoreExamples mln dataset add-regularization-terms?)
+         [{:mln _ :iter _ :add-regularization-terms? _}]
+         (.scoreExamples mln (reset-iterator! iter) add-regularization-terms?)
+         :else (assert false "you must supply data in the form of a dataset or a dataset iterator.
 you must also supply whether or not you want to add regularization terms (L1, L2, dropout...)")))
 
 (defn output
@@ -237,28 +238,27 @@ you must also supply whether or not you want to add regularization terms (L1, L2
   [& {:keys [iter train? input features-mask labels-mask
              training-mode mln]
       :as opts}]
-  (let [ds-iter (if (contains? opts :iter)
+  (let [ds-iter (if iter
                   (reset-if-empty?! iter))
-        i (if (contains? opts :input)
+        i (if input
             (vec-or-matrix->indarray input))]
-    (cond (contains-many? opts :input :train?
-                          :features-mask :labels-mask)
-          (.output mln i train?
-                   (vec-or-matrix->indarray features-mask)
-                   (vec-or-matrix->indarray labels-mask))
-          (contains-many? opts :training-mode :input)
-          (.output mln i (enum/value-of {:layer-training-mode training-mode}))
-          (contains-many? opts :train? :input)
-          (.output mln i train?)
-          (contains-many? opts :iter :train?)
-          (.output mln ds-iter train?)
-          (contains? opts :input)
-          (.output mln i)
-          (contains? opts :iter)
-          (.output mln ds-iter)
-          :else
-          (assert false "you must supply atleast an input or iterator"))))
-
+    (match [opts]
+           [{:mln _ :input _ :train? _ :features-mask _ :labels-mask _}]
+           (.output mln i train?
+                    (vec-or-matrix->indarray features-mask)
+                    (vec-or-matrix->indarray labels-mask))
+           [{:mln _ :input _ :training-mode _}]
+           (.output mln i (enum/value-of {:layer-training-mode training-mode}))
+           [{:mln _ :input _ :train? _}]
+           (.output mln i train?)
+           [{:mln _ :iter _ :train? _}]
+           (.output mln ds-iter train?)
+           [{:mln _ :input _}]
+           (.output mln i)
+           [{:mln _ :iter _}]
+           (.output mln ds-iter)
+           :else
+           (assert false "you must supply atleast an input or iterator"))))
 
 
 (defn reconstruct

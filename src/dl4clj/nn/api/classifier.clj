@@ -5,6 +5,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   (:import [org.deeplearning4j.nn.api Classifier])
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.helpers :refer [reset-iterator!]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn f1-score
@@ -18,21 +19,22 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
     - labels = the correct classifcation for a a set of examples"
   [& {:keys [classifier dataset examples labels]
       :as opts}]
-  (cond (contains? opts :dataset)
-        (.f1Score classifier dataset)
-        (contains-many? opts :examples :labels)
-        (.f1Score classifier
-                  (vec-or-matrix->indarray examples)
-                  (vec-or-matrix->indarray labels))
-        :else
-        (assert false "you must supply a classifier and either a dataset or
+  (match [opts]
+         [{:classifier _ :dataset _}]
+         (.f1Score classifier dataset)
+         [{:classifier _ :examples _ :labels _}]
+         (.f1Score classifier
+                   (vec-or-matrix->indarray examples)
+                   (vec-or-matrix->indarray labels))
+         :else
+         (assert false "you must supply a classifier and either a dataset or
 examples and their labels")))
 
 (defn fit-classifier!
   "If dataset-iterator is supplied, trains the classifier based on the dataset-iterator
   if dataset or examples and labels are supplied, fits the classifier.
 
-  :data-set = a dataset
+  :dataset = a dataset
 
   :iter (iterator), an iterator for going through a collection of dataset objects
 
@@ -41,17 +43,18 @@ examples and their labels")))
   :labels = INDArray or vector of labels for the examples
 
   Returns the classifier after it has been fit"
-  [& {:keys [classifier data-set iter examples labels]
+  [& {:keys [classifier dataset iter examples labels]
       :as opts}]
-  (cond (contains? opts :data-set)
-        (doto classifier (.fit data-set))
-        (contains? opts :dataset-iterator)
-        (doto classifier (.fit (reset-iterator! iter)))
-        (contains-many? opts :examples :labels)
-        (doto classifier (.fit (vec-or-matrix->indarray examples)
-                               (vec-or-matrix->indarray labels)))
-        :else
-        (assert false "you must supply a classifier and either a dataset,
+  (match [opts]
+         [{:classifier _ :dataset _}]
+         (doto classifier (.fit dataset))
+         [{:classifier _ :iter _}]
+         (doto classifier (.fit (reset-iterator! iter)))
+         [{:classifier _ :examples _ :labels _}]
+         (doto classifier (.fit (vec-or-matrix->indarray examples)
+                                (vec-or-matrix->indarray labels)))
+         :else
+         (assert false "you must supply a classifier and either a dataset,
  iterator obj, or examples and their labels")))
 
 (defn label-probabilities
@@ -74,7 +77,10 @@ examples and their labels")))
   takes a datset of examples for each row, returns a label"
   [& {:keys [classifier examples dataset]
       :as opts}]
-  (cond (contains? opts :examples) (.predict classifier (vec-or-matrix->indarray examples))
-        (contains? opts :dataset) (.predict classifier dataset)
-        :else
-        (assert false "you must supply a classifier and either an INDArray of examples or a dataset")))
+  (match [opts]
+         [{:classifier _ :examples _}]
+         (.predict classifier (vec-or-matrix->indarray examples))
+         [{:classifier _ :dataset _}]
+         (.predict classifier dataset)
+         :else
+         (assert false "you must supply a classifier and either an INDArray of examples or a dataset")))
