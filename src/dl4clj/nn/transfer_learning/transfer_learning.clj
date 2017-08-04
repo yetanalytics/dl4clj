@@ -7,8 +7,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
             TransferLearning
             ;; currently not supporting graph-builder
             TransferLearning$Builder])
-  (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.nn.conf.builders.layers :as layer]
+  (:require [dl4clj.nn.conf.builders.layers :as layer]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
             [clojure.core.match :refer [match]]
             [dl4clj.nn.api.model :refer [init!]]
@@ -169,9 +168,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - The specified layer and the layers preceding it will be frozen with parameters staying constant
 
   :input-pre-processor (map) {:layer-idx (int) :pre-processor (pre-processor)}
-   - see: dl4clj.nn.conf.input-pre-processor
-
-  :build? (boolean), wether or not to build the mutation, defaults to true"
+   - see: dl4clj.nn.conf.input-pre-processor"
   [& {:keys [mln fine-tune-conf input-pre-processor remove-last-n-layers
              replacement-layer set-feature-extractor-idx add-layers
              remove-output-layer? as-code?]
@@ -198,7 +195,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
                       :fine-tune-conf fine-tune-conf*}
 
         opts* (replace-map-vals (dissoc opts :mln :as-code? :remove-output-layer?
-                                        :add-layers :build?)
+                                        :add-layers)
                                 updated-opts)
 
         fn-chain (builder-fn b tlb-method-map opts*)

@@ -2,8 +2,8 @@
     dl4clj.nn.conf.builders.layers
   (:require [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.constants :as constants]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals
-                                  eval-and-build]]
+            [dl4clj.utils :refer [generic-dispatching-fn builder-fn
+                                  replace-map-vals eval-and-build]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist]
             [clojure.core.match :refer [match]])

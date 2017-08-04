@@ -7,7 +7,6 @@
                                     input-type-helper]]
             [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build
                                   generic-dispatching-fn]]
-            [dl4clj.nn.api.model :refer [init!]]
             [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
@@ -370,7 +369,7 @@
 
         opts* (dissoc opts :layers :backprop? :backprop-type
                       :input-pre-processors :input-type :pretrain? :tbptt-back-length
-                      :tbptt-fwd-length :as-code? :init? :build?)
+                      :tbptt-fwd-length :as-code? :build?)
 
         ;; map of methods to values/code to create objects
         updated-opts (replace-map-vals opts* nn-conf-opts)
