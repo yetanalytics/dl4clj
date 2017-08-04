@@ -1,5 +1,5 @@
-(ns dl4clj.nn.builders.nn
-  (:require [dl4clj.nn.conf.builders.builders :as layer-builders]
+(ns dl4clj.nn.conf.builders.nn
+  (:require [dl4clj.nn.conf.builders.layers :as layer-builders]
             [dl4clj.helpers :refer [value-of-helper
                                     distribution-helper
                                     step-fn-helper
@@ -7,6 +7,7 @@
                                     input-type-helper]]
             [dl4clj.utils :refer [builder-fn replace-map-vals eval-and-build
                                   generic-dispatching-fn]]
+            [dl4clj.nn.api.model :refer [init!]]
             [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf
             NeuralNetConfiguration$Builder
@@ -145,9 +146,8 @@
         be converted to a multi layer conf
 
   NOTE: if you get a can't call nil error, you misspelled one of your keyword args
-        eval-and-build? (boolean), defaults to true.
+        as-code? (boolean), defaults to true.
           - determines if this fn returns the unevaluated code or a built network config
-          - try setting to false for a better understanding of what is going on
 
    Params for 1) the neural network are:
 
@@ -316,15 +316,16 @@
              iterations lr-policy-decay-rate lr-policy-power
              lr-policy-steps max-num-line-search-iterations mini-batch? minimize?
              use-drop-connect? optimization-algo lr-score-based-decay-rate nn-builder
-             regularization? seed step-fn convolution-mode layer layers build? eval?
+             regularization? seed step-fn convolution-mode layer layers
              ;; multi layer opts
              backprop? backprop-type input-pre-processors input-type pretrain?
              tbptt-back-length tbptt-fwd-length
 
              ;; do we want the code or the evaluated and built code?
-             eval-and-build?]
+             as-code? build?]
       :or {nn-builder `(NeuralNetConfiguration$Builder.)
-           eval-and-build? true}
+           as-code? true
+           build? true}
       :as opts}]
   (let [;; set up code for value of and other objects/enums
         a (if default-activation-fn
@@ -369,7 +370,7 @@
 
         opts* (dissoc opts :layers :backprop? :backprop-type
                       :input-pre-processors :input-type :pretrain? :tbptt-back-length
-                      :tbptt-fwd-length :eval-and-build?)
+                      :tbptt-fwd-length :as-code? :init? :build?)
 
         ;; map of methods to values/code to create objects
         updated-opts (replace-map-vals opts* nn-conf-opts)
@@ -395,11 +396,15 @@
         mln-conf-opts* (into {} (filter val mln-conf-opts))
 
         ;; create the code for creating the multi layer network conf
-        mln-b (multi-layer-builder-helper mln-conf-opts* builder-with-layers layers)]
+        mln-b (multi-layer-builder-helper mln-conf-opts* builder-with-layers layers)
+
+        build-mln? (if build?
+                     `(.build ~mln-b)
+                     mln-b)]
     ;; do we want to evaluate the code and build the result?
-    (if eval-and-build?
-      (eval-and-build mln-b)
-      mln-b)))
+    (if as-code?
+      build-mln?
+      (eval build-mln?))))
 
 (defn mln-from-nn-confs
   "creates a multi layer network from the supplied options and nn-confs
@@ -437,6 +442,7 @@
 
         mln-b (builder-fn b multi-layer-methods mln-conf-opts*)
 
+        ;; consider changing this to be :as-code? based
         mln-with-confs (if (not confz)
                          (.confs (eval mln-b) (into `() confs))
                          (eval mln-b))]

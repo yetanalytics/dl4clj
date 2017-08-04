@@ -1,7 +1,7 @@
 (ns dl4clj.nn-tests
-  (:require [dl4clj.nn.conf.builders.builders :refer :all]
-            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
-            [dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
+  (:require [dl4clj.nn.conf.builders.layers :refer :all]
+            [dl4clj.nn.conf.builders.nn :refer :all]
+            #_[dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
             [dl4clj.nn.api.multi-layer-network :refer :all]
             [dl4clj.nn.multilayer.multi-layer-network :refer :all]
             [dl4clj.nn.conf.distributions :refer :all]
@@ -1105,6 +1105,53 @@
                        :pretrain? false
                        :build? true)))
                :build? false)]
+      #_(dl4clj.nn.transfer-learning.transfer-learning/builder
+         :mln
+         (dl4clj.nn.multilayer.multi-layer-network/new-multi-layer-network
+          :as-code? true
+          :conf
+          (dl4clj.nn.conf.builders.nn/builder :layers {0 {:dense-layer {:n-in 100
+                                                                        :n-out 10
+                                                                        :layer-name "first layer"
+                                                                        :activation-fn :tanh
+                                                                        :weight-init :relu}}
+                                                       1 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                                          :n-in 10
+                                                          :n-out 10
+                                                          :layer-name "second layer"
+                                                          :activation-fn :tanh
+                                                          :gradient-normalization :none)}))
+         :fine-tune-conf  (dl4clj.nn.transfer-learning.fine-tune-conf/new-fine-tune-conf
+                           :activation-fn :relu
+                           :n-iterations 2
+                           :regularization? false
+                           :seed 1234)
+         :remove-last-n-layers 1
+         :replacement-layer {:layer-idx 0 :n-out 101 :weight-init :relu}
+         :add-layers {2 {:dense-layer {:n-in 100
+                                       :n-out 10
+                                       :layer-name "third layer"
+                                       :activation-fn :tanh
+                                       :weight-init :relu}}
+                      4 (dl4clj.nn.conf.builders.builders/output-layer-builder
+                         :n-in 10
+                         :n-out 10
+                         :layer-name "5th layer"
+                         :activation-fn :tanh
+                         :gradient-normalization :none)
+                      5 {:dense-layer {:n-in 100
+                                       :n-out 10
+                                       :layer-name "last layer"
+                                       :activation-fn :tanh
+                                       :weight-init :relu}}
+                      3 {:dense-layer {:n-in 100
+                                       :n-out 10
+                                       :layer-name "4th layer"
+                                       :activation-fn :tanh
+                                       :weight-init :relu}}}
+         :as-code? false
+         :input-pre-processor {:layer-idx 0
+                               :pre-processor {:unit-variance-processor {}}})
       ;; dl4clj.nn.transfer-learning.fine-tune-conf
       (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration
              (type fine-tune-conf)))

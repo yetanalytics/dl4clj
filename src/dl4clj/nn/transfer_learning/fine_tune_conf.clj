@@ -7,7 +7,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
             FineTuneConfiguration])
   (:require [dl4clj.constants :as enum]
             [dl4clj.utils :refer [builder-fn eval-and-build]]
-            [dl4clj.helpers :refer [value-of-helper]]))
+            [dl4clj.helpers :refer [value-of-helper]]
+            [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make the fine tuning conf
@@ -32,19 +33,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
   :seed (int or long), consistent randomization
 
   :eval-and-build? (boolean), do you want to evaluate and build the conf?
-   - defaults to true"
-  [& {:keys [activation-fn n-iterations regularization? seed eval-and-build?]
-      :or {eval-and-build? true}
+   - defaults to false"
+  [& {:keys [activation-fn n-iterations regularization? seed as-code?]
+      :or {as-code? true}
       :as opts}]
   (let [b `(FineTuneConfiguration$Builder.)
         a-fn (value-of-helper :activation-fn activation-fn)
         opts* (-> opts
-                  (dissoc :activation-fn :eval-and-build?)
+                  (dissoc :activation-fn :as-code?)
                   (assoc :activation-fn a-fn))
         fn-chain (builder-fn b fine-tune-method-map opts*)]
-    (if eval-and-build?
-      (eval-and-build fn-chain)
-      fn-chain)))
+    (if as-code?
+      fn-chain
+      (eval-and-build fn-chain))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply the fine tune conf

@@ -2,7 +2,8 @@
     dl4clj.nn.conf.builders.layers
   (:require [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.constants :as constants]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals]]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals
+                                  eval-and-build]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist]
             [clojure.core.match :refer [match]])
@@ -159,7 +160,10 @@
 
   :weight-init (keyword) Weight initialization scheme
   one of: :distribution, :zero, :sigmoid-uniform, :uniform, :xavier, :xavier-uniform
-          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size"
+          :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size
+
+  NOTE: as-code? (boolean), determines if the java object is created or not.
+   - defaults to true (java objects creation is put off)"
   [builder-type {:keys [activation-fn adam-mean-decay adam-var-decay
                         bias-init bias-learning-rate dist drop-out epsilon
                         gradient-normalization gradient-normalization-threshold
@@ -174,8 +178,8 @@
                         encoder-layer-sizes num-samples pzx-activation-function
                         collapse-dimensions? pnorm pooling-dimensions eps
                         gate-activation-fn reconstruction-distribution
-                        vae-loss-fn build?]
-                 :or {build? true}
+                        vae-loss-fn as-code?]
+                 :or {as-code? true}
                  :as opts}]
   (let [;; create code for creating java objects at eval time
         a-fn (if activation-fn (value-of-helper :activation-fn activation-fn))
@@ -206,9 +210,12 @@
                   :hidden-unit hid-unit
                   :gate-activation-fn gate-a-fn
                   :vae-loss-fn vae-lfn}
-        updated-opts (replace-map-vals opts obj-opts)]
-    ;; create our code
-    (builder-fn builder-type layer-method-map updated-opts)))
+        updated-opts (replace-map-vals (dissoc opts :as-code?) obj-opts)
+        ;; create our code
+        fn-chain (builder-fn builder-type layer-method-map updated-opts)]
+    (if as-code?
+      fn-chain
+      (eval-and-build fn-chain))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn methods

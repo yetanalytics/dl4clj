@@ -2,20 +2,29 @@
     dl4clj.nn.multilayer.multi-layer-network
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.constants :as enum]
-            [dl4clj.nn.api.model :refer [fit!]]
+            [dl4clj.nn.api.model :refer [fit! init!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]])
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
   some params (INDArray or vec)"
-  [& {:keys [conf params]}]
-  (if params
-    (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
-    (MultiLayerNetwork. conf)))
+  [& {:keys [conf params as-code?]
+      :or {as-code? false}
+      :as opts}]
+  (match [opts]
+         [{:conf _ :params _ :as-code? true}]
+         `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
+         [{:conf _ :params _ :as-code? false}]
+         (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
+         [{:conf _  :as-code? true}]
+          `(MultiLayerNetwork. ~conf)
+         :else
+         (MultiLayerNetwork. conf)))
 
 (defn initialize!
   "Sets the input and labels from this dataset

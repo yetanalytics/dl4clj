@@ -1,20 +1,25 @@
 (ns ^{:doc "The transfer learning API can be used to modify the architecture or the learning parameters of an existing multilayernetwork or computation graph.
  It allows one to - change nOut of an existing layer - remove and add existing layers/vertices - fine tune learning configuration (learning rate, updater etc) - hold parameters for specified layers as a constant
 
-see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/TransferLearning.html"}
+see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/TransferLearning.htmlq"}
     dl4clj.nn.transfer-learning.transfer-learning
   (:import [org.deeplearning4j.nn.transferlearning
             TransferLearning
             ;; currently not supporting graph-builder
             TransferLearning$Builder])
   (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.constants :as enum]
-            [dl4clj.nn.conf.builders.layer :as l]))
+            [dl4clj.nn.conf.builders.layers :as layer]
+            [dl4clj.nn.conf.input-pre-processor :as pre-process]
+            [clojure.core.match :refer [match]]
+            [dl4clj.nn.api.model :refer [init!]]
+            [dl4clj.nn.api.multi-layer-network :refer [is-init-called?]]
+            [dl4clj.utils :refer [builder-fn eval-and-build replace-map-vals generic-dispatching-fn]]
+            [dl4clj.helpers :refer [value-of-helper distribution-helper pre-processor-helper]]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn replace-layer!
+(defn replace-layer-helper
   "performs the replacement of n-out for a supplied layer
 
   This fn is called within multi-layer-network-mutater-builder
@@ -24,11 +29,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
   :n-out (int), desired n-out for the supplied layer
 
   :dist (distribution), a distribution to sample weights from
-   - creation of the distribution is not handled here
    - see: dl4clj.nn.conf.distribution.distribution
 
   :next-dist (distribution), distribtuion to use for params in the next layer
-   - creation of the distribution is not handled here
    - see: dl4clj.nn.conf.distribution.distribution
 
   :weight-init (keyword) Weight initialization scheme
@@ -36,34 +39,36 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
           :xavier-fan-in, :xavier-legacy, :relu, :relu-uniform, :vi, :size
 
   :next-weight-init (keyword), same as :weight-init but applied to the next layer"
-  [builder {:keys [layer-idx n-out dist next-dist
-                   weight-init next-weight-init]
-            :as opts}]
-  (assert (contains-many? opts :layer-idx :n-out)
-          "You must supply a layer index and the n-out for replacement")
-  (cond (contains-many? opts :dist :next-weight-init)
-        (.nOutReplace builder layer-idx n-out dist (enum/value-of
-                                                    {:weight-init next-weight-init}))
-        (contains-many? opts :dist :next-dist)
-        (.nOutReplace builder layer-idx n-out dist next-dist)
-        (contains-many? opts :weight-init :next-dist)
-        (.nOutReplace builder layer-idx n-out (enum/value-of
-                                               {:weight-init weight-init}) next-dist)
-        (contains-many? opts :weight-init :next-weight-init)
-        (.nOutReplace builder layer-idx n-out
-                      (enum/value-of
-                       {:weight-init weight-init})
-                      (enum/value-of
-                       {:weight-init next-weight-init}))
-        (contains-many? opts :dist)
-        (.nOutReplace builder layer-idx n-out dist)
-        (contains-many? opts :weight-init)
-        (.nOutReplace builder layer-idx n-out (enum/value-of
-                                               {:weight-init weight-init}))
-        :else
-        (assert false "no mutation happened, you need atleast a distribution or a weight-init")))
+  [{:keys [layer-idx n-out dist next-dist
+           weight-init next-weight-init]
+    :as opts}]
+  (let [d (if dist
+            (distribution-helper dist))
+        next-d (if next-dist
+                 (distribution-helper next-dist))
+        w (if weight-init
+            (value-of-helper :weight-init weight-init))
+        next-w (if next-weight-init
+                 (value-of-helper :weight-init next-weight-init))]
+    (match [opts]
+           [{:layer-idx _ :n-out _ :dist _ :next-weight-init _}]
+           `[~layer-idx ~n-out ~d ~w]
+           [{:layer-idx _ :n-out _ :weight-init _ :next-dist _}]
+           `[~layer-idx ~n-out ~w ~next-d]
+           [{:layer-idx _ :n-out _ :dist _ :next-dist _}]
+           `[~layer-idx ~n-out ~d ~next-d]
+           [{:layer-idx _ :n-out _ :weight-init _ :next-dist _}]
+           `[~layer-idx ~n-out ~w ~next-d]
+           [{:layer-idx _ :n-out _ :weight-init _ :next-weight-init _}]
+           `[~layer-idx ~n-out ~w ~next-w]
+           [{:layer-idx _ :n-out _ :dist _}]
+           `[~layer-idx ~n-out ~d]
+           [{:layer-idx _ :n-out _ :weight-init _}]
+           `[~layer-idx ~n-out ~w]
+           :else
+           (assert false "missing args, you need atleast a distribution or a weight-init"))))
 
-(defn set-input-pre-processor!
+(defn input-pre-processor-helper
   "addds a preprocessor for a given layer
 
   this fn is called by multi-layer-network-mutater-builder
@@ -72,33 +77,66 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
 
   :pre-processor (pre-processor), a built pre-processor
    - see: dl4clj.nn.conf.input-pre-processor"
-  [builder {:keys [layer-idx pre-processor]
-            :as opts}]
-  (.setInputPreProcessor builder layer-idx pre-processor))
-
-(defn add-multiple-layers
-  "adds multiple layers to a transfer learning builder"
-  [tl-builder layers]
-  (let [idxs (sort (keys layers))
-        layers (into []
-                     (for [each idxs]
-                       (get layers each)))]
-    (loop [result tl-builder
-           cur! layers]
-      (cond (empty? cur!)
-            result
+  [{:keys [layer-idx pre-processor]
+    :as opts}]
+  `[~layer-idx
+    ~(match [pre-processor]
+            [(_ :guard seq?)] pre-processor
             :else
-            (let [cur-layer (first cur!)]
-              (recur (.addLayer result (if (map? cur-layer)
-                                         (l/builder cur-layer)
-                                         cur-layer))
-                     (rest cur!)))))))
+            `(pre-process/pre-processors ~pre-processor))])
+
+(defn add-layers-helper
+  "adds multiple layers to a transfer learning builder
+
+  maintains order of int keys in the passed in layers map when
+
+  multiple layers are suppose to be added"
+  [layers]
+  (match [layers]
+         ;; sinle layer, fn call
+         [(_ :guard seq?)]
+         [`(eval-and-build ~layers)]
+         ;; single layer, config map
+         [(true :<< #(keyword? (generic-dispatching-fn %)))]
+         [`(eval-and-build (layer/builder ~layers))]
+         ;; multiple layers
+         [(true :<< #(integer? (generic-dispatching-fn %)))]
+         ;; ensure ordering based on passed in idxs
+         (let [idxs (sort (keys layers))
+               ls (into []
+                        (for [each idxs]
+                          (get layers each)))]
+           (loop [result []
+                  cur! ls]
+             ;; tail recursion
+             (cond (empty? cur!)
+                   result
+                   :else
+                   (let [cur-layer (first cur!)]
+                     (recur (conj result
+                                  (match [cur-layer]
+                                         ;; are we dealing with a config map or a fn call
+                                         [(_ :guard map?)]
+                                         [`(eval-and-build
+                                            (layer/builder ~cur-layer))]
+                                         :else
+                                         [`(eval-and-build ~cur-layer)]))
+                            (rest cur!))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; builder for mutating multi layer networks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn transfer-learning-builder
+(def tlb-method-map
+  {:fine-tune-conf            '.fineTuneConfiguration
+   :remove-last-n-layers      '.removeLayersFromOutput
+   :remove-output-layer?      '.removeOutputLayer
+   :add-layers                '.addLayer
+   :set-feature-extractor-idx '.setFeatureExtractor
+   :replacement-layer         '.nOutReplace
+   :input-pre-processor       '.setInputPreProcessor})
+
+(defn builder
   "given a multi-layer-network and options on how to change it,
 
   creates a builder for applying the changes and applies them.
@@ -108,24 +146,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
   :mln (multi layer network), a multi layer network to mutate
    - see dl4clj.nn.conf.builders.multi-layer-builders
 
-  :tlb (transferlearning builder), an existing transfer learning builder
-   - if not supplied, a new one will be created from the mln
-
-  :add-layer (layer), a layer to add to the multi layer network
-   - see dl4clj.nn.conf.builders.builders
-
   :add-layers (multiple layers), a map of layers to add to the net, will be added
    in the order of their supplied index
-    - you should either add a single layer by supplying :layer and not :layers or
-      multiple layers by supplying this key
 
   :fine-tune-conf (fine tune configuration), a fine tune configuration
    - required to add layer(s)
    - see dl4clj.nn.transfer-learning.fine-tune-conf
+   - result of new-fine-tune-conf when eval-and-build? set to false
 
   :replacement-layer (map), {:layer-idx (int) :n-out (int) :dist (distribution)
-                         :next-dist (distribution) :weight-init (keyword)
-                         :next-weight-init (keyword)}
+                             :next-dist (distribution) :weight-init (keyword)
+                             :next-weight-init (keyword)}
    - see replace-n-out for further details about the args
    - see dl4clj.nn.conf.distribution.distribution for creating distributions
 
@@ -141,22 +172,45 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - see: dl4clj.nn.conf.input-pre-processor
 
   :build? (boolean), wether or not to build the mutation, defaults to true"
-  [& {:keys [mln add-layer add-layers fine-tune-conf
-             replacement-layer remove-last-n-layers
-             remove-output-layer? set-feature-extractor-idx
-             input-pre-processor build? tlb]
-      :or {build? true}
+  [& {:keys [mln fine-tune-conf input-pre-processor remove-last-n-layers
+             replacement-layer set-feature-extractor-idx add-layers
+             remove-output-layer? as-code?]
+      :or {as-code? false}
       :as opts}]
-  (let [b (if (contains? opts :tlb)
-            tlb
-           (TransferLearning$Builder. mln))]
-    (cond-> b
-      (contains? opts :fine-tune-conf) (.fineTuneConfiguration fine-tune-conf)
-      (contains? opts :replacement-layer) (replace-layer! replacement-layer)
-      (contains? opts :remove-last-n-layers) (.removeLayersFromOutput remove-last-n-layers)
-      (true? remove-output-layer?) .removeOutputLayer
-      (contains? opts :add-layer) (.addLayer add-layer)
-      (contains? opts :add-layers) (add-multiple-layers add-layers)
-      (contains? opts :set-feature-extractor-idx) (.setFeatureExtractor set-feature-extractor-idx)
-      (contains? opts :input-pre-processor) (set-input-pre-processor! input-pre-processor)
-      build? .build)))
+  (let [b `(TransferLearning$Builder. (if (is-init-called? ~mln)
+                                        ~mln
+                                        (init! :model ~mln)))
+
+        replacement-layer* (if replacement-layer
+                             (replace-layer-helper replacement-layer))
+
+        input-pre-processor* (if input-pre-processor
+                               (input-pre-processor-helper input-pre-processor))
+
+        add-layers* (if add-layers
+                      (add-layers-helper add-layers))
+
+        fine-tune-conf* (if fine-tune-conf
+                          `(eval-and-build ~fine-tune-conf))
+
+        updated-opts {:replacement-layer replacement-layer*
+                      :input-pre-processor input-pre-processor*
+                      :fine-tune-conf fine-tune-conf*}
+
+        opts* (replace-map-vals (dissoc opts :mln :as-code? :remove-output-layer?
+                                        :add-layers :build?)
+                                updated-opts)
+
+        fn-chain (builder-fn b tlb-method-map opts*)
+
+        ;; layers have to be added after the fine tune conf
+        fn-chain-with-layers (if add-layers*
+                               (builder-fn fn-chain tlb-method-map {:add-layers add-layers*})
+                               fn-chain)
+
+        fn-chain* (if remove-output-layer?
+                    `(.removeOutputLayer ~fn-chain-with-layers)
+                    fn-chain-with-layers)]
+    (if as-code?
+      fn-chain*
+      (eval-and-build fn-chain*))))
