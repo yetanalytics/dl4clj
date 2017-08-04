@@ -246,8 +246,8 @@
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
 
-  :pre-processors (coll), a collection of pre-processor objects
-   - can be pre-processors built using the above fns or a configuration map
+  :pre-processors (coll), a collection of pre-processors
+   - can be a mix of the above fns or a configuration map
      that is passed to the pre-processors multi method
 
   ie. (composable-input-pre-processor

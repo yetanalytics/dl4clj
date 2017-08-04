@@ -1,4 +1,4 @@
-(ns dl4clj.nn.builders.nn-builder
+(ns dl4clj.nn.builders.nn
   (:require [dl4clj.nn.conf.builders.builders :as layer-builders]
             [dl4clj.helpers :refer [value-of-helper
                                     distribution-helper
@@ -125,86 +125,87 @@
                      :conf `(~list (eval-and-build ~builder-with-layers)))))))
 
 (defn builder
-  ;; come back and update this doc string
-  ;; changes like eval-and-build?
-  ;; might just move this info over to the wiki
-  ;; and say for arg descriptions, see the wiki
-  ;; because this doc string would otherwise be huge
-  "
-  1) network args
+  "Creates a single layer neural network configuration or a multi layer neural network
+   configuration dl4j object given the specifed args.  There are 3 categories of args
+   this fn accepts:
+
+   1) network args
       - these are params that affect the network as a whole instead of just at the layer level
 
-   2) global layer args
+   2) global layer args (args which start with default-...)
       - these params will not overwrite those set at the layer level
       - will replace layer params that were not set at the layer level
-      - args from layer.builder, the base class for all layers
+      - args from builder.layer/any-layer-builder
 
-  3) multi layer args
+   3) multi layer args
+      - these params are those specificly for multi layer configurations
+      - adding more than 1 layer to a nn-conf will automatically produce
+        a multi layer network even if no multi layer args are supplied
+      - if any of these args are supplied, a 0 or 1 layer nn-conf will
+        be converted to a multi layer conf
 
-  If you only supply one or no layer, will return a neural net configuration
-  if you supply layers, will return a multi layer configuration
-   - you should only supply a config for one of these options
-     (layer or layers not both)
+  NOTE: if you get a can't call nil error, you misspelled one of your keyword args
+        eval-and-build? (boolean), defaults to true.
+          - determines if this fn returns the unevaluated code or a built network config
+          - try setting to false for a better understanding of what is going on
+
+   Params for 1) the neural network are:
+
+   :iterations (int) Number of optimization iterations
+
+   :lr-policy-decay-rate (double) Sets the decay rate for the learning rate decay policy.
+
+   :lr-policy-power (double) Sets the power used for learning rate inverse policy
+
+   :lr-policy-steps (double) Sets the number of steps used for learning decay rate steps policy
+
+   :max-num-line-search-iterations (int) Maximum number of line search iterations
+
+   :mini-batch? (boolean) Process input as minibatch instead of as a full dataset
+
+   :minimize? (boolean) Objective function to minimize or maximize cost function
+    default is true
+
+   :use-drop-connect? (boolean) Multiply the weight by a binomial sampling wrt the dropout probability.
+    Dropconnect probability is set using :drop-out(double); this is the probability of retaining a weight
+
+   :optimization-algo (keyword) Optimization algorithm to use
+    one of: :line-gradient-descent, :conjugate-gradient, :hessian-free (deprecated),
+            :lbfgs, :stochastic-gradient-descent
+
+   :lr-score-based-decay-rate (double)
+    Rate to decrease :learning-rate by when the score stops improving
+
+   :regularization? (boolean) Whether or not to use regularization
+
+   :seed (int or long) Random number generator seed, Used for reproducability between runs
+
+   :step-fn (keyword or fn) Step functions to apply for back track line search
+    Only applies for line search optimizers: Line Search SGD, Conjugate Gradient, LBFGS
+    one of: :default-step-fn (default), :negative-default-step-fn :gradient-step-fn (for SGD),
+    :negative-gradient-step-fn
+     - see dl4clj.nn.conf.step-fns for fns you can pass as args
+
+   :convolution-mode (keyword), one of: :strict, :truncate, :same
+    - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
+
+   :layers (fn or config map), layers can be supplied in many ways.
+    for passing single layers:
+      a) pass in a layer-type-builder fn from dl4clj.nn.conf.builders.layers
+      b) a configuration map for the builder multi method
+          - see any-layer-builder for general layer args and the fns from a)
+            for layer specific args
+    for passing multiple layers, need to pass config map: {idx (int) config-map or fn-call}
+     - the keys in this config map should be the desired index of the layers
+     - the values are either configuration maps or fn calls
+       - a) and b) from single layers options above
 
 
 
-
-  Params for the neural network are:
-
-  :iterations (int) Number of optimization iterations
-
-  :lr-policy-decay-rate (double) Sets the decay rate for the learning rate decay policy.
-
-  :lr-policy-power (double) Sets the power used for learning rate inverse policy
-
-  :lr-policy-steps (double) Sets the number of steps used for learning decay rate steps policy
-
-  :max-num-line-search-iterations (int) Maximum number of line search iterations
-
-  :mini-batch? (boolean) Process input as minibatch instead of as a full dataset
-
-  :minimize? (boolean) Objective function to minimize or maximize cost function
-   default is true
-
-  :use-drop-connect? (boolean) Multiply the weight by a binomial sampling wrt the dropout probability.
-   Dropconnect probability is set using :drop-out(double); this is the probability of retaining a weight
-
-  :optimization-algo (keyword) Optimization algorithm to use
-   one of: :line-gradient-descent, :conjugate-gradient, :hessian-free (deprecated),
-           :lbfgs, :stochastic-gradient-descent
-
-  :lr-score-based-decay-rate (double)
-   Rate to decrease :learning-rate by when the score stops improving
-
-  :regularization? (boolean) Whether or not to use regularization
-
-  :seed (int or long) Random number generator seed, Used for reproducability between runs
-
-  :step-fn (keyword) Step functions to apply for back track line search
-   Only applies for line search optimizers: Line Search SGD, Conjugate Gradient, LBFGS
-   one of: :default-step-fn (default), :negative-default-step-fn :gradient-step-fn (for SGD),
-   :negative-gradient-step-fn
-
-  :convolution-mode (keyword), one of: :strict, :truncate, :same
-   - see https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ConvolutionMode.html
-
-  :build? (boolean), defaults to false, builds the nn-conf
-   - defaults to false because the resulting list builder is needed when passing
-     the result of this fn to multi-layer-config-builder.
-
-   - If there are no additional params you want added to the configuration
-     (from multi-layer-config-builder) then set built? to true
-
-  :layers {idx (int) {:layer-type {config-opts vals}}}
-   see dl4clj.nn.conf.builders.builders and tests for examples
-  {:layer-type {config-opts vals}}
-
-
-
-  Params for layers are:
+  Params for 2) the layer defaults are:
 
   :default-activation-fn (keyword) default global activation fn,
-   wont overwrite activation functions specificed in the layer or layers map.
+   wont overwrite activation functions specificed for layers.
    opts are :cube, :elu, :hard-sigmoid, :hard-tanh, :identity, :leaky-relu
             :relu, :r-relu, :sigmoid, :soft-max, :soft-plus, :soft-sign, :tanh
             :rational-tanh
@@ -217,10 +218,11 @@
 
   :default-bias-learning-rate (double) Bias learning rate
 
-  :default-dist (map) distribution to sample initial weights from, one of:
+  :default-dist (map or fn-call) distribution to sample initial weights from, one of:
         binomial-distribution = {:binomial {:number-of-trails int :probability-of-success double}}
         normal-distribution = {:normal {:mean double :std double}}
         uniform-distribution = {:uniform {:lower double :upper double}}
+      - see dl4clj.nn.conf.distributions for the corresponding fns
 
   :default-drop-out (double) Dropout probability
 
@@ -272,8 +274,7 @@
 
 
 
-
-  params for multi layer networks are:
+  Params for 3) multi layer networks are:
 
   :backprop? (boolean) whether to do backprop or not
 
@@ -283,8 +284,8 @@
                                                 1 {:unit-variance-processor {}}}
   specifies the processors, these are used at each layer for doing things like
   normalization and shaping of input.
-   - the pre-processors should be config maps but can the code for creating the
-     java objects.  If its the code for creating the objects, it must be quoted
+   - the keys of the map are the indexs of layers you want the pre-processor attached to
+   - the values are either fn calls from dl4clj.nn.conf.input-pre-processor or config maps
 
   :input-type (map), map of params describing the input
    {(keyword) other-opts}, ie. {:convolutional {:input-height 1 ...}}
@@ -361,20 +362,12 @@
                       :default-updater u
                       :default-weight-init w}
 
-        mln-conf-opts {:input-pre-processors pps
-                       :backprop-type bp-type
-                       :input-type input-t
-                       :backprop? backprop?
-                       :pretrain? pretrain?
-                       :tbptt-back-length tbptt-back-length
-                       :tbptt-fwd-length tbptt-fwd-length}
-
         ;; remove mln opts and layer opts
         ;; the mln methods should not be added until after the code
         ;; for the nn-conf builder is created
-        ;; layers need to be treated after other nn-conf opts methods care created
+        ;; layers need to be treated after other nn-conf opts methods
 
-        opts* (dissoc opts :layers :layer :backprop? :backprop-type
+        opts* (dissoc opts :layers :backprop? :backprop-type
                       :input-pre-processors :input-type :pretrain? :tbptt-back-length
                       :tbptt-fwd-length :eval-and-build?)
 
@@ -388,6 +381,16 @@
         builder-with-layers (if layers
                               (layer-builder-helper nn-conf-b layers)
                               nn-conf-b)
+
+        ;; re introduce our mln options
+        mln-conf-opts {:input-pre-processors pps
+                       :backprop-type bp-type
+                       :input-type input-t
+                       :backprop? backprop?
+                       :pretrain? pretrain?
+                       :tbptt-back-length tbptt-back-length
+                       :tbptt-fwd-length tbptt-fwd-length}
+
         ;; only pass the supplied method and values
         mln-conf-opts* (into {} (filter val mln-conf-opts))
 

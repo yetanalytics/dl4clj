@@ -9,7 +9,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
             TransferLearning$Builder])
   (:require [dl4clj.utils :refer [contains-many?]]
             [dl4clj.constants :as enum]
-            [dl4clj.nn.conf.builders.builders :as l]))
+            [dl4clj.nn.conf.builders.layer :as l]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

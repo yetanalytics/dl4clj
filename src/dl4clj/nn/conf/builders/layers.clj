@@ -1,5 +1,5 @@
 (ns ^{:doc "see https://deeplearning4j.org/glossary for param descriptions"}
-    dl4clj.nn.conf.builders.builders
+    dl4clj.nn.conf.builders.layers
   (:require [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.constants :as constants]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn replace-map-vals]]
