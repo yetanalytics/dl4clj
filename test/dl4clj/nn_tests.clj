@@ -1115,7 +1115,7 @@
                                                                         :layer-name "first layer"
                                                                         :activation-fn :tanh
                                                                         :weight-init :relu}}
-                                                       1 (dl4clj.nn.conf.builders.builders/dense-layer-builder
+                                                       1 (dl4clj.nn.conf.builders.layers/dense-layer-builder
                                                           :n-in 10
                                                           :n-out 10
                                                           :layer-name "second layer"
@@ -1133,7 +1133,7 @@
                                        :layer-name "third layer"
                                        :activation-fn :tanh
                                        :weight-init :relu}}
-                      4 (dl4clj.nn.conf.builders.builders/output-layer-builder
+                      4 (dl4clj.nn.conf.builders.layers/output-layer-builder
                          :n-in 10
                          :n-out 10
                          :layer-name "5th layer"
