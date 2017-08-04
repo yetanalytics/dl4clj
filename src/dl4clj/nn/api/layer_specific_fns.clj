@@ -147,7 +147,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   (assert (contains-many? opts :rbm :visible-input)
           "you must supply a rbm and the visible input")
   (let [vi (vec-or-matrix->indarray visible-input)]
-   (if training?
+   (if (boolean training?)
     (.propUp rbm vi training?)
     (.propUp rbm vi))))
 

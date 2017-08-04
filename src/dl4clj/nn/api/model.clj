@@ -131,7 +131,7 @@
      of the weights for the various neuralNets and output layer"
   [& {:keys [model backwards?]
       :as opts}]
-  (if backwards?
+  (if (boolean? backwards?)
     (.numParams model backwards?)
     (.numParams model)))
 
@@ -141,7 +141,7 @@
   and output layer"
   [& {:keys [model backward-only?]
       :as opts}]
-  (if backward-only?
+  (if (boolean? backward-only?)
     (.params model backward-only?)
     (.params model)))
 
@@ -149,7 +149,7 @@
   "The param table"
   [& {:keys [model backprop-params-only?]
       :as opts}]
-  (if backprop-params-only?
+  (if (boolean? backprop-params-only?)
         (.paramTable model backprop-params-only?)
         (.paramTable model)))
 
