@@ -21,8 +21,7 @@
   "Sets the input and labels from this dataset
 
   :ds (dataset), a dataset
-   -see: nd4clj.linalg.dataset.data-set
-         dl4clj.datasets.datavec"
+   -see: nd4clj.linalg.dataset.data-set"
   [& {:keys [mln ds]}]
   (doto mln
     (.initialize ds)))
@@ -44,6 +43,7 @@
   "train the supplied multi layer network on the supplied dataset
 
   :iter (iterator), an iterator wrapping a dataset
+   - see: dl4clj.datasets.iterators
 
   :n-epochs (int), the number of passes through the dataset"
   [& {:keys [mln iter n-epochs]}]
@@ -95,7 +95,7 @@
   or train each layer manually using (pre-train-layer! layer-idx DataSetIterator)
 
   :iter (ds-iter), dataset iterator
-   - see: dl4clj.datasets.datavec"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [mln iter]}]
   (.pretrain mln (reset-iterator! iter)))
 
@@ -107,7 +107,7 @@
   :layer-idx (int), the index of the layer you want to pretrain
 
   :iter (ds-iter), dataset iterator
-   - see: dl4clj.datasets.datavec
+   - see: dl4clj.datasets.iterators
 
   :features (INDArray or vec), training data array"
   [& {:keys [mln layer-idx iter features]
@@ -129,14 +129,13 @@
     (.finetune)))
 
 (defn evaluate-classification
-  ;; might be a duplicate fn
   "if you only supply mln and iter: Evaluate the network (classification performance)
   if you supply mln, iter and labels-list: Evaluate the network on the provided data set.
   if you supply all args: Evaluate the network (for classification) on the provided data set,
                           with top N accuracy in addition to standard accuracy.
 
   :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec
+   - see: dl4clj.datasets.iterators
 
   :labels (coll), a collection of strings (the labels)
 
@@ -155,8 +154,7 @@
   "Evaluate the network for regression performance
 
   :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec"
-  ;; update doc
+   - see: dl4clj.datasets.iterators"
   [& {:keys [mln iter]}]
   (.evaluateRegression mln (reset-iterator! iter)))
 
@@ -165,7 +163,7 @@
    - see:dl4clj.eval.roc.rocs
 
   :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec
+   - see: dl4clj.datasets.iterators
 
   :roc-threshold-steps (int), value needed to call the ROC constructor
    - see: dl4clj.eval.roc.rocs"
@@ -176,7 +174,7 @@
   "Evaluate the network on the specified data.
 
   :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec
+   - see: dl4clj.datasets.iterators
 
   :roc-threshold-steps (int), value needed to call the ROCMultiClass constructor
    - see: dl4clj.eval.roc.rocs"
@@ -196,7 +194,7 @@
    otherwise just return the scores
 
   :iter (ds-iter), dataset iterator
-   - see: dl4clj.datasets.datavec"
+   - see: dl4clj.datasets.iterators"
   [& {:keys [mln dataset add-regularization-terms? iter]
       :as opts}]
   (cond (contains-many? opts :dataset :add-regularization-terms?)
@@ -212,7 +210,7 @@ you must also supply whether or not you want to add regularization terms (L1, L2
   calculate the output of the network with masking arrays
 
   :iter (ds-iter), a dataset iterator
-   - see: dl4clj.datasets.datavec
+   - see: dl4clj.datasets.iterators
 
   :train? (boolean), are we in training mode?
    - This mainly affect hyper parameters such as drop out

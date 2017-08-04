@@ -5,11 +5,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
     dl4clj.nn.transfer-learning.fine-tune-conf
   (:import [org.deeplearning4j.nn.transferlearning FineTuneConfiguration$Builder
             FineTuneConfiguration])
-  (:require [dl4clj.constants :as enum]))
+  (:require [dl4clj.constants :as enum]
+            [dl4clj.utils :refer [builder-fn eval-and-build]]
+            [dl4clj.helpers :refer [value-of-helper]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make the fine tuning conf
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def fine-tune-method-map
+  {:activation-fn   '.activation
+   :n-iterations    '.iterations
+   :regularization? '.regularization
+   :seed            '.seed})
+
 
 (defn new-fine-tune-conf
   "creates a new fine tune configuration
@@ -22,23 +31,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
 
   :seed (int or long), consistent randomization
 
-  :build? (boolean), do you want to build the conf or not?
+  :eval-and-build? (boolean), do you want to evaluate and build the conf?
    - defaults to true"
-  [& {:keys [activation-fn n-iterations regularization? seed build?]
-    :or {build? true}
-    :as opts}]
-  (let [b (FineTuneConfiguration$Builder.)]
-    (cond-> b
-      (contains? opts :activation-fn)
-      (.activation (enum/value-of {:activation-fn activation-fn}))
-      (contains? opts :n-iterations)
-      (.iterations n-iterations)
-      (contains? opts :regularization?)
-      (.regularization regularization?)
-      (contains? opts :seed)
-      (.seed seed)
-      (true? build?)
-      .build)))
+  [& {:keys [activation-fn n-iterations regularization? seed eval-and-build?]
+      :or {eval-and-build? true}
+      :as opts}]
+  (let [b `(FineTuneConfiguration$Builder.)
+        a-fn (value-of-helper :activation-fn activation-fn)
+        opts* (-> opts
+                  (dissoc :activation-fn :eval-and-build?)
+                  (assoc :activation-fn a-fn))
+        fn-chain (builder-fn b fine-tune-method-map opts*)]
+    (if eval-and-build?
+      (eval-and-build fn-chain)
+      fn-chain)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply the fine tune conf
@@ -59,6 +65,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
   :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
   [& {:keys [fine-tune-conf build?]
       :or {build? false}}]
-  (if (true? build?)
+  (if build?
     (.build (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
     (.appliedNeuralNetConfigurationBuilder fine-tune-conf)))

@@ -2,29 +2,6 @@
   (:require [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.util ModelSerializer]))
 
-(defn pre-processor-helper
-  [pps]
-  (into {}
-        (for [each pps
-              :let [[idx pp] each]]
-          {idx `(pre-process/pre-processors ~pp)})))
-
-(defn value-of-helper
-  [k v]
-  `(constants/value-of {~k ~v}))
-
-(defn distribution-helper
-  [opts]
-  `(distribution/distribution ~opts))
-
-(defn step-fn-helper
-  [opts]
-  `(step-functions/step-fn ~opts))
-
-(defn input-type-helper
-  [input-type]
-  `(constants/input-types ~input-type))
-
 (defn multi-arg-helper
   "takes elements from the args data structure and puts in a
   list which contains the method."
@@ -88,9 +65,6 @@
   (let [ks (keys (dissoc args :build?))
         fn-chain (for [each ks
                        :let [v (each args)]]
-                   ;; ignoring ordering issues for now, don't think it will be a problem
-                   ;; for the problem domain, the only order that matters can be account for
-                   ;; in the implementaiton of the builder, ie. .build should always come last
                    (flatten* (list (each method-map) v)))]
     (conj (collapse-methods-types fn-chain) builder 'doto)))
 
@@ -106,7 +80,6 @@
   "evaluates the doto data structure created by builder-fn and builts the resulting object"
   [doto-ds]
   (.build (eval doto-ds)))
-
 
 (defn contains-many? [m & ks]
   (every? #(contains? m %) ks))
