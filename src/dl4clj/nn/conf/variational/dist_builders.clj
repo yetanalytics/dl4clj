@@ -48,7 +48,8 @@
                                   data (k each)
                                   dist-size (:dist-size data)]]
                         [dist-size `(distributions {~k ~data})]))]
-    (eval-and-build (builder-fn `(CompositeReconstructionDistribution$Builder.) {:to-add '.addDistribution}
+    (eval-and-build (builder-fn `(CompositeReconstructionDistribution$Builder.)
+                                {:to-add '.addDistribution}
                                 {:to-add m-calls}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,7 +80,7 @@
 
   the result will need to be evaluated and built at the proper time"
   [distributions-to-add]
-  (distributions {:composite {:distributions-to-add distributions-to-add}}))
+  `(distributions {:composite {:distributions-to-add ~distributions-to-add}}))
 
 (defn new-bernoulli-reconstruction-distribution
   "Bernoulli reconstruction distribution for variational autoencoder.
@@ -97,7 +98,7 @@
    -see https://deeplearning4j.org/features#activation-functions"
   [& {:keys [activation-fn]
       :as opts}]
-  (distributions {:bernoulli opts}))
+  `(distributions {:bernoulli ~opts}))
 
 (defn new-exponential-reconstruction-distribution
   "Exponential reconstruction distribution. Supports data in range 0-infinity
@@ -117,7 +118,7 @@
    -see https://deeplearning4j.org/features#activation-functions"
   [& {:keys [activation-fn]
       :as opts}]
-  (distributions {:exponential opts}))
+  `(distributions {:exponential ~opts}))
 
 (defn new-gaussian-reconstruction-distribution
   "Gaussian reconstruction distribution for variational autoencoder.
@@ -140,4 +141,4 @@
    -see https://deeplearning4j.org/features#activation-functions"
   [& {:keys [activation-fn]
       :as opts}]
-  (distributions {:gaussian opts}))
+  `(distributions {:gaussian ~opts}))

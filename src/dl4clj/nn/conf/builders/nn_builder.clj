@@ -279,7 +279,7 @@
 
   :backprop-type (keyword) the type of backprop, one of :standard or :truncated-bptt
 
-  :input-pre-processors {int pre-processor} ie {0 '(new-zero-mean-pre-pre-processor)
+  :input-pre-processors {int pre-processor} ie {0 (new-zero-mean-pre-pre-processor)
                                                 1 {:unit-variance-processor {}}}
   specifies the processors, these are used at each layer for doing things like
   normalization and shaping of input.

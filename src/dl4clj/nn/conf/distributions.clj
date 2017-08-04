@@ -52,7 +52,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   :lower (double), the lower bound of the distribution"
   [& {:keys [lower upper]
       :as opts}]
-  (distribution {:uniform opts}))
+  `(distribution {:uniform ~opts}))
 
 (defn new-normal-distribution
   "Create a normal distribution with the given mean and std
@@ -62,7 +62,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   :std (double), the standard deviation of the distribution"
   [& {:keys [mean std]
       :as opts}]
-  (distribution {:normal opts}))
+  `(distribution {:normal ~opts}))
 
 (defn new-gaussian-distribution
   "Create a gaussian distribution with the given mean and std
@@ -74,7 +74,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   - this is the same thing as creating a normal distribution"
   [& {:keys [mean std]
       :as opts}]
-  (distribution {:gaussian opts}))
+  `(distribution {:gaussian ~opts}))
 
 (defn new-binomial-distribution
   "creates a binomial distribution with the given number of trials and
@@ -86,4 +86,4 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
    can be classified as a success"
   [& {:keys [number-of-trials probability-of-success]
       :as opts}]
-  (distribution {:binomial opts}))
+  `(distribution {:binomial ~opts}))

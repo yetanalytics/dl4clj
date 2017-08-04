@@ -9,16 +9,6 @@
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
             [clojure.core.match :refer [match]]))
 
-;; update helpers to accept fn calls (the ones that can)
-;; not just config maps
-;; should just be somthing like
-#_(match [input]
-         [(_ :guard seq?)] `(eval passed-in-fn)
-         :else
-         do whatever was already being done)
-;; this may have to be within a forloop in some cases
-;; like when the input is a collection of to-be java objects
-
 (defn pre-processor-helper
   "accepts functions and config maps"
   [pps]
@@ -43,7 +33,10 @@
 
 (defn step-fn-helper
   [opts]
-  `(step-functions/step-fn ~opts))
+  (match [opts]
+         [(_ :guard seq?)] opts
+         :else
+         `(step-functions/step-fn ~opts)))
 
 (defn input-type-helper
   [input-type]
