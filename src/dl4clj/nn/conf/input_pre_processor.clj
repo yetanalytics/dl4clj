@@ -76,12 +76,12 @@
 (defn new-binominal-sampling-pre-processor
   "Binomial sampling pre processor"
   []
-  (pre-processors {:binominal-sampling-pre-processor {}}))
+  `(pre-processors {:binominal-sampling-pre-processor {}}))
 
 (defn new-unit-variance-processor
   "Unit variance operation"
   []
-  (pre-processors {:unit-variance-processor {}}))
+  `(pre-processors {:unit-variance-processor {}}))
 
 (defn new-rnn-to-cnn-pre-processor
   "A preprocessor to allow RNN and CNN layers to be used together
@@ -109,17 +109,17 @@
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
   [& {:keys [input-height input-width num-channels]
       :as opts}]
-  (pre-processors {:rnn-to-cnn-pre-processor opts}))
+  `(pre-processors {:rnn-to-cnn-pre-processor ~opts}))
 
 (defn new-zero-mean-and-unit-variance-pre-processor
   "Zero mean and unit variance operation"
   []
-  (pre-processors {:zero-mean-and-unit-variance-pre-processor {}}))
+  `(pre-processors {:zero-mean-and-unit-variance-pre-processor {}}))
 
 (defn new-zero-mean-pre-pre-processor
   "Zero mean and unit variance operation"
   []
-  (pre-processors {:zero-mean-pre-pre-processor {}}))
+  `(pre-processors {:zero-mean-pre-pre-processor {}}))
 
 (defn new-cnn-to-feed-forward-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -147,7 +147,7 @@
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
   [& {:keys [input-height input-width num-channels]
       :as opts}]
-  (pre-processors {:cnn-to-feed-forward-pre-processor opts}))
+  `(pre-processors {:cnn-to-feed-forward-pre-processor ~opts}))
 
 (defn new-cnn-to-rnn-pre-processor
   "A preprocessor to allow CNN and RNN layers to be used together.
@@ -177,7 +177,7 @@
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
   [& {:keys [input-height input-width num-channels]
       :as opts}]
-  (pre-processors {:cnn-to-rnn-pre-processor opts}))
+  `(pre-processors {:cnn-to-rnn-pre-processor ~opts}))
 
 (defn new-feed-forward-to-cnn-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -205,7 +205,7 @@
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
   [& {:keys [input-height input-width num-channels]
       :as opts}]
-  (pre-processors {:feed-forward-to-cnn-pre-processor opts}))
+  `(pre-processors {:feed-forward-to-cnn-pre-processor ~opts}))
 
 (defn new-rnn-to-feed-forward-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
@@ -223,7 +223,7 @@
   (with shape [miniBatchSize,layerSize,timeSeriesLength]) for use in RNN layer"
 
   []
-  (pre-processors {:rnn-to-feed-forward-pre-processor {}}))
+ `(pre-processors {:rnn-to-feed-forward-pre-processor {}}))
 
 (defn new-feed-forward-to-rnn-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
@@ -241,7 +241,7 @@
   into 2d epsilons (with shape [miniBatchSize*timeSeriesLength,layerSize])
   for use in feed forward layer"
   []
-  (pre-processors {:feed-forward-to-rnn-pre-processor {}}))
+  `(pre-processors {:feed-forward-to-rnn-pre-processor {}}))
 
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
@@ -260,7 +260,7 @@
   (let [pp (into []
                  (for [each pre-processors]
                    (if (map? each)
-                     (pre-processors each)
+                     `(pre-processors ~each)
                      each)))]
-   (ComposableInputPreProcessor.
-   (array-of :data pp :java-type InputPreProcessor))))
+   `(ComposableInputPreProcessor.
+   (array-of :data ~pp :java-type InputPreProcessor))))

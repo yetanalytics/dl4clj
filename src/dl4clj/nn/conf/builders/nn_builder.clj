@@ -195,13 +195,9 @@
    - If there are no additional params you want added to the configuration
      (from multi-layer-config-builder) then set built? to true
 
-  :layer {:layer-type {config-opts vals}} map of layer config params.
-    see dl4clj.nn.conf.builders.builders
-    :layer will be ignored if :layers is supplied, layer only creates a single layer
-
   :layers {idx (int) {:layer-type {config-opts vals}}}
    see dl4clj.nn.conf.builders.builders and tests for examples
-
+  {:layer-type {config-opts vals}}
 
 
 
@@ -283,12 +279,12 @@
 
   :backprop-type (keyword) the type of backprop, one of :standard or :truncated-bptt
 
-  :input-pre-processors {int pre-processor} ie {0 (new-zero-mean-pre-pre-processor)
-                                                1 (new-unit-variance-processor)}
+  :input-pre-processors {int pre-processor} ie {0 '(new-zero-mean-pre-pre-processor)
+                                                1 {:unit-variance-processor {}}}
   specifies the processors, these are used at each layer for doing things like
   normalization and shaping of input.
-   - the pre-processor can be the obj created by the new- fns in input-pre-processor
-     or a config map for creating the desired pre-processor
+   - the pre-processors should be config maps but can the code for creating the
+     java objects.  If its the code for creating the objects, it must be quoted
 
   :input-type (map), map of params describing the input
    {(keyword) other-opts}, ie. {:convolutional {:input-height 1 ...}}

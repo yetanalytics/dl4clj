@@ -6,7 +6,8 @@
             [dl4clj.constants :as constants]
             [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.nn.conf.step-fns :as step-functions]
-            [dl4clj.nn.conf.input-pre-processor :as pre-process]))
+            [dl4clj.nn.conf.input-pre-processor :as pre-process]
+            [clojure.core.match :refer [match]]))
 
 ;; update helpers to accept fn calls (the ones that can)
 ;; not just config maps
@@ -19,11 +20,15 @@
 ;; like when the input is a collection of to-be java objects
 
 (defn pre-processor-helper
+  "accepts functions and config maps"
   [pps]
   (into {}
         (for [each pps
               :let [[idx pp] each]]
-          {idx `(pre-process/pre-processors ~pp)})))
+          (match [pp]
+                 [(_ :guard seq?)] {idx pp}
+                 :else
+                 {idx `(pre-process/pre-processors ~pp)}))))
 
 (defn value-of-helper
   [k v]
@@ -31,7 +36,10 @@
 
 (defn distribution-helper
   [opts]
-  `(distribution/distribution ~opts))
+  (match [opts]
+         [(_ :guard seq?)] opts
+         :else
+         `(distribution/distribution ~opts)))
 
 (defn step-fn-helper
   [opts]
