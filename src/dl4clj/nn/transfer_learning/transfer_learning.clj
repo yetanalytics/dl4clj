@@ -174,7 +174,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
              remove-output-layer? as-code?]
       :or {as-code? false}
       :as opts}]
-  (let [b `(TransferLearning$Builder. (if (is-init-called? ~mln)
+  (let [b `(TransferLearning$Builder.  (if (is-init-called? ~mln)
                                         ~mln
                                         (init! :model ~mln)))
 

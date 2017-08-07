@@ -1,6 +1,6 @@
-(ns dl4clj.nn.conf.layers.layer-testing.layer-validation
+(ns dl4clj.nn.conf.layers.layer-validation
   (:import [org.deeplearning4j.nn.conf.layers LayerValidation])
-  (:require [dl4clj.nn.conf.distribution.distribution :as distribution]))
+  (:require [dl4clj.nn.conf.distributions :as distribution]))
 
 (defn general-validation!
   "validates a layer params are reasonable
@@ -32,7 +32,9 @@
              l2 l2-bias l1 l1-bias dist]}]
   (LayerValidation/generalValidation layer-name layer use-regularization?
                                      use-drop-connect? drop-out l2 l2-bias
-                                     l1 l1-bias dist))
+                                     l1 l1-bias (if map?
+                                                  (distribution/distribution dist)
+                                                  dist)))
 
 (defn updater-validation!
   "Validate the updater configuration - setting the default updater values, if necessary

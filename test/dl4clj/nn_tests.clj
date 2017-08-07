@@ -1,26 +1,41 @@
 (ns dl4clj.nn-tests
-  (:require [dl4clj.nn.conf.builders.layers :refer :all]
-            [dl4clj.nn.conf.builders.nn :refer :all]
-            #_[dl4clj.nn.conf.builders.multi-layer-builders :refer :all]
-            [dl4clj.nn.api.multi-layer-network :refer :all]
-            [dl4clj.nn.multilayer.multi-layer-network :refer :all]
+  (:require [dl4clj.nn.conf.builders.layers :as layer]
+            [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.nn.conf.distributions :refer :all]
-            [dl4clj.nn.conf.variational.dist-builders :refer :all]
-            [dl4clj.nn.conf.step-fns :refer :all]
-            [dl4clj.constants :refer :all]
-            [dl4clj.nn.gradient.default-gradient :refer :all]
-            [dl4clj.nn.params.param-initializers :refer :all]
-            [dl4clj.nn.layers.layer-creation :refer :all]
-            [dl4clj.nn.api.layer :refer :all]
-            [dl4clj.nn.api.layer-specific-fns :refer :all]
-            [dl4clj.nn.api.model :refer :all]
             [dl4clj.nn.conf.input-pre-processor :refer :all]
-            [dl4clj.nn.transfer-learning.fine-tune-conf :refer :all]
-            [dl4clj.nn.transfer-learning.helper :refer :all]
-            [dl4clj.nn.transfer-learning.transfer-learning :refer :all]
+            [dl4clj.nn.conf.layers.input-type-util :refer :all]
+            [dl4clj.nn.conf.layers.layer-validation :refer :all]
+            [dl4clj.nn.conf.step-fns :refer :all]
+            [dl4clj.nn.conf.variational.dist-builders :refer :all]
+            [dl4clj.nn.conf.variational.dists-interface :refer :all]
+            [dl4clj.nn.api.classifier :as classifier]
+            [dl4clj.nn.api.distribution :as dist]
+            [dl4clj.nn.api.input-pre-processors :as ipp]
+            [dl4clj.nn.api.layer :as layer-api]
+            [dl4clj.nn.api.layer-specific-fns :as lsf]
+            [dl4clj.nn.api.model :as model]
+            [dl4clj.nn.api.multi-layer-conf :as multi-layer-conf]
+            [dl4clj.nn.api.multi-layer-network :as mln]
+            [dl4clj.nn.api.nn-conf :as nn-conf]
+            [dl4clj.constants :refer :all]
+            [dl4clj.nn.layers.layer-creation :as layer-creation]
+            [dl4clj.nn.multilayer.multi-layer-network :as multi-layer-network]
+            [dl4clj.nn.transfer-learning.fine-tune-conf :as fine-tune-conf]
+            [dl4clj.nn.transfer-learning.helper :as tl-helper]
+            [dl4clj.nn.transfer-learning.transfer-learning :as tl]
+
             [dl4clj.nn.updater.layer-updater :refer :all]
             [dl4clj.nn.updater.multi-layer-updater :refer :all]
-            [dl4clj.nn.api.nn-conf :refer :all]
+
+
+            ;; possibly not core
+            [dl4clj.nn.params.param-initializers :as param-init]
+            [dl4clj.nn.gradient.default-gradient :as gradient]
+            [dl4clj.nn.layers.layer-creation :as layer-creation]
+            [dl4clj.nn.updater.layer-updater :as layer-updater]
+            [dl4clj.nn.updater.multi-layer-updater :as mln-updater]
+
+
             ;; helper fns
             [dl4clj.utils :refer [array-of get-labels]]
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-zeros]]
@@ -36,15 +51,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fn for layer creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; this might get replaced...
 (defn quick-nn-conf
   [layer]
-  (nn-conf-builder :optimization-algo     :stochastic-gradient-descent
-                   :iterations            1
-                   :default-learning-rate 0.006
-                   :lr-policy-decay-rate  0.2
-                   :build?                true
-                   :layer                 layer))
+  (nn/builder :optimization-algo     :stochastic-gradient-descent
+              :iterations            1
+              :default-learning-rate 0.006
+              :lr-policy-decay-rate  0.2
+              :build?                true
+              :as-code?              false
+              :layers                layer))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Things required for making layers/nn-confs/multi-layer-confs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; distributions to sample weights from
@@ -56,17 +76,28 @@
     ;; uniform
     (is (= org.deeplearning4j.nn.conf.distribution.UniformDistribution
            (type (distribution {:uniform {:lower 0.2 :upper 0.4}}))))
+    (is (= '(dl4clj.nn.conf.distributions/distribution {:uniform {:lower 0.2 :upper 0.4}})
+           (new-uniform-distribution :lower 0.2 :upper 0.4)))
     ;; normal
     (is (= org.deeplearning4j.nn.conf.distribution.NormalDistribution
            (type (distribution {:normal {:mean 0 :std 1}}))))
+    (is (= '(dl4clj.nn.conf.distributions/distribution {:normal {:mean 0 :std 1}})
+           (new-normal-distribution :mean 0 :std 1)))
+
     ;; guassian (same as normal)
     (is (= org.deeplearning4j.nn.conf.distribution.GaussianDistribution
            (type (distribution {:gaussian {:mean 0.0 :std 1}}))))
+    (is (= '(dl4clj.nn.conf.distributions/distribution {:gaussian {:mean 0.0 :std 1}})
+           (new-gaussian-distribution :mean 0.0 :std 1)))
     ;; binomial
     (is (= org.deeplearning4j.nn.conf.distribution.BinomialDistribution
            (type (distribution
                   {:binomial {:number-of-trials       1
-                              :probability-of-success 0.5}}))))))
+                              :probability-of-success 0.5}}))))
+    (is (= '(dl4clj.nn.conf.distributions/distribution {:binomial {:number-of-trials       1
+                                                                   :probability-of-success 0.5}})
+           (new-binomial-distribution :probability-of-success 0.5
+                                      :number-of-trials 1)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; reconstruction distribution
@@ -80,18 +111,27 @@
            (type (distributions {:bernoulli {:activation-fn :sigmoid}}))))
     (is (= org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution
            (type (distributions {:bernoulli {}}))))
+    (is (= '(dl4clj.nn.conf.variational.dist-builders/distributions
+             {:bernoulli {:activation-fn :sigmoid}})
+           (new-bernoulli-reconstruction-distribution :activation-fn :sigmoid)))
 
     ;; exponential reconstruction
     (is (= org.deeplearning4j.nn.conf.layers.variational.ExponentialReconstructionDistribution
            (type (distributions {:exponential {:activation-fn :relu}}))))
     (is (= org.deeplearning4j.nn.conf.layers.variational.ExponentialReconstructionDistribution
            (type (distributions {:exponential {}}))))
+    (is (= '(dl4clj.nn.conf.variational.dist-builders/distributions
+             {:exponential {:activation-fn :relu}})
+           (new-exponential-reconstruction-distribution :activation-fn :relu)))
 
     ;; gaussian
     (is (= org.deeplearning4j.nn.conf.layers.variational.GaussianReconstructionDistribution
            (type (distributions {:gaussian {:activation-fn :relu}}))))
     (is (= org.deeplearning4j.nn.conf.layers.variational.GaussianReconstructionDistribution
            (type (distributions {:gaussian {}}))))
+    (is (= '(dl4clj.nn.conf.variational.dist-builders/distributions
+             {:gaussian {:activation-fn :relu}})
+           (new-gaussian-reconstruction-distribution :activation-fn :relu)))
 
     ;; composite
     (is (= org.deeplearning4j.nn.conf.layers.variational.CompositeReconstructionDistribution
@@ -105,7 +145,27 @@
                      {:gaussian {:activation-fn :hard-tanh
                                  :dist-size     1}}
                      {:bernoulli {:activation-fn :sigmoid
-                                  :dist-size     4}}]}}))))))
+                                  :dist-size     4}}]}}))))
+    (is (= '(dl4clj.nn.conf.variational.dist-builders/distributions
+             {:composite
+              {:distributions-to-add
+               [{:bernoulli {:activation-fn :sigmoid
+                             :dist-size     5}}
+                {:exponential {:activation-fn :sigmoid
+                               :dist-size     3}}
+                {:gaussian {:activation-fn :hard-tanh
+                            :dist-size     1}}
+                {:bernoulli {:activation-fn :sigmoid
+                             :dist-size     4}}]}})
+           (new-composite-reconstruction-distribution
+            [{:bernoulli {:activation-fn :sigmoid
+                          :dist-size     5}}
+             {:exponential {:activation-fn :sigmoid
+                            :dist-size     3}}
+             {:gaussian {:activation-fn :hard-tanh
+                         :dist-size     1}}
+             {:bernoulli {:activation-fn :sigmoid
+                          :dist-size     4}}])))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; step functions for use in nn-conf creation
@@ -114,14 +174,145 @@
 
 (deftest step-fn-test
   (testing "the creation of step fns"
+    (is (= '(dl4clj.nn.conf.step-fns/step-fn :default-step-fn)
+           (new-default-step-fn)))
     (is (= org.deeplearning4j.nn.conf.stepfunctions.DefaultStepFunction
-           (type (new-default-step-fn))))
+           (type (step-fn :default-step-fn))))
+
+    (is (= '(dl4clj.nn.conf.step-fns/step-fn :gradient-step-fn)
+           (new-gradient-step-fn)))
     (is (= org.deeplearning4j.nn.conf.stepfunctions.GradientStepFunction
-           (type (new-gradient-step-fn))))
+           (type (step-fn :gradient-step-fn))))
+
     (is (= org.deeplearning4j.nn.conf.stepfunctions.NegativeDefaultStepFunction
-           (type (new-negative-default-step-fn))))
+           (type (step-fn :negative-default-step-fn))))
+    (is (= '(dl4clj.nn.conf.step-fns/step-fn :negative-default-step-fn)
+           (new-negative-default-step-fn)))
+
     (is (= org.deeplearning4j.nn.conf.stepfunctions.NegativeGradientStepFunction
-           (type (new-negative-gradient-step-fn))))))
+           (type (step-fn :negative-gradient-step-fn))))
+    (is (= '(dl4clj.nn.conf.step-fns/step-fn :negative-gradient-step-fn)
+           (new-negative-gradient-step-fn)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input pre-processors test
+;; dl4clj.nn.conf.input-pre-processor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest pre-processors-test
+  (testing "the creation of input preprocessors for use in multi-layer-conf"
+    ;; binominal sampling pre-processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.BinomialSamplingPreProcessor
+           (type (pre-processors {:binominal-sampling-pre-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:binominal-sampling-pre-processor {}})
+           (new-binominal-sampling-pre-processor)))
+
+    ;; unit variance processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.UnitVarianceProcessor
+           (type (pre-processors {:unit-variance-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:unit-variance-processor {}})
+           (new-unit-variance-processor)))
+
+    ;; Rnn -> Cnn pre-processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToCnnPreProcessor
+           (type (pre-processors {:rnn-to-cnn-pre-processor
+                                  {:input-height 1 :input-width 1
+                                   :num-channels 1}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:rnn-to-cnn-pre-processor {:input-height 1 :input-width 1
+                                         :num-channels 1}})
+           (new-rnn-to-cnn-pre-processor :input-height 1 :input-width 1
+                                         :num-channels 1)))
+
+    ;; zero mean and unit variance
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanAndUnitVariancePreProcessor
+           (type (pre-processors {:zero-mean-and-unit-variance-pre-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:zero-mean-and-unit-variance-pre-processor {}})
+           (new-zero-mean-and-unit-variance-pre-processor)))
+
+    ;; zero mean pre-pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanPrePreProcessor
+           (type (pre-processors {:zero-mean-pre-pre-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:zero-mean-pre-pre-processor {}})
+           (new-zero-mean-pre-pre-processor)))
+
+    ;; cnn -> feed foward pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor
+           (type (pre-processors {:cnn-to-feed-forward-pre-processor {:input-height 1
+                                                                      :input-width 1
+                                                                      :num-channels 1}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:cnn-to-feed-forward-pre-processor {:input-height 1
+                                                  :input-width 1
+                                                  :num-channels 1}})
+           (new-cnn-to-feed-forward-pre-processor :input-height 1
+                                                  :input-width 1
+                                                  :num-channels 1)))
+
+    ;; cnn -> rnn pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToRnnPreProcessor
+           (type (pre-processors {:cnn-to-rnn-pre-processor {:input-height 1
+                                                             :input-width 1
+                                                             :num-channels 1}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:cnn-to-rnn-pre-processor {:input-height 1
+                                         :input-width 1
+                                         :num-channels 1}})
+           (new-cnn-to-rnn-pre-processor :input-height 1 :input-width 1
+                                         :num-channels 1)))
+
+    ;; feed forward -> cnn pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToCnnPreProcessor
+           (type (pre-processors {:feed-forward-to-cnn-pre-processor {:input-height 1
+                                                                      :input-width 1
+                                                                      :num-channels 1}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:feed-forward-to-cnn-pre-processor {:input-height 1
+                                                  :input-width 1
+                                                  :num-channels 1}})
+           (new-feed-forward-to-cnn-pre-processor :input-height 1
+                                                  :input-width 1
+                                                  :num-channels 1)))
+
+    ;; rnn -> feed forward pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToFeedForwardPreProcessor
+           (type (pre-processors {:rnn-to-feed-forward-pre-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:rnn-to-feed-forward-pre-processor {}})
+           (new-rnn-to-feed-forward-pre-processor)))
+
+    ;; feed forward -> rnn pre processor
+    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToRnnPreProcessor
+           (type (pre-processors {:feed-forward-to-rnn-pre-processor {}}))))
+    (is (= '(dl4clj.nn.conf.input-pre-processor/pre-processors
+             {:feed-forward-to-rnn-pre-processor {}})
+           (new-feed-forward-to-rnn-pre-processor)))
+
+    ;; combine multiple pre-processors
+    (is (= '(org.deeplearning4j.nn.conf.preprocessor.ComposableInputPreProcessor.
+            (dl4clj.utils/array-of
+             :data
+             [(dl4clj.nn.conf.input-pre-processor/pre-processors
+               {:zero-mean-pre-pre-processor {}})
+              (dl4clj.nn.conf.input-pre-processor/pre-processors
+               {:binominal-sampling-pre-processor {}})]
+             :java-type org.deeplearning4j.nn.conf.InputPreProcessor))
+           (new-composable-input-pre-processor
+            :pre-processors [(new-zero-mean-pre-pre-processor)
+                             (new-binominal-sampling-pre-processor)])))
+    (is (= org.deeplearning4j.nn.conf.preprocessor.ComposableInputPreProcessor
+           (type (org.deeplearning4j.nn.conf.preprocessor.ComposableInputPreProcessor.
+                  (dl4clj.utils/array-of
+                   :data
+                   [(dl4clj.nn.conf.input-pre-processor/pre-processors
+                     {:zero-mean-pre-pre-processor {}})
+                    (dl4clj.nn.conf.input-pre-processor/pre-processors
+                     {:binominal-sampling-pre-processor {}})]
+                   :java-type org.deeplearning4j.nn.conf.InputPreProcessor)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; creation of default gradients
@@ -130,23 +321,24 @@
 
 (deftest default-gradient-test
   (testing "the creation and manipulation of gradients"
-    (let [grad-with-var (set-gradient-for! :grad (new-default-gradient)
-                                           :variable "foo"
-                                           :new-gradient (indarray-of-zeros
-                                                          :rows 2 :columns 2))]
-     (is (= org.deeplearning4j.nn.gradient.DefaultGradient
-           (type (new-default-gradient))))
-    (is (= org.deeplearning4j.nn.gradient.DefaultGradient
-           (type grad-with-var)))
-    ;; I don't think this test is reliable bc it assumes cpu
-    (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-           (type (gradient :grad grad-with-var))))
-    (is (= java.util.LinkedHashMap
-           (type (gradient-for-variable grad-with-var))))
-    ;; gradient order was not explictly set
-    (is (= nil
-           (type (flattening-order-for-variables :grad grad-with-var
-                                                 :variable "foo")))))))
+    (let [grad-with-var (gradient/set-gradient-for!
+                         :grad (gradient/new-default-gradient)
+                         :variable "foo"
+                         :new-gradient (indarray-of-zeros
+                                        :rows 2 :columns 2))]
+      (is (= org.deeplearning4j.nn.gradient.DefaultGradient
+             (type (gradient/new-default-gradient))))
+      (is (= org.deeplearning4j.nn.gradient.DefaultGradient
+             (type grad-with-var)))
+      ;; I don't think this test is reliable bc it assumes cpu
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+             (type (gradient/gradient :grad grad-with-var))))
+      (is (= java.util.LinkedHashMap
+             (type (gradient/gradient-for-variable grad-with-var))))
+      ;; gradient order was not explictly set
+      (is (= nil
+             (type (gradient/flattening-order-for-variables :grad grad-with-var
+                                                            :variable "foo")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; param initializers
@@ -156,61 +348,23 @@
 (deftest param-initializers-test
   (testing "the creation of param initializers"
     (is (= org.deeplearning4j.nn.params.BatchNormalizationParamInitializer
-           (type (new-batch-norm-initializer))))
+           (type (param-init/new-batch-norm-initializer))))
     (is (= org.deeplearning4j.nn.params.CenterLossParamInitializer
-           (type (new-center-loss-initializer))))
+           (type (param-init/new-center-loss-initializer))))
     (is (= org.deeplearning4j.nn.params.ConvolutionParamInitializer
-           (type (new-convolution-initializer))))
+           (type (param-init/new-convolution-initializer))))
     (is (= org.deeplearning4j.nn.params.DefaultParamInitializer
-           (type (new-default-initializer))))
+           (type (param-init/new-default-initializer))))
     (is (= org.deeplearning4j.nn.params.EmptyParamInitializer
-           (type (new-empty-initializer))))
+           (type (param-init/new-empty-initializer))))
     (is (= org.deeplearning4j.nn.params.GravesBidirectionalLSTMParamInitializer
-           (type (new-bidirectional-lstm-initializer))))
+           (type (param-init/new-bidirectional-lstm-initializer))))
     (is (= org.deeplearning4j.nn.params.GravesLSTMParamInitializer
-           (type (new-lstm-initializer))))
+           (type (param-init/new-lstm-initializer))))
     (is (= org.deeplearning4j.nn.params.PretrainParamInitializer
-           (type (new-pre-train-initializer))))
+           (type (param-init/new-pre-train-initializer))))
     (is (= org.deeplearning4j.nn.params.VariationalAutoencoderParamInitializer
-           (type (new-vae-initializer))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; input pre-processors test
-;; dl4clj.nn.conf.input-pre-processor
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest pre-processors-test
-  (testing "the creation of input preprocessors for use in multi-layer-conf"
-    (is (= org.deeplearning4j.nn.conf.preprocessor.BinomialSamplingPreProcessor
-           (type (new-binominal-sampling-pre-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.UnitVarianceProcessor
-           (type (new-unit-variance-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToCnnPreProcessor
-           (type (new-rnn-to-cnn-pre-processor :input-height 1 :input-width 1
-                                               :num-channels 1))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanAndUnitVariancePreProcessor
-           (type (new-zero-mean-and-unit-variance-pre-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.ZeroMeanPrePreProcessor
-           (type (new-zero-mean-pre-pre-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor
-           (type (new-cnn-to-feed-forward-pre-processor :input-height 1
-                                                        :input-width 1
-                                                        :num-channels 1))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.CnnToRnnPreProcessor
-           (type (new-cnn-to-rnn-pre-processor :input-height 1 :input-width 1
-                                               :num-channels 1))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToCnnPreProcessor
-           (type (new-feed-forward-to-cnn-pre-processor :input-height 1
-                                                        :input-width 1
-                                                        :num-channels 1))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.RnnToFeedForwardPreProcessor
-           (type (new-rnn-to-feed-forward-pre-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.FeedForwardToRnnPreProcessor
-           (type (new-feed-forward-to-rnn-pre-processor))))
-    (is (= org.deeplearning4j.nn.conf.preprocessor.ComposableInputPreProcessor
-           (type (new-composable-input-pre-processor
-                  :pre-processors [(new-zero-mean-pre-pre-processor)
-                                   (new-binominal-sampling-pre-processor)]))))))
+           (type (param-init/new-vae-initializer))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
@@ -219,19 +373,18 @@
 
 ;; activation layer
 
-#_(.build (eval (builder {:activation-layer
-          {:n-in 10 :n-out 2 :activation-fn :relu
-           :bias-init 0.7 :bias-learning-rate 0.1
-           :dist {:normal {:mean 0 :std 1}}
-           :drop-out 0.2 :epsilon 0.3
-           :gradient-normalization :none
-           :gradient-normalization-threshold 0.9
-           :layer-name "foo" :learning-rate 0.1
-           :learning-rate-policy :inverse
-           :learning-rate-schedule {0 0.2 1 0.5}
-           :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-           :updater :nesterovs :weight-init :distribution}})))
-
+#_(quick-nn-conf {:activation-layer
+                {:n-in 10 :n-out 2 :activation-fn :relu
+                 :bias-init 0.7 :bias-learning-rate 0.1
+                 :dist {:normal {:mean 0 :std 1}}
+                 :drop-out 0.2 :epsilon 0.3
+                 :gradient-normalization :none
+                 :gradient-normalization-threshold 0.9
+                 :layer-name "foo" :learning-rate 0.1
+                 :learning-rate-policy :inverse
+                 :learning-rate-schedule {0 0.2 1 0.5}
+                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
+                 :updater :nesterovs :weight-init :distribution}})
 
 (deftest activation-layer-test
   (testing "the creation of a activation layer from a nn-conf"
@@ -247,9 +400,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :momentum 0.2 :momentum-after {0 0.3 1 0.4}
                  :updater :nesterovs :weight-init :distribution}}]
-      (is (= :activation (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :activation (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.ActivationLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest center-loss-output-layer-test
   (testing "the creation of a ceneter loss output layer from a nn-conf"
@@ -267,9 +420,10 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam
                  :weight-init :distribution}}]
-      (is (= :center-loss-output-layer (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :center-loss-output-layer (layer-creation/layer-type
+                                        {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.training.CenterLossOutputLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest output-layer-test
   (testing "the creation of a output layer from a nn-conf"
@@ -286,9 +440,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :rho 0.7 :updater :adadelta
                  :weight-init :distribution}}]
-      (is (= :output (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :output (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.OutputLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest rnn-output-layer-test
   (testing "the creation of a rnn output layer from a nn-conf"
@@ -305,9 +459,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :rms-decay 0.7 :updater :rmsprop
                  :weight-init :distribution}}]
-      (is (= :rnnoutput (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :rnnoutput (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.RnnOutputLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest autoencoder-layer-test
   (testing "the creation of a autoencoder layer from a nn-conf"
@@ -327,9 +481,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam
                  :weight-init :distribution}}]
-      (is (= :auto-encoder (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :auto-encoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.autoencoder.AutoEncoder
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest rbm-layer-test
   (testing "the creation of a rbm layer from a nn-conf"
@@ -348,9 +502,9 @@
                       :learning-rate 0.1 :learning-rate-policy :inverse
                       :learning-rate-schedule {0 0.2 1 0.5}
                       :updater :adam :weight-init :distribution}}]
-      (is (= :rbm (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :rbm (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.rbm.RBM
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest graves-bidirectional-lstm-layer-test
   (testing "the creation of a bidirectional lstm layer from a nn-conf"
@@ -368,9 +522,10 @@
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam :weight-init :distribution}}]
-      (is (= :graves-bidirectional-lstm (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :graves-bidirectional-lstm (layer-creation/layer-type
+                                         {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.GravesBidirectionalLSTM
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest graves-lstm-layer-test
   (testing "the creation of a lstm layer from a nn-conf"
@@ -388,9 +543,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :momentum 0.2 :momentum-after {0 0.3 1 0.4}
                  :updater :nesterovs :weight-init :distribution}}]
-      (is (= :graves-lstm (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :graves-lstm (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.GravesLSTM
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest batch-normalization-layer-test
   (testing "the creation of a batch normalization layer from a nn-conf"
@@ -409,9 +564,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :rho 0.7 :updater :adadelta
                  :weight-init :distribution}}]
-      (is (= :batch-normalization (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :batch-normalization (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.normalization.BatchNormalization
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest convolution-layer-test
   (testing "the creation of a convolution layer from a nn-conf"
@@ -443,13 +598,13 @@
                     :learning-rate-schedule {0 0.2 1 0.5}
                     :rms-decay 0.7 :updater :rmsprop
                     :weight-init :distribution}}]
-      (is (= :convolution (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :convolution (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.convolution.ConvolutionLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf)))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf)))))
 
-      (is (= :convolution1d (layer-type {:nn-conf (quick-nn-conf conf-1d)})))
+      (is (= :convolution1d (layer-creation/layer-type {:nn-conf (quick-nn-conf conf-1d)})))
       (is (= org.deeplearning4j.nn.layers.convolution.Convolution1DLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf-1d))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf-1d))))))))
 
 (deftest dense-layer-test
   (testing "creation of a dense layer from a nn-conf"
@@ -465,9 +620,9 @@
                               :learning-rate 0.1 :learning-rate-policy :inverse
                               :learning-rate-schedule {0 0.2 1 0.5}
                               :updater :adam :weight-init :distribution}}]
-      (is (= :dense (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :dense (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.dense.DenseLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest embedding-layer-test
   (testing "the creation of a embedding layer from a nn-conf"
@@ -484,9 +639,9 @@
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :rms-decay 0.7 :updater :rmsprop
                  :weight-init :distribution}}]
-      (is (= :embedding (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :embedding (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest local-response-normalization-layer-test
   (testing "the creation of a local response normalization layer from a nn-conf"
@@ -503,9 +658,10 @@
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam :weight-init :distribution}}]
-      (is (= :local-response-normalization (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :local-response-normalization (layer-creation/layer-type
+                                            {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.normalization.LocalResponseNormalization
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest subsampling-layer-test
   (testing "the creation of a subsampling layer from a nn-conf"
@@ -540,12 +696,12 @@
                     :learning-rate-schedule {0 0.2 1 0.5}
                     :updater :adam :weight-init :distribution}}]
 
-      (is (= :subsampling (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :subsampling (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.convolution.subsampling.SubsamplingLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf)))))
-      (is (= :subsampling1d (layer-type {:nn-conf (quick-nn-conf conf-1d)})))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf)))))
+      (is (= :subsampling1d (layer-creation/layer-type {:nn-conf (quick-nn-conf conf-1d)})))
       (is (= org.deeplearning4j.nn.layers.convolution.subsampling.Subsampling1DLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf-1d))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf-1d))))))))
 
 (deftest loss-layer-test
   (testing "the creation of a loss layer from a nn-conf"
@@ -561,9 +717,9 @@
                              :learning-rate 0.1 :learning-rate-policy :inverse
                              :learning-rate-schedule {0 0.2 1 0.5}
                              :updater :adam :weight-init :distribution}}]
-      (is (= :loss (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :loss (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.LossLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest dropout-layer-test
   (testing "the creation of a dropout layer from a nn-conf"
@@ -580,9 +736,9 @@
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam :weight-init :distribution}}]
-      (is (= :dropout (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :dropout (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.DropoutLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest global-pooling-layer-test
   (testing "the creation of a global pooling layer from a nn-conf, also shows off layer validation
@@ -605,7 +761,7 @@
                  :weight-init :distribution}}]
       (println "\n example layer validation warnings \n")
       (is (= org.deeplearning4j.nn.layers.pooling.GlobalPoolingLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest zero-padding-layer-test
   (testing "the creation of a zero padding layer from a nn-conf"
@@ -622,9 +778,9 @@
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam :weight-init :distribution}}]
-      (is (= :zero-padding (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :zero-padding (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.convolution.ZeroPaddingLayer
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest variational-autoencoder-layer-test
   (testing "the creation of a vae layer from a nn-conf"
@@ -651,9 +807,9 @@
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
                  :updater :adam :weight-init :distribution}}]
-      (is (= :variational-autoencoder (layer-type {:nn-conf (quick-nn-conf conf)})))
+      (is (= :variational-autoencoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.variational.VariationalAutoencoder
-             (type (new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest frozen-layer-test
   (testing "the creation of a frozen layer from an existing layer"
@@ -671,12 +827,16 @@
                        :learning-rate-schedule {0 0.2 1 0.5}
                        :updater :adam :weight-init :distribution}}]
       (is (= org.deeplearning4j.nn.layers.FrozenLayer
-             (type (new-frozen-layer
-                    (set-param-table!
-                     :model (new-layer
+             (type (layer-creation/new-frozen-layer
+                    (model/set-param-table!
+                     :model (layer-creation/new-layer
                              :nn-conf (quick-nn-conf layer-conf))
                      :param-table-map {"foo" (indarray-of-zeros :rows 1)}))))))))
 
+
+
+;;;;;;;; needs to be updated to the new nn/builder
+;; need to add tests for all the helper fns like layer helper and multi layer helper
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf-builder
 ;; dl4clj.nn.conf.builders.nn-conf-builder
@@ -777,44 +937,6 @@
                                                :activation-fn :tanh
                                                :gradient-normalization :none}}))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; list-builder test
-;; dl4clj.nn.conf.builders.multi-layer-builders
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest list-builder-test
-  (testing "the list builder for setting up the :layers key in nn-conf-builder"
-    (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$ListBuilder
-           (type
-            (list-builder
-             (nn-conf-builder)
-             {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
-                 :n-in 100
-                 :n-out 1000
-                 :layer-name "first layer"
-                 :activation-fn :tanh
-                 :gradient-normalization :none)
-              1 {:dense-layer {:n-in 1000
-                               :n-out 10
-                               :layer-name "second layer"
-                               :activation-fn :tanh
-                               :gradient-normalization :none}}}))))
-    (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
-           (type
-            (.build
-             (list-builder
-              (nn-conf-builder)
-              {0 (dl4clj.nn.conf.builders.builders/dense-layer-builder
-                  :n-in 100
-                  :n-out 1000
-                  :layer-name "first layer"
-                  :activation-fn :tanh
-                  :gradient-normalization :none)
-               1 {:dense-layer {:n-in 1000
-                                :n-out 10
-                                :layer-name "second layer"
-                                :activation-fn :tanh
-                                :gradient-normalization :none}}})))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi-layer-config-builder test
@@ -1149,7 +1271,7 @@
                                        :layer-name "4th layer"
                                        :activation-fn :tanh
                                        :weight-init :relu}}}
-         :as-code? false
+         :as-code? true
          :input-pre-processor {:layer-idx 0
                                :pre-processor {:unit-variance-processor {}}})
       ;; dl4clj.nn.transfer-learning.fine-tune-conf
