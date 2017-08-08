@@ -12,12 +12,13 @@
   :url "https://github.com/engagor/dl4clj"
   :license {:name "BSD C2"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.deeplearning4j/deeplearning4j-core "0.4-rc3.10"]
-                 [org.deeplearning4j/deeplearning4j-ui "0.4-rc3.10"]
-                 [org.deeplearning4j/deeplearning4j-nlp "0.4-rc3.10"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.deeplearning4j/deeplearning4j-core "0.9.0"]
+                 ;;no later versions released
+                 [org.deeplearning4j/deeplearning4j-ui "0.6.0"]
+                 [org.deeplearning4j/deeplearning4j-nlp "0.9.0"]
                  [org.apache.commons/commons-io "1.3.2"]
-                 [org.nd4j/nd4j-native "0.4-rc3.10"]
+                 [org.nd4j/nd4j-native "0.9.0"]
                  [org.nd4j/canova-api "0.0.0.14"]
                  [org.clojure/data.json "0.2.6"]])
   
