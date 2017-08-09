@@ -192,12 +192,17 @@
         vis-unit (if visible-unit (value-of-helper :visible-unit visible-unit))
         hid-unit (if hidden-unit (value-of-helper :hidden-unit hidden-unit))
         gate-a-fn (if gate-activation-fn (value-of-helper :activation-fn gate-activation-fn))
-        vae-lfn (if vae-loss-fn '((value-of-helper :activation-fn
-                                                   (:output-activation-fn
-                                                    vae-loss-fn))
-                                  (value-of-helper :loss-fn
-                                                   (:loss-fn vae-loss-fn))))
+        vae-lfn (if vae-loss-fn [(value-of-helper :activation-fn
+                                                  (:output-activation-fn
+                                                   vae-loss-fn))
+                                 (value-of-helper :loss-fn
+                                                  (:loss-fn vae-loss-fn))])
         pzx-a-fn (if pzx-activation-function (value-of-helper :activation-fn pzx-activation-function))
+        encoder-l-size (if encoder-layer-sizes `(int-array ~encoder-layer-sizes))
+        decoder-l-size (if decoder-layer-sizes `(int-array ~decoder-layer-sizes))
+        reconst-dist (if reconstruction-distribution
+                       `(reconstruction-dist/distributions ~reconstruction-distribution))
+        p-dim (if pooling-dimensions `(int-array ~pooling-dimensions))
         ;; update our methods with the code for creating java objects
         obj-opts {:activation-fn a-fn
                   :dist d
@@ -209,7 +214,12 @@
                   :visible-unit vis-unit
                   :hidden-unit hid-unit
                   :gate-activation-fn gate-a-fn
-                  :vae-loss-fn vae-lfn}
+                  :vae-loss-fn vae-lfn
+                  :pzx-activation-function pzx-a-fn
+                  :encoder-layer-sizes encoder-l-size
+                  :decoder-layer-sizes decoder-l-size
+                  :reconstruction-distribution reconst-dist
+                  :pooling-dimensions p-dim}
         updated-opts (replace-map-vals (dissoc opts :as-code?) obj-opts)
         ;; create our code
         fn-chain (builder-fn builder-type layer-method-map updated-opts)]
@@ -252,7 +262,10 @@
   (let [conf (:convolutional-layer opts)
         {kernel-size :kernel-size
          stride :stride
-         padding :padding} conf]
+         padding :padding} conf
+        k-s `(int-array ~kernel-size)
+        s `(int-array ~stride)
+        p `(int-array ~padding)]
     (match [conf]
            ;; do i want to add in guards/printlns for notifying the user they screwed up?
            ;; curently letting anything through and assuming the user provided the correct type of values
@@ -260,19 +273,19 @@
              :stride _
              :kernel-size _}]
            (any-layer-builder
-            `(ConvolutionLayer$Builder. (int-array ~kernel-size)
-                                        (int-array ~stride)
-                                        (int-array ~padding))
+            `(ConvolutionLayer$Builder. ~k-s
+                                        ~s
+                                        ~p)
             (dissoc conf :kernel-size :stride :padding))
            [{:stride _
              :kernel-size _}]
            (any-layer-builder
-            `(ConvolutionLayer$Builder. (int-array ~kernel-size)
-                                        (int-array ~stride))
+            `(ConvolutionLayer$Builder. ~k-s
+                                        ~s)
             (dissoc conf :kernel-size :stride))
            [{:kernel-size _}]
            (any-layer-builder
-            `(ConvolutionLayer$Builder. (int-array ~kernel-size))
+            `(ConvolutionLayer$Builder. ~k-s)
             (dissoc conf :kernel-size))
            :else
            (any-layer-builder `(ConvolutionLayer$Builder.) conf))))
@@ -287,23 +300,23 @@
              :stride _
              :kernel-size _}]
            (any-layer-builder
-            `(Convolution1DLayer$Builder ~kernel-size
+            `(Convolution1DLayer$Builder. ~kernel-size
                                          ~stride
                                          ~padding)
             (dissoc conf :kernel-size :stride :padding))
            [{:stride _
              :kernel-size _}]
            (any-layer-builder
-            `(Convolution1DLayer$Builder ~kernel-size
+            `(Convolution1DLayer$Builder. ~kernel-size
                                          ~stride)
             (dissoc conf :kernel-size :stride))
            [{:kernel-size _}]
            (any-layer-builder
-            `(Convolution1DLayer$Builder ~kernel-size)
+            `(Convolution1DLayer$Builder. ~kernel-size)
             (dissoc conf :kernel-size))
            :else
            (any-layer-builder
-            `(Convolution1DLayer$Builder)
+            `(Convolution1DLayer$Builder.)
             conf))))
 
 (defmethod builder :dense-layer [opts]
@@ -321,9 +334,9 @@
          stride :stride
          padding :padding
          pooling-type :pooling-type} conf
-        k-s (int-array kernel-size)
-        s (int-array stride)
-        p (int-array padding)
+        k-s `(int-array ~kernel-size)
+        s `(int-array ~stride)
+        p `(int-array ~padding)
         pt (if (keyword? pooling-type)
              `(constants/value-of {:pool-type ~pooling-type}))]
     (match [conf]
@@ -438,7 +451,7 @@
     (match [conf]
            [{:pooling-type (_ :guard keyword?)}]
            (any-layer-builder
-            `(GlobalPoolingLayer$Builder. (constants/value-of {:pool-type ~pooling-type}))
+            `(GlobalPoolingLayer$Builder. ~(value-of-helper :pool-type pooling-type))
             (dissoc conf :pooling-type))
            :else
            (any-layer-builder

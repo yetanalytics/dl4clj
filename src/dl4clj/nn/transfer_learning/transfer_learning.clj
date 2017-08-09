@@ -50,8 +50,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
         next-w (if next-weight-init
                  (value-of-helper :weight-init next-weight-init))]
     (match [opts]
-           [{:layer-idx _ :n-out _ :dist _ :next-weight-init _}]
+           [{:layer-idx _ :n-out _ :dist _ :weight-init _}]
            `[~layer-idx ~n-out ~d ~w]
+           [{:layer-idx _ :n-out _ :dist _ :next-weight-init _}]
+           `[~layer-idx ~n-out ~d ~next-w]
            [{:layer-idx _ :n-out _ :weight-init _ :next-dist _}]
            `[~layer-idx ~n-out ~w ~next-d]
            [{:layer-idx _ :n-out _ :dist _ :next-dist _}]
@@ -171,17 +173,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
    - see: dl4clj.nn.conf.input-pre-processor"
   [& {:keys [mln fine-tune-conf input-pre-processor remove-last-n-layers
              replacement-layer set-feature-extractor-idx add-layers
-             remove-output-layer? as-code?]
+             remove-output-layer? as-code? tlb]
       :or {as-code? false}
       :as opts}]
-  (let [b `(TransferLearning$Builder.  (if (is-init-called? ~mln)
+  (let [b (if tlb
+            tlb
+           `(TransferLearning$Builder.  (if (is-init-called? ~mln)
                                         ~mln
-                                        (init! :model ~mln)))
+                                        (init! :model ~mln))))
 
         replacement-layer* (if replacement-layer
                              (replace-layer-helper replacement-layer))
 
         input-pre-processor* (if input-pre-processor
+                               ;; should I account for multiple input pre processors here?
                                (input-pre-processor-helper input-pre-processor))
 
         add-layers* (if add-layers
@@ -195,19 +200,21 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
                       :fine-tune-conf fine-tune-conf*}
 
         opts* (replace-map-vals (dissoc opts :mln :as-code? :remove-output-layer?
-                                        :add-layers)
+                                        :add-layers :tlb)
                                 updated-opts)
 
         fn-chain (builder-fn b tlb-method-map opts*)
 
         ;; layers have to be added after the fine tune conf
-        fn-chain-with-layers (if add-layers*
-                               (builder-fn fn-chain tlb-method-map {:add-layers add-layers*})
-                               fn-chain)
 
-        fn-chain* (if remove-output-layer?
-                    `(.removeOutputLayer ~fn-chain-with-layers)
-                    fn-chain-with-layers)]
+        fn-chain-output-removed (if remove-output-layer?
+                                  `(.removeOutputLayer ~fn-chain)
+                                  fn-chain)
+
+
+        fn-chain* (if add-layers*
+                    (builder-fn fn-chain-output-removed tlb-method-map {:add-layers add-layers*})
+                    fn-chain-output-removed)]
     (if as-code?
       fn-chain*
       (eval-and-build fn-chain*))))

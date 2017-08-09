@@ -24,20 +24,15 @@
             [dl4clj.nn.transfer-learning.helper :as tl-helper]
             [dl4clj.nn.transfer-learning.transfer-learning :as tl]
 
-            [dl4clj.nn.updater.layer-updater :refer :all]
-            [dl4clj.nn.updater.multi-layer-updater :refer :all]
-
-
             ;; possibly not core
             [dl4clj.nn.params.param-initializers :as param-init]
             [dl4clj.nn.gradient.default-gradient :as gradient]
             [dl4clj.nn.layers.layer-creation :as layer-creation]
-            [dl4clj.nn.updater.layer-updater :as layer-updater]
-            [dl4clj.nn.updater.multi-layer-updater :as mln-updater]
-
+            [dl4clj.nn.updater.layer-updater :refer :all]
+            [dl4clj.nn.updater.multi-layer-updater :refer :all]
 
             ;; helper fns
-            [dl4clj.utils :refer [array-of get-labels]]
+            [dl4clj.utils :refer [array-of get-labels eval-and-build]]
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-zeros]]
             [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
             [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
@@ -809,7 +804,7 @@
                  :updater :adam :weight-init :distribution}}]
       (is (= :variational-autoencoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.variational.VariationalAutoencoder
-             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
+               (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest frozen-layer-test
   (testing "the creation of a frozen layer from an existing layer"
@@ -833,10 +828,6 @@
                              :nn-conf (quick-nn-conf layer-conf))
                      :param-table-map {"foo" (indarray-of-zeros :rows 1)}))))))))
 
-
-
-;;;;;;;; needs to be updated to the new nn/builder
-;; need to add tests for all the helper fns like layer helper and multi layer helper
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf-builder
 ;; dl4clj.nn.conf.builders.nn-conf-builder
@@ -907,6 +898,98 @@
                                           "some list builder"
                                           {0 {:dense-layer {:n-in 10}}
                                            1 (layer/dense-layer-builder :n-in 10)})))
+    (is (= '(.build
+             (doto
+                 (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
+               (.stepFunction (dl4clj.nn.conf.step-fns/step-fn :gradient-step-fn))
+               (.regularization true)
+               (.learningRateDecayPolicy
+                (dl4clj.constants/value-of {:learning-rate-policy :poly}))
+               (.seed 123)
+               (.maxNumLineSearchIterations 6)
+               (.lrPolicyDecayRate 0.3)
+               (.useDropConnect false)
+               (.minimize true)
+               (.iterations 1)
+               (.miniBatch true)
+               (.learningRateScoreBasedDecayRate 0.7)
+               (.optimizationAlgo
+                (dl4clj.constants/value-of {:optimization-algorithm :lbfgs}))
+               (.convolutionMode
+                (dl4clj.constants/value-of {:convolution-mode :strict}))
+               (.lrPolicyPower 0.1)))
+           (nn/builder
+            :iterations 1
+            :lr-policy-decay-rate 0.3
+            :max-num-line-search-iterations 6
+            :mini-batch? true
+            :minimize? true
+            :use-drop-connect? false
+            :optimization-algo :lbfgs
+            :lr-score-based-decay-rate 0.7
+            :regularization? true
+            :seed 123
+            :step-fn :gradient-step-fn
+            :convolution-mode :strict
+            :lr-policy-power 0.1
+            :default-learning-rate-policy :poly
+            :build? true
+            :as-code? true)))
+
+    (is (= '(.build
+             (doto
+                 (.list
+                  (doto
+                      (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
+                    (.stepFunction
+                     (dl4clj.nn.conf.step-fns/step-fn :negative-gradient-step-fn))
+                    (.weightInit
+                     (dl4clj.constants/value-of {:weight-init :xavier-uniform}))
+                    (.gradientNormalization
+                     (dl4clj.constants/value-of
+                      {:gradient-normalization :renormalize-l2-per-layer}))
+                    (.updater (dl4clj.constants/value-of {:updater :none}))
+                    (.dropOut 0.2)
+                    (.useDropConnect true)
+                    (.activation (dl4clj.constants/value-of {:activation-fn :relu}))))
+               (.layer
+                0
+                (dl4clj.utils/eval-and-build
+                 (doto
+                     (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+                   (.nOut 1000)
+                   (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
+                   (.gradientNormalization
+                    (dl4clj.constants/value-of {:gradient-normalization :none}))
+                   (.nIn 100)
+                   (.name "first layer"))))
+               (.layer
+                1
+                (dl4clj.utils/eval-and-build
+                 (dl4clj.nn.conf.builders.layers/builder
+                  {:dense-layer
+                   {:n-in 1000,
+                    :n-out 10,
+                    :layer-name "second layer",
+                    :gradient-normalization :none}})))))
+           (nn/builder :default-activation-fn :relu
+                       :step-fn :negative-gradient-step-fn
+                       :default-updater :none
+                       :use-drop-connect? true
+                       :default-drop-out 0.2
+                       :default-weight-init :xavier-uniform
+                       :build? true
+                       :default-gradient-normalization :renormalize-l2-per-layer
+                       :as-code? true
+                       :layers {0 (layer/dense-layer-builder :n-in 100
+                                                             :n-out 1000
+                                                             :layer-name "first layer"
+                                                             :activation-fn :tanh
+                                                             :gradient-normalization :none)
+                                1 {:dense-layer {:n-in 1000
+                                                 :n-out 10
+                                                 :layer-name "second layer"
+                                                 :gradient-normalization :none}}})))
     ;; here we have to use the constructor for the MultiLayerConfigBuilder
     ;; because we don't have a list builder, we just have a nn-conf
     (let [layer-fn-call-code (nn/multi-layer-builder-helper
@@ -950,8 +1033,7 @@
              :lr-policy-power 0.1
              :default-learning-rate-policy :poly
              :build? true
-             :as-code? false
-             ))))
+             :as-code? false))))
     (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
            (type
             (nn/builder
@@ -1167,30 +1249,7 @@
                                     :pretrain? false
                                     :as-code? true)
 
-          mln-conf-obj (nn/builder :seed 123
-                                   :optimization-algo :stochastic-gradient-descent
-                                   :iterations 1
-                                   :default-learning-rate 0.006
-                                   :default-updater :nesterovs
-                                   :default-momentum 0.9
-                                   :regularization? true
-                                   :default-l2 1e-4
-                                   :build? true
-                                   :default-gradient-normalization :renormalize-l2-per-layer
-                                   :layers {0 (layer/dense-layer-builder
-                                               :n-in 784
-                                               :n-out 1000
-                                               :layer-name "first layer"
-                                               :activation-fn :relu
-                                               :weight-init :xavier)
-                                            1 {:output-layer {:n-in 1000
-                                                              :n-out 10
-                                                              :layer-name "second layer"
-                                                              :activation-fn :soft-max
-                                                              :weight-init :xavier}}}
-                                   :backprop? true
-                                   :pretrain? false
-                                   :as-code? false)
+          mln-conf-obj (eval mln-conf-code)
 
           mln-as-code (multi-layer-network/new-multi-layer-network :conf mln-conf-code
                                                                    :as-code? true)
@@ -1369,220 +1428,427 @@
 
 (deftest transfer-learning-tests
   (testing "the transfer learning fns"
-    (let [nn-conf (nn-conf-builder :default-activation-fn :relu
+    (let [;; nn conf code and obj
+          nn-conf-code (nn/builder :default-activation-fn :relu
                                    :step-fn :negative-gradient-step-fn
                                    :default-updater :none
                                    :use-drop-connect? false
                                    :default-weight-init :xavier-uniform
                                    :default-gradient-normalization :none
-                                   :build? true
-                                   :layer {:dense-layer{:n-in 10
-                                                        :n-out 100
-                                                        :layer-name "some layer"
-                                                        :activation-fn :tanh
-                                                        :gradient-normalization :none}})
-          fine-tune-conf (new-fine-tune-conf :activation-fn :relu
-                                             :n-iterations 2
-                                             :regularization? false
-                                             :seed 1234)
-          l-builder (nn-conf-builder :seed 123
-                                     :optimization-algo :stochastic-gradient-descent
-                                     :iterations 1
-                                     :default-learning-rate 0.006
-                                     :default-updater :nesterovs
-                                     :default-momentum 0.9
-                                     :regularization? false
-                                     :build? false
-                                     :default-gradient-normalization :none
-                                     :layers {0 {:dense-layer {:n-in 784
-                                                               :n-out 1000
-                                                               :layer-name "first layer"
-                                                               :activation-fn :relu
-                                                               :weight-init :xavier}}
-                                              1 {:output-layer {:n-in 1000
-                                                                :n-out 10
-                                                                :layer-name "second layer"
-                                                                :activation-fn :soft-max
-                                                                :weight-init :xavier}}})
-          mln-conf (multi-layer-config-builder :list-builder l-builder
-                                               :backprop? true
-                                               :pretrain? false
-                                               :build? true)
-          mln (init! :model (new-multi-layer-network :conf mln-conf))
-          helper (new-helper :mln mln :frozen-til 0)
-          featurized (featurize :helper helper :data-set (get-example :ds (new-mnist-ds)
-                                                                      :idx 0))
+                                   :as-code? true
+                                   :layers {:dense-layer {:n-in 10
+                                                          :n-out 100
+                                                          :layer-name "some layer"
+                                                          :activation-fn :tanh
+                                                          :gradient-normalization :none}})
+          nn-conf-obj (eval nn-conf-code)
+
+          ;; fine tune conf code and obj
+          ft-conf-code (fine-tune-conf/new-fine-tune-conf :activation-fn :relu
+                                                          :n-iterations 2
+                                                          :regularization? false
+                                                          :seed 1234)
+          ft-conf-obj (eval-and-build ft-conf-code)
+
+          ;; mln conf obj and code
+          mln-conf-code (nn/builder :seed 123
+                                    :optimization-algo :stochastic-gradient-descent
+                                    :iterations 1
+                                    :default-learning-rate 0.006
+                                    :default-updater :nesterovs
+                                    :default-momentum 0.9
+                                    :regularization? false
+                                    :build? true
+                                    :default-gradient-normalization :none
+                                    :backprop? true
+                                    :pretrain? false
+                                    :as-code? true
+                                    :layers {0 {:dense-layer {:n-in 784
+                                                              :n-out 1000
+                                                              :layer-name "first layer"
+                                                              :activation-fn :relu
+                                                              :weight-init :xavier}}
+                                             1 {:output-layer {:n-in 1000
+                                                               :n-out 10
+                                                               :layer-name "second layer"
+                                                               :activation-fn :soft-max
+                                                               :weight-init :xavier}}})
+          mln-conf-obj (eval mln-conf-code)
+          ;; initialized multi layer newtork
+          mln (model/init! :model (multi-layer-network/new-multi-layer-network
+                                   :conf mln-conf-obj))
+
+          mln-code (multi-layer-network/new-multi-layer-network
+                    :conf mln-conf-code
+                    :as-code? true)
+
+          helper (tl-helper/new-helper :mln mln :frozen-til 0)
+          featurized (tl-helper/featurize :helper helper :data-set
+                                          (get-example :ds (new-mnist-ds)
+                                                       :idx 0))
           featurized-input (get-features featurized)
-          tlb (transfer-learning-builder
-               :mln (init!
-                     :model
-                     (new-multi-layer-network
-                      :conf
-                      (multi-layer-config-builder
-                       :list-builder (nn-conf-builder
-                                      :seed 123
-                                      :optimization-algo :stochastic-gradient-descent
-                                      :iterations 1
-                                      :default-learning-rate 0.006
-                                      :default-updater :nesterovs
-                                      :default-momentum 0.9
-                                      :regularization? false
-                                      :build? false
-                                      :default-gradient-normalization :none
-                                      :layers {0 {:dense-layer {:n-in 10
-                                                                :n-out 100
-                                                                :layer-name "first layer"
-                                                                :activation-fn :relu
-                                                                :weight-init :xavier}}
-                                               1 {:activation-layer {:n-in 100
-                                                                     :n-out 10
-                                                                     :layer-name "second layer"
-                                                                     :activation-fn :soft-max
-                                                                     :weight-init :xavier}}
-                                               2 {:output-layer {:n-in 10
-                                                                 :n-out 1
-                                                                 :layer-name "output layer"
-                                                                 :activation-fn :soft-max
-                                                                 :weight-init :xavier}}})
-                       :backprop? true
-                       :pretrain? false
-                       :build? true)))
-               :build? false)]
-      #_(clojure.pprint/pprint
-       (dl4clj.nn.transfer-learning.transfer-learning/builder
-         :mln
-         (dl4clj.nn.multilayer.multi-layer-network/new-multi-layer-network
-          :as-code? true
-          :conf
-          (dl4clj.nn.conf.builders.nn/builder :layers {0 {:dense-layer {:n-in 100
-                                                                        :n-out 10
-                                                                        :layer-name "first layer"
-                                                                        :activation-fn :tanh
-                                                                        :weight-init :relu}}
-                                                       1 (dl4clj.nn.conf.builders.layers/dense-layer-builder
-                                                          :n-in 10
+          tlb-code (tl/builder
+                    :as-code? true
+                    :mln (multi-layer-network/new-multi-layer-network
+                          :as-code? true
+                          :conf
+                          (nn/builder
+                           :seed 123
+                           :optimization-algo :stochastic-gradient-descent
+                           :iterations 1
+                           :default-learning-rate 0.006
+                           :default-updater :nesterovs
+                           :default-momentum 0.9
+                           :regularization? false
+                           :build? true
+                           :as-code? true
+                           :default-gradient-normalization :none
+                           :backprop? true
+                           :pretrain? false
+                           :layers {0 {:dense-layer {:n-in 10
+                                                     :n-out 100
+                                                     :layer-name "first layer"
+                                                     :activation-fn :relu
+                                                     :weight-init :xavier}}
+                                    1 {:activation-layer {:n-in 100
                                                           :n-out 10
                                                           :layer-name "second layer"
-                                                          :activation-fn :tanh
-                                                          :gradient-normalization :none)}))
-         :fine-tune-conf  (dl4clj.nn.transfer-learning.fine-tune-conf/new-fine-tune-conf
-                           :activation-fn :relu
-                           :n-iterations 2
-                           :regularization? false
-                           :seed 1234)
-         :remove-last-n-layers 1
-         :replacement-layer {:layer-idx 0 :n-out 101 :weight-init :relu}
-         :add-layers {2 {:dense-layer {:n-in 100
-                                       :n-out 10
-                                       :layer-name "third layer"
-                                       :activation-fn :tanh
-                                       :weight-init :relu}}
-                      4 (dl4clj.nn.conf.builders.layers/output-layer-builder
-                         :n-in 10
-                         :n-out 10
-                         :layer-name "5th layer"
-                         :activation-fn :tanh
-                         :gradient-normalization :none)
-                      5 {:dense-layer {:n-in 100
-                                       :n-out 10
-                                       :layer-name "last layer"
-                                       :activation-fn :tanh
-                                       :weight-init :relu}}
-                      3 {:dense-layer {:n-in 100
-                                       :n-out 10
-                                       :layer-name "4th layer"
-                                       :activation-fn :tanh
-                                       :weight-init :relu}}}
-         :as-code? true
-         :input-pre-processor {:layer-idx 0
-                               :pre-processor {:unit-variance-processor {}}}))
-      ;; dl4clj.nn.transfer-learning.fine-tune-conf
-      (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration
-             (type fine-tune-conf)))
-      (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration$Builder
-             (type (new-fine-tune-conf :activation-fn :relu
-                                       :n-iterations 2
-                                       :regularization? true
-                                       :seed 123
-                                       :build? false))))
-      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
-             (type (applied-to-nn-conf! :fine-tune-conf fine-tune-conf
-                                        :nn-conf nn-conf))))
-      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
-             (type (nn-conf-from-fine-tune-conf :fine-tune-conf fine-tune-conf))))
-      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
-             (type (nn-conf-from-fine-tune-conf :fine-tune-conf fine-tune-conf
-                                                :build? true))))
-      ;; dl4clj.nn.transfer-learning.helper
-      (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
-             (type (new-helper :mln mln))))
-      (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
-             (type helper)))
-      (is (= org.nd4j.linalg.dataset.DataSet (type featurized)))
-      (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
-             (type (fit-featurized! :helper helper :data-set featurized))))
-      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (output-from-featurized :helper helper :featurized-input featurized-input))))
-      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (unfrozen-mln helper))))
+                                                          :activation-fn :soft-max
+                                                          :weight-init :xavier}}
+                                    2 {:output-layer {:n-in 10
+                                                      :n-out 1
+                                                      :layer-name "output layer"
+                                                      :activation-fn :soft-max
+                                                      :weight-init :xavier}}})))
+          tlb-obj (eval-and-build tlb-code)]
+      (testing "dl4clj.nn.transfer-learning.fine-tune-conf"
+        (is (= org.deeplearning4j.nn.transferlearning.FineTuneConfiguration
+               (type ft-conf-obj)))
+        (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+               (type (fine-tune-conf/applied-to-nn-conf! :fine-tune-conf ft-conf-obj
+                                                         :nn-conf nn-conf-obj))))
+        (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
+               (type (fine-tune-conf/nn-conf-from-fine-tune-conf :fine-tune-conf ft-conf-obj))))
+        (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+               (type (fine-tune-conf/nn-conf-from-fine-tune-conf :fine-tune-conf ft-conf-obj
+                                                                 :build? true)))))
+      (testing "dl4clj.nn.transfer-learning.helper"
+        (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
+               (type (tl-helper/new-helper :mln mln))))
+        (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
+               (type helper)))
+        (is (= org.nd4j.linalg.dataset.DataSet (type featurized)))
+        (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
+               (type (tl-helper/fit-featurized! :helper helper :data-set featurized))))
+        (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
+               (type (tl-helper/output-from-featurized :helper helper :featurized-input featurized-input))))
+        (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
+               (type (tl-helper/unfrozen-mln helper)))))
 
-      ;; dl4clj.nn.transfer-learning.transfer-learning
-      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (transfer-learning-builder
-                    :mln mln
-                    :fine-tune-conf fine-tune-conf
-                    :remove-output-layer? true
-                    :replacement-layer {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform}
-                    :remove-last-n-layers 1
-                    :add-layer (dl4clj.nn.conf.builders.builders/output-layer-builder
-                            :n-in 100
-                            :n-out 10
-                            :layer-name "another layer"
-                            :activation-fn :tanh
-                            :gradient-normalization :none)
-                    :set-feature-extractor-idx 0
-                    :input-pre-processor {:layer-idx 0 :pre-processor (new-unit-variance-processor)}))))
-      ;; testing add-layers
-      (is (= ["first layer" "replacement another layer" "replacement second layer"]
-             (get-layer-names
-              (transfer-learning-builder :tlb tlb
-                                         :fine-tune-conf fine-tune-conf
-                                         :remove-last-n-layers 2
-                                         :add-layers {1 (dl4clj.nn.conf.builders.builders/activation-layer-builder
-                                                         :n-in 10
-                                                         :n-out 100
-                                                         :layer-name "replacement another layer"
-                                                         :activation-fn :tanh
-                                                         :gradient-normalization :none)
-                                                      2 {:output-layer {:n-in 100
-                                                                        :n-out 10
-                                                                        :layer-name "replacement second layer"
-                                                                        :activation-fn :soft-max
-                                                                        :weight-init :xavier}}}))))
-      ;; testing add-layer
-      (is (= ["first layer" "another layer"]
-             (get-layer-names
-              (transfer-learning-builder
-               :mln mln
-               :fine-tune-conf fine-tune-conf
-               :remove-output-layer? true
-               :add-layer (dl4clj.nn.conf.builders.builders/output-layer-builder
-                           :n-in 100
-                           :n-out 10
-                           :layer-name "another layer"
-                           :activation-fn :tanh
-                           :gradient-normalization :none)
-               :set-feature-extractor-idx 0
-               :input-pre-processor {:layer-idx 0 :pre-processor (new-unit-variance-processor)})))))))
+      (testing "dl4clj.nn.transfer-learning.transfer-learning/builder helper fns"
+        (is (= '[0 1001 (dl4clj.constants/value-of {:weight-init :xavier-uniform})]
+               (tl/replace-layer-helper {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform})))
+        (is (= '[0 1001 (dl4clj.nn.conf.distributions/distribution {:normal {:mean 0, :std 1}})
+                 (dl4clj.constants/value-of {:weight-init :xavier-uniform})]
+               (tl/replace-layer-helper {:layer-idx 0 :n-out 1001
+                                         :weight-init :xavier-uniform
+                                         :dist {:normal {:mean 0 :std 1}}})))
+        (is (= '[0 (dl4clj.nn.conf.input-pre-processor/pre-processors {:unit-variance-processor {}})]
+               (tl/input-pre-processor-helper {:layer-idx 0 :pre-processor (new-unit-variance-processor)})))
+        (is (= '[0 (dl4clj.nn.conf.input-pre-processor/pre-processors {:unit-variance-processor {}})]
+               (tl/input-pre-processor-helper {:layer-idx 0 :pre-processor {:unit-variance-processor {}}})))
+        (is (= '[(dl4clj.utils/eval-and-build
+                  (doto (org.deeplearning4j.nn.conf.layers.OutputLayer$Builder.)
+                    (.nOut 10) (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
+                    (.gradientNormalization (dl4clj.constants/value-of {:gradient-normalization :none}))
+                    (.nIn 100) (.name "another layer")))]
+               (tl/add-layers-helper (layer/output-layer-builder
+                                      :n-in 100
+                                      :n-out 10
+                                      :layer-name "another layer"
+                                      :activation-fn :tanh
+                                      :gradient-normalization :none))))
+        (is (= '[(dl4clj.utils/eval-and-build
+                  (dl4clj.nn.conf.builders.layers/builder
+                   {:output-layer
+                    {:n-in 100, :n-out 10,
+                     :layer-name "replacement second layer",
+                     :activation-fn :soft-max, :weight-init :xavier}}))]
+               (tl/add-layers-helper {:output-layer {:n-in 100
+                                                     :n-out 10
+                                                     :layer-name "replacement second layer"
+                                                     :activation-fn :soft-max
+                                                     :weight-init :xavier}})))
+        (is (= '[[(dl4clj.utils/eval-and-build
+                   (doto (org.deeplearning4j.nn.conf.layers.ActivationLayer$Builder.)
+                     (.nOut 100) (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
+                     (.gradientNormalization (dl4clj.constants/value-of {:gradient-normalization :none}))
+                     (.nIn 10) (.name "replacement another layer")))]
+                 [(dl4clj.utils/eval-and-build
+                   (dl4clj.nn.conf.builders.layers/builder
+                    {:output-layer
+                     {:n-in 100, :n-out 10,
+                      :layer-name "replacement second layer",
+                      :activation-fn :soft-max, :weight-init :xavier}}))]]
+               (tl/add-layers-helper {1 (layer/activation-layer-builder
+                                         :n-in 10
+                                         :n-out 100
+                                         :layer-name "replacement another layer"
+                                         :activation-fn :tanh
+                                         :gradient-normalization :none)
+                                      2 {:output-layer {:n-in 100
+                                                        :n-out 10
+                                                        :layer-name "replacement second layer"
+                                                        :activation-fn :soft-max
+                                                        :weight-init :xavier}}})))
+        (is (= '(doto
+                    (doto
+                        (org.deeplearning4j.nn.transferlearning.TransferLearning$Builder.
+                         (if
+                             (dl4clj.nn.api.multi-layer-network/is-init-called?
+                              (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
+                               (.build
+                                (doto
+                                    (.list
+                                     (doto
+                                         (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)))
+                                  (.layer
+                                   0
+                                   (dl4clj.utils/eval-and-build
+                                    (dl4clj.nn.conf.builders.layers/builder
+                                     {:dense-layer
+                                      {:n-in 100,
+                                       :n-out 10,
+                                       :layer-name "first layer",
+                                       :activation-fn :tanh,
+                                       :weight-init :relu}})))
+                                  (.layer
+                                   1
+                                   (dl4clj.utils/eval-and-build
+                                    (doto
+                                        (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+                                      (.nOut 10)
+                                      (.activation
+                                       (dl4clj.constants/value-of {:activation-fn :tanh}))
+                                      (.gradientNormalization
+                                       (dl4clj.constants/value-of
+                                        {:gradient-normalization :none}))
+                                      (.nIn 10)
+                                      (.name "second layer"))))))))
+                           (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
+                            (.build
+                             (doto
+                                 (.list
+                                  (doto
+                                      (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)))
+                               (.layer
+                                0
+                                (dl4clj.utils/eval-and-build
+                                 (dl4clj.nn.conf.builders.layers/builder
+                                  {:dense-layer
+                                   {:n-in 100,
+                                    :n-out 10,
+                                    :layer-name "first layer",
+                                    :activation-fn :tanh,
+                                    :weight-init :relu}})))
+                               (.layer
+                                1
+                                (dl4clj.utils/eval-and-build
+                                 (doto
+                                     (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+                                   (.nOut 10)
+                                   (.activation
+                                    (dl4clj.constants/value-of {:activation-fn :tanh}))
+                                   (.gradientNormalization
+                                    (dl4clj.constants/value-of {:gradient-normalization :none}))
+                                   (.nIn 10)
+                                   (.name "second layer")))))))
+                           (dl4clj.nn.api.model/init!
+                            :model
+                            (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                             (.build
+                              (doto
+                                  (.list
+                                   (doto
+                                       (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)))
+                                (.layer
+                                 0
+                                 (dl4clj.utils/eval-and-build
+                                  (dl4clj.nn.conf.builders.layers/builder
+                                   {:dense-layer
+                                    {:n-in 100,
+                                     :n-out 10,
+                                     :layer-name "first layer",
+                                     :activation-fn :tanh,
+                                     :weight-init :relu}})))
+                                (.layer
+                                 1
+                                 (dl4clj.utils/eval-and-build
+                                  (doto
+                                      (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+                                    (.nOut 10)
+                                    (.activation
+                                     (dl4clj.constants/value-of {:activation-fn :tanh}))
+                                    (.gradientNormalization
+                                     (dl4clj.constants/value-of
+                                      {:gradient-normalization :none}))
+                                    (.nIn 10)
+                                    (.name "second layer"))))))))))
+                      (.nOutReplace 0 101 (dl4clj.constants/value-of {:weight-init :relu}))
+                      (.setInputPreProcessor
+                       0
+                       (dl4clj.nn.conf.input-pre-processor/pre-processors
+                        {:unit-variance-processor {}}))
+                      (.fineTuneConfiguration
+                       (dl4clj.utils/eval-and-build
+                        (doto
+                            (org.deeplearning4j.nn.transferlearning.FineTuneConfiguration$Builder.)
+                          (.iterations 2)
+                          (.activation (dl4clj.constants/value-of {:activation-fn :relu}))
+                          (.regularization false)
+                          (.seed 1234))))
+                      (.removeLayersFromOutput 1))
+                  (.addLayer
+                   (dl4clj.utils/eval-and-build
+                    (dl4clj.nn.conf.builders.layers/builder
+                     {:dense-layer
+                      {:n-in 100,
+                       :n-out 10,
+                       :layer-name "third layer",
+                       :activation-fn :tanh,
+                       :weight-init :relu}})))
+                  (.addLayer
+                   (dl4clj.utils/eval-and-build
+                    (dl4clj.nn.conf.builders.layers/builder
+                     {:dense-layer
+                      {:n-in 100,
+                       :n-out 10,
+                       :layer-name "4th layer",
+                       :activation-fn :tanh,
+                       :weight-init :relu}})))
+                  (.addLayer
+                   (dl4clj.utils/eval-and-build
+                    (doto
+                        (org.deeplearning4j.nn.conf.layers.OutputLayer$Builder.)
+                      (.nOut 10)
+                      (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
+                      (.gradientNormalization
+
+                       (dl4clj.constants/value-of {:gradient-normalization :none}))
+                      (.nIn 10)
+                      (.name "5th layer"))))
+                  (.addLayer
+                   (dl4clj.utils/eval-and-build
+                    (dl4clj.nn.conf.builders.layers/builder
+                     {:dense-layer
+                      {:n-in 100,
+                       :n-out 10,
+                       :layer-name "last layer",
+                       :activation-fn :tanh,
+                       :weight-init :relu}}))))
+               (tl/builder
+                :mln
+                (multi-layer-network/new-multi-layer-network
+                 :as-code? true
+                 :conf
+                 (nn/builder :layers {0 {:dense-layer {:n-in 100
+                                                       :n-out 10
+                                                       :layer-name "first layer"
+                                                       :activation-fn :tanh
+                                                       :weight-init :relu}}
+                                      1 (dl4clj.nn.conf.builders.layers/dense-layer-builder
+                                         :n-in 10
+                                         :n-out 10
+                                         :layer-name "second layer"
+                                         :activation-fn :tanh
+                                         :gradient-normalization :none)}))
+                :fine-tune-conf (fine-tune-conf/new-fine-tune-conf
+                                 :activation-fn :relu
+                                 :n-iterations 2
+                                 :regularization? false
+                                 :seed 1234)
+                :remove-last-n-layers 1
+                :replacement-layer {:layer-idx 0 :n-out 101 :weight-init :relu}
+                :add-layers {2 {:dense-layer {:n-in 100
+                                              :n-out 10
+                                              :layer-name "third layer"
+                                              :activation-fn :tanh
+                                              :weight-init :relu}}
+                             4 (layer/output-layer-builder
+                                :n-in 10
+                                :n-out 10
+                                :layer-name "5th layer"
+                                :activation-fn :tanh
+                                :gradient-normalization :none)
+                             5 {:dense-layer {:n-in 100
+                                              :n-out 10
+                                              :layer-name "last layer"
+                                              :activation-fn :tanh
+                                              :weight-init :relu}}
+                             3 {:dense-layer {:n-in 100
+                                              :n-out 10
+                                              :layer-name "4th layer"
+                                              :activation-fn :tanh
+                                              :weight-init :relu}}}
+                :as-code? true
+                :input-pre-processor {:layer-idx 0
+                                      :pre-processor {:unit-variance-processor {}}}))))
+      (testing "dl4clj.nn.transfer-learning.transfer-learning"
+        (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
+               (type (tl/builder
+                      :mln mln-code
+                      :fine-tune-conf ft-conf-code
+                      :remove-output-layer? true
+                      :replacement-layer {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform}
+                      :remove-last-n-layers 1
+                      :add-layers (layer/output-layer-builder
+                                   :n-in 100
+                                   :n-out 10
+                                   :layer-name "another layer"
+                                   :activation-fn :tanh
+                                   :gradient-normalization :none)
+                      :set-feature-extractor-idx 0
+                      :input-pre-processor {:layer-idx 0 :pre-processor (new-unit-variance-processor)}))))
+        (is (= ["first layer" "replacement another layer" "replacement second layer"]
+               (mln/get-layer-names
+                (tl/builder :tlb tlb-code
+                            :fine-tune-conf ft-conf-code
+                            :remove-last-n-layers 2
+                            :add-layers {1 (layer/activation-layer-builder
+                                            :n-in 10
+                                            :n-out 100
+                                            :layer-name "replacement another layer"
+                                            :activation-fn :tanh
+                                            :gradient-normalization :none)
+                                         2 {:output-layer {:n-in 100
+                                                           :n-out 10
+                                                           :layer-name "replacement second layer"
+                                                           :activation-fn :soft-max
+                                                           :weight-init :xavier}}}))))
+        (is (= ["first layer" "another layer"]
+               (mln/get-layer-names
+                (tl/builder
+                 :mln mln-code
+                 :fine-tune-conf ft-conf-code
+                 :remove-output-layer? true
+                 :add-layers (layer/output-layer-builder
+                              :n-in 100
+                              :n-out 10
+                              :layer-name "another layer"
+                              :activation-fn :tanh
+                              :gradient-normalization :none)
+                 :set-feature-extractor-idx 0
+                 :input-pre-processor {:layer-idx 0 :pre-processor (new-unit-variance-processor)}))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dl4clj.nn.updater.layer-updater
 ;; dl4clj.nn.updater.multi-layer-updater
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest updater-tests
   (testing "the creation of model updaters"
-    (let [mln (as-> (nn-conf-builder
+    (let [mln (as-> (nn/builder
                      :seed 123
                      :optimization-algo :stochastic-gradient-descent
                      :iterations 1
@@ -1590,8 +1856,10 @@
                      :default-updater :nesterovs
                      :default-momentum 0.9
                      :regularization? false
-                     :build? false
                      :default-gradient-normalization :none
+                     :backprop? true
+                     :pretrain? false
+                     :as-code? false
                      :layers {0
                               {:dense-layer {:n-in 10
                                              :n-out 100
@@ -1609,38 +1877,35 @@
                                                 :activation-fn :soft-max
                                                 :weight-init :xavier}}})
                   conf
-                (multi-layer-config-builder :list-builder conf
-                                            :backprop? true
-                                            :pretrain? false
-                                            :build? true)
-                (new-multi-layer-network :conf conf)
-                (init! :model conf))
+                (multi-layer-network/new-multi-layer-network :conf conf)
+                (model/init! :model conf))
           layer-updater (new-layer-updater)
-          conf-with-param (as-> (nn-conf-builder
+          conf-with-param (as-> (nn/builder
                                  :regularization? true
                                  :build? true
-                                 :layer {:graves-lstm
-                                         {:n-in 10 :n-out 2 :forget-gate-bias-init 0.2
-                                          :gate-activation-fn :relu
-                                          :activation-fn :relu
-                                          :bias-init 0.7 :bias-learning-rate 0.1
-                                          :dist {:normal {:mean 0 :std 1}}
-                                          :drop-out 0.2 :epsilon 0.3
-                                          :gradient-normalization :renormalize-l2-per-layer
-                                          :l2 0.1 :l2-bias 1
-                                          :gradient-normalization-threshold 0.9
-                                          :layer-name "foo"
-                                          :learning-rate 0.1 :learning-rate-policy :inverse
-                                          :learning-rate-schedule {0 0.6 1 0.5}
-                                          :momentum 0.2  :momentum-after {0 0.3 1 0.4}
-                                          :updater :nesterovs :weight-init :distribution}})
+                                 :as-code? false
+                                 :layers {:graves-lstm
+                                          {:n-in 10 :n-out 2 :forget-gate-bias-init 0.2
+                                           :gate-activation-fn :relu
+                                           :activation-fn :relu
+                                           :bias-init 0.7 :bias-learning-rate 0.1
+                                           :dist {:normal {:mean 0 :std 1}}
+                                           :drop-out 0.2 :epsilon 0.3
+                                           :gradient-normalization :renormalize-l2-per-layer
+                                           :l2 0.1 :l2-bias 1
+                                           :gradient-normalization-threshold 0.9
+                                           :layer-name "foo"
+                                           :learning-rate 0.1 :learning-rate-policy :inverse
+                                           :learning-rate-schedule {0 0.6 1 0.5}
+                                           :momentum 0.2  :momentum-after {0 0.3 1 0.4}
+                                           :updater :nesterovs :weight-init :distribution}})
                               l
                             ;; add this part to add-variable!
                             (do (.variables l (.add (.variables l false) "baz"))
                                 l)
-                            (add-variable! :nn-conf l :var-name "baz")
-                            (set-learning-rate-by-param! :nn-conf l :var-name "foo" :rate 0.2))
-          layer (new-layer :nn-conf conf-with-param)
+                            (nn-conf/add-variable! :nn-conf l :var-name "baz")
+                            (nn-conf/set-learning-rate-by-param! :nn-conf l :var-name "foo" :rate 0.2))
+          layer (layer-creation/new-layer :nn-conf conf-with-param)
 
           ;;(new-layer :nn-conf l)
           ;; try initializing the layer instead of calling new layer for setting l2byparam
@@ -1663,45 +1928,11 @@
       (is (= (type layer)
              (type (:layer (pre-apply! :updater layer-updater
                                        :layer layer :iteration 1
-                                       :gradient (new-default-gradient))))))
+                                       :gradient (gradient/new-default-gradient))))))
       (is (= {} (get-updater-for-variable layer-updater)))
       ;; cant get this to work, cant add things to the l2ByParam hash map for some damn reason
       ;; thats what this is trying to do under the hood
       ;; https://github.com/deeplearning4j/deeplearning4j/blob/master/deeplearning4j-nn/src/main/java/org/deeplearning4j/nn/conf/NeuralNetConfiguration.java
       #_(is (= "" (post-apply! :updater layer-updater
                                :layer layer :gradient-array (rand [2])
-                               :param "foo" :mini-batch-size 10)))
-      )))
-
-
-
-(comment
-
-  (dl4clj.nn.conf.layers.shared-fns/instantiate
- :layer (dl4clj.nn.conf.builders.builders/activation-layer-builder
-         :n-in 10
-         :n-out 100
-         :layer-name "another layer"
-         :activation-fn :tanh
-         :gradient-normalization :none)
- :conf
- (nn-conf-builder :global-activation-fn :relu
-                  :step-fn :negative-gradient-step-fn
-                  :updater :none
-                  :use-drop-connect true
-                  :drop-out 0.2
-                  :weight-init :xavier-uniform
-                  :gradient-normalization :renormalize-l2-per-layer
-                  :build? true
-                  :layer (dl4clj.nn.conf.builders.builders/activation-layer-builder
-                          :n-in 10
-                          :n-out 100
-                          :layer-name "another layer"
-                          :activation-fn :tanh
-                          :gradient-normalization :none))
- :listeners (dl4clj.optimize.listeners.listeners/new-score-iteration-listener)
- #_(dl4clj.utils/array-of :data (dl4clj.optimize.listeners.listeners/new-score-iteration-listener)
-                                   :java-type org.deeplearning4j.optimize.api.IterationListener)
- :layer-idx 0
- :layer-param-view (nd4clj.linalg.factory.nd4j/rand [10])
- :initialize-params? true))
+                               :param "foo" :mini-batch-size 10))))))
