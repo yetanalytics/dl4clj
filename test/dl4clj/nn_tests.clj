@@ -40,6 +40,7 @@
             [dl4clj.eval.evaluation :refer [new-classification-evaler]]
             [dl4clj.eval.api.eval :refer [eval-classification! get-stats
                                           eval-model-whole-ds]]
+            [cheshire.core :refer [parse-string]]
             [clojure.test :refer :all])
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
@@ -365,21 +366,6 @@
 ;; any layer builder
 ;; dl4clj.nn.conf.builders.builders
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; activation layer
-
-#_(quick-nn-conf {:activation-layer
-                {:n-in 10 :n-out 2 :activation-fn :relu
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo" :learning-rate 0.1
-                 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                 :updater :nesterovs :weight-init :distribution}})
 
 (deftest activation-layer-test
   (testing "the creation of a activation layer from a nn-conf"
@@ -833,6 +819,137 @@
 ;; dl4clj.nn.conf.builders.nn-conf-builder
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(deftest setting-vals
+  (let [parsed-conf (parse-string
+                     (multi-layer-conf/to-json
+                      (nn/builder
+                       ;; vals for the first layer
+                       :default-activation-fn :relu
+                       :default-updater :nesterovs
+                       :default-weight-init :xavier-uniform
+                       :default-bias-init 0.2
+                       :default-bias-learning-rate 0.2
+                       :default-drop-out 0.2
+                       :default-gradient-normalization :renormalize-l2-per-layer
+                       :default-gradient-normalization-threshold 0.3
+                       :default-l1 0.5
+                       :default-l1-bias 0.2
+                       :default-l2 0.8
+                       :default-l2-bias 0.2
+                       :default-learning-rate 0.3
+                       :default-learning-rate-policy :poly
+                       ;; ^ this is the learning rate policy for all layers
+                       ;; nn vals
+                       :iterations 2
+                       :lr-policy-decay-rate 0.4
+                       :lr-policy-power 0.4
+                       :max-num-line-search-iterations 10
+                       :mini-batch? true
+                       :minimize? true
+                       :use-drop-connect? true
+                       :optimization-algo :line-gradient-descent
+                       :lr-score-based-decay-rate 0.001
+                       :regularization? true
+                       :seed 123
+                       :step-fn :negative-gradient-step-fn
+                       :build? true
+                       :as-code? false
+                       :layers {0 (layer/dense-layer-builder :n-in 100
+                                                             :n-out 1000
+                                                             :layer-name "first layer"
+                                                             :momentum 0.4
+                                                             :momentum-after {0 0.2 1 0.4})
+                                1 {:dense-layer {:n-in 1000
+                                                 :n-out 2
+                                                 :activation-fn :tanh
+                                                 :adam-mean-decay 0.2
+                                                 :adam-var-decay 0.1
+                                                 :bias-init 0.7
+                                                 :bias-learning-rate 0.1
+                                                 :dist {:normal {:mean 0 :std 1}}
+                                                 :drop-out 0.2
+                                                 :epsilon 0.3
+                                                 :gradient-normalization :none
+                                                 :gradient-normalization-threshold 0.9
+                                                 :l1 0.2
+                                                 :l1-bias 0.1
+                                                 :l2 0.4
+                                                 :l2-bias 0.3
+                                                 :layer-name "second layer"
+                                                 :learning-rate 0.1
+                                                 :learning-rate-schedule {0 0.2 1 0.5}
+                                                 :updater :adam
+                                                 :weight-init :distribution}}}
+                       ;;mln vals
+                       :backprop? true
+                       :backprop-type :standard
+                       :input-pre-processors {0 (new-zero-mean-pre-pre-processor)}
+                       :pretrain? false)) true)
+        nn-conf (:confs parsed-conf)
+        ;; a nn conf is created for each layer behind the scene (in java world)
+        [conf-l1 conf-l2] nn-conf
+        l1 (:dense (:layer conf-l1))
+        l2 (:dense (:layer conf-l2))]
+    ;; see args for nn/builder
+    ;; mln args
+    (testing "the multi layer network args set"
+      (is (= true (:backprop parsed-conf)))
+      (is (= "Standard" (:backpropType parsed-conf)))
+      (is (= {:0 {:zeroMean {}}} (:inputPreProcessors parsed-conf)))
+      (is (= false (:pretrain parsed-conf))))
+    ;; nn args
+    (testing "the nn-conf args set"
+      (is (= "Poly" (:learningRatePolicy conf-l1) (:learningRatePolicy conf-l2)))
+      (is (= 0.4 (:lrPolicyDecayRate conf-l1) (:lrPolicyDecayRate conf-l2)))
+      (is (= true (:miniBatch conf-l1) (:miniBatch conf-l2)))
+      (is (= 10 (:maxNumLineSearchIterations conf-l1) (:maxNumLineSearchIterations conf-l2)))
+      (is (= 2 (:numIterations conf-l1) (:numIterations conf-l2)))
+      (is (= 0.4 (:lrPolicyPower conf-l1) (:lrPolicyPower conf-l2)))
+      (is (= true (:useDropConnect conf-l1) (:useDropConnect conf-l2)))
+      (is (= true (:useRegularization conf-l1) (:useRegularization conf-l2)))
+      (is (= 123 (:seed conf-l1) (:seed conf-l2))))
+    ;; layer args (defaults set for l1)
+    (testing "the default layer 1 args set"
+      (is (= 100 (:nin l1)))
+      (is (= 1000 (:nout l1)))
+      (is (= {:ReLU {}} (:activationFn l1)))
+      (is (= "RenormalizeL2PerLayer" (:gradientNormalization l1)))
+      (is (= "first layer" (:layerName l1)))
+      (is (= 0.2 (:l2Bias l1)))
+      (is (= 0.4 (:momentum l1)))
+      (is (= "NESTEROVS" (:updater l1)))
+      (is (= 0.8 (:l2 l1)))
+      (is (= {:0 0.2, :1 0.4} (:momentumSchedule l1)))
+      (is (= "XAVIER_UNIFORM" (:weightInit l1)))
+      (is (= 0.2 (:biasInit l1)))
+      (is (= 0.3 (:learningRate l1)))
+      (is (= 0.2 (:l1Bias l1)))
+      (is (= 0.5 (:l1 l1)))
+      (is (= 0.3 (:gradientNormalizationThreshold l1)))
+      (is (= 0.3 (:biasLearningRate l1))))
+    (testing "the explictly set layer 2 args"
+      (is (= 1000 (:nin l2)))
+      (is (= 2 (:nout l2)))
+      (is (= {:TanH {}} (:activationFn l2)))
+      (is (= 0.2 (:adamMeanDecay l2)))
+      (is (= 0.1 (:adamVarDecay l2)))
+      (is (= 0.7 (:biasInit l2)))
+      (is (= 0.1 (:biasLearningRate l2)))
+      (is (= {:normal {:mean 0.0, :std 1.0}} (:dist l2)))
+      (is (= 0.2 (:dropOut l2)))
+      (is (= 0.3 (:epsilon l2)))
+      (is (= "None" (:gradientNormalization l2)))
+      (is (= 0.9 (:gradientNormalizationThreshold l2)))
+      (is (= 0.2 (:l1 l2)))
+      (is (= 0.1 (:l1Bias l2)))
+      (is (= 0.4 (:l2 l2)))
+      (is (= 0.3 (:l2Bias l2)))
+      (is (= "second layer" (:layerName l2)))
+      (is (= 0.1 (:learningRate l2)))
+      (is (= {:0 0.2, :1 0.5} (:learningRateSchedule l2)))
+      (is (= "ADAM" (:updater l2)))
+      (is (= "DISTRIBUTION" (:weightInit l2))))))
+
 (deftest nn-test
   (testing "the helper fns for builder"
     ;; layer builder helper
@@ -936,60 +1053,155 @@
             :build? true
             :as-code? true)))
 
-    (is (= '(.build
-             (doto
-                 (.list
-                  (doto
-                      (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
-                    (.stepFunction
-                     (dl4clj.nn.conf.step-fns/step-fn :negative-gradient-step-fn))
-                    (.weightInit
-                     (dl4clj.constants/value-of {:weight-init :xavier-uniform}))
-                    (.gradientNormalization
-                     (dl4clj.constants/value-of
-                      {:gradient-normalization :renormalize-l2-per-layer}))
-                    (.updater (dl4clj.constants/value-of {:updater :none}))
-                    (.dropOut 0.2)
-                    (.useDropConnect true)
-                    (.activation (dl4clj.constants/value-of {:activation-fn :relu}))))
-               (.layer
-                0
-                (dl4clj.utils/eval-and-build
-                 (doto
-                     (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
-                   (.nOut 1000)
-                   (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
-                   (.gradientNormalization
-                    (dl4clj.constants/value-of {:gradient-normalization :none}))
-                   (.nIn 100)
-                   (.name "first layer"))))
-               (.layer
-                1
-                (dl4clj.utils/eval-and-build
-                 (dl4clj.nn.conf.builders.layers/builder
-                  {:dense-layer
-                   {:n-in 1000,
-                    :n-out 10,
-                    :layer-name "second layer",
-                    :gradient-normalization :none}})))))
-           (nn/builder :default-activation-fn :relu
-                       :step-fn :negative-gradient-step-fn
-                       :default-updater :none
-                       :use-drop-connect? true
-                       :default-drop-out 0.2
-                       :default-weight-init :xavier-uniform
-                       :build? true
-                       :default-gradient-normalization :renormalize-l2-per-layer
-                       :as-code? true
-                       :layers {0 (layer/dense-layer-builder :n-in 100
-                                                             :n-out 1000
-                                                             :layer-name "first layer"
-                                                             :activation-fn :tanh
-                                                             :gradient-normalization :none)
-                                1 {:dense-layer {:n-in 1000
-                                                 :n-out 10
-                                                 :layer-name "second layer"
-                                                 :gradient-normalization :none}}})))
+    (is (=
+         '(.build
+           (doto
+               (doto
+                   (.list
+                    (doto
+                        (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
+                      (.l2 0.8)
+                      (.gradientNormalizationThreshold 0.3)
+                      (.stepFunction
+                       (dl4clj.nn.conf.step-fns/step-fn :negative-gradient-step-fn))
+                      (.weightInit
+                       (dl4clj.constants/value-of {:weight-init :xavier-uniform}))
+                      (.regularization true)
+                      (.gradientNormalization
+                       (dl4clj.constants/value-of
+                        {:gradient-normalization :renormalize-l2-per-layer}))
+                      (.learningRateDecayPolicy
+                       (dl4clj.constants/value-of {:learning-rate-policy :poly}))
+                      (.updater (dl4clj.constants/value-of {:updater :nesterovs}))
+                      (.l1 0.5)
+                      (.biasLearningRate 0.2)
+                      (.dropOut 0.2)
+                      (.seed 123)
+                      (.maxNumLineSearchIterations 10)
+                      (.lrPolicyDecayRate 0.4)
+                      (.l1Bias 0.2)
+                      (.useDropConnect true)
+                      (.minimize true)
+                      (.iterations 2)
+                      (.learningRate 0.3)
+                      (.biasInit 0.2)
+                      (.miniBatch true)
+                      (.activation (dl4clj.constants/value-of {:activation-fn :relu
+                                                               }))
+                      (.learningRateScoreBasedDecayRate 0.001)
+                      (.optimizationAlgo
+                       (dl4clj.constants/value-of
+                        {:optimization-algorithm :line-gradient-descent}))
+                      (.lrPolicyPower 0.4)
+                      (.l2Bias 0.2)))
+                 (.layer
+                  0
+                  (dl4clj.utils/eval-and-build
+                   (doto
+                       (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+                     (.nOut 1000)
+                     (.momentumAfter {0 0.2, 1 0.4})
+                     (.nIn 100)
+                     (.momentum 0.4)
+                     (.name "first layer"))))
+                 (.layer
+                  1
+                  (dl4clj.utils/eval-and-build
+                   (dl4clj.nn.conf.builders.layers/builder
+                    {:dense-layer
+                     {:learning-rate-policy :inverse,
+                      :l1-bias 0.1,
+                      :l1 0.2,
+                      :drop-out 0.2,
+                      :n-out 2,
+                      :activation-fn :tanh,
+                      :dist {:normal {:mean 0, :std 1}},
+                      :gradient-normalization :none,
+                      :bias-learning-rate 0.1,
+                      :weight-init :distribution,
+                      :adam-var-decay 0.1,
+                      :bias-init 0.7,
+                      :n-in 1000,
+                      :l2-bias 0.3,
+                      :l2 0.4,
+                      :updater :adam,
+                      :learning-rate-schedule
+                      {0 0.2, 1 0.5},
+                      :epsilon 0.3,
+                      :layer-name "foo11",
+                      :learning-rate 0.1,
+                      :adam-mean-decay 0.2,
+                      :gradient-normalization-threshold 0.9}}))))
+             (.inputPreProcessors
+              {0
+               (dl4clj.nn.conf.input-pre-processor/pre-processors
+                {:zero-mean-pre-pre-processor {}})})
+             (.backpropType
+              (dl4clj.constants/value-of {:backprop-type :standard}))
+             (.backprop true)))
+         (nn/builder
+            ;; vals for the first layer
+            :default-activation-fn :relu
+            :default-updater :nesterovs
+            :default-weight-init :xavier-uniform
+            :default-bias-init 0.2
+            :default-bias-learning-rate 0.2
+            :default-drop-out 0.2
+            :default-gradient-normalization :renormalize-l2-per-layer
+            :default-gradient-normalization-threshold 0.3
+            :default-l1 0.5
+            :default-l1-bias 0.2
+            :default-l2 0.8
+            :default-l2-bias 0.2
+            :default-learning-rate 0.3
+            :default-learning-rate-policy :poly
+            ;; nn vals
+            :iterations 2
+            :lr-policy-decay-rate 0.4
+            :lr-policy-power 0.4
+            :max-num-line-search-iterations 10
+            :mini-batch? true
+            :minimize? true
+            :use-drop-connect? true
+            :optimization-algo :line-gradient-descent
+            :lr-score-based-decay-rate 0.001
+            :regularization? true
+            :seed 123
+            :step-fn :negative-gradient-step-fn
+            :build? true
+            :as-code? true
+            :layers {0 (layer/dense-layer-builder :n-in 100
+                                                  :n-out 1000
+                                                  :layer-name "first layer"
+                                                  :momentum 0.4
+                                                  :momentum-after {0 0.2 1 0.4})
+                     1 {:dense-layer {:n-in 1000
+                                      :n-out 2
+                                      :activation-fn :tanh
+                                      :adam-mean-decay 0.2
+                                      :adam-var-decay 0.1
+                                      :bias-init 0.7
+                                      :bias-learning-rate 0.1
+                                      :dist {:normal {:mean 0 :std 1}}
+                                      :drop-out 0.2
+                                      :epsilon 0.3
+                                      :gradient-normalization :none
+                                      :gradient-normalization-threshold 0.9
+                                      :l1 0.2
+                                      :l1-bias 0.1
+                                      :l2 0.4
+                                      :l2-bias 0.3
+                                      :layer-name "foo11"
+                                      :learning-rate 0.1
+                                      :learning-rate-policy :inverse
+                                      :learning-rate-schedule {0 0.2 1 0.5}
+                                      :updater :adam
+                                      :weight-init :distribution}}}
+            ;;mln vals
+            :backprop? true
+            :backprop-type :standard
+            :input-pre-processors {0 (new-zero-mean-pre-pre-processor)}
+            :pretrain? false)))
     ;; here we have to use the constructor for the MultiLayerConfigBuilder
     ;; because we don't have a list builder, we just have a nn-conf
     (let [layer-fn-call-code (nn/multi-layer-builder-helper
@@ -1300,9 +1512,6 @@
                   (.backprop true))))
              mln-as-code))
       (is (= (type mln-from-obj) (type (eval mln-as-code)))))))
-
-
-
 
 (deftest multi-layer-network-method-test
   (testing "multi layer network methods"
