@@ -61,7 +61,6 @@
   (.record rr uri data-in-stream ))
 
 (defn initialize-rr!
-  ;; refactor once datavec.api.split is refactored (:input-split)
   "will need to be updated when other rr's are implemented
 
   :input-split (input split) the split that defines the range of records to read

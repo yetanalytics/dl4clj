@@ -3,6 +3,7 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [java.util Random])
   (:require [dl4clj.utils :refer [array-of contains-many?]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn add-feature-vector!
@@ -133,14 +134,16 @@
 
   if only :ds is supplied, all labels will be returned as an INDArray"
   [& {:keys [ds idx as-list?]
-      :or {all? false}}]
-  ;; core.match
-  (cond
-    (true? as-list?) (.getLabelNamesList ds)
-    (int? idx) (.getLabelName ds idx)
-    (coll? idx) (.getLabelNames ds (vec-or-matrix->indarray idx))
-    :else
-    (.getLabels ds)))
+      :as opts}]
+  (match [opts]
+         [{:ds _ :as-list? true}]
+         (.getLabelNamesList ds)
+         [{:ds _ :idx (_ :guard int?)}]
+         (.getLabelName ds idx)
+         [{:ds _ :idx (_ :guard coll?)}]
+         (.getLabelNames ds (vec-or-matrix->indarray idx))
+         :else
+         (.getLabels ds)))
 
 (defn get-labels-mask-array
   "Labels (output) mask array: a mask array for input, where each value is in {0,1}
@@ -235,18 +238,15 @@
   "Sample with/without replacement and a given/random rng"
   [& {:keys [ds n-samples with-replacement? seed]
       :as opts}]
-  ;; this is the wrong type of random
-  ;; test to see if it will still work with util.Random, kinda doubt it
   (let [rng (new Random seed)]
-    ;; core.match
-   (cond (contains-many? opts :n-samples :with-replacement? :seed)
-         (.sample ds n-samples rng with-replacement?)
-         (contains-many? opts :n-samples :seed)
-         (.sample ds n-samples rng)
-         (contains-many? opts :n-samples :with-replacement?)
-         (.sample ds n-samples with-replacement?)
-         :else
-         (.sample ds n-samples))))
+    (match [opts]
+           [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
+           (.sample ds n-samples rng with-replacement?)
+           [{:ds _ :n-samples _  :seed _}]
+           (.sample ds n-samples rng)
+           [{:ds _ :n-samples _ :with-replacement? _}]
+           (.sample ds n-samples with-replacement?)
+           :else (.sample ds n-samples))))
 
 (defn save-ds!
   "saves a datset to a given file or output stream
@@ -340,13 +340,13 @@
   "split the dataset into two datasets randomly"
   [& {:keys [ds percent-train n-holdout seed]
       :as opts}]
-  ;; core.match
-  (cond (contains-many? opts :n-holdout :seed)
-        (.splitTestAndTrain ds n-holdout (new Random seed))
-        (contains? opts :n-holdout)
-        (.splitTestAndTrain ds n-holdout)
-        (contains? opts :percent-train)
-        (.splitTestAndTrain ds percent-train)))
+  (match [opts]
+         [{:ds _ :n-holdout _ :seed _}]
+         (.splitTestAndTrain ds n-holdout (new Random seed))
+         [{:ds _ :n-holdout _}]
+         (.splitTestAndTrain ds n-holdout)
+         [{:ds _ :percent-train _}]
+         (.splitTestAndTrain ds percent-train)))
 
 (defn squish-to-range!
   "Squeezes input data to a max and a min"
