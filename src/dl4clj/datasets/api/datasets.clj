@@ -22,9 +22,9 @@
       :as opts}]
   (let [f (vec-or-matrix->indarray feature)
         ta (vec-or-matrix->indarray to-add)]
-   (if (contains? opts :to-add)
-        (doto ds (.addFeatureVector ta))
-        (doto ds (.addFeatureVector f example-idx)))))
+    (if to-add
+      (doto ds (.addFeatureVector ta))
+      (doto ds (.addFeatureVector f example-idx)))))
 
 (defn add-row!
   "adds a dataset object to an existing datset object as a new row
@@ -61,7 +61,7 @@
   "Binarizes the dataset such that any number greater than :cutoff is 1 otherwise zero"
   [& {:keys [ds cutoff]
       :as opts}]
-  (if (contains? opts :cutoff)
+  (if cutoff
     (doto ds (.binarize cutoff))
     (doto ds .binarize)))
 
@@ -134,6 +134,7 @@
   if only :ds is supplied, all labels will be returned as an INDArray"
   [& {:keys [ds idx as-list?]
       :or {all? false}}]
+  ;; core.match
   (cond
     (true? as-list?) (.getLabelNamesList ds)
     (int? idx) (.getLabelName ds idx)
@@ -180,7 +181,7 @@
   :file-path (str), the path to a file containing the dataset"
   [& {:keys [file-path in]
       :as opts}]
-  (if (contains? opts :in)
+  (if in
     (.load in)
     (.load (clojure.java.io/as-file file-path))))
 
@@ -237,6 +238,7 @@
   ;; this is the wrong type of random
   ;; test to see if it will still work with util.Random, kinda doubt it
   (let [rng (new Random seed)]
+    ;; core.match
    (cond (contains-many? opts :n-samples :with-replacement? :seed)
          (.sample ds n-samples rng with-replacement?)
          (contains-many? opts :n-samples :seed)
@@ -254,7 +256,7 @@
   :file-path (str), a string to a file you want to save the dataset in"
   [& {:keys [ds file-path out]
       :as opts}]
-  (if (contains? opts :out)
+  (if out
     (doto ds (.save out))
     (doto ds (.save (clojure.java.io/as-file file-path)))))
 
@@ -338,6 +340,7 @@
   "split the dataset into two datasets randomly"
   [& {:keys [ds percent-train n-holdout seed]
       :as opts}]
+  ;; core.match
   (cond (contains-many? opts :n-holdout :seed)
         (.splitTestAndTrain ds n-holdout (new Random seed))
         (contains? opts :n-holdout)

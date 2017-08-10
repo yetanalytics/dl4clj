@@ -25,6 +25,7 @@
         a-fmt (array-of :data fmt
                         :java-type java.lang.String)
         a-file (io/as-file root)]
+    ;; core.match
     (cond (contains-many? config :root-dir :allow-format :rng-seed)
           (FileSplit. a-file a-fmt rng)
           (contains-many? config :root-dir :allow-format :recursive?)

@@ -25,6 +25,7 @@
   :seed (long) seed used for shuffling, shuffles unique per seed"
   [& {:keys [binarize? train? shuffle? seed]
       :as opts}]
+  ;; core.match
   (cond (contains-many? opts :binarize? :train? :shuffle? :rng-seed)
         (MnistDataFetcher. binarize? train? shuffle? seed)
         (contains? opts :binarize)

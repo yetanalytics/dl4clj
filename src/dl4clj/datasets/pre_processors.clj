@@ -10,6 +10,7 @@
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; replace contains-many? with core.match
 (defmulti pre-processors generic-dispatching-fn)
 
 (defmethod pre-processors :image-flattening [opts]
@@ -130,6 +131,7 @@
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
   [map-of-pre-processors]
+  ;; could refactor to use builder-fn
   (loop [b (CombinedPreProcessor$Builder.)
          result map-of-pre-processors]
     (if (empty? result)

@@ -31,6 +31,7 @@
       :as opts}]
   (let [f (vec-or-matrix->indarray features)
         l (vec-or-matrix->indarray labels)]
+    ;; replace with core.match
    (cond (contains-many? opts :features :labels :features-mask :labels-mask)
          (MultiDataSet. f l (vec-or-matrix->indarray features-mask)
                         (vec-or-matrix->indarray labels-mask))

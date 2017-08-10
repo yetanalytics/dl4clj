@@ -75,9 +75,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer features features-mask]
       :as opts}]
   (let [f (vec-or-matrix->indarray features)]
-   (if (contains? opts :features-mask)
-    (.revertFeatures normalizer f (vec-or-matrix->indarray features-mask))
-    (.revertFeatures normalizer f))))
+    (if features-mask
+      (.revertFeatures normalizer f (vec-or-matrix->indarray features-mask))
+      (.revertFeatures normalizer f))))
 
 (defn revert-labels!
   "Undo the normalization applied by the normalizer on the labels array
@@ -90,7 +90,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
   (let [l (vec-or-matrix->indarray labels)]
-    (if (contains? opts :labels-mask)
+    (if labels-mask
       (.revertLabels normalizer l (vec-or-matrix->indarray labels-mask))
       (.revertLabels normalizer l))))
 
@@ -105,9 +105,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer features features-mask]
       :as opts}]
   (let [f (vec-or-matrix->indarray features)]
-   (if (contains? opts :features-mask)
-    (.transform normalizer f (vec-or-matrix->indarray features-mask))
-    (.transform normalizer f))))
+    (if features-mask
+      (.transform normalizer f (vec-or-matrix->indarray features-mask))
+      (.transform normalizer f))))
 
 (defn transform-labels!
   "applies the transform specified by the normalizer to the labels
@@ -120,9 +120,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
   (let [l (vec-or-matrix->indarray labels)]
-   (if (contains? opts :labels-mask)
-    (.transformLabel normalizer l (vec-or-matrix->indarray labels-mask))
-    (.transformLabel normalizer l))))
+    (if labels-mask
+      (.transformLabel normalizer l (vec-or-matrix->indarray labels-mask))
+      (.transformLabel normalizer l))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; min-max-normalization specific fns

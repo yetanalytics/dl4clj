@@ -39,6 +39,7 @@
 ;; record reader dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; replace with core.match
 (defmethod iterator :rr-dataset-iter [opts]
   (let [config (:rr-dataset-iter opts)
         {rr :record-reader
@@ -173,6 +174,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          rr :record-reader} add-reader
         {seq-reader-name :reader-name
          seq-rr :record-reader} add-seq-reader]
+    ;; consider refactoring using builder-fn and core.match
     (.build
      (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)
            r (reset-rr! rr)
@@ -266,6 +268,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          n-epochs :n-epochs
          ds :dataset} config]
     (if (contains? config :n-epochs)
+      ;; core.match
       (cond (contains-many? config :iter :que-size)
             (MultipleEpochsIterator. n-epochs (reset-iterator! iter) q-size)
             (contains? config :iter)
@@ -304,6 +307,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
     (assert (or (contains? config :dataset)
                 (contains? config :iter))
             "you must supply a dataset or a dataset iterator")
+    ;; core.match
     (if (contains? config :iter)
       (if (contains? config :labels)
         (ExistingDataSetIterator. (reset-iterator! ds-iter) labels)
@@ -320,6 +324,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
         {ds-iter :iter
          que-size :que-size
          que :que} config]
+    ;; core.match
     (let [i (reset-iterator! ds-iter)]
       (cond (contains-many? config :que :que-size :iter)
             (AsyncDataSetIterator. i que-size que)
@@ -366,6 +371,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          n-possible-labels :n-possible-labels
          img-transform :img-transform} config
         img (int-array img-dims)]
+    ;; core.match
     (cond (contains-many? config :batch-size :n-examples :img-dims :n-possible-labels
                         :img-transform :use-special-pre-process-cifar? :train?)
         (CifarDataSetIterator. batch-size n-examples img n-possible-labels
@@ -410,6 +416,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
         rng (if (contains? config :seed)
               (new Random seed)
               (new Random 123))]
+    ;; core.match
     (cond (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
                         :label-generator :train? :split-train-test :rng :image-transform)
         (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
@@ -449,6 +456,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
          binarize? :binarize?
          shuffle? :shuffle?
          batch :batch} config]
+    ;; core.match
     (cond (contains-many? config :batch :n-examples :binarize? :train? :shuffle? :seed)
           (MnistDataSetIterator. batch n-examples binarize? train? shuffle? (long seed))
           (contains-many? config :batch-size :train? :seed)

@@ -23,6 +23,7 @@
 ;; multi method
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; replace contains-many? with core.match
 (defmulti record-reader
   "Multimethod that builds a record reader based on the supplied type and opts"
   generic-dispatching-fn)

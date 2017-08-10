@@ -71,7 +71,7 @@
   this is how data actually gets into the record reader"
   [& {:keys [rr input-split conf]
       :as opts}]
-  (if (contains? opts conf)
+  (if conf
     (doto rr (.initialize conf input-split))
     (doto rr (.initialize input-split))))
 
