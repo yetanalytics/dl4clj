@@ -7,10 +7,16 @@
 
 (defn new-iris-ds
   "creates a new instance of the iris dataset"
-  []
-  (DataSets/iris))
+  [& {:keys [as-code?]
+      :or {as-code? false}}]
+  (if as-code?
+    `(DataSets/iris)
+    (DataSets/iris)))
 
 (defn new-mnist-ds
   "creates a new instance of the mnist dataset"
-  []
-  (DataSets/mnist))
+  [& {:keys [as-code?]
+      :or {as-code? false}}]
+  (if as-code?
+    `(DataSets/mnist)
+    (DataSets/mnist)))

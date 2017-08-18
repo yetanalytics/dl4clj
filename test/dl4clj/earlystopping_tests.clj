@@ -2,59 +2,82 @@
   (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
             [dl4clj.earlystopping.early-stopping-result :refer [new-early-stopping-result]]
             [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
-            [dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
-            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
-            [dl4clj.earlystopping.api.model-saver :refer :all]
-            [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
-            [dl4clj.earlystopping.api.score-calc :refer :all]
-            [dl4clj.earlystopping.termination-conditions :refer :all]
-            [dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
-            [dl4clj.earlystopping.api.iteration-termination-condition :refer :all]
-            [dl4clj.earlystopping.api.listener :refer :all]
+            #_[dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
+            #_[dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
+            #_[dl4clj.earlystopping.api.model-saver :refer :all]
+            #_[dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
+            #_[dl4clj.earlystopping.api.score-calc :refer :all]
+            #_[dl4clj.earlystopping.termination-conditions :refer :all]
+            #_[dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
+            #_[dl4clj.earlystopping.api.iteration-termination-condition :refer :all]
+            #_[dl4clj.earlystopping.api.listener :refer :all]
             ;; namespaces I need to test the above namespaces
             [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
-            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
+            [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.nn.api.model :refer [init! score!]]
-            [dl4clj.datasets.iterators :refer [new-record-reader-dataset-iterator
+            #_[dl4clj.datasets.iterators :refer [new-record-reader-dataset-iterator
                                                new-mnist-data-set-iterator]]
             [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.input-splits :refer [new-filesplit]]
-            [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
+            #_[dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
-            [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
+            #_[dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
             [clojure.test :refer :all])
-  (:import [java.nio.charset Charset]
-           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+  (:import [java.nio.charset Charset]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objs needed in multiple tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def mln (new-multi-layer-network
-          :conf
-          (nn-conf-builder
-           :seed 123
-           :optimization-algo :stochastic-gradient-descent
-           :iterations 1
-           :default-learning-rate 0.006
-           :default-updater :nesterovs
-           :default-momentum 0.9
-           :regularization? true
-           :default-l2 1e-4
-           :build? true
-           :layers {0 {:dense-layer {:n-in 784
-                                     :n-out 1000
+(def mln-code
+  (new-multi-layer-network
+   :as-code? true
+   :conf (nn/builder
+          :seed 123
+          :optimization-algo :stochastic-gradient-descent
+          :iterations 1
+          :default-learning-rate 0.006
+          :default-updater :nesterovs
+          :default-momentum 0.9
+          :regularization? true
+          :default-l2 1e-4
+          :build? true
+          :layers {0 {:dense-layer {:n-in 784
+                                    :n-out 1000
+                                    :updater :nesterovs
+                                    :activation-fn :relu
+                                    :weight-init :xavier}}
+                   1 {:output-layer {:loss-fn :negativeloglikelihood
+                                     :n-in 1000
+                                     :n-out 10
                                      :updater :nesterovs
-                                     :activation-fn :relu
-                                     :regularization? true
-                                     :weight-init :xavier}}
-                    1 {:output-layer {:loss-fn :negativeloglikelihood
-                                      :n-in 1000
-                                      :n-out 10
-                                      :regularization? true
-                                      :updater :nesterovs
-                                      :activation-fn :soft-max
-                                      :weight-init :xavier}}})))
+                                     :activation-fn :soft-max
+                                     :weight-init :xavier}}})))
+
+(def mln
+  (new-multi-layer-network
+   :conf (nn/builder
+          :seed 123
+          :optimization-algo :stochastic-gradient-descent
+          :iterations 1
+          :default-learning-rate 0.006
+          :default-updater :nesterovs
+          :default-momentum 0.9
+          :regularization? true
+          :default-l2 1e-4
+          :build? true
+          :as-code? false
+          :layers {0 {:dense-layer {:n-in 784
+                                    :n-out 1000
+                                    :updater :nesterovs
+                                    :activation-fn :relu
+                                    :weight-init :xavier}}
+                   1 {:output-layer {:loss-fn :negativeloglikelihood
+                                     :n-in 1000
+                                     :n-out 10
+                                     :updater :nesterovs
+                                     :activation-fn :soft-max
+                                     :weight-init :xavier}}})))
 
 (def init-mln (init! :model mln))
 

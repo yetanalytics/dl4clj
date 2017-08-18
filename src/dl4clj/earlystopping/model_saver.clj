@@ -13,15 +13,15 @@
 (defmulti model-saver-type generic-dispatching-fn)
 
 (defmethod model-saver-type :in-memory [opts]
-  (InMemoryModelSaver.))
+  `(InMemoryModelSaver.))
 
 (defmethod model-saver-type :local-file [opts]
   (let [config (:local-file opts)
         {dir :directory
          char-set :charset} config]
-    (if (contains? config :charset)
-      (LocalFileModelSaver. dir char-set)
-      (LocalFileModelSaver. dir))))
+    `(if ~char-set
+      (LocalFileModelSaver. ~dir ~char-set)
+      (LocalFileModelSaver. ~dir))))
 
 ;; local file graph no implemented as computational graphs are not implemented
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/LocalFileGraphSaver.html

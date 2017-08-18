@@ -5,13 +5,19 @@
 
 (defn curves-fetcher
   "gets the Curves dataset."
-  []
-  (CurvesDataFetcher.))
+  [& {:keys [as-code?]
+      :or {as-code? false}}]
+  (if as-code?
+    `(CurvesDataFetcher.)
+    (CurvesDataFetcher.)))
 
 (defn iris-fetcher
   "fetches the iris dataset"
-  []
-  (IrisDataFetcher.))
+  [& {:keys [as-code?]
+      :or {as-code? false}}]
+  (if as-code?
+    `(IrisDataFetcher.)
+    (IrisDataFetcher.)))
 
 (defn mnist-fetcher
   "fetches the mnist dataset
@@ -22,13 +28,19 @@
 
   :shuffle (boolean) whether to shulffle the dataset or not
 
-  :seed (long) seed used for shuffling, shuffles unique per seed"
-  [& {:keys [binarize? train? shuffle? seed]
+  :seed (long) seed used for shuffling, shuffles unique per seed
+
+  :as-code? (boolean), determines if the java object or the code for creating the object is returned"
+  [& {:keys [binarize? train? shuffle? seed as-code?]
+      :or {as-code? false}
       :as opts}]
-  (match [opts]
-         [{:binarize? _ :train? _ :shuffle? _ :rng-seed _}]
-         (MnistDataFetcher. binarize? train? shuffle? seed)
-         [{:binarize? _}]
-         (MnistDataFetcher. binarize?)
-         :else
-         (MnistDataFetcher.)))
+  (let [code (match [opts]
+                    [{:binarize? _ :train? _ :shuffle? _ :rng-seed _}]
+                    `(MnistDataFetcher. ~binarize? ~train? ~shuffle? ~seed)
+                    [{:binarize? _}]
+                    `(MnistDataFetcher. ~binarize?)
+                    :else
+                    `(MnistDataFetcher.))]
+    (if as-code?
+      code
+      (eval code))))

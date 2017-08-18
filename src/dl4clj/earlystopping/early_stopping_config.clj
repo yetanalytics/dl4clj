@@ -12,7 +12,7 @@ Users need to specify the following:
             IterationTerminationCondition
             EpochTerminationCondition]
            [org.deeplearning4j.earlystopping EarlyStoppingModelSaver])
-  (:require [dl4clj.utils :refer [array-of]]))
+  (:require [dl4clj.utils :refer [array-of builder-fn]]))
 
 (defn new-early-stopping-config
   "Builder for setting up an early stopping configuration.  Mainly used during testing
@@ -46,7 +46,17 @@ Users need to specify the following:
              save-last-model? score-calculator build?]
       :or {build? true}
       :as opts}]
-  (cond-> (EarlyStoppingConfiguration$Builder.)
+  (let [method-map {:epoch-termination-conditions     '.epochTerminationConditions
+                    :n-epochs                         '.evaluateEveryNEpochs
+                    :iteration-termination-conditions '.iterationTerminationConditions
+                    :model-saver                      '.modelSaver
+                    :save-last-model?                 '.saveLastModel
+                    :score-calculator                 '.scoreCalculator}
+        b `(EarlyStoppingConfiguration$Builder.)]
+    ;; termination conditions need to be code
+    ;; model saver needs to be code
+    ;; score-calc needs to be code
+   (cond-> (EarlyStoppingConfiguration$Builder.)
     (contains? opts :epoch-termination-conditions)
     (.epochTerminationConditions (array-of :data epoch-termination-conditions
                                            :java-type EpochTerminationCondition))
@@ -55,8 +65,6 @@ Users need to specify the following:
     (contains? opts :iteration-termination-conditions)
     (.iterationTerminationConditions (array-of :data iteration-termination-conditions
                                                :java-type IterationTerminationCondition))
-    (contains? opts :n-epochs)
-    (.evaluateEveryNEpochs n-epochs)
     (contains? opts :model-saver)
     (.modelSaver (first
                   (array-of :java-type EarlyStoppingModelSaver
@@ -66,4 +74,4 @@ Users need to specify the following:
     (contains? opts :score-calculator)
     (.scoreCalculator score-calculator)
     (true? build?)
-    (.build)))
+    (.build))))

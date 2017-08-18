@@ -122,7 +122,7 @@
            (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true))))
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
            (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true
-                                               :train? true :shuffle? true :rng-seed 123))))
+                                               :train? true :shuffle? true :seed 123))))
 
     ;; raw mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator
@@ -211,9 +211,10 @@
   (testing "the creation of path filters and their functionality"
     (is (= org.datavec.api.io.filters.BalancedPathFilter
            (type
-            (new-balanced-path-filter :rng (new java.util.Random)
+            (new-balanced-path-filter :rng 10
                                       :extensions [".txt"]
-                                      :label-generator (new-parent-path-label-generator)
+                                      :label-generator (new-parent-path-label-generator
+                                                        :as-code? true)
                                       :max-paths 1
                                       :max-labels 3
                                       :min-paths-per-label 1
@@ -221,14 +222,14 @@
                                       :labels []))))
     (is (= org.datavec.api.io.filters.RandomPathFilter
            (type
-            (new-random-path-filter :rng (new java.util.Random)
+            (new-random-path-filter :rng 123
                                     :extensions [".txt"]
                                     :max-paths 2))))
     (is (= (type
             (array-of :data [(java.net.URI/create "foo")]
                       :java-type java.net.URI))
            (type
-            (filter-paths :path-filter (new-random-path-filter :rng (new java.util.Random)
+            (filter-paths :path-filter (new-random-path-filter :rng 123
                                                                :extensions [".txt"]
                                                                :max-paths 2)
                           :paths ["foo"]))))))
@@ -240,7 +241,7 @@
            (type (new-filesplit :path "resources/"))))
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
-                                :rng-seed (new java.util.Random)))))
+                                :rng-seed 123))))
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"))))
@@ -251,17 +252,17 @@
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"
-                                :rng-seed (new java.util.Random)))))
+                                :rng-seed 123))))
     (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/")))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
-           (type (new-collection-input-split :coll [(new java.net.URI "foo")
-                                                    (new java.net.URI "baz")]))))
+           (type (new-collection-input-split :coll ['(new java.net.URI "foo")
+                                                    '(new java.net.URI "baz")]))))
 
     ;; input stream input split
-    (with-open [data (clojure.java.io/input-stream "resources/poker-hand-testing.csv")
-                other-data (clojure.java.io/input-stream "resources/poker-hand-training.csv")]
+    (let [data '(clojure.java.io/input-stream "resources/poker-hand-testing.csv")
+          other-data '(clojure.java.io/input-stream "resources/poker-hand-training.csv")]
       (is (= org.datavec.api.split.InputStreamInputSplit
              (type (new-input-stream-input-split
                     :in-stream data
@@ -276,14 +277,14 @@
       (= org.datavec.api.split.InputStreamInputSplit
          (type (set-is! :input-stream-input-split (new-input-stream-input-split
                                                    :in-stream data)
-                        :is other-data))))
+                        :is (eval other-data)))))
 
     ;; list string input split
     (is (= org.datavec.api.split.ListStringSplit
-           (type (new-list-string-split :data (list "foo" "baz")))))
+           (type (new-list-string-split :data  ["foo" "baz"]))))
     (is (= (list "foo" "baz")
            (get-list-string-split-data
-            (new-list-string-split :data (list "foo" "baz")))))
+            (new-list-string-split :data ["foo" "baz"]))))
 
     ;; numbered file input split
     (is (= org.datavec.api.split.NumberedFileInputSplit
@@ -302,34 +303,35 @@
     (is (= org.datavec.api.split.TransformSplit
            (type
             (new-transform-split :base-input-split (new-collection-input-split
-                                                    :coll [(new java.net.URI "foo")
-                                                           (new java.net.URI "baz")])
+                                                    :coll ['(new java.net.URI "foo")
+                                                           '(new java.net.URI "baz")]
+                                                    :as-code? true)
                                  :to-be-replaced "foo"
                                  :replaced-with "oof"))))
 
     ;; sample
     (is (= (type (new-collection-input-split
-                  :coll [(new java.net.URI "foo")
-                         (new java.net.URI "baz")]))
+                  :coll ['(new java.net.URI "foo")
+                         '(new java.net.URI "baz")]))
            (type (first (sample :split (new-collection-input-split
-                                        :coll [(new java.net.URI "foo")
-                                               (new java.net.URI "baz")])
+                                        :coll ['(new java.net.URI "foo")
+                                               '(new java.net.URI "baz")])
                                 :weights [50 50]
 
                                 :path-filter (new-random-path-filter
-                                              :rng (new java.util.Random)
+                                              :rng 123
                                               :extensions [".txt"]
                                               :max-paths 2))))))
     (is (= (type (new-collection-input-split
-                  :coll [(new java.net.URI "foo")
-                         (new java.net.URI "baz")]))
+                  :coll ['(new java.net.URI "foo")
+                         '(new java.net.URI "baz")]))
            (type (first (sample :split (new-collection-input-split
-                                        :coll [(new java.net.URI "foo")
-                                               (new java.net.URI "baz")])
+                                        :coll ['(new java.net.URI "foo")
+                                               '(new java.net.URI "baz")])
                                 :weights [50 50])))))
     (is (= 2 (count (sample :split (new-collection-input-split
-                                    :coll [(new java.net.URI "foo")
-                                           (new java.net.URI "baz")])
+                                    :coll ['(new java.net.URI "foo")
+                                           '(new java.net.URI "baz")])
                             :weights [50 50]))))))
 
 (deftest input-split-interface-testing

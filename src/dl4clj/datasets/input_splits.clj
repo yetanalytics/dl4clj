@@ -23,57 +23,57 @@
          rng :rng-seed
          fmt :allow-format
          recursive? :recursive?} config
-        a-fmt (array-of :data fmt
+        a-fmt `(array-of :data ~fmt
                         :java-type java.lang.String)
-        a-file (io/as-file root)]
+        a-file `(io/as-file ~root)
+        seed `(java.util.Random. ~rng)]
     (match [config]
            [{:path _ :allow-format _ :rng-seed _}]
-           (FileSplit. a-file a-fmt rng)
+           `(FileSplit. ~a-file ~a-fmt ~seed)
            [{:path _ :allow-format _ :recursive? _}]
-           (FileSplit. a-file a-fmt recursive?)
+           `(FileSplit. ~a-file ~a-fmt ~recursive?)
            [{:path _ :allow-format _}]
-           (FileSplit. a-file a-fmt)
+           `(FileSplit. ~a-file ~a-fmt)
            [{:path _ :rng-seed _}]
-           (FileSplit. a-file rng)
+           `(FileSplit. ~a-file ~seed)
            :else
-           (FileSplit. a-file))))
+           `(FileSplit. ~a-file))))
 
 (defmethod input-split :collection-input-split [opts]
   (let [config (:collection-input-split opts)
         coll-of-uris (:collection config)]
-    (CollectionInputSplit. coll-of-uris)))
+    `(CollectionInputSplit. ~coll-of-uris)))
 
 (defmethod input-split :input-stream-input-split [opts]
   (let [config (:input-stream-input-split opts)
         {in :in-stream
          path :file-path} config]
-    (if path
-      (InputStreamInputSplit. in (io/as-file path))
-      (InputStreamInputSplit. in))))
+    ;; worried about input streams being objects
+    `(if ~path
+      (InputStreamInputSplit. ~in (io/as-file ~path))
+      (InputStreamInputSplit. ~in))))
 
 (defmethod input-split :list-string-split [opts]
-  (let [config (:list-string-split opts)
-        d (:data config)]
-    (ListStringSplit. d)))
+  (let [config (:list-string-split opts)]
+    `(ListStringSplit. (reverse (into `() (:data ~config))))))
 
 (defmethod input-split :numbered-file-input-split [opts]
   (let [config (:numbered-file-input-split opts)
         {base-str :base-string
          min-idx :inclusive-min-idx
          max-idx :inclusive-max-idx} config]
-    (NumberedFileInputSplit. base-str min-idx max-idx)))
+    `(NumberedFileInputSplit. ~base-str ~min-idx ~max-idx)))
 
 (defmethod input-split :string-split [opts]
-  (let [config (:string-split opts)
-        d (:data config)]
-    (StringSplit. d)))
+  (let [config (:string-split opts)]
+    `(StringSplit. (reverse (into `() (:data ~config))))))
 
 (defmethod input-split :transform-split [opts]
   (let [config (:transform-split opts)
         {src-split :base-input-split
          t :to-be-replaced
          u :replaced-with} config]
-    (TransformSplit/ofSearchReplace src-split t u)))
+    `(TransformSplit/ofSearchReplace ~src-split ~t ~u)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; label generators
@@ -82,9 +82,14 @@
 (defn new-parent-path-label-generator
   "Returns as label the base name of the parent file of the path (the directory).
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/ParentPathLabelGenerator.html"
-  []
-  (ParentPathLabelGenerator.))
+  [& {:keys [as-code?]
+      :or {as-code? false}}]
+  (if as-code?
+    `(ParentPathLabelGenerator.)
+    (ParentPathLabelGenerator.)))
 
 (defn new-pattern-path-label-generator
   "Returns a label derived from the base name of the path.
@@ -95,13 +100,18 @@
 
   :pattern-position (int), where to expect the patern within the file-path
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/PatternPathLabelGenerator.html"
-  [& {:keys [pattern pattern-position]
+  [& {:keys [pattern pattern-position as-code?]
+      :or {as-code? false}
       :as opts}]
-  (assert (contains? opts :pattern) "you must supply a regex patern to use this label generator")
-  (if pattern-position
-    (PatternPathLabelGenerator. pattern pattern-position)
-    (PatternPathLabelGenerator. pattern)))
+  (let [code `(if ~pattern-position
+               (PatternPathLabelGenerator. ~pattern ~pattern-position)
+               (PatternPathLabelGenerator. ~pattern))]
+    (if as-code?
+      code
+      (eval code))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; path-filter
@@ -112,7 +122,9 @@
   have the same number of paths for each label. Further interlaces the paths
   on output based on their labels, to obtain easily optimal batches for training.
 
-  :rng (java.util.Random), a randomly generated number
+  :as-code? (boolean), return java object or code for creating it
+
+  :rng (int or long), a randomly generated number
 
   :extensions (collection of string(s)), files to keep
 
@@ -136,21 +148,28 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/BalancedPathFilter.html"
   [& {:keys [rng extensions label-generator max-paths max-labels
-             min-paths-per-label max-paths-per-label labels]
+             min-paths-per-label max-paths-per-label labels as-code?]
       :or {extensions nil
            max-paths 0
            max-labels 0
            min-paths-per-label 0
-           max-paths-per-label 0}}]
-  (BalancedPathFilter. rng (array-of :data extensions
-                                     :java-type java.lang.String)
-                       label-generator max-paths max-labels
-                       min-paths-per-label max-paths-per-label
-                       (array-of :data labels
-                                 :java-type java.lang.String)))
+           max-paths-per-label 0
+           as-code? false}}]
+  (let [code `(BalancedPathFilter.
+               (java.util.Random. ~rng) (array-of :data ~extensions
+                              :java-type java.lang.String)
+               ~label-generator ~max-paths ~max-labels
+               ~min-paths-per-label ~max-paths-per-label
+               (array-of :data ~labels
+                         :java-type java.lang.String))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-random-path-filter
   "Randomizes the order of paths in an array.
+
+  :as-code? (boolean), return java object or code for creating it
 
   :rng (java.util.Random), a random object used as a seed
 
@@ -160,10 +179,17 @@
     - 0 = unlimited
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/RandomPathFilter.html"
-  [& {:keys [rng extensions max-paths]
-      :or {max-paths 0}}]
-  (RandomPathFilter. rng (array-of :data extensions
-                                   :java-type java.lang.String) max-paths))
+  [& {:keys [rng extensions max-paths as-code?]
+      :or {max-paths 0
+           as-code? false}}]
+  (let [code `(RandomPathFilter.
+               (java.util.Random. ~rng)
+               (array-of :data ~extensions
+                         :java-type java.lang.String)
+               ~max-paths)]
+    (if as-code?
+      code
+      (eval code))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split user facing fns
@@ -172,28 +198,40 @@
 (defn new-filesplit
   "File input split. Splits up a file into writables
 
+  :as-code? (boolean), return java object or code for creating it
+
   :path (str), the path to the file you want to import
 
-  :rng-seed (java.util.Random), seed for consistent randomization
+  :rng-seed (int or long), seed for consistent randomization
 
   :allow-format (collection of string(s)), the file formats allowed
 
   :recursive? (boolean), how the files should be read in
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/FileSplit.html"
-  [& {:keys [path rng-seed allow-format recursive?]
+  [& {:keys [path rng-seed allow-format recursive? as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:file-split opts}))
+  (let [code (input-split {:file-split opts})]
+   (if as-code?
+    code
+    (eval code))))
 
 (defn new-collection-input-split
   "creates a new collection input split
    - A simple InputSplit based on a collection of URIs
 
-  coll (coll of URIs), the URIs to import
+  :coll (coll of URIs), the URIs to import
+
+  :as-code? (boolean), return java object or code for creating it
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/CollectionInputSplit.html"
-  [& {:keys [coll]}]
-  (input-split {:collection-input-split {:collection coll}}))
+  [& {:keys [coll as-code?]
+      :or {as-code? false}}]
+  (let [code (input-split {:collection-input-split {:collection coll}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-input-stream-input-split
   "Input stream input split.
@@ -204,20 +242,32 @@
 
   :in-stream, is the input stream
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html"
-  [& {:keys [in-stream file-path]
+  [& {:keys [in-stream file-path as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:input-stream-input-split opts}))
+  (let [code (input-split {:input-stream-input-split opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-list-string-split
   "An input split that already has delimited data of some kind.
 
   :data should be a lists of strings
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html"
-  [& {:keys [data]
+  [& {:keys [data as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:list-string-split opts}))
+  (let [code (input-split {:list-string-split opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-numbered-file-input-split
   "InputSplit for sequences of numbered files.
@@ -233,20 +283,32 @@
 
   :inclusive-max-idx (int) end index of ffiles
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html"
-  [& {:keys [base-string inclusive-min-idx inclusive-max-idx]
+  [& {:keys [base-string inclusive-min-idx inclusive-max-idx as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:numbered-file-input-split opts}))
+  (let [code (input-split {:numbered-file-input-split opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-string-split
   "String split used for single line inputs
 
    :data (str), a string to be used as data
 
+   :as-code? (boolean), return java object or code for creating it
+
    see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html"
-  [& {:keys [data]
+  [& {:keys [data as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:string-split opts}))
+  (let [code (input-split {:string-split opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-transform-split
   "input-split implementation that maps the URIs of a given base-input-split to new URIs.
@@ -259,8 +321,14 @@
 
   :replaced-with (str), the string to replace what matches to-be-replaced
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html"
   [& {:keys [base-input-split to-be-replaced
-             replaced-with]
+             replaced-with as-code?]
+      :or {as-code? false}
       :as opts}]
-  (input-split {:transform-split opts}))
+  (let [code (input-split {:transform-split opts})]
+    (if as-code?
+      code
+      (eval code))))
