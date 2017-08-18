@@ -25,6 +25,8 @@
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
+            [clojure.core.match :refer [match]]
+            [dl4clj.helpers :refer [value-of-helper]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,54 +53,41 @@
          regression? :regression?
          max-n-batches :max-num-batches
          converter :writeable-converter} config]
-    (assert (contains-many? config :record-reader :batch-size)
-            "you must supply atleast a record reader config map and a batch size")
     (let [r (reset-rr! rr)]
-     (if (contains? config :writeable-converter)
-      (cond (contains-many? config :batch-size :label-idx-from :label-idx-to
-                            :n-possible-labels :max-num-batches :regression?)
-            (RecordReaderDataSetIterator.
-             r
-             converter
-             batch-size l-idx-from l-idx-to n-labels
-             max-n-batches regression?)
-            (contains-many? config :batch-size :label-idx :n-possible-labels
-                            :max-num-batches :regression?)
-            (RecordReaderDataSetIterator.
-             r
-             converter
-             batch-size label-idx n-labels max-n-batches regression?)
-            (contains-many? config :batch-size :label-idx :n-possible-labels :regression?)
-            (RecordReaderDataSetIterator.
-             r
-             converter
-             batch-size label-idx n-labels regression?)
-            (contains-many? :batch-size :label-idx :n-possible-labels)
-            (RecordReaderDataSetIterator.
-             r
-             converter
-             batch-size label-idx n-labels)
-            (contains? config :batch-size)
-            (RecordReaderDataSetIterator.
-             r
-             converter
-             batch-size)
-            :else
-            (assert false "you must provide a record reader, writeable converter and a batch size"))
-      (cond (contains-many? config :batch-size :label-idx :n-possible-labels :max-num-batches)
-            (RecordReaderDataSetIterator.
-             r batch-size label-idx n-labels max-n-batches)
-            (contains-many? config :batch-size :label-idx-from :label-idx-to :regression?)
-            (RecordReaderDataSetIterator.
-             r batch-size l-idx-from l-idx-to regression?)
-            (contains-many? config :batch-size :label-idx :n-possible-labels)
-            (RecordReaderDataSetIterator.
-             r batch-size label-idx n-labels)
-            (contains? config :batch-size)
-            (RecordReaderDataSetIterator.
-             r batch-size)
-            :else
-            (assert false "you must supply a record reader and a batch size"))))))
+      (match [config]
+             [{:writeable-converter _ :batch-size _ :label-idx-from _
+               :label-idx-to _ :n-possible-labels _ :max-num-batches _
+               :regression? _ :record-reader _}]
+             (RecordReaderDataSetIterator. r converter batch-size l-idx-from
+                                           l-idx-to n-labels max-n-batches
+                                           regression?)
+             [{:writeable-converter _ :batch-size _ :label-idx _
+               :n-possible-labels _ :max-num-batches _ :regression? _
+               :record-reader _}]
+             (RecordReaderDataSetIterator. r converter batch-size label-idx
+                                           n-labels max-n-batches regression?)
+             [{:record-reader _ :batch-size _ :label-idx _
+               :n-possible-labels _ :max-num-batches _}]
+             (RecordReaderDataSetIterator.
+              r batch-size label-idx n-labels max-n-batches)
+             [{:record-reader _ :batch-size _ :label-idx-from _
+               :label-idx-to _ :regression? _}]
+             (RecordReaderDataSetIterator.
+              r batch-size l-idx-from l-idx-to regression?)
+             [{:writeable-converter _ :batch-size _ :label-idx _
+               :n-possible-labels _  :regression? _ :record-reader _}]
+             (RecordReaderDataSetIterator. r converter batch-size label-idx
+                                           n-labels regression?)
+             [{:writeable-converter _ :batch-size _ :label-idx _
+               :n-possible-labels _  :record-reader _}]
+             (RecordReaderDataSetIterator. r converter batch-size label-idx n-labels)
+             [{:record-reader _ :batch-size _ :label-idx _ :n-possible-labels _}]
+             (RecordReaderDataSetIterator.
+              r batch-size label-idx n-labels)
+             [{:writeable-converter _ :batch-size _ :record-reader _}]
+             (RecordReaderDataSetIterator. r converter batch-size)
+             [{:batch-size _ :record-reader _}]
+             (RecordReaderDataSetIterator. r batch-size)))))
 
 (defmethod iterator :seq-rr-dataset-iter [opts]
   (let [config (:seq-rr-dataset-iter opts)
@@ -110,41 +99,29 @@
          labels-reader :labels-reader
          features-reader :features-reader
          alignment :alignment-mode} config]
-    (assert (or (and (contains? config :labels-reader)
-                     (contains? config :features-reader))
-                (contains? config :record-reader))
-            "you must supply a record reader or a pair of labels/features readers")
     (let [r (if rr (reset-rr! rr))
           features-r (if features-reader (reset-rr! features-reader))
           labels-r (if labels-reader (reset-rr! labels-reader))]
-     (if (contains-many? config :labels-reader :features-reader)
-      (cond (contains-many? config :mini-batch-size :n-possible-labels
-                            :regression? :alignment-mode)
-            (SequenceRecordReaderDataSetIterator.
-             features-r labels-r
-             m-batch-size n-labels regression?
-             (value-of {:seq-alignment-mode alignment}))
-            (contains-many? config :mini-batch-size :n-possible-labels :regression?)
-            (SequenceRecordReaderDataSetIterator.
-             features-r labels-r
-             m-batch-size n-labels regression?)
-            (contains-many? config :mini-batch-size :n-possible-labels)
-            (SequenceRecordReaderDataSetIterator.
-             features-r labels-r
-             m-batch-size n-labels)
-            :else
-            (assert false "if youre supplying seperate labels and features readers,
-you must supply atleast a batch size and the number of possible labels"))
-      (cond (contains-many? config :mini-batch-size :n-possible-labels :label-idx
-                            :regression?)
-            (SequenceRecordReaderDataSetIterator.
-             r m-batch-size n-labels label-idx regression?)
-            (contains-many? config :mini-batch-size :n-possible-labels :label-idx)
-            (SequenceRecordReaderDataSetIterator.
-             r m-batch-size n-labels label-idx)
-            :else
-            (assert false "if you're supplying a single record reader for the features and the labels,
-you need to suply atleast the mini batch size, number of possible labels and the column index of the labels"))))))
+      (match [config]
+             [{:labels-reader _ :features-reader _ :mini-batch-size _
+               :n-possible-labels _ :regression? _ :alignment-mode _}]
+             (SequenceRecordReaderDataSetIterator.
+              features-r labels-r m-batch-size n-labels regression?
+              (value-of {:seq-alignment-mode alignment}))
+             [{:labels-reader _ :features-reader _ :mini-batch-size _
+               :n-possible-labels _ :regression? _}]
+             (SequenceRecordReaderDataSetIterator.
+              features-r labels-r m-batch-size n-labels regression?)
+             [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
+             (SequenceRecordReaderDataSetIterator.
+              features-r labels-r m-batch-size n-labels)
+             [{:record-reader _ :mini-batch-size _ :n-possible-labels _
+               :label-idx _ :regression? _}]
+             (SequenceRecordReaderDataSetIterator.
+              r m-batch-size n-labels label-idx regression?)
+             [{:record-reader _ :mini-batch-size _ :n-possible-labels _ :label-idx _}]
+             (SequenceRecordReaderDataSetIterator.
+              r m-batch-size n-labels label-idx)))))
 
 (defmethod iterator :multi-dataset-iter [opts]
   (assert (integer? (:batch-size (:multi-dataset-iter opts)))
@@ -174,11 +151,11 @@ you need to suply atleast the mini batch size, number of possible labels and the
          rr :record-reader} add-reader
         {seq-reader-name :reader-name
          seq-rr :record-reader} add-seq-reader]
-    ;; consider refactoring using builder-fn and core.match
     (.build
      (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)
-           r (reset-rr! rr)
+           r (reset-rr! rr) ;; record readers are already objects, cant use builder-fn
            seq-r (reset-rr! seq-rr)]
+       ;; core match would require 7! conditions
        (cond-> b
          (and (contains? config :add-reader)
               (contains-many? add-reader :reader-name :record-reader))
@@ -267,22 +244,17 @@ you need to suply atleast the mini batch size, number of possible labels and the
          t-iterations :total-iterations
          n-epochs :n-epochs
          ds :dataset} config]
-    (if (contains? config :n-epochs)
-      ;; core.match
-      (cond (contains-many? config :iter :que-size)
-            (MultipleEpochsIterator. n-epochs (reset-iterator! iter) q-size)
-            (contains? config :iter)
-            (MultipleEpochsIterator. n-epochs (reset-iterator! iter))
-            (contains? config :dataset)
-            (MultipleEpochsIterator. n-epochs ds)
-            :else
-            (assert false "if you provide the number of epochs, you also need to provide either an iterator or a dataset"))
-      (cond (contains-many? config :iter :que-size :total-iterations)
-            (MultipleEpochsIterator. (reset-iterator! iter) q-size t-iterations)
-            (contains-many? config :iter :total-iterations)
-            (MultipleEpochsIterator. (reset-iterator! iter) t-iterations)
-            :else
-            (assert false "if you dont supply the number of epochs, you must supply atleast a dataset iterator and the total number of iterations")))))
+    (match [config]
+           [{:n-epochs _ :iter _ :que-size _}]
+           (MultipleEpochsIterator. n-epochs (reset-iterator! iter) q-size)
+           [{:n-epochs _ :iter _}]
+           (MultipleEpochsIterator. n-epochs (reset-iterator! iter))
+           [{:n-epochs _ :dataset _}]
+           (MultipleEpochsIterator. n-epochs ds)
+           [{:iter _ :que-size _ :total-iterations _}]
+           (MultipleEpochsIterator. (reset-iterator! iter) q-size t-iterations)
+           [{:iter _ :total-iterations _}]
+           (MultipleEpochsIterator. (reset-iterator! iter) t-iterations))))
 
 (defmethod iterator :reconstruction-dataset-iter [opts]
   (let [config (:reconstruction-dataset-iter opts)
@@ -304,20 +276,17 @@ you need to suply atleast the mini batch size, number of possible labels and the
          n-labels :n-labels
          labels :labels
          ds-iter :iter} config]
-    (assert (or (contains? config :dataset)
-                (contains? config :iter))
-            "you must supply a dataset or a dataset iterator")
-    ;; core.match
-    (if (contains? config :iter)
-      (if (contains? config :labels)
-        (ExistingDataSetIterator. (reset-iterator! ds-iter) labels)
-        (ExistingDataSetIterator. (reset-iterator! ds-iter)))
-      (cond (contains-many? config :dataset :total-examples :n-features :n-labels)
-            (ExistingDataSetIterator. iterable n-examples n-features n-labels)
-            (contains-many? config :dataset :labels)
-            (ExistingDataSetIterator. iterable labels)
-            :else
-            (ExistingDataSetIterator. iterable)))))
+    (match [config]
+           [{:iter _ :labels _}]
+           (ExistingDataSetIterator. (reset-iterator! ds-iter) labels)
+           [{:iter _}]
+           (ExistingDataSetIterator. (reset-iterator! ds-iter))
+           [{:dataset _ :total-examples _ :n-features _ :n-labels _}]
+           (ExistingDataSetIterator. iterable n-examples n-features n-labels)
+           [{:dataset _ :labels _}]
+           (ExistingDataSetIterator. iterable labels)
+           [{:dataset _}]
+           (ExistingDataSetIterator. iterable))))
 
 (defmethod iterator :async-dataset-iter [opts]
   (let [config (:async-dataset-iter opts)
@@ -326,14 +295,13 @@ you need to suply atleast the mini batch size, number of possible labels and the
          que :que} config]
     ;; core.match
     (let [i (reset-iterator! ds-iter)]
-      (cond (contains-many? config :que :que-size :iter)
-            (AsyncDataSetIterator. i que-size que)
-            (contains-many? config :iter :que-size)
-            (AsyncDataSetIterator. i que-size)
-            (contains? config :iter)
-            (AsyncDataSetIterator. i)
-            :else
-            (assert false "you must atleast provide a dataset iterator")))))
+      (match [config]
+             [{:iter _ :que _ :que-size _}]
+             (AsyncDataSetIterator. i que-size que)
+             [{:iter _ :que-size _}]
+             (AsyncDataSetIterator. i que-size)
+             [{:iter _}]
+             (AsyncDataSetIterator. i)))))
 
 (defmethod iterator :ds-iter-to-multi-ds-iter [opts]
   (let [iter (reset-iterator! (:iter (:ds-iter-to-multi-ds-iter opts)))]
@@ -371,28 +339,24 @@ you need to suply atleast the mini batch size, number of possible labels and the
          n-possible-labels :n-possible-labels
          img-transform :img-transform} config
         img (int-array img-dims)]
-    ;; core.match
-    (cond (contains-many? config :batch-size :n-examples :img-dims :n-possible-labels
-                        :img-transform :use-special-pre-process-cifar? :train?)
-        (CifarDataSetIterator. batch-size n-examples img n-possible-labels
-                               img-transform use-special-pre-process-cifar? train?)
-        (contains-many? config :batch-size :n-examples :img-dims :use-special-pre-process-cifar? :train?)
-        (CifarDataSetIterator. batch-size n-examples img use-special-pre-process-cifar? train?)
-        (contains-many? config :batch-size :n-examples :img-dims :train?)
-        (CifarDataSetIterator. batch-size n-examples img train?)
-        (contains-many? config :batch-size :n-examples :img-dims)
-        (CifarDataSetIterator. batch-size n-examples img)
-        (contains-many? config :batch-size :n-examples :train?)
-        (CifarDataSetIterator. batch-size n-examples train?)
-        (contains-many? config :batch-size :img-dims)
-        (CifarDataSetIterator. batch-size img)
-        (contains-many? config :batch-size :n-examples)
-        (CifarDataSetIterator. batch-size n-examples)
-        :else
-        (assert (and (contains? config :batch-size)
-                     (or (contains? config :img-dims)
-                         (contains? config :n-examples)))
-                "you must provide atleast a batch size and number of examples or a batch size and the desired demensions of the images"))))
+    (match [config]
+           [{:batch-size _ :n-examples _ :img-dims _ :n-possible-labels _
+             :img-transform _ :use-special-pre-process-cifar? _ :train? _}]
+           (CifarDataSetIterator. batch-size n-examples img n-possible-labels
+                                  img-transform use-special-pre-process-cifar? train?)
+           [{:batch-size _ :n-examples _ :img-dims _
+             :use-special-pre-process-cifar? _ :train? _}]
+           (CifarDataSetIterator. batch-size n-examples img use-special-pre-process-cifar? train?)
+           [{:batch-size _ :n-examples _ :img-dims _ :train? _}]
+           (CifarDataSetIterator. batch-size n-examples img train?)
+           [{:batch-size _ :n-examples _ :img-dims _}]
+           (CifarDataSetIterator. batch-size n-examples img)
+           [{:batch-size _ :n-examples _ :train? _}]
+           (CifarDataSetIterator. batch-size n-examples train?)
+           [{:batch-size _ :img-dims _}]
+           (CifarDataSetIterator. batch-size img)
+           [{:batch-size _ :n-examples _}]
+           (CifarDataSetIterator. batch-size n-examples))))
 
 (defmethod iterator :iris-dataset-iter [opts]
   (let [config (:iris-dataset-iter opts)
@@ -416,36 +380,34 @@ you need to suply atleast the mini batch size, number of possible labels and the
         rng (if (contains? config :seed)
               (new Random seed)
               (new Random 123))]
-    ;; core.match
-    (cond (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
-                        :label-generator :train? :split-train-test :rng :image-transform)
-        (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                             label-generator train? split-train-test image-transform
-                             rng)
-        (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
-                        :label-generator :train? :split-train-test :rng)
-        (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                             label-generator train? split-train-test rng)
-        (contains-many? config :batch-size :n-examples :img-dims :n-labels :use-subset?
-                        :train? :split-train-test :rng)
-        (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                             train? split-train-test rng)
-        (contains-many? config :batch-size :n-examples :n-labels :train? :split-train-test)
-        (LFWDataSetIterator. batch-size n-examples n-labels train? split-train-test)
-        (contains-many? config :batch-size :n-examples :img-dims :train? :split-train-test)
-        (LFWDataSetIterator. batch-size n-examples img train? split-train-test)
-        (contains-many? config :batch-size :n-examples :img-dims)
-        (LFWDataSetIterator. batch-size n-examples img)
-        (contains-many? config :batch-size :img-dims :use-subset?)
-        (LFWDataSetIterator. batch-size img use-subset?)
-        (contains-many? config :batch-size :n-examples)
-        (LFWDataSetIterator. batch-size n-examples)
-        (contains? config :img-dims)
-        (LFWDataSetIterator. img)
-        :else
-        (assert false "you must supply atleast the desired image dimensions for the data"))))
-
-(LFWDataSetIterator. (int-array [1 2 3]))
+    (match [config]
+           [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
+             :use-subset? _ :label-generator _ :train? _ :split-train-test _
+             :rng _ :image-transform _}]
+           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
+                                label-generator train? split-train-test image-transform
+                                rng)
+           [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
+             :use-subset? _ :label-generator _ :train? _ :split-train-test _
+             :rng _}]
+           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
+                                label-generator train? split-train-test rng)
+           [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
+             :use-subset? _ :train? _ :split-train-test _ :rng _}]
+           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
+                                train? split-train-test rng)
+           [{:batch-size _ :n-examples _  :n-labels _ :train? _ :split-train-test _}]
+           (LFWDataSetIterator. batch-size n-examples n-labels train? split-train-test)
+           [{:batch-size _ :n-examples _ :img-dims _  :train? _ :split-train-test _}]
+           (LFWDataSetIterator. batch-size n-examples img train? split-train-test)
+           [{:batch-size _ :n-examples _ :img-dims _ }]
+           (LFWDataSetIterator. batch-size n-examples img)
+           [{:batch-size _ :use-subset? _ :img-dims _ }]
+           (LFWDataSetIterator. batch-size img use-subset?)
+           [{:batch-size _ :n-examples _}]
+           (LFWDataSetIterator. batch-size n-examples)
+           [{:img-dims _ }]
+           (LFWDataSetIterator. img))))
 
 (defmethod iterator :mnist-dataset-iter [opts]
   (let [config (:mnist-dataset-iter opts)
@@ -456,17 +418,16 @@ you need to suply atleast the mini batch size, number of possible labels and the
          binarize? :binarize?
          shuffle? :shuffle?
          batch :batch} config]
-    ;; core.match
-    (cond (contains-many? config :batch :n-examples :binarize? :train? :shuffle? :seed)
-          (MnistDataSetIterator. batch n-examples binarize? train? shuffle? (long seed))
-          (contains-many? config :batch-size :train? :seed)
-          (MnistDataSetIterator. batch-size train? (int seed))
-          (contains-many? config :batch :n-examples :binarize?)
-          (MnistDataSetIterator. batch n-examples binarize?)
-          (contains-many? config :batch :n-examples)
-          (MnistDataSetIterator. batch n-examples)
-          :else
-          (assert false "you must atleast supply a batch and number of examples"))))
+    (match [config]
+           [{:batch _ :n-examples _ :binarize? _
+             :train? _ :shuffle? _ :seed _}]
+           (MnistDataSetIterator. batch n-examples binarize? train? shuffle? (long seed))
+           [{:batch-size _ :train? _ :seed _}]
+           (MnistDataSetIterator. batch-size train? (int seed))
+           [{:batch _ :n-examples _ :binarize? _}]
+           (MnistDataSetIterator. batch n-examples binarize?)
+           [{:batch _ :n-examples _}]
+           (MnistDataSetIterator. batch n-examples))))
 
 (defmethod iterator :raw-mnist-dataset-iter [opts]
   (let [config (:raw-mnist-dataset-iter opts)
@@ -482,7 +443,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:path-to-ds opts)
         {str-paths :string-paths
          iter :iter} config]
-    (if (contains? config :string-paths)
+    (if str-paths
       (PathSparkDataSetIterator. str-paths)
       (PathSparkDataSetIterator. (reset-iterator! iter)))))
 
@@ -490,7 +451,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:path-to-multi-ds opts)
         {str-paths :string-paths
          iter :iter} config]
-    (if (contains? config :string-paths)
+    (if str-paths
       (PathSparkMultiDataSetIterator. str-paths)
       (PathSparkMultiDataSetIterator. (reset-iterator! iter)))))
 
@@ -498,7 +459,7 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:portable-ds-stream opts)
         {streams :streams
          iter :iter} config]
-    (if (contains? config :streams)
+    (if streams
       (PortableDataStreamDataSetIterator. streams)
       (PortableDataStreamDataSetIterator. (reset-iterator! iter)))))
 
@@ -506,11 +467,9 @@ you need to suply atleast the mini batch size, number of possible labels and the
   (let [config (:portable-multi-ds-stream opts)
         {streams :streams
          iter :iter} config]
-    (if (contains? config :streams)
+    (if streams
       (PortableDataStreamMultiDataSetIterator. streams)
       (PortableDataStreamMultiDataSetIterator. (reset-iterator! iter)))))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns

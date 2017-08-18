@@ -2,6 +2,7 @@
   (:import [org.nd4j.linalg.dataset DataSet]
            [org.nd4j.linalg.dataset MultiDataSet])
   (:require [dl4clj.utils :refer [contains-many?]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn new-ds
@@ -32,10 +33,11 @@
   (let [f (vec-or-matrix->indarray features)
         l (vec-or-matrix->indarray labels)]
     ;; replace with core.match
-   (cond (contains-many? opts :features :labels :features-mask :labels-mask)
-         (MultiDataSet. f l (vec-or-matrix->indarray features-mask)
-                        (vec-or-matrix->indarray labels-mask))
-        (contains-many? opts :features :labels)
-        (MultiDataSet. f l)
-        :else
-        (MultiDataSet.))))
+    (match [opts]
+           [{:features _ :labels _ :features-mask _ :labels-mask _}]
+           (MultiDataSet. f l (vec-or-matrix->indarray features-mask)
+                          (vec-or-matrix->indarray labels-mask))
+           [{:features _ :labels _}]
+           (MultiDataSet. f l)
+           :else
+           (MultiDataSet.))))

@@ -8,6 +8,7 @@
            [org.deeplearning4j.datasets.iterator
             CombinedPreProcessor CombinedPreProcessor$Builder])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;; replace contains-many? with core.match
@@ -24,12 +25,13 @@
         {a :min-range
          b :max-range
          max-bits :max-bits} conf]
-    (cond (contains-many? conf :min-range :max-range :max-bites)
-          (ImagePreProcessingScaler. a b max-bits)
-          (contains-many? conf :min-range :max-range)
-          (ImagePreProcessingScaler. a b)
-          :else
-          (ImagePreProcessingScaler.))))
+    (match [conf]
+           [{:min-range _ :max-range _ :max-bits _}]
+           (ImagePreProcessingScaler. a b max-bits)
+           [{:min-range _ :max-range _}]
+           (ImagePreProcessingScaler. a b)
+           :else
+           (ImagePreProcessingScaler.))))
 
 (defmethod pre-processors :min-max-normalization [opts]
   (let [conf (:min-max-normalization opts)
@@ -47,13 +49,15 @@
          l-std :labels-std} conf]
     (let [f-m (vec-or-matrix->indarray f-mean)
           f-s (vec-or-matrix->indarray f-std)]
-     (cond (contains-many? conf :features-mean :features-std :labels-mean :labels-std)
-           (NormalizerStandardize. f-m f-s (vec-or-matrix->indarray l-mean)
-                                   (vec-or-matrix->indarray l-std))
-          (contains-many? conf :features-mean :features-std)
-          (NormalizerStandardize. f-m f-s)
-          :else
-          (NormalizerStandardize.)))))
+      (match [conf]
+             [{:features-mean _ :features-std _
+               :labels-mean _ :labels-std _}]
+             (NormalizerStandardize. f-m f-s (vec-or-matrix->indarray l-mean)
+                                     (vec-or-matrix->indarray l-std))
+             [{:features-mean _ :features-std _}]
+             (NormalizerStandardize. f-m f-s)
+             :else
+             (NormalizerStandardize.)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pre-processer creation user facing fns
@@ -131,7 +135,7 @@
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
   [map-of-pre-processors]
-  ;; could refactor to use builder-fn
+  ;; come back to this, after the consideration in the doc string is addressed
   (loop [b (CombinedPreProcessor$Builder.)
          result map-of-pre-processors]
     (if (empty? result)

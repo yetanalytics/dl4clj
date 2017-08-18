@@ -17,7 +17,8 @@
            [org.datavec.api.records.reader.impl.csv CSVSequenceRecordReader]
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+            [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method
@@ -33,37 +34,40 @@
         {skip-lines :skip-num-lines
          delim :delimiter
          n-lines-per-seq :n-lines-per-seq} config]
-    (cond (contains-many? config :skip-num-lines :delimiter :n-lines-per-seq)
-          (CSVNLinesSequenceRecordReader. n-lines-per-seq skip-lines delim)
-          (contains? config :n-lines-per-seq)
-          (CSVNLinesSequenceRecordReader. n-lines-per-seq)
-          :else
-          (CSVNLinesSequenceRecordReader.))))
+    (match [config]
+           [{:skip-num-lines _ :delimiter _ :n-lines-per-seq _}]
+           (CSVNLinesSequenceRecordReader. n-lines-per-seq skip-lines delim)
+           [{:n-lines-per-seq _}]
+           (CSVNLinesSequenceRecordReader. n-lines-per-seq)
+           :else
+           (CSVNLinesSequenceRecordReader.))))
 
 (defmethod record-reader :csv-rr [opts]
   (let [config (:csv-rr opts)
         {skip-lines :skip-num-lines
          delim :delimiter
          strip-quotes :strip-quotes} config]
-    (cond (contains-many? config :skip-num-lines :delimiter :strip-quotes)
-          (CSVRecordReader. skip-lines delim strip-quotes)
-          (contains-many? config :skip-num-lines :delimiter)
-          (CSVRecordReader. skip-lines delim)
-          (contains? config :skip-num-lines)
-          (CSVRecordReader. skip-lines)
-          :else
-          (CSVRecordReader.))))
+    (match [config]
+           [{:skip-num-lines _ :delimiter _ :strip-quotes _}]
+           (CSVRecordReader. skip-lines delim strip-quotes)
+           [{:skip-num-lines _ :delimiter _}]
+           (CSVRecordReader. skip-lines delim)
+           [{:skip-num-lines _}]
+           (CSVRecordReader. skip-lines)
+           :else
+           (CSVRecordReader.))))
 
 (defmethod record-reader :csv-seq-rr [opts]
   (let [config (:csv-seq-rr opts)
         {skip-lines :skip-num-lines
          delim :delimiter} config]
-    (cond (contains-many? config :skip-num-lines :delimiter)
-          (CSVSequenceRecordReader. skip-lines delim)
-          (contains? config :skip-num-lines)
-          (CSVSequenceRecordReader. skip-lines)
-          :else
-          (CSVSequenceRecordReader.))))
+    (match [config]
+           [{:skip-num-lines _ :delimiter _}]
+           (CSVSequenceRecordReader. skip-lines delim)
+           [{:skip-num-lines _}]
+           (CSVSequenceRecordReader. skip-lines)
+           :else
+           (CSVSequenceRecordReader.))))
 
 
 (defmethod record-reader :file-rr [opts]

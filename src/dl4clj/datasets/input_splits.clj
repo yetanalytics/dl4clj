@@ -6,7 +6,8 @@
            [org.datavec.api.io.labels PathLabelGenerator ParentPathLabelGenerator
             PatternPathLabelGenerator])
   (:require [clojure.java.io :as io]
-            [dl4clj.utils :refer [contains-many? array-of generic-dispatching-fn]]))
+            [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [array-of generic-dispatching-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split multimethod
@@ -25,17 +26,17 @@
         a-fmt (array-of :data fmt
                         :java-type java.lang.String)
         a-file (io/as-file root)]
-    ;; core.match
-    (cond (contains-many? config :root-dir :allow-format :rng-seed)
-          (FileSplit. a-file a-fmt rng)
-          (contains-many? config :root-dir :allow-format :recursive?)
-          (FileSplit. a-file a-fmt recursive?)
-          (contains-many? config :root-dir :allow-format)
-          (FileSplit. a-file a-fmt)
-          (contains-many? config :root-dir :rng-seed)
-          (FileSplit. a-file rng)
-          :else
-          (FileSplit. a-file))))
+    (match [config]
+           [{:path _ :allow-format _ :rng-seed _}]
+           (FileSplit. a-file a-fmt rng)
+           [{:path _ :allow-format _ :recursive? _}]
+           (FileSplit. a-file a-fmt recursive?)
+           [{:path _ :allow-format _}]
+           (FileSplit. a-file a-fmt)
+           [{:path _ :rng-seed _}]
+           (FileSplit. a-file rng)
+           :else
+           (FileSplit. a-file))))
 
 (defmethod input-split :collection-input-split [opts]
   (let [config (:collection-input-split opts)
@@ -46,7 +47,7 @@
   (let [config (:input-stream-input-split opts)
         {in :in-stream
          path :file-path} config]
-    (if (contains? config :file-path)
+    (if path
       (InputStreamInputSplit. in (io/as-file path))
       (InputStreamInputSplit. in))))
 
@@ -98,7 +99,7 @@
   [& {:keys [pattern pattern-position]
       :as opts}]
   (assert (contains? opts :pattern) "you must supply a regex patern to use this label generator")
-  (if (contains? opts :pattern-position)
+  (if pattern-position
     (PatternPathLabelGenerator. pattern pattern-position)
     (PatternPathLabelGenerator. pattern)))
 

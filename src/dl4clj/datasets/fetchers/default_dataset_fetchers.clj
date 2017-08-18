@@ -1,7 +1,7 @@
 (ns dl4clj.datasets.fetchers.default-dataset-fetchers
   (:import [org.deeplearning4j.datasets.fetchers
             MnistDataFetcher IrisDataFetcher CurvesDataFetcher])
-  (:require [dl4clj.utils :refer [contains-many?]]))
+  (:require [clojure.core.match :refer [match]]))
 
 (defn curves-fetcher
   "gets the Curves dataset."
@@ -25,10 +25,10 @@
   :seed (long) seed used for shuffling, shuffles unique per seed"
   [& {:keys [binarize? train? shuffle? seed]
       :as opts}]
-  ;; core.match
-  (cond (contains-many? opts :binarize? :train? :shuffle? :rng-seed)
-        (MnistDataFetcher. binarize? train? shuffle? seed)
-        (contains? opts :binarize)
-        (MnistDataFetcher. binarize?)
-        :else
-        (MnistDataFetcher.)))
+  (match [opts]
+         [{:binarize? _ :train? _ :shuffle? _ :rng-seed _}]
+         (MnistDataFetcher. binarize? train? shuffle? seed)
+         [{:binarize? _}]
+         (MnistDataFetcher. binarize?)
+         :else
+         (MnistDataFetcher.)))
