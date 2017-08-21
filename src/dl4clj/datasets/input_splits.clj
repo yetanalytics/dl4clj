@@ -54,8 +54,9 @@
       (InputStreamInputSplit. ~in))))
 
 (defmethod input-split :list-string-split [opts]
-  (let [config (:list-string-split opts)]
-    `(ListStringSplit. (reverse (into `() (:data ~config))))))
+  (let [config (:list-string-split opts)
+        data (:data config)]
+    `(ListStringSplit. (reverse (into () ~data)))))
 
 (defmethod input-split :numbered-file-input-split [opts]
   (let [config (:numbered-file-input-split opts)
@@ -66,7 +67,7 @@
 
 (defmethod input-split :string-split [opts]
   (let [config (:string-split opts)]
-    `(StringSplit. (reverse (into `() (:data ~config))))))
+    `(StringSplit. (:data ~config))))
 
 (defmethod input-split :transform-split [opts]
   (let [config (:transform-split opts)
@@ -256,7 +257,7 @@
 (defn new-list-string-split
   "An input split that already has delimited data of some kind.
 
-  :data should be a lists of strings
+  :data should be a vector of strings
 
   :as-code? (boolean), return java object or code for creating it
 
