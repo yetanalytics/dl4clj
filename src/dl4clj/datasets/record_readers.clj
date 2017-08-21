@@ -30,54 +30,54 @@
   generic-dispatching-fn)
 
 (defmethod record-reader :csv-nlines-seq-rr [opts]
-  (let [config (:csvn-lines-seq-rr opts)
-        {skip-lines :skip-num-lines
+  (let [config (:csv-nlines-seq-rr opts)
+        {skip-lines :skip-n-lines
          delim :delimiter
          n-lines-per-seq :n-lines-per-seq} config]
     (match [config]
-           [{:skip-num-lines _ :delimiter _ :n-lines-per-seq _}]
-           (CSVNLinesSequenceRecordReader. n-lines-per-seq skip-lines delim)
+           [{:skip-n-lines _ :delimiter _ :n-lines-per-seq _}]
+           `(CSVNLinesSequenceRecordReader. ~n-lines-per-seq ~skip-lines ~delim)
            [{:n-lines-per-seq _}]
-           (CSVNLinesSequenceRecordReader. n-lines-per-seq)
+           `(CSVNLinesSequenceRecordReader. ~n-lines-per-seq)
            :else
-           (CSVNLinesSequenceRecordReader.))))
+           `(CSVNLinesSequenceRecordReader.))))
 
 (defmethod record-reader :csv-rr [opts]
   (let [config (:csv-rr opts)
-        {skip-lines :skip-num-lines
+        {skip-lines :skip-n-lines
          delim :delimiter
          strip-quotes :strip-quotes} config]
     (match [config]
-           [{:skip-num-lines _ :delimiter _ :strip-quotes _}]
-           (CSVRecordReader. skip-lines delim strip-quotes)
-           [{:skip-num-lines _ :delimiter _}]
-           (CSVRecordReader. skip-lines delim)
-           [{:skip-num-lines _}]
-           (CSVRecordReader. skip-lines)
+           [{:skip-n-lines _ :delimiter _ :strip-quotes _}]
+           `(CSVRecordReader. ~skip-lines ~delim ~strip-quotes)
+           [{:skip-n-lines _ :delimiter _}]
+           `(CSVRecordReader. ~skip-lines ~delim)
+           [{:skip-n-lines _}]
+           `(CSVRecordReader. ~skip-lines)
            :else
-           (CSVRecordReader.))))
+           `(CSVRecordReader.))))
 
 (defmethod record-reader :csv-seq-rr [opts]
   (let [config (:csv-seq-rr opts)
-        {skip-lines :skip-num-lines
+        {skip-lines :skip-n-lines
          delim :delimiter} config]
     (match [config]
-           [{:skip-num-lines _ :delimiter _}]
-           (CSVSequenceRecordReader. skip-lines delim)
-           [{:skip-num-lines _}]
-           (CSVSequenceRecordReader. skip-lines)
+           [{:skip-n-lines _ :delimiter _}]
+           `(CSVSequenceRecordReader. ~skip-lines ~delim)
+           [{:skip-n-lines _}]
+           `(CSVSequenceRecordReader. ~skip-lines)
            :else
-           (CSVSequenceRecordReader.))))
+           `(CSVSequenceRecordReader.))))
 
 
 (defmethod record-reader :file-rr [opts]
-  (FileRecordReader.))
+  `(FileRecordReader.))
 
 (defmethod record-reader :line-rr [opts]
-  (LineRecordReader.))
+  `(LineRecordReader.))
 
 (defmethod record-reader :list-string-rr [opts]
-  (ListStringRecordReader.))
+  `(ListStringRecordReader.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing functions
@@ -91,30 +91,40 @@
   For example, with :n-lines-per-seq = 10, lines 0 to 9 are the first time series, 10 to 19 are the second, and so on.
 
   args are:
-  :skip-num-lines (int) number of lines to skip
+  :skip-n-lines (int) number of lines to skip
   :delimiter (str) the delimiter seperating values
   :n-lines-per-seq (int) the number of lines which compose a single series
+  :as-code? (boolean), return java object or code for creating it
 
   NOTE: This record reader is for saying, there are multiple time series which should
         be considered together and classified by a single label (for classification)
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVNLinesSequenceRecordReader.html"
-  [& {:keys [skip-num-lines delimiter n-lines-per-seq]
+  [& {:keys [skip-n-lines delimiter n-lines-per-seq as-code?]
+      :or {as-code? true}
       :as opts}]
-  (record-reader {:csv-nlines-seq-rr opts}))
+  (let [code (record-reader {:csv-nlines-seq-rr opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-csv-record-reader
   "Simple csv record reader
 
   args are:
-  :skip-num-lines (int) number of lines to skip
+  :skip-n-lines (int) number of lines to skip
   :delimiter (str) the delimiter seperating values
   :strip-quotes (str) the quote to strip
+  :as-code? (boolean), return java object or code for creating it
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVRecordReader.html"
-  [& {:keys [skip-num-lines delimiter strip-quotes]
+  [& {:keys [skip-n-lines delimiter strip-quotes as-code?]
+      :or {as-code? true}
       :as opts}]
-  (record-reader {:csv-rr opts}))
+  (let [code (record-reader {:csv-rr opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-csv-seq-record-reader
   "This reader is intended to read sequences of data in CSV format,
@@ -122,27 +132,44 @@
    Each line in the file represents one time step
 
    args are:
-   :skip-num-lines (int) number of lines to skip
+   :skip-n-lines (int) number of lines to skip
    :delimiter (str), the delimiter seperating values
+   :as-code? (boolean), return java object or code for creating it
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVSequenceRecordReader.html"
-  [& {:keys [skip-num-lines delimiter]
+  [& {:keys [skip-n-lines delimiter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (record-reader {:csv-seq-rr opts}))
+  (let [code (record-reader {:csv-seq-rr opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-file-record-reader
   "File reader/writer, no args required
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/FileRecordReader.html"
-  []
-  (record-reader {:file-rr {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (record-reader {:file-rr {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-line-record-reader
   "Reads files line by line, no args required
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/LineRecordReader.html"
-  []
-  (record-reader {:line-rr {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (record-reader {:line-rr {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-list-string-record-reader
   "Iterates through a list of strings return a record.
@@ -150,9 +177,15 @@
 
   no args needed to call the constructor
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/collection/ListStringRecordReader.html"
-  []
-  (record-reader {:list-string-rr {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (record-reader {:list-string-rr {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (comment
 ;; will implement when needed

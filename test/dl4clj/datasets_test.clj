@@ -24,12 +24,21 @@
   (testing "dataset fetchers"
     ;; dl4clj.datasets.fetchers.default-dataset-fetchers
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher (type (iris-fetcher))))
+    (is (= '(org.deeplearning4j.datasets.fetchers.IrisDataFetcher.)
+           (iris-fetcher :as-code? true)))
+
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher (type (mnist-fetcher))))
+    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.)
+           (mnist-fetcher :as-code? true)))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type (mnist-fetcher :binarize? true))))
+    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true)
+           (mnist-fetcher :binarize? true :as-code? true)))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type
             (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123))))
+    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true true true 123)
+           (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123 :as-code? true)))
     ;; dl4clj.datasets.fetchers.base-data-fetcher
     (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
@@ -42,6 +51,7 @@
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
     ;; dl4clj.datasets.iterator.impl.default-datasets
+    ;; come back and add tests for the code these produce
     ;; cifar dataset
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100))))
@@ -110,8 +120,6 @@
                                             :label-generator (new-parent-path-label-generator)
                                             :img-transform (ColorConversionTransform.)))))
 
-    ;; left off here
-
     ;;mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
            (type (new-mnist-data-set-iterator :batch-size 5 :train? true
@@ -160,7 +168,7 @@
                                                    :n-examples 100 :train? true
                                                    :split-train-test 0.50 :n-labels 5
                                                    :use-subset? true :rng 123
-                                                   :label-generator (new-parent-path-label-generator)
+                                                   :label-generator (new-parent-path-label-generator :as-code? false)
                                                    :img-transform (ColorConversionTransform.))
           cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)]
       ;; nd4clj.linalg.api.ds-iter
@@ -197,21 +205,31 @@
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
     (is (= org.datavec.api.io.labels.ParentPathLabelGenerator
-           (type (new-parent-path-label-generator))))
+           (type (new-parent-path-label-generator :as-code? false))))
+    (is (= '(org.datavec.api.io.labels.ParentPathLabelGenerator.)
+           (new-parent-path-label-generator)))
     (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
-           (type (new-pattern-path-label-generator :pattern "."))))
+           (type (new-pattern-path-label-generator :pattern "." :as-code? false))))
+    (is (= '(if nil
+              (org.datavec.api.io.labels.PatternPathLabelGenerator. "." nil)
+              (org.datavec.api.io.labels.PatternPathLabelGenerator. "."))
+           (new-pattern-path-label-generator :pattern ".")))
     (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
-           (type (new-pattern-path-label-generator :pattern "." :pattern-position 0))))
+           (type (new-pattern-path-label-generator :pattern "." :pattern-position 0 :as-code? false))))
+    (is (= '(if 0
+              (org.datavec.api.io.labels.PatternPathLabelGenerator. "." 0)
+              (org.datavec.api.io.labels.PatternPathLabelGenerator. "."))
+           (new-pattern-path-label-generator :pattern "." :pattern-position 0)))
     (is (= org.datavec.api.writable.Text
            (type
-            (get-label-for-path :label-generator (new-parent-path-label-generator)
+            (get-label-for-path :label-generator (new-parent-path-label-generator :as-code? false)
                                 :path "resources/paravec/labeled/finance"))))))
 
 (deftest path-filter-tests
   (testing "the creation of path filters and their functionality"
     (is (= org.datavec.api.io.filters.BalancedPathFilter
            (type
-            (new-balanced-path-filter :rng 10
+            (new-balanced-path-filter :seed 10
                                       :extensions [".txt"]
                                       :label-generator (new-parent-path-label-generator
                                                         :as-code? true)
@@ -219,46 +237,113 @@
                                       :max-labels 3
                                       :min-paths-per-label 1
                                       :max-paths-per-label 1
-                                      :labels []))))
+                                      :labels []
+                                      :as-code? false))))
+    (is (= '(org.datavec.api.io.filters.BalancedPathFilter.
+             (java.util.Random. 10)
+             (dl4clj.utils/array-of :data [".txt"]
+                                    :java-type java.lang.String)
+             (org.datavec.api.io.labels.ParentPathLabelGenerator.)
+             1 3 1 1
+             (dl4clj.utils/array-of :data [] :java-type java.lang.String))
+           (new-balanced-path-filter :seed 10
+                                     :extensions [".txt"]
+                                     :label-generator (new-parent-path-label-generator
+                                                       :as-code? true)
+                                     :max-paths 1
+                                     :max-labels 3
+                                     :min-paths-per-label 1
+                                     :max-paths-per-label 1
+                                     :labels [])))
+
     (is (= org.datavec.api.io.filters.RandomPathFilter
            (type
-            (new-random-path-filter :rng 123
+            (new-random-path-filter :seed 123
                                     :extensions [".txt"]
-                                    :max-paths 2))))
+                                    :max-paths 2
+                                    :as-code? false))))
+    (is (= '(org.datavec.api.io.filters.RandomPathFilter.
+             (java.util.Random. 123)
+             (dl4clj.utils/array-of :data [".txt"]
+                                    :java-type java.lang.String)
+             2)
+           (new-random-path-filter :seed 123
+                                   :extensions [".txt"]
+                                   :max-paths 2)))
     (is (= (type
             (array-of :data [(java.net.URI/create "foo")]
                       :java-type java.net.URI))
            (type
-            (filter-paths :path-filter (new-random-path-filter :rng 123
+            (filter-paths :path-filter (new-random-path-filter :seed 123
                                                                :extensions [".txt"]
-                                                               :max-paths 2)
+                                                               :max-paths 2
+                                                               :as-code? false)
                           :paths ["foo"]))))))
 
 (deftest file-split-testing
   (testing "base level io stuffs"
     ;; file split
     (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/"))))
+           (type (new-filesplit :path "resources/"
+                                :as-code? false))))
+    (is (= '(org.datavec.api.split.FileSplit.
+             (clojure.java.io/as-file "resources/"))
+           (new-filesplit :path "resources/")))
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
-                                :rng-seed 123))))
-    (is (= org.datavec.api.split.FileSplit
-           (type (new-filesplit :path "resources/"
-                                :allow-format ".csv"))))
+                                :seed 123
+                                :as-code? false))))
+    (is (= '(org.datavec.api.split.FileSplit.
+             (clojure.java.io/as-file "resources/")
+             (java.util.Random. 123))
+           (new-filesplit :path "resources/"
+                          :seed 123)))
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"
-                                :recursive? true))))
+                                :as-code? false))))
+    (is (= '(org.datavec.api.split.FileSplit.
+             (clojure.java.io/as-file "resources/")
+             (dl4clj.utils/array-of :data ".csv"
+                                    :java-type java.lang.String))
+           (new-filesplit :path "resources/"
+                          :allow-format ".csv")))
     (is (= org.datavec.api.split.FileSplit
            (type (new-filesplit :path "resources/"
                                 :allow-format ".csv"
-                                :rng-seed 123))))
-    (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/")))))
+                                :recursive? true
+                                :as-code? false))))
+    (is (= '(org.datavec.api.split.FileSplit.
+             (clojure.java.io/as-file "resources/")
+             (dl4clj.utils/array-of :data ".csv"
+                                    :java-type java.lang.String)
+             true)
+           (new-filesplit :path "resources/"
+                          :allow-format ".csv"
+                          :recursive? true)))
+    (is (= org.datavec.api.split.FileSplit
+           (type (new-filesplit :path "resources/"
+                                :allow-format ".csv"
+                                :seed 123
+                                :as-code? false))))
+    (is (= '(org.datavec.api.split.FileSplit.
+             (clojure.java.io/as-file "resources/")
+             (dl4clj.utils/array-of :data ".csv"
+                                    :java-type java.lang.String))
+           (new-filesplit :path "resources/"
+                          :allow-format ".csv"
+                          :seed 123)))
+    (is (= java.io.File (type (get-root-dir (new-filesplit :path "resources/" :as-code? false)))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
            (type (new-collection-input-split :coll ['(new java.net.URI "foo")
-                                                    '(new java.net.URI "baz")]))))
+                                                    '(new java.net.URI "baz")]
+                                             :as-code? false))))
+    (is (= '(org.datavec.api.split.CollectionInputSplit. [(new java.net.URI "foo")
+                                                          (new java.net.URI "baz")])
+           (new-collection-input-split :coll ['(new java.net.URI "foo")
+                                              '(new java.net.URI "baz")])))
 
     ;; input stream input split
     (let [data '(clojure.java.io/input-stream "resources/poker-hand-testing.csv")
@@ -266,78 +351,108 @@
       (is (= org.datavec.api.split.InputStreamInputSplit
              (type (new-input-stream-input-split
                     :in-stream data
-                    :file-path "resources/poker-hand-testing.csv"))))
+                    :file-path "resources/poker-hand-testing.csv"
+                    :as-code? false))))
       (is (= org.datavec.api.split.InputStreamInputSplit
              (type (new-input-stream-input-split
-                    :in-stream data))))
+                    :in-stream data
+                    :as-code? false))))
 
       (is (= java.io.BufferedInputStream
              (type (get-is (new-input-stream-input-split
-                            :in-stream data)))))
+                            :in-stream data
+                            :as-code? false)))))
       (= org.datavec.api.split.InputStreamInputSplit
          (type (set-is! :input-stream-input-split (new-input-stream-input-split
-                                                   :in-stream data)
+                                                   :in-stream data
+                                                   :as-code? false)
                         :is (eval other-data)))))
 
     ;; list string input split
     (is (= org.datavec.api.split.ListStringSplit
-           (type (new-list-string-split :data  ["foo" "baz"]))))
+           (type (new-list-string-split :data  ["foo" "baz"]
+                                        :as-code? false))))
+    (is (= '(org.datavec.api.split.ListStringSplit.
+             (clojure.core/reverse (clojure.core/into () ["foo" "baz"])))
+           (new-list-string-split :data  ["foo" "baz"])))
     (is (= (list "foo" "baz")
            (get-list-string-split-data
-            (new-list-string-split :data ["foo" "baz"]))))
+            (new-list-string-split :data ["foo" "baz"]
+                                   :as-code? false))))
 
     ;; numbered file input split
     (is (= org.datavec.api.split.NumberedFileInputSplit
            (type
             (new-numbered-file-input-split :base-string "f_%d.txt"
                                            :inclusive-min-idx 0
-                                           :inclusive-max-idx 10))))
+                                           :inclusive-max-idx 10
+                                           :as-code? false))))
+    (is (= '(org.datavec.api.split.NumberedFileInputSplit. "f_%d.txt" 0 10)
+           (new-numbered-file-input-split :base-string "f_%d.txt"
+                                          :inclusive-min-idx 0
+                                          :inclusive-max-idx 10)))
 
     ;; string split
     (is (= org.datavec.api.split.StringSplit
-           (type (new-string-split :data "foo baz bar"))))
+           (type (new-string-split :data "foo baz bar" :as-code? false))))
+    (is (= '(org.datavec.api.split.StringSplit. "foo baz bar")
+           (new-string-split :data "foo baz bar")))
     (is (= "foo baz bar" (get-list-string-split-data
-                          (new-string-split :data "foo baz bar"))))
+                          (new-string-split :data "foo baz bar" :as-code? false))))
 
     ;; transform split
     (is (= org.datavec.api.split.TransformSplit
            (type
             (new-transform-split :base-input-split (new-collection-input-split
                                                     :coll ['(new java.net.URI "foo")
-                                                           '(new java.net.URI "baz")]
-                                                    :as-code? true)
+                                                           '(new java.net.URI "baz")])
                                  :to-be-replaced "foo"
-                                 :replaced-with "oof"))))
+                                 :replaced-with "oof"
+                                 :as-code? false))))
+    (is (= '(org.datavec.api.split.TransformSplit/ofSearchReplace
+             (org.datavec.api.split.CollectionInputSplit.
+              [(new java.net.URI "foo") (new java.net.URI "baz")]) "foo" "oof")
+           (new-transform-split :base-input-split (new-collection-input-split
+                                                   :coll ['(new java.net.URI "foo")
+                                                          '(new java.net.URI "baz")])
+                                :to-be-replaced "foo"
+                                :replaced-with "oof")))
 
     ;; sample
     (is (= (type (new-collection-input-split
                   :coll ['(new java.net.URI "foo")
-                         '(new java.net.URI "baz")]))
+                         '(new java.net.URI "baz")]
+                  :as-code? false))
            (type (first (sample :split (new-collection-input-split
                                         :coll ['(new java.net.URI "foo")
-                                               '(new java.net.URI "baz")])
+                                               '(new java.net.URI "baz")]
+                                        :as-code? false)
                                 :weights [50 50]
-
+                                :as-code? false
                                 :path-filter (new-random-path-filter
-                                              :rng 123
+                                              :seed 123
                                               :extensions [".txt"]
-                                              :max-paths 2))))))
+                                              :max-paths 2
+                                              :as-code? false))))))
     (is (= (type (new-collection-input-split
                   :coll ['(new java.net.URI "foo")
-                         '(new java.net.URI "baz")]))
+                         '(new java.net.URI "baz")]
+                  :as-code? false))
            (type (first (sample :split (new-collection-input-split
                                         :coll ['(new java.net.URI "foo")
-                                               '(new java.net.URI "baz")])
+                                               '(new java.net.URI "baz")]
+                                        :as-code? false)
                                 :weights [50 50])))))
     (is (= 2 (count (sample :split (new-collection-input-split
                                     :coll ['(new java.net.URI "foo")
-                                           '(new java.net.URI "baz")])
+                                           '(new java.net.URI "baz")]
+                                    :as-code? false)
                             :weights [50 50]))))))
 
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
     ;; datavec.api.writeable
-    (let [f-split (new-filesplit :path "resources/poker/")]
+    (let [f-split (new-filesplit :path "resources/poker/" :as-code? false)]
       (is (= java.lang.Long (type (length f-split))))
       (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
@@ -351,50 +466,88 @@
     ;; datavec.api.records.readers
     ;; csv-nlines-seq-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
-           (type (new-csv-nlines-seq-record-reader))))
+           (type (new-csv-nlines-seq-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader.)
+           (new-csv-nlines-seq-record-reader)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
-           (type (new-csv-nlines-seq-record-reader :n-lines-per-seq 5))))
+           (type (new-csv-nlines-seq-record-reader :n-lines-per-seq 5 :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader. 5)
+         (new-csv-nlines-seq-record-reader :n-lines-per-seq 5)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
            (type (new-csv-nlines-seq-record-reader :n-lines-per-seq 5
-                                                   :delimiter "," :skip-num-lines 1))))
+                                                   :delimiter ","
+                                                   :skip-n-lines 1
+                                                   :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader. 5 1 ",")
+           (new-csv-nlines-seq-record-reader :n-lines-per-seq 5
+                                             :delimiter "," :skip-n-lines 1)))
 
     ;; csv-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
-           (type (new-csv-record-reader))))
+           (type (new-csv-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+           (new-csv-record-reader)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
-           (type (new-csv-record-reader :skip-lines 1))))
+           (type (new-csv-record-reader :skip-n-lines 1 :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader. 1)
+           (new-csv-record-reader :skip-n-lines 1)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
-           (type (new-csv-record-reader :skip-lines 1 :delimiter ","))))
+           (type (new-csv-record-reader :skip-n-lines 1 :delimiter "," :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader. 1 ",")
+           (new-csv-record-reader :skip-n-lines 1 :delimiter ",")))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
-           (type (new-csv-record-reader :skip-lines 1 :delimiter ","
-                                        :strip-quotes nil))))
+           (type (new-csv-record-reader :skip-n-lines 1 :delimiter ","
+                                        :strip-quotes nil :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader. 1 "," nil)
+           (new-csv-record-reader :skip-n-lines 1 :delimiter ","
+                                  :strip-quotes nil)))
 
     ;; csv-seq-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
-           (type (new-csv-seq-record-reader))))
+           (type (new-csv-seq-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+           (new-csv-seq-record-reader)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
-           (type (new-csv-seq-record-reader :skip-num-lines 1))))
+           (type (new-csv-seq-record-reader :skip-n-lines 1 :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader. 1)
+           (new-csv-seq-record-reader :skip-n-lines 1)))
+
     (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
-           (type (new-csv-seq-record-reader :skip-num-lines 1 :delimiter ","))))
+           (type (new-csv-seq-record-reader :skip-n-lines 1 :delimiter "," :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader. 1 ",")
+           (new-csv-seq-record-reader :skip-n-lines 1 :delimiter ",")))
 
     ;; file-rr
     (is (= org.datavec.api.records.reader.impl.FileRecordReader
-           (type (new-file-record-reader))))
+           (type (new-file-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.FileRecordReader.)
+           (new-file-record-reader)))
 
     ;; line-rr
     (is (= org.datavec.api.records.reader.impl.LineRecordReader
-           (type (new-line-record-reader))))
+           (type (new-line-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.LineRecordReader.)
+           (new-line-record-reader)))
 
     ;; list-string-rr
     (is (= org.datavec.api.records.reader.impl.collection.ListStringRecordReader
-           (type (new-list-string-record-reader))))))
+           (type (new-list-string-record-reader :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.collection.ListStringRecordReader.)
+           (new-list-string-record-reader)))))
 
 (deftest record-readers-interface
   (testing "the api fns for record readers"
-    (let [rr (new-file-record-reader)
+    (let [rr (new-file-record-reader :as-code? false)
           init-rr (initialize-rr! :rr rr :input-split
                                   (new-filesplit
-                                   :path "resources/poker-hand-testing.csv"))]
+                                   :path "resources/poker-hand-testing.csv"
+                                   :as-code? false))]
       ;; these tests do not cover the entire ns but the most imporant fns
       (is (= java.lang.Boolean (type (has-next-record? init-rr))))
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))

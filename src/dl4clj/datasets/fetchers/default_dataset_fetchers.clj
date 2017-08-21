@@ -35,7 +35,7 @@
       :or {as-code? false}
       :as opts}]
   (let [code (match [opts]
-                    [{:binarize? _ :train? _ :shuffle? _ :rng-seed _}]
+                    [{:binarize? _ :train? _ :shuffle? _ :seed _}]
                     `(MnistDataFetcher. ~binarize? ~train? ~shuffle? ~seed)
                     [{:binarize? _}]
                     `(MnistDataFetcher. ~binarize?)

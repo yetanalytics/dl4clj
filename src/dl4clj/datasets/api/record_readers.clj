@@ -68,6 +68,7 @@
   :conf (map) a configuration for initialization
 
   this is how data actually gets into the record reader"
+  ;; add in the ability to detect if rr is a java object or code
   [& {:keys [rr input-split conf]
       :as opts}]
   (if conf

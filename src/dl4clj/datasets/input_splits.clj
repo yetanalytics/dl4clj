@@ -20,7 +20,7 @@
 (defmethod input-split :file-split [opts]
   (let [config (:file-split opts)
         {root :path
-         rng :rng-seed
+         rng :seed
          fmt :allow-format
          recursive? :recursive?} config
         a-fmt `(array-of :data ~fmt
@@ -34,7 +34,7 @@
            `(FileSplit. ~a-file ~a-fmt ~recursive?)
            [{:path _ :allow-format _}]
            `(FileSplit. ~a-file ~a-fmt)
-           [{:path _ :rng-seed _}]
+           [{:path _ :seed _}]
            `(FileSplit. ~a-file ~seed)
            :else
            `(FileSplit. ~a-file))))
@@ -66,8 +66,9 @@
     `(NumberedFileInputSplit. ~base-str ~min-idx ~max-idx)))
 
 (defmethod input-split :string-split [opts]
-  (let [config (:string-split opts)]
-    `(StringSplit. (:data ~config))))
+  (let [config (:string-split opts)
+        data (:data config)]
+    `(StringSplit. ~data)))
 
 (defmethod input-split :transform-split [opts]
   (let [config (:transform-split opts)
@@ -87,7 +88,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/ParentPathLabelGenerator.html"
   [& {:keys [as-code?]
-      :or {as-code? false}}]
+      :or {as-code? true}}]
   (if as-code?
     `(ParentPathLabelGenerator.)
     (ParentPathLabelGenerator.)))
@@ -105,7 +106,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/PatternPathLabelGenerator.html"
   [& {:keys [pattern pattern-position as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code `(if ~pattern-position
                (PatternPathLabelGenerator. ~pattern ~pattern-position)
@@ -125,7 +126,7 @@
 
   :as-code? (boolean), return java object or code for creating it
 
-  :rng (int or long), a randomly generated number
+  :seed (int or long), a randomly generated number
 
   :extensions (collection of string(s)), files to keep
 
@@ -148,16 +149,16 @@
   larger than the number of examples available for the label with the minimum amount.
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/BalancedPathFilter.html"
-  [& {:keys [rng extensions label-generator max-paths max-labels
+  [& {:keys [seed extensions label-generator max-paths max-labels
              min-paths-per-label max-paths-per-label labels as-code?]
       :or {extensions nil
            max-paths 0
            max-labels 0
            min-paths-per-label 0
            max-paths-per-label 0
-           as-code? false}}]
+           as-code? true}}]
   (let [code `(BalancedPathFilter.
-               (java.util.Random. ~rng) (array-of :data ~extensions
+               (java.util.Random. ~seed) (array-of :data ~extensions
                               :java-type java.lang.String)
                ~label-generator ~max-paths ~max-labels
                ~min-paths-per-label ~max-paths-per-label
@@ -172,7 +173,7 @@
 
   :as-code? (boolean), return java object or code for creating it
 
-  :rng (java.util.Random), a random object used as a seed
+  :seed (int or long), a number used as the seed
 
   :extensions (collection of strings), file types to keep
 
@@ -180,11 +181,11 @@
     - 0 = unlimited
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/RandomPathFilter.html"
-  [& {:keys [rng extensions max-paths as-code?]
+  [& {:keys [seed extensions max-paths as-code?]
       :or {max-paths 0
-           as-code? false}}]
+           as-code? true}}]
   (let [code `(RandomPathFilter.
-               (java.util.Random. ~rng)
+               (java.util.Random. ~seed)
                (array-of :data ~extensions
                          :java-type java.lang.String)
                ~max-paths)]
@@ -203,15 +204,15 @@
 
   :path (str), the path to the file you want to import
 
-  :rng-seed (int or long), seed for consistent randomization
+  :seed (int or long), seed for consistent randomization
 
   :allow-format (collection of string(s)), the file formats allowed
 
   :recursive? (boolean), how the files should be read in
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/FileSplit.html"
-  [& {:keys [path rng-seed allow-format recursive? as-code?]
-      :or {as-code? false}
+  [& {:keys [path seed allow-format recursive? as-code?]
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:file-split opts})]
    (if as-code?
@@ -228,7 +229,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/CollectionInputSplit.html"
   [& {:keys [coll as-code?]
-      :or {as-code? false}}]
+      :or {as-code? true}}]
   (let [code (input-split {:collection-input-split {:collection coll}})]
     (if as-code?
       code
@@ -247,7 +248,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputStreamInputSplit.html"
   [& {:keys [in-stream file-path as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:input-stream-input-split opts})]
     (if as-code?
@@ -263,7 +264,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/ListStringSplit.html"
   [& {:keys [data as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:list-string-split opts})]
     (if as-code?
@@ -288,7 +289,7 @@
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/NumberedFileInputSplit.html"
   [& {:keys [base-string inclusive-min-idx inclusive-max-idx as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:numbered-file-input-split opts})]
     (if as-code?
@@ -304,7 +305,7 @@
 
    see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/StringSplit.html"
   [& {:keys [data as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:string-split opts})]
     (if as-code?
@@ -327,7 +328,7 @@
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/TransformSplit.html"
   [& {:keys [base-input-split to-be-replaced
              replaced-with as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (input-split {:transform-split opts})]
     (if as-code?
