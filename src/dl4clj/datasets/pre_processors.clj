@@ -7,7 +7,8 @@
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator
             CombinedPreProcessor CombinedPreProcessor$Builder])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of
+                                  builder-fn eval-and-build]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -156,7 +157,7 @@
   "This is special preProcessor, that allows to combine multiple prerpocessors,
   and apply them to data sequentially.
 
-   pre-processors (map), {(int) (pre-processor)
+   pre-processor (map), {(int) (pre-processor)
                          (int) (pre-processor-config-map)}
 
    - the keys are the desired indexes of the pre-processors (dataset index within the iterator)
@@ -164,16 +165,19 @@
    - pre-processors should be fit to a dataset or iterator before being combined (double check on this)
      - if this is the case, config maps dont make sense
 
+   :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CombinedPreProcessor.html"
-  [map-of-pre-processors]
-  ;; come back to this, after the consideration in the doc string is addressed
-  (loop [b (CombinedPreProcessor$Builder.)
-         result map-of-pre-processors]
-    (if (empty? result)
-      (.build b)
-      (let [data (first result)
-            [idx pp] data]
-        (recur (doto b (.addPreProcessor idx (if (map? pp)
-                                               (pre-processors pp)
-                                               pp)))
-               (rest result))))))
+  [& {:keys [pre-processor as-code?]
+      :or {as-code? true}}]
+  (let [code (builder-fn `(CombinedPreProcessor$Builder.)
+                         {:add '.addPreProcessor}
+                         {:add (into [] (for [each pre-processor
+                                              :let [[idx pp] each]]
+                                          (match [pp]
+                                                 [(_ :guard seq?)] [idx pp]
+                                                 :else
+                                                 [idx (pre-processors pp)])))})]
+    (if as-code?
+      `(.build ~code)
+      (eval-and-build code))))

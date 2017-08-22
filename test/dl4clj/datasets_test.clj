@@ -600,7 +600,21 @@
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize
            (type (new-standardize-normalization-ds-preprocessor :as-code? false))))
     (is (= '(org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize.)
-           (new-standardize-normalization-ds-preprocessor)))))
+           (new-standardize-normalization-ds-preprocessor)))
+
+    (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
+           (type (new-combined-pre-processor :pre-processor {0 (new-image-flattening-ds-preprocessor)
+                                                             1 {:image-scaling {:min-range 0 :max-range 10}}}
+                                             :as-code? false))))
+    (is (= '(.build
+             (doto
+                 (org.deeplearning4j.datasets.iterator.CombinedPreProcessor$Builder.)
+               (.addPreProcessor 0
+                (org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor.))
+               (.addPreProcessor 1
+                (org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler. 0 10))))
+           (new-combined-pre-processor :pre-processor {0 (new-image-flattening-ds-preprocessor)
+                                                       1 {:image-scaling {:min-range 0 :max-range 10}}})))))
 
 ;; will be updated
 (deftest ds-iterators-test
