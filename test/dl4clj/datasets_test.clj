@@ -20,6 +20,7 @@
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
 
+;; good
 (deftest dataset-fetchers-test
   (testing "dataset fetchers"
     ;; dl4clj.datasets.fetchers.default-dataset-fetchers
@@ -48,6 +49,7 @@
     (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher)))))
     (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher)))))))
 
+;; will be updated
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
     ;; dl4clj.datasets.iterator.impl.default-datasets
@@ -160,7 +162,7 @@
                     (new-multi-data-set-iterator-adapter
                      :iter
                      (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
-
+;; will be updated
 (deftest ds-iteration-interaction-fns-test
   (testing "the api fns for ds iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
@@ -202,6 +204,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
 
+;; good
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
     (is (= org.datavec.api.io.labels.ParentPathLabelGenerator
@@ -225,6 +228,7 @@
             (get-label-for-path :label-generator (new-parent-path-label-generator :as-code? false)
                                 :path "resources/paravec/labeled/finance"))))))
 
+;; good
 (deftest path-filter-tests
   (testing "the creation of path filters and their functionality"
     (is (= org.datavec.api.io.filters.BalancedPathFilter
@@ -280,6 +284,7 @@
                                                                :as-code? false)
                           :paths ["foo"]))))))
 
+;; good
 (deftest file-split-testing
   (testing "base level io stuffs"
     ;; file split
@@ -449,6 +454,7 @@
                                     :as-code? false)
                             :weights [50 50]))))))
 
+;; good
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
     ;; datavec.api.writeable
@@ -461,6 +467,7 @@
              (type (locations-path-iterator f-split))))
       (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
+;; good
 (deftest record-readers-test
   (testing "the creation of record readers"
     ;; datavec.api.records.readers
@@ -541,6 +548,7 @@
     (is (= '(org.datavec.api.records.reader.impl.collection.ListStringRecordReader.)
            (new-list-string-record-reader)))))
 
+;; good
 (deftest record-readers-interface
   (testing "the api fns for record readers"
     (let [rr (new-file-record-reader :as-code? false)
@@ -553,25 +561,48 @@
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
       (is (= java.util.ArrayList (type (next-record! (reset-rr! init-rr))))))))
 
+;; good
 (deftest pre-processors-test
   (testing "testing the creation of pre-processors"
     ;; nd4clj.linalg.dataset.api.pre-processors
     (is (= org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor
-           (type (new-image-flattening-ds-preprocessor))))
+           (type (new-image-flattening-ds-preprocessor :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor.)
+           (new-image-flattening-ds-preprocessor)))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler
-           (type (new-image-scaling-ds-preprocessor))))
+           (type (new-image-scaling-ds-preprocessor :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler.)
+           (new-image-scaling-ds-preprocessor)))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler
            (type (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler. 0 150)
+           (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150)))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor
-           (type (new-vgg16-image-preprocessor))))
+           (type (new-vgg16-image-preprocessor :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor.)
+           (new-vgg16-image-preprocessor)))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-           (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1))))
+           (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1
+                                                            :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler. 0 1)
+           (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1 )))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-           (type (new-min-max-normalization-ds-preprocessor :min-val 7 :max-val 15))))
+           (type (new-min-max-normalization-ds-preprocessor :min-val 7 :max-val 15
+                                                            :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler. 7 15)
+           (new-min-max-normalization-ds-preprocessor :min-val 7 :max-val 15)))
+
     (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize
-           (type (new-standardize-normalization-ds-preprocessor))))))
+           (type (new-standardize-normalization-ds-preprocessor :as-code? false))))
+    (is (= '(org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize.)
+           (new-standardize-normalization-ds-preprocessor)))))
 
-
+;; will be updated
 (deftest ds-iterators-test
   (testing "the creation of various dataset iterators"
     ;; dl4clj.datasets.iterator.iterators
@@ -619,7 +650,7 @@
              (type (new-INDArray-dataset-iterator :features [1 2]
                                                   :labels [2 2]
                                                   :batch-size 2)))))))
-
+;; will be updated
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
     ;; dl4clj.datasets.datavec
