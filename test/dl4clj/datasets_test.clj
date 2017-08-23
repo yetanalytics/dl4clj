@@ -49,130 +49,295 @@
     (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher)))))
     (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher)))))))
 
-;; will be updated
+;; good
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
-    ;; dl4clj.datasets.iterator.impl.default-datasets
-    ;; come back and add tests for the code these produce
     ;; cifar dataset
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
-           (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100))))
+           (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator. 2 100)
+           (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
-           (type (new-cifar-data-set-iterator :batch-size 2 :img-dims [1 1 1]))))
-    (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
-           (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100 :train? true))))
+           (type (new-cifar-data-set-iterator :batch-size 2 :img-dims [1 1 1]
+                                              :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator.
+             2 (clojure.core/int-array [1 1 1]))
+           (new-cifar-data-set-iterator :batch-size 2 :img-dims [1 1 1])))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
-                                              :train? true :img-dims [1 1 1]))))
+                                              :train? true :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator. 2 100 true)
+           (new-cifar-data-set-iterator :batch-size 2 :n-examples 100 :train? true)))
+
+    (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
+           (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
+                                              :train? true :img-dims [1 1 1]
+                                              :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) true)
+           (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
+                                        :train? true :img-dims [1 1 1])))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 3 :n-examples 100
                                               :train? true :img-dims [3 3 3]
-                                              :use-special-pre-process-cifar? true))))
+                                              :use-special-pre-process-cifar? true
+                                              :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator.
+             3 100 (clojure.core/int-array [3 3 3]) true true)
+           (new-cifar-data-set-iterator :batch-size 3 :n-examples 100
+                                        :train? true :img-dims [3 3 3]
+                                        :use-special-pre-process-cifar? true)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 3 :n-examples 100
                                               :train? true :img-dims [3 3 3]
                                               :use-special-pre-process-cifar? true
                                               :n-possible-labels 5
-                                              :img-transform (ColorConversionTransform.)))))
-
+                                              :as-code? false
+                                              :img-transform `(ColorConversionTransform.)))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator.
+             3 100 (clojure.core/int-array [3 3 3]) 5
+             (ColorConversionTransform.) true true)
+           (new-cifar-data-set-iterator :batch-size 3 :n-examples 100
+                                        :train? true :img-dims [3 3 3]
+                                        :use-special-pre-process-cifar? true
+                                        :n-possible-labels 5
+                                        :img-transform '(ColorConversionTransform.))))
     ;; iris dataset
     (is (= org.deeplearning4j.datasets.iterator.impl.IrisDataSetIterator
-           (type (new-iris-data-set-iterator :batch-size 2 :n-examples 100))))
+           (type (new-iris-data-set-iterator :batch-size 2 :n-examples 100
+                                             :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.IrisDataSetIterator. 2 100)
+           (new-iris-data-set-iterator :batch-size 2 :n-examples 100)))
 
     ;; lfwd
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
-           (type (new-lfw-data-set-iterator :img-dims [1 1 1]))))
+           (type (new-lfw-data-set-iterator :img-dims [1 1 1] :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             (clojure.core/int-array [1 1 1]))
+           (new-lfw-data-set-iterator :img-dims [1 1 1])))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
-           (type (new-lfw-data-set-iterator :batch-size 2 :n-examples 100))))
+           (type (new-lfw-data-set-iterator :batch-size 2 :n-examples 100
+                                            :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator. 2 100)
+           (new-lfw-data-set-iterator :batch-size 2 :n-examples 100)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
-                                            :use-subset? true))))
+                                            :use-subset? true :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 (clojure.core/int-array [1 1 1]) true)
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :use-subset? true)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
-                                            :n-examples 100))))
+                                            :n-examples 100 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]))
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :n-examples 100)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
-                                            :split-train-test 0.50))))
+                                            :split-train-test 0.50 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) true 0.5)
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :n-examples 100 :train? true
+                                      :split-train-test 0.50)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :n-labels 5 :batch-size 2
                                             :n-examples 100 :train? true
-                                            :split-train-test 0.50))))
+                                            :split-train-test 0.50 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 5 true 0.5)
+           (new-lfw-data-set-iterator :n-labels 5 :batch-size 2
+                                      :n-examples 100 :train? true
+                                      :split-train-test 0.50)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :seed 123))))
-    (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
-           (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
-                                            :n-examples 100 :train? true
-                                            :split-train-test 0.50 :n-labels 5
-                                            :use-subset? true :seed 123))))
+                                            :use-subset? true :seed 123 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) 5 true true
+             0.5 (new java.util.Random 123))
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :n-examples 100 :train? true
+                                      :split-train-test 0.50 :n-labels 5
+                                      :use-subset? true :seed 123)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
                                             :use-subset? true :seed 123
-                                            :label-generator (new-parent-path-label-generator)))))
+                                            :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) 5 true true
+             0.5 (new java.util.Random 123))
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :n-examples 100 :train? true
+                                      :split-train-test 0.50 :n-labels 5
+                                      :use-subset? true :seed 123)))
+
+    (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
+           (type (new-lfw-data-set-iterator
+                  :img-dims [1 1 1] :batch-size 2
+                  :n-examples 100 :train? true
+                  :split-train-test 0.50 :n-labels 5
+                  :use-subset? true :seed 123
+                  :label-generator (new-parent-path-label-generator)
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) 5 true
+             (org.datavec.api.io.labels.ParentPathLabelGenerator.)
+             true 0.5 (new java.util.Random 123))
+           (new-lfw-data-set-iterator
+            :img-dims [1 1 1] :batch-size 2
+            :n-examples 100 :train? true
+            :split-train-test 0.50 :n-labels 5
+            :use-subset? true :seed 123
+            :label-generator (new-parent-path-label-generator))))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator
            (type (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
                                             :n-examples 100 :train? true
                                             :split-train-test 0.50 :n-labels 5
                                             :use-subset? true :seed 123
+                                            :as-code? false
                                             :label-generator (new-parent-path-label-generator)
                                             :img-transform (ColorConversionTransform.)))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.LFWDataSetIterator.
+             2 100 (clojure.core/int-array [1 1 1]) 5 true
+             (org.datavec.api.io.labels.ParentPathLabelGenerator.)
+             true 0.5 (new java.util.Random 123))
+           (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
+                                      :n-examples 100 :train? true
+                                      :split-train-test 0.50 :n-labels 5
+                                      :use-subset? true :seed 123
+                                      :label-generator (new-parent-path-label-generator)
+                                      :img-transform (ColorConversionTransform.))))
 
     ;;mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
            (type (new-mnist-data-set-iterator :batch-size 5 :train? true
-                                              :seed 123))))
+                                              :seed 123 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+             5 true 123)
+           (new-mnist-data-set-iterator :batch-size 5 :train? true
+                                        :seed 123)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
-           (type (new-mnist-data-set-iterator :batch 5 :n-examples 100))))
-    (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
-           (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true))))
+           (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+             5 100)
+           (new-mnist-data-set-iterator :batch 5 :n-examples 100)))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
            (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true
-                                               :train? true :shuffle? true :seed 123))))
+                                              :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+             5 100 true)
+           (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true)))
+
+    (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
+           (type (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true
+                                              :train? true :shuffle? true :seed 123
+                                              :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+             5 100 true true true 123)
+           (new-mnist-data-set-iterator :batch 5 :n-examples 100 :binarize? true
+                                        :train? true :shuffle? true :seed 123)))
 
     ;; raw mnist
     (is (= org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator
-           (type (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100))))
+           (type (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100 :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator. 5 100)
+           (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)))
 
     ;; dl4clj.datasets.iterator.impl.list-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
            (type (new-list-dataset-iterator
-                  :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]))))
+                  :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator.
+             [(org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator. 5 100)])
+           (new-list-dataset-iterator
+            :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)])))
+
     (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
            (type (new-list-dataset-iterator
                   :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
-                  :batch 6))))
+                  :batch 6
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator.
+             [(org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator. 5 100)])
+           (new-list-dataset-iterator
+            :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
+            :batch 6)))
 
     ;; dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter
     (is (= org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter
            (type (new-multi-data-set-iterator-adapter
+                  :as-code? false
                   :iter
                   (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
+             (dl4clj.helpers/reset-iterator!
+              (:iter {:iter
+                      (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                       5 100)})))
+           (new-multi-data-set-iterator-adapter
+            :iter
+            (new-mnist-data-set-iterator :batch 5 :n-examples 100))))
 
     ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
            (type (new-singleton-multi-dataset-iterator
+                  :as-code? false
                   :multi-dataset
-                  (next-example!
-                   (reset-fetcher!
-                    (new-multi-data-set-iterator-adapter
-                     :iter
-                     (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))))
-;; will be updated
+                  ;; need to adapt api fns so this isnt necessary
+                  `(next-example!
+                   ~(new-multi-data-set-iterator-adapter
+                    :iter
+                    (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))))
+    (is (= '(org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator.
+             (dl4clj.datasets.api.iterators/next-example!
+              (org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
+               (dl4clj.helpers/reset-iterator!
+                (:iter {:iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                               5 100)})))))
+           (new-singleton-multi-dataset-iterator
+            :multi-dataset
+            `(next-example!
+              ~(new-multi-data-set-iterator-adapter
+                :iter
+                (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))
+
+;; good
 (deftest ds-iteration-interaction-fns-test
   (testing "the api fns for ds iterators"
-    (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
-          iter-w-labels (new-lfw-data-set-iterator :img-dims [1 1 1] :batch-size 2
-                                                   :n-examples 100 :train? true
-                                                   :split-train-test 0.50 :n-labels 5
-                                                   :use-subset? true :rng 123
-                                                   :label-generator (new-parent-path-label-generator :as-code? false)
-                                                   :img-transform (ColorConversionTransform.))
-          cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)]
+    (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100 :as-code? false)
+          iter-w-labels (new-lfw-data-set-iterator
+                         :img-dims [1 1 1] :batch-size 2
+                         :n-examples 100 :train? true
+                         :n-labels 5
+                         :use-subset? true :rng 123
+                         :label-generator (new-parent-path-label-generator
+                                           :as-code? false)
+                         :img-transform (ColorConversionTransform.)
+                         :as-code? false)
+          cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
+                                                  :as-code? false)]
       ;; nd4clj.linalg.api.ds-iter
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
@@ -181,9 +346,11 @@
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
              (type (set-pre-processor!
                     :iter iter
-                    :pre-processor (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1)))))
+                    :pre-processor (new-min-max-normalization-ds-preprocessor
+                                    :min-val 0 :max-val 1 :as-code? false)))))
       (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-             (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1))
+             (type (new-min-max-normalization-ds-preprocessor :min-val 0 :max-val 1
+                                                              :as-code? false))
              (type (get-pre-processor iter))))
       (is (= java.lang.Integer (type (get-input-columns iter))))
       (is (= org.nd4j.linalg.dataset.DataSet
@@ -576,7 +743,8 @@
            (new-image-scaling-ds-preprocessor)))
 
     (is (= org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler
-           (type (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150))))
+           (type (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150
+                                                    :as-code? false))))
     (is (= '(org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler. 0 150)
            (new-image-scaling-ds-preprocessor :min-range 0 :max-range 150)))
 
@@ -616,87 +784,247 @@
            (new-combined-pre-processor :pre-processor {0 (new-image-flattening-ds-preprocessor)
                                                        1 {:image-scaling {:min-range 0 :max-range 10}}})))))
 
-;; will be updated
+;; good
 (deftest ds-iterators-test
   (testing "the creation of various dataset iterators"
-    ;; dl4clj.datasets.iterator.iterators
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
-          pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
-                         :iter iter)
-          pp2 (fit-iter! :normalizer (new-standardize-normalization-ds-preprocessor)
-                         :iter iter)
+          pp1 `(fit-iter! :normalizer ~(new-image-scaling-ds-preprocessor)
+                          :iter ~iter)
+          pp2 `(fit-iter! :normalizer ~(new-standardize-normalization-ds-preprocessor)
+                          :iter ~iter)
           multi-iter (new-multi-data-set-iterator-adapter
                       :iter
                       (new-mnist-data-set-iterator :batch 5 :n-examples 100))]
       (is (= org.deeplearning4j.datasets.iterator.CombinedPreProcessor
-             (type (new-combined-pre-processor {0 pp1 1 pp2}))))
+             (type (new-combined-pre-processor :pre-processor {0 pp1 1 pp2}
+                                               :as-code? false))))
+      (is (= '(.build
+               (doto
+                   (org.deeplearning4j.datasets.iterator.CombinedPreProcessor$Builder.)
+                 (.addPreProcessor
+                  0
+                  (dl4clj.datasets.api.pre-processors/fit-iter!
+                   :normalizer (org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler.)
+                   :iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator. 5 100)))
+                 (.addPreProcessor
+                  1
+                  (dl4clj.datasets.api.pre-processors/fit-iter!
+                   :normalizer (org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize.)
+                   :iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator. 5 100)))))
+             (new-combined-pre-processor :pre-processor {0 pp1 1 pp2})))
+
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
-             (type (new-async-dataset-iterator :iter iter))))
+             (type (new-async-dataset-iterator :iter iter :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.AsyncDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100)))
+             (new-async-dataset-iterator :iter iter)))
+
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
              (type (new-async-dataset-iterator :iter iter
-                                                :que-size 10))))
+                                               :que-size 10
+                                               :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.AsyncDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100))
+               10)
+             (new-async-dataset-iterator :iter iter
+                                         :que-size 10)))
+
       (is (= org.deeplearning4j.datasets.iterator.ExistingDataSetIterator
-             (type (new-existing-dataset-iterator :iter iter))))
+             (type (new-existing-dataset-iterator :iter iter :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.ExistingDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100)))
+             (new-existing-dataset-iterator :iter iter)))
+
       (is (= org.deeplearning4j.datasets.iterator.SamplingDataSetIterator
              (type
-              (new-sampling-dataset-iterator :sampling-source (new-iris-ds)
+              (new-sampling-dataset-iterator :sampling-source (new-iris-ds :as-code? true)
                                              :batch-size 10
-                                             :total-n-samples 10))))
+                                             :total-n-samples 10
+                                             :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.SamplingDataSetIterator.
+               (org.deeplearning4j.datasets.DataSets/iris) 10 10)
+             (new-sampling-dataset-iterator :sampling-source (new-iris-ds :as-code? true)
+                                            :batch-size 10
+                                            :total-n-samples 10)))
+
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
-             (type (new-reconstruction-dataset-iterator :iter iter))))
+             (type (new-reconstruction-dataset-iterator :iter iter :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100)))
+             (new-reconstruction-dataset-iterator :iter iter)))
+
       (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
              (type (new-async-multi-dataset-iterator
                     :multi-dataset-iter multi-iter
+                    :as-code? false
                     :que-length 10))))
+      (is (= '(org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
+                 (dl4clj.helpers/reset-iterator!
+                  (:iter {:iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                                 5 100)}))))
+               10)
+             (new-async-multi-dataset-iterator
+              :multi-dataset-iter multi-iter
+              :que-length 10)))
+
       (is (= org.deeplearning4j.datasets.iterator.IteratorDataSetIterator
-             (type (new-iterator-dataset-iterator :iter iter :batch-size 10))))
+             (type (new-iterator-dataset-iterator :iter iter :batch-size 10
+                                                  :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.IteratorDataSetIterator.
+               (dl4clj.helpers/reset-iterator!
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100))
+               10)
+             (new-iterator-dataset-iterator :iter iter :batch-size 10)))
+
       (is (= org.deeplearning4j.datasets.iterator.MultipleEpochsIterator
-             (type (new-multiple-epochs-iterator :iter iter :n-epochs 1))))
+             (type (new-multiple-epochs-iterator :iter iter :n-epochs 1
+                                                 :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.MultipleEpochsIterator.
+               1 (dl4clj.helpers/reset-iterator!
+                  (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                   5 100)))
+             (new-multiple-epochs-iterator :iter iter :n-epochs 1)))
+
       (is (= org.deeplearning4j.datasets.iterator.DoublesDataSetIterator
              (type (new-doubles-dataset-iterator :features [0.2 0.4]
                                               :labels [0.4 0.8]
-                                              :batch-size 2))))
+                                              :batch-size 2
+                                              :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.DoublesDataSetIterator.
+               [(dl4clj.berkeley/new-pair
+                 :p1 (clojure.core/double-array [0.2 0.4])
+                 :p2 (clojure.core/double-array [0.4 0.8]))]
+               2)
+             (new-doubles-dataset-iterator :features [0.2 0.4]
+                                           :labels [0.4 0.8]
+                                           :batch-size 2)))
+
       (is (= org.deeplearning4j.datasets.iterator.FloatsDataSetIterator
              (type (new-floats-dataset-iterator :features [0.2 0.4]
                                                  :labels [0.4 0.8]
-                                                 :batch-size 2))))
+                                                 :batch-size 2
+                                                 :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.FloatsDataSetIterator.
+               [(dl4clj.berkeley/new-pair
+                 :p1 (clojure.core/float-array [0.2 0.4])
+                 :p2 (clojure.core/float-array [0.4 0.8]))]
+               2)
+             (new-floats-dataset-iterator :features [0.2 0.4]
+                                          :labels [0.4 0.8]
+                                          :batch-size 2)))
+
       (is (= org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator
              (type (new-INDArray-dataset-iterator :features [1 2]
                                                   :labels [2 2]
-                                                  :batch-size 2)))))))
+                                                  :batch-size 2
+                                                  :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator.
+               [(dl4clj.berkeley/new-pair
+                 :p1 (nd4clj.linalg.factory.nd4j/vec-or-matrix->indarray [1 2])
+                 :p2 (nd4clj.linalg.factory.nd4j/vec-or-matrix->indarray [2 2]))]
+               2)
+             (new-INDArray-dataset-iterator :features [1 2]
+                                            :labels [2 2]
+                                            :batch-size 2))))))
 ;; will be updated
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
     ;; dl4clj.datasets.datavec
     (let [fs (new-filesplit :path "resources/poker-hand-training.csv")
-          rr (initialize-rr! :rr (new-csv-record-reader)
-                             :input-split fs)
-          seq-rr (initialize-rr! :rr (new-csv-seq-record-reader)
-                                 :input-split fs)]
-      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
-             (type
-              (new-record-reader-dataset-iterator :record-reader rr
-                                                  :batch-size 10))))
+          rr `(initialize-rr! :rr ~(new-csv-record-reader)
+                             :input-split ~fs)
+          seq-rr `(initialize-rr! :rr ~(new-csv-seq-record-reader)
+                                 :input-split ~fs)]
       (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
              (type
               (new-record-reader-dataset-iterator :record-reader rr
                                                   :batch-size 10
-                                                  :label-idx 6
-                                                  :n-possible-labels 10))))
-      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
-             (type
-              (new-record-reader-dataset-iterator :record-reader rr
-                                                  :batch-size 10
-                                                  :label-idx-from 0
-                                                  :label-idx-to 7
-                                                  :regression? true))))
+                                                  :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               10)
+             (new-record-reader-dataset-iterator :record-reader rr
+                                                 :batch-size 10)))
+
       (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
              (type
               (new-record-reader-dataset-iterator :record-reader rr
                                                   :batch-size 10
                                                   :label-idx 6
                                                   :n-possible-labels 10
+                                                  :as-code? false))))
+      (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               10 6 10)
+             (new-record-reader-dataset-iterator :record-reader rr
+                                                 :batch-size 10
+                                                 :label-idx 6
+                                                 :n-possible-labels 10)))
+
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10
+                                                  :label-idx-from 0
+                                                  :label-idx-to 7
+                                                  :as-code? false
+                                                  :regression? true))))
+      (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               10 0 7 true)
+             (new-record-reader-dataset-iterator :record-reader rr
+                                                 :batch-size 10
+                                                 :label-idx-from 0
+                                                 :label-idx-to 7
+                                                 :regression? true)))
+
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
+             (type
+              (new-record-reader-dataset-iterator :record-reader rr
+                                                  :batch-size 10
+                                                  :label-idx 6
+                                                  :as-code? false
+                                                  :n-possible-labels 10
                                                   :max-num-batches 2))))
+      (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               10 6 10 2)
+             (new-record-reader-dataset-iterator :record-reader rr
+                                                 :batch-size 10
+                                                 :label-idx 6
+                                                 :n-possible-labels 10
+                                                 :max-num-batches 2)))
 
       (is (= org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator
            (type (new-seq-record-reader-dataset-iterator
@@ -704,14 +1032,46 @@
                   :mini-batch-size 5
                   :n-possible-labels 10
                   :label-idx 10
+                  :as-code? false
                   :regression? false))))
+      (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               5 10 10 false)
+             (new-seq-record-reader-dataset-iterator
+              :record-reader seq-rr
+              :mini-batch-size 5
+              :n-possible-labels 10
+              :label-idx 10
+              :regression? false)))
+
       (is (= org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator
              (type (new-seq-record-reader-dataset-iterator
                     :record-reader seq-rr
                     :mini-batch-size 5
                     :n-possible-labels 10
+                    :as-code? false
                     :label-idx 10))))
-      (is (= org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator
+      (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
+               (dl4clj.datasets.api.record-readers/reset-rr!
+                (dl4clj.datasets.api.record-readers/initialize-rr!
+                 :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                 :input-split (org.datavec.api.split.FileSplit.
+                               (clojure.java.io/as-file
+                                "resources/poker-hand-training.csv"))))
+               5 10 10)
+             (new-seq-record-reader-dataset-iterator
+              :record-reader seq-rr
+              :mini-batch-size 5
+              :n-possible-labels 10
+              :label-idx 10)))
+
+      ;; this fn + multimethod need to be refactored using builder-fn
+      #_(is (= org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator
              (type (new-record-reader-multi-dataset-iterator
                     :alignment-mode :equal-length
                     :batch-size 10

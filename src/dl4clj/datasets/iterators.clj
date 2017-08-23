@@ -26,7 +26,6 @@
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
             [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
             [clojure.core.match :refer [match]]
-            [dl4clj.helpers :refer [value-of-helper]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,7 +40,8 @@
 ;; record reader dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; replace with core.match
+;; is there still a need to reset record readers if they haven't even been created yet?
+
 (defmethod iterator :rr-dataset-iter [opts]
   (let [config (:rr-dataset-iter opts)
         {rr :record-reader
@@ -53,41 +53,41 @@
          regression? :regression?
          max-n-batches :max-num-batches
          converter :writeable-converter} config]
-    (let [r (reset-rr! rr)]
+    (let [r `(reset-rr! ~rr)]
       (match [config]
              [{:writeable-converter _ :batch-size _ :label-idx-from _
                :label-idx-to _ :n-possible-labels _ :max-num-batches _
                :regression? _ :record-reader _}]
-             (RecordReaderDataSetIterator. r converter batch-size l-idx-from
-                                           l-idx-to n-labels max-n-batches
-                                           regression?)
+             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~l-idx-from
+                                           ~l-idx-to ~n-labels ~max-n-batches
+                                           ~regression?)
              [{:writeable-converter _ :batch-size _ :label-idx _
                :n-possible-labels _ :max-num-batches _ :regression? _
                :record-reader _}]
-             (RecordReaderDataSetIterator. r converter batch-size label-idx
-                                           n-labels max-n-batches regression?)
+             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx
+                                           ~n-labels ~max-n-batches ~regression?)
              [{:record-reader _ :batch-size _ :label-idx _
                :n-possible-labels _ :max-num-batches _}]
-             (RecordReaderDataSetIterator.
-              r batch-size label-idx n-labels max-n-batches)
+             `(RecordReaderDataSetIterator.
+              ~r ~batch-size ~label-idx ~n-labels ~max-n-batches)
              [{:record-reader _ :batch-size _ :label-idx-from _
                :label-idx-to _ :regression? _}]
-             (RecordReaderDataSetIterator.
-              r batch-size l-idx-from l-idx-to regression?)
+             `(RecordReaderDataSetIterator.
+              ~r ~batch-size ~l-idx-from ~l-idx-to ~regression?)
              [{:writeable-converter _ :batch-size _ :label-idx _
                :n-possible-labels _  :regression? _ :record-reader _}]
-             (RecordReaderDataSetIterator. r converter batch-size label-idx
-                                           n-labels regression?)
+             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx
+                                           ~n-labels ~regression?)
              [{:writeable-converter _ :batch-size _ :label-idx _
                :n-possible-labels _  :record-reader _}]
-             (RecordReaderDataSetIterator. r converter batch-size label-idx n-labels)
+             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx ~n-labels)
              [{:record-reader _ :batch-size _ :label-idx _ :n-possible-labels _}]
-             (RecordReaderDataSetIterator.
-              r batch-size label-idx n-labels)
+             `(RecordReaderDataSetIterator.
+              ~r ~batch-size ~label-idx ~n-labels)
              [{:writeable-converter _ :batch-size _ :record-reader _}]
-             (RecordReaderDataSetIterator. r converter batch-size)
+             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size)
              [{:batch-size _ :record-reader _}]
-             (RecordReaderDataSetIterator. r batch-size)))))
+             `(RecordReaderDataSetIterator. ~r ~batch-size)))))
 
 (defmethod iterator :seq-rr-dataset-iter [opts]
   (let [config (:seq-rr-dataset-iter opts)
@@ -99,29 +99,29 @@
          labels-reader :labels-reader
          features-reader :features-reader
          alignment :alignment-mode} config]
-    (let [r (if rr (reset-rr! rr))
-          features-r (if features-reader (reset-rr! features-reader))
-          labels-r (if labels-reader (reset-rr! labels-reader))]
+    (let [r (if rr `(reset-rr! ~rr))
+          features-r (if features-reader `(reset-rr! ~features-reader))
+          labels-r (if labels-reader `(reset-rr! ~labels-reader))]
       (match [config]
              [{:labels-reader _ :features-reader _ :mini-batch-size _
                :n-possible-labels _ :regression? _ :alignment-mode _}]
-             (SequenceRecordReaderDataSetIterator.
-              features-r labels-r m-batch-size n-labels regression?
-              (value-of {:seq-alignment-mode alignment}))
+             `(SequenceRecordReaderDataSetIterator.
+              ~features-r ~labels-r ~m-batch-size ~n-labels ~regression?
+              ~(value-of-helper :seq-alignment-mode alignment))
              [{:labels-reader _ :features-reader _ :mini-batch-size _
                :n-possible-labels _ :regression? _}]
-             (SequenceRecordReaderDataSetIterator.
-              features-r labels-r m-batch-size n-labels regression?)
+             `(SequenceRecordReaderDataSetIterator.
+              ~features-r ~labels-r ~m-batch-size ~n-labels ~regression?)
              [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
-             (SequenceRecordReaderDataSetIterator.
-              features-r labels-r m-batch-size n-labels)
+             `(SequenceRecordReaderDataSetIterator.
+              ~features-r ~labels-r ~m-batch-size ~n-labels)
              [{:record-reader _ :mini-batch-size _ :n-possible-labels _
                :label-idx _ :regression? _}]
-             (SequenceRecordReaderDataSetIterator.
-              r m-batch-size n-labels label-idx regression?)
+             `(SequenceRecordReaderDataSetIterator.
+              ~r ~m-batch-size ~n-labels ~label-idx ~regression?)
              [{:record-reader _ :mini-batch-size _ :n-possible-labels _ :label-idx _}]
-             (SequenceRecordReaderDataSetIterator.
-              r m-batch-size n-labels label-idx)))))
+             `(SequenceRecordReaderDataSetIterator.
+              ~r ~m-batch-size ~n-labels ~label-idx)))))
 
 (defmethod iterator :multi-dataset-iter [opts]
   (assert (integer? (:batch-size (:multi-dataset-iter opts)))
@@ -152,10 +152,10 @@
         {seq-reader-name :reader-name
          seq-rr :record-reader} add-seq-reader]
     (.build
+     ;; refactor with builder-fn
      (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)
-           r (reset-rr! rr) ;; record readers are already objects, cant use builder-fn
+           r (reset-rr! rr)
            seq-r (reset-rr! seq-rr)]
-       ;; core match would require 7! conditions
        (cond-> b
          (and (contains? config :add-reader)
               (contains-many? add-reader :reader-name :record-reader))
@@ -188,45 +188,45 @@
         {features :features
          labels :labels
          batch-size :batch-size} config]
-    (DoublesDataSetIterator. [(new-pair :p1 (double-array features)
-                                        :p2 (double-array labels))]
-                             batch-size)))
+    `(DoublesDataSetIterator. [(new-pair :p1 (double-array ~features)
+                                        :p2 (double-array ~labels))]
+                             ~batch-size)))
 
 (defmethod iterator :floats-dataset-iter [opts]
   (let [config (:floats-dataset-iter opts)
         {features :features
          labels :labels
          batch-size :batch-size} config]
-    (FloatsDataSetIterator. [(new-pair :p1 (float-array features)
-                                       :p2 (float-array labels))]
-                            batch-size)))
+    `(FloatsDataSetIterator. [(new-pair :p1 (float-array ~features)
+                                       :p2 (float-array ~labels))]
+                            ~batch-size)))
 
 (defmethod iterator :INDArray-dataset-iter [opts]
   (let [config (:INDArray-dataset-iter opts)
         {features :features
          labels :labels
          batch-size :batch-size} config]
-    (INDArrayDataSetIterator. [(new-pair :p1 (vec-or-matrix->indarray features)
-                                         :p2 (vec-or-matrix->indarray labels))]
-                              batch-size)))
+    `(INDArrayDataSetIterator. [(new-pair :p1 (vec-or-matrix->indarray ~features)
+                                         :p2 (vec-or-matrix->indarray ~labels))]
+                              ~batch-size)))
 
 (defmethod iterator :iterator-multi-dataset-iter [opts]
   (let [config (:iterator-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          batch-size :batch-size} config]
-    (IteratorMultiDataSetIterator. (reset-iterator! iter) batch-size)))
+    `(IteratorMultiDataSetIterator. (reset-iterator! ~iter) ~batch-size)))
 
 (defmethod iterator :iterator-dataset-iter [opts]
   (let [config (:iterator-dataset-iter opts)
         {iter :iter
          batch-size :batch-size} config]
-    (IteratorDataSetIterator. (reset-iterator! iter) batch-size)))
+    `(IteratorDataSetIterator. (reset-iterator! ~iter) ~batch-size)))
 
 (defmethod iterator :async-multi-dataset-iter [opts]
   (let [config (:async-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          que-l :que-length} config]
-    (AsyncMultiDataSetIterator. (reset-iterator! iter) que-l)))
+    `(AsyncMultiDataSetIterator. (reset-iterator! ~iter) ~que-l)))
 
 (defmethod iterator :moving-window-base-dataset-iter [opts]
   (let [config (:moving-window-base-dataset-iter opts)
@@ -235,7 +235,7 @@
          data :dataset
          window-rows :window-rows
          window-columns :window-columns} config]
-    (MovingWindowBaseDataSetIterator. batch n-examples data window-rows window-columns)))
+    `(MovingWindowBaseDataSetIterator. ~batch ~n-examples ~data ~window-rows ~window-columns)))
 
 (defmethod iterator :multiple-epochs-iter [opts]
   (let [config (:multiple-epochs-iter opts)
@@ -246,27 +246,27 @@
          ds :dataset} config]
     (match [config]
            [{:n-epochs _ :iter _ :que-size _}]
-           (MultipleEpochsIterator. n-epochs (reset-iterator! iter) q-size)
+           `(MultipleEpochsIterator. ~n-epochs (reset-iterator! ~iter) ~q-size)
            [{:n-epochs _ :iter _}]
-           (MultipleEpochsIterator. n-epochs (reset-iterator! iter))
+           `(MultipleEpochsIterator. ~n-epochs (reset-iterator! ~iter))
            [{:n-epochs _ :dataset _}]
-           (MultipleEpochsIterator. n-epochs ds)
+           `(MultipleEpochsIterator. ~n-epochs ~ds)
            [{:iter _ :que-size _ :total-iterations _}]
-           (MultipleEpochsIterator. (reset-iterator! iter) q-size t-iterations)
+           `(MultipleEpochsIterator. (reset-iterator! ~iter) ~q-size ~t-iterations)
            [{:iter _ :total-iterations _}]
-           (MultipleEpochsIterator. (reset-iterator! iter) t-iterations))))
+           `(MultipleEpochsIterator. (reset-iterator! ~iter) ~t-iterations))))
 
 (defmethod iterator :reconstruction-dataset-iter [opts]
   (let [config (:reconstruction-dataset-iter opts)
         iter (:iter config)]
-    (ReconstructionDataSetIterator. (reset-iterator! iter))))
+    `(ReconstructionDataSetIterator. (reset-iterator! ~iter))))
 
 (defmethod iterator :sampling-dataset-iter [opts]
   (let [config (:sampling-dataset-iter opts)
         {ds :sampling-source
          batch-size :batch-size
          n-samples :total-n-samples} config]
-    (SamplingDataSetIterator. ds batch-size n-samples)))
+    `(SamplingDataSetIterator. ~ds ~batch-size ~n-samples)))
 
 (defmethod iterator :existing-dataset-iter [opts]
   (let [config (:existing-dataset-iter opts)
@@ -278,46 +278,47 @@
          ds-iter :iter} config]
     (match [config]
            [{:iter _ :labels _}]
-           (ExistingDataSetIterator. (reset-iterator! ds-iter) labels)
+           `(ExistingDataSetIterator. (reset-iterator! ~ds-iter) ~labels)
            [{:iter _}]
-           (ExistingDataSetIterator. (reset-iterator! ds-iter))
+           `(ExistingDataSetIterator. (reset-iterator! ~ds-iter))
            [{:dataset _ :total-examples _ :n-features _ :n-labels _}]
-           (ExistingDataSetIterator. iterable n-examples n-features n-labels)
+           `(ExistingDataSetIterator. ~iterable ~n-examples ~n-features ~n-labels)
            [{:dataset _ :labels _}]
-           (ExistingDataSetIterator. iterable labels)
+           `(ExistingDataSetIterator. ~iterable ~labels)
            [{:dataset _}]
-           (ExistingDataSetIterator. iterable))))
+           `(ExistingDataSetIterator. ~iterable))))
 
 (defmethod iterator :async-dataset-iter [opts]
   (let [config (:async-dataset-iter opts)
         {ds-iter :iter
          que-size :que-size
          que :que} config]
-    ;; core.match
-    (let [i (reset-iterator! ds-iter)]
+    (let [i `(reset-iterator! ~ds-iter)]
       (match [config]
              [{:iter _ :que _ :que-size _}]
-             (AsyncDataSetIterator. i que-size que)
+             `(AsyncDataSetIterator. ~i ~que-size ~que)
              [{:iter _ :que-size _}]
-             (AsyncDataSetIterator. i que-size)
+             `(AsyncDataSetIterator. ~i ~que-size)
              [{:iter _}]
-             (AsyncDataSetIterator. i)))))
+             `(AsyncDataSetIterator. ~i)))))
 
 (defmethod iterator :ds-iter-to-multi-ds-iter [opts]
-  (let [iter (reset-iterator! (:iter (:ds-iter-to-multi-ds-iter opts)))]
-    (MultiDataSetIteratorAdapter. iter)))
+  (let [conf (:ds-iter-to-multi-ds-iter opts)
+        iter `(reset-iterator! (:iter ~conf))]
+    `(MultiDataSetIteratorAdapter. ~iter)))
 
 (defmethod iterator :list-ds-iter [opts]
   (let [conf (:list-ds-iter opts)
         {ds :dataset
          batch-size :batch-size} conf]
     (if (contains? conf :batch-size)
-      (ListDataSetIterator. ds batch-size)
-      (ListDataSetIterator. ds))))
+      `(ListDataSetIterator. ~ds ~batch-size)
+      `(ListDataSetIterator. ~ds))))
 
 (defmethod iterator :multi-ds-to-multi-ds-iter [opts]
-  (let [mds (:multi-dataset (:multi-ds-to-multi-ds-iter opts))]
-    (SingletonMultiDataSetIterator. mds)))
+  (let [conf (:multi-ds-to-multi-ds-iter opts)
+        mds (:multi-dataset conf)]
+    `(SingletonMultiDataSetIterator. ~mds)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; default dataset iterator mulimethods
@@ -327,7 +328,7 @@
   (let [config (:curves-dataset-iter opts)
         {batch :batch-size
          n-examples :n-examples} config]
-    (CurvesDataSetIterator. batch n-examples)))
+    `(CurvesDataSetIterator. ~batch ~n-examples)))
 
 (defmethod iterator :cifar-dataset-iter [opts]
   (let [config (:cifar-dataset-iter opts)
@@ -338,31 +339,32 @@
          use-special-pre-process-cifar? :use-special-pre-process-cifar?
          n-possible-labels :n-possible-labels
          img-transform :img-transform} config
-        img (int-array img-dims)]
+        img `(int-array ~img-dims)]
     (match [config]
            [{:batch-size _ :n-examples _ :img-dims _ :n-possible-labels _
              :img-transform _ :use-special-pre-process-cifar? _ :train? _}]
-           (CifarDataSetIterator. batch-size n-examples img n-possible-labels
-                                  img-transform use-special-pre-process-cifar? train?)
+           `(CifarDataSetIterator. ~batch-size ~n-examples ~img ~n-possible-labels
+                                  ~img-transform ~use-special-pre-process-cifar? ~train?)
            [{:batch-size _ :n-examples _ :img-dims _
              :use-special-pre-process-cifar? _ :train? _}]
-           (CifarDataSetIterator. batch-size n-examples img use-special-pre-process-cifar? train?)
+           `(CifarDataSetIterator. ~batch-size ~n-examples ~img
+                                   ~use-special-pre-process-cifar? ~train?)
            [{:batch-size _ :n-examples _ :img-dims _ :train? _}]
-           (CifarDataSetIterator. batch-size n-examples img train?)
+           `(CifarDataSetIterator. ~batch-size ~n-examples ~img ~train?)
            [{:batch-size _ :n-examples _ :img-dims _}]
-           (CifarDataSetIterator. batch-size n-examples img)
+           `(CifarDataSetIterator. ~batch-size ~n-examples ~img)
            [{:batch-size _ :n-examples _ :train? _}]
-           (CifarDataSetIterator. batch-size n-examples train?)
+           `(CifarDataSetIterator. ~batch-size ~n-examples ~train?)
            [{:batch-size _ :img-dims _}]
-           (CifarDataSetIterator. batch-size img)
+           `(CifarDataSetIterator. ~batch-size ~img)
            [{:batch-size _ :n-examples _}]
-           (CifarDataSetIterator. batch-size n-examples))))
+           `(CifarDataSetIterator. ~batch-size ~n-examples))))
 
 (defmethod iterator :iris-dataset-iter [opts]
   (let [config (:iris-dataset-iter opts)
         {batch-size :batch-size
          n-examples :n-examples} config]
-    (IrisDataSetIterator. batch-size n-examples)))
+    `(IrisDataSetIterator. ~batch-size ~n-examples)))
 
 (defmethod iterator :lfw-dataset-iter [opts]
   (let [config (:lfw-dataset-iter opts)
@@ -376,38 +378,38 @@
          seed :seed
          label-generator :label-generator
          image-transform :image-transform} config
-        img (int-array img-dims)
+        img `(int-array ~img-dims)
         rng (if (contains? config :seed)
-              (new Random seed)
-              (new Random 123))]
+              `(new Random ~seed)
+              `(new Random 123))]
     (match [config]
            [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
              :use-subset? _ :label-generator _ :train? _ :split-train-test _
-             :rng _ :image-transform _}]
-           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                                label-generator train? split-train-test image-transform
-                                rng)
+             :seed _ :image-transform _}]
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
+                                ~label-generator ~train? ~split-train-test ~image-transform
+                                ~rng)
            [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
              :use-subset? _ :label-generator _ :train? _ :split-train-test _
-             :rng _}]
-           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                                label-generator train? split-train-test rng)
+             :seed _}]
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
+                                ~label-generator ~train? ~split-train-test ~rng)
            [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
-             :use-subset? _ :train? _ :split-train-test _ :rng _}]
-           (LFWDataSetIterator. batch-size n-examples img n-labels use-subset?
-                                train? split-train-test rng)
+             :use-subset? _ :train? _ :split-train-test _ :seed _}]
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
+                                ~train? ~split-train-test ~rng)
            [{:batch-size _ :n-examples _  :n-labels _ :train? _ :split-train-test _}]
-           (LFWDataSetIterator. batch-size n-examples n-labels train? split-train-test)
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~n-labels ~train? ~split-train-test)
            [{:batch-size _ :n-examples _ :img-dims _  :train? _ :split-train-test _}]
-           (LFWDataSetIterator. batch-size n-examples img train? split-train-test)
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~train? ~split-train-test)
            [{:batch-size _ :n-examples _ :img-dims _ }]
-           (LFWDataSetIterator. batch-size n-examples img)
+           `(LFWDataSetIterator. ~batch-size ~n-examples ~img)
            [{:batch-size _ :use-subset? _ :img-dims _ }]
-           (LFWDataSetIterator. batch-size img use-subset?)
+           `(LFWDataSetIterator. ~batch-size ~img ~use-subset?)
            [{:batch-size _ :n-examples _}]
-           (LFWDataSetIterator. batch-size n-examples)
+           `(LFWDataSetIterator. ~batch-size ~n-examples)
            [{:img-dims _ }]
-           (LFWDataSetIterator. img))))
+           `(LFWDataSetIterator. ~img))))
 
 (defmethod iterator :mnist-dataset-iter [opts]
   (let [config (:mnist-dataset-iter opts)
@@ -421,23 +423,26 @@
     (match [config]
            [{:batch _ :n-examples _ :binarize? _
              :train? _ :shuffle? _ :seed _}]
-           (MnistDataSetIterator. batch n-examples binarize? train? shuffle? (long seed))
+           `(MnistDataSetIterator. ~batch ~n-examples ~binarize? ~train?
+                                   ~shuffle? ~(long seed))
            [{:batch-size _ :train? _ :seed _}]
-           (MnistDataSetIterator. batch-size train? (int seed))
+           `(MnistDataSetIterator. ~batch-size ~train? ~(int seed))
            [{:batch _ :n-examples _ :binarize? _}]
-           (MnistDataSetIterator. batch n-examples binarize?)
+           `(MnistDataSetIterator. ~batch ~n-examples ~binarize?)
            [{:batch _ :n-examples _}]
-           (MnistDataSetIterator. batch n-examples))))
+           `(MnistDataSetIterator. ~batch ~n-examples))))
 
 (defmethod iterator :raw-mnist-dataset-iter [opts]
   (let [config (:raw-mnist-dataset-iter opts)
         {batch :batch
          n-examples :n-examples} config]
-    (RawMnistDataSetIterator. batch n-examples)))
+    `(RawMnistDataSetIterator. ~batch ~n-examples)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; spark dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; going to update once I get to updating spark stuff
 
 (defmethod iterator :path-to-ds [opts]
   (let [config (:path-to-ds opts)
@@ -481,6 +486,8 @@
 
   :record-reader (record-reader) a record reader, see datavec.api.records.readers
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int) the batch size
 
   :label-idx (int) the index of the labels in a dataset
@@ -506,15 +513,21 @@
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderDataSetIterator.html"
   [& {:keys [record-reader batch-size label-idx n-possible-labels
              label-idx-from label-idx-to regression? max-num-batches
-             writeable-converter]
+             writeable-converter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:rr-dataset-iter opts}))
+  (let [code (iterator {:rr-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-seq-record-reader-dataset-iterator
   "creates a new sequence record reader dataset iterator by calling its constructor
   with the supplied args.  args are:
 
   :record-reader (sequence-record-reader) a record reader, see datavec.api.records.readers
+
+  :as-code? (boolean), return java object or code for creating it
 
   :mini-batch-size (int) the mini batch size
 
@@ -533,11 +546,16 @@
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.html"
   [& {:keys [record-reader mini-batch-size n-possible-labels label-idx regression?
-             labels-reader features-reader alignment-mode]
+             labels-reader features-reader alignment-mode as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:seq-rr-dataset-iter opts}))
+  (let [code (iterator {:seq-rr-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-record-reader-multi-dataset-iterator
+  ;; update after refactor of multi method
   "creates a new record reader multi dataset iterator by calling its builder with
   the supplied args.  args are:
 
@@ -581,6 +599,8 @@
   Obviously this may use additional memory.
   Note however that due to asynchronous loading of data, (next! iter n) is not supported.
 
+  :as-code? (boolean), return java object or code for creating it
+
   :iter (ds-iterator), a dataset iterator
    - see: dl4clj.datasets.iterators (this ns)
 
@@ -589,14 +609,20 @@
   :que (blocking-que), the que containing the dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncDataSetIterator.html"
-  [& {:keys [iter que-size que]
+  [& {:keys [iter que-size que as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:async-dataset-iter opts}))
+  (let [code (iterator {:async-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-existing-dataset-iterator
   "This wrapper provides DataSetIterator interface to existing datasets or dataset iterators
 
   :dataset (iterable), an iterable object, some dataset
+
+  :as-code? (boolean), return java object or code for creating it
 
   :total-examples (int), the total number of examples
 
@@ -610,9 +636,13 @@
    - see: dl4clj.datasets.iterators (this ns)
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ExistingDataSetIterator.html"
-  [& {:keys [dataset total-examples n-features n-labels labels iter]
+  [& {:keys [dataset total-examples n-features n-labels labels iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:existing-dataset-iter opts}))
+  (let [code (iterator {:existing-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-sampling-dataset-iterator
   "A wrapper for a dataset to sample from.
@@ -620,14 +650,20 @@
 
   :sampling-source (dataset), the dataset to sample from
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   :total-n-samples (int), the total number of desired samples from the dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/SamplingDataSetIterator.html"
-  [& {:keys [sampling-source batch-size total-n-samples]
+  [& {:keys [sampling-source batch-size total-n-samples as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:sampling-dataset-iter opts}))
+  (let [code (iterator {:sampling-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-reconstruction-dataset-iterator
   "Wraps a dataset iterator, setting the first (feature matrix) as the labels.
@@ -635,16 +671,24 @@
   ds-iter (iterator), the iterator to wrap
    - see: dl4clj.datasets.iterators (this ns)
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/ReconstructionDataSetIterator.html"
-  [& {:keys [iter]
+  [& {:keys [iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:reconstruction-dataset-iter opts}))
+  (let [code (iterator {:reconstruction-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-multiple-epochs-iterator
   "A dataset iterator for doing multiple passes over a dataset
 
   :iter (dataset iterator), an iterator for a dataset
    - see: dl4clj.datasets.iterators (this ns)
+
+  :as-code? (boolean), return java object or code for creating it
 
   :que-size (int), the size for the multiple iterations (improve this desc)
 
@@ -655,9 +699,13 @@
   :dataset (dataset), a dataset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MultipleEpochsIterator.html"
-  [& {:keys [iter que-size total-iterations n-epochs dataset]
+  [& {:keys [iter que-size total-iterations n-epochs dataset as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:multiple-epochs-iter opts}))
+  (let [code (iterator {:multiple-epochs-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-moving-window-base-dataset-iterator
   ;; currently can't test this until I figure out the issue im running into with
@@ -666,6 +714,8 @@
   "DataSetIterator for moving window (rotating matrices)
 
   :batch-size (int), the batch size
+
+  :as-code? (boolean), return java object or code for creating it
 
   :n-examples (int), the total number of examples
 
@@ -676,9 +726,13 @@
   :window-columns (int), the number of columns to rotate
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/MovingWindowBaseDataSetIterator.html"
-  [& {:keys [batch-size n-examples dataset window-rows window-columns]
+  [& {:keys [batch-size n-examples dataset window-rows window-columns as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:moving-window-base-dataset-iter opts}))
+  (let [code (iterator {:moving-window-base-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-async-multi-dataset-iterator
   "Async prefetching iterator wrapper for MultiDataSetIterator implementations
@@ -687,12 +741,18 @@
 
   :multi-dataset-iter (multidataset iterator), iterator to wrap
 
+  :as-code? (boolean), return java object or code for creating it
+
   :que-length (int), length of the que for async processing
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/AsyncMultiDataSetIterator.html"
-  [& {:keys [multi-dataset-iter que-length]
+  [& {:keys [multi-dataset-iter que-length as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:async-multi-dataset-iter opts}))
+  (let [code (iterator {:async-multi-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-iterator-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -704,12 +764,18 @@
   :iter (iter), an iterator containing datasets
    - see: dl4clj.datasets.iterators (this ns)
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorDataSetIterator.html"
-  [& {:keys [iter batch-size]
+  [& {:keys [iter batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:iterator-dataset-iter opts}))
+  (let [code (iterator {:iterator-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -720,12 +786,18 @@
 
   :multi-dataset-iter (iter) an iterator containing multiple datasets
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/IteratorMultiDataSetIterator.html"
-  [& {:keys [multi-dataset-iter batch-size]
+  [& {:keys [multi-dataset-iter batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:iterator-multi-dataset-iter opts}))
+  (let [code (iterator {:iterator-multi-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-doubles-dataset-iterator
   "creates a dataset iterator which iterates over the supplied features and labels
@@ -736,12 +808,18 @@
   :labels (coll of doubles), a collection of doubles which acts as targets
    - [0.4 0.8 ...]
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/DoublesDataSetIterator.html"
-  [& {:keys [features labels batch-size]
+  [& {:keys [features labels batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:doubles-dataset-iter opts}))
+  (let [code (iterator {:doubles-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-floats-dataset-iterator
   "creates a dataset iterator which iterates over the supplied iterable
@@ -750,12 +828,18 @@
 
   :labels (coll of floats), a collection of floats which acts as the targets
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/FloatsDataSetIterator.html"
-  [& {:keys [features labels batch-size]
+  [& {:keys [features labels batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:floats-dataset-iter opts}))
+  (let [code (iterator {:floats-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
@@ -766,12 +850,18 @@
   :labels (vec or INDArray), an INDArray which as the targets
    - see: nd4clj.linalg.factory.nd4j
 
+  :as-code? (boolean), return java object or code for creating it
+
   :batch-size (int), the batch size
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/INDArrayDataSetIterator.html"
-  [& {:keys [features labels batch-size]
+  [& {:keys [features labels batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:INDArray-dataset-iter opts}))
+  (let [code (iterator {:INDArray-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-multi-data-set-iterator-adapter
   "Iterator that adapts a DataSetIterator to a MultiDataSetIterator
@@ -779,10 +869,16 @@
   :iter (datset-iterator), an iterator for a dataset
    - see: dl4clj.datasets.iterators (this ns)
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MultiDataSetIteratorAdapter.html"
-  [& {:keys [iter]
+  [& {:keys [iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:ds-iter-to-multi-ds-iter opts}))
+  (let [code (iterator {:ds-iter-to-multi-ds-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-list-dataset-iterator
   "creates a new list data set iterator given a collection of datasets.
@@ -792,18 +888,30 @@
 
   :batch-size (int), the batch size, if not supplied, defaults to 5
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/ListDataSetIterator.html"
-  [& {:keys [dataset batch-size]
+  [& {:keys [dataset batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:list-ds-iter opts}))
+  (let [code (iterator {:list-ds-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-singleton-multi-dataset-iterator
   "A very simple adapter class for converting a single MultiDataSet to a MultiDataSetIterator.
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/SingletonMultiDataSetIterator.html"
-  [& {:keys [multi-dataset]
+  [& {:keys [multi-dataset as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:multi-ds-to-multi-ds-iter opts}))
+  (let [code (iterator {:multi-ds-to-multi-ds-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; default dataset iterators user facing fns
@@ -814,17 +922,25 @@
 
   :batch-size (int), the size of the batch
 
+  :as-code? (boolean), return java object or code for creating it
+
   :n-examples (int), the total number of examples
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CurvesDataSetIterator.html"
-  [& {:keys [batch-size n-examples]
+  [& {:keys [batch-size n-examples as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:curves-dataset-iter opts}))
+  (let [code (iterator {:curves-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-cifar-data-set-iterator
   "Load the images from the cifar dataset,
 
   :batch-size (int), the batch size
+
+  :as-code? (boolean), return java object or code for creating it
 
   :n-examples (int), the number of examples from the ds to include in the iterator
 
@@ -844,26 +960,38 @@
   and: https://github.com/szagoruyko/cifar.torch"
   [& {:keys [batch-size n-examples img-dims train?
              use-special-pre-process-cifar?
-             n-possible-labels img-transform]
+             n-possible-labels img-transform as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:cifar-dataset-iter opts}))
+  (let [code (iterator {:cifar-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-iris-data-set-iterator
   "IrisDataSetIterator handles traversing through the Iris Data Set.
 
   :batch-size (int), size of the batch
 
+  :as-code? (boolean), return java object or code for creating it
+
   :n-examples (int), number of examples to iterator over
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/IrisDataSetIterator.html"
-  [& {:keys [batch-size n-examples]
+  [& {:keys [batch-size n-examples as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:iris-dataset-iter opts}))
+  (let [code (iterator {:iris-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-lfw-data-set-iterator
   "Creates a dataset iterator for the LFW image dataset.
 
-  :img-dims (int-array), desired dimensions of the images
+  :img-dims (vec), desired dimensions of the images
+
+  :as-code? (boolean), return java object or code for creating it
 
   :batch-size (int), the batch size
 
@@ -887,14 +1015,20 @@
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/LFWDataSetIterator.html"
   [& {:keys [img-dims batch-size n-examples use-subset? train? split-train-test
-             n-labels seed label-generator image-transform]
+             n-labels seed label-generator image-transform as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:lfw-dataset-iter opts}))
+  (let [code (iterator {:lfw-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-mnist-data-set-iterator
   "creates a dataset iterator for the Mnist dataset
 
   :batch-size (int), the batch size
+
+  :as-code? (boolean), return java object or code for creating it
 
   :train? (boolean), training or testing
 
@@ -910,25 +1044,38 @@
   - supplying batch-size will retrieve the entire dataset where as batch will get a subset
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MnistDataSetIterator.html"
-  [& {:keys [batch-size train? seed n-examples binarize? shuffle? rng-seed batch]
+  [& {:keys [batch-size train? seed n-examples binarize? shuffle? rng-seed batch
+             as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:mnist-dataset-iter opts}))
+  (let [code (iterator {:mnist-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-raw-mnist-data-set-iterator
   "Mnist data with scaled pixels
 
   :batch (int) size of each patch
 
+  :as-code? (boolean), return java object or code for creating it
+
   :n-examples (int), the overall number of examples
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/RawMnistDataSetIterator.html"
-  [& {:keys [batch n-examples]
+  [& {:keys [batch n-examples as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:raw-mnist-dataset-iter opts}))
+  (let [code (iterator {:raw-mnist-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; spark dataset iterator user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; update after multi methods are updated
 
 (defn new-path-spark-ds-iterator
   "A DataSetIterator that loads serialized DataSet objects
