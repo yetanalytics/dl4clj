@@ -20,10 +20,8 @@
   ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
 
-;; good
 (deftest dataset-fetchers-test
   (testing "dataset fetchers"
-    ;; dl4clj.datasets.fetchers.default-dataset-fetchers
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher (type (iris-fetcher))))
     (is (= '(org.deeplearning4j.datasets.fetchers.IrisDataFetcher.)
            (iris-fetcher :as-code? true)))
@@ -40,7 +38,6 @@
             (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123))))
     (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true true true 123)
            (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123 :as-code? true)))
-    ;; dl4clj.datasets.fetchers.base-data-fetcher
     (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
     (is (= java.lang.Integer (type (input-column-length (iris-fetcher)))))
@@ -49,7 +46,6 @@
     (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher)))))
     (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher)))))))
 
-;; good
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
     ;; cifar dataset
@@ -264,7 +260,6 @@
     (is (= '(org.deeplearning4j.datasets.iterator.impl.RawMnistDataSetIterator. 5 100)
            (new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)))
 
-    ;; dl4clj.datasets.iterator.impl.list-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator
            (type (new-list-dataset-iterator
                   :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
@@ -285,7 +280,6 @@
             :dataset [(new-raw-mnist-data-set-iterator :batch 5 :n-examples 100)]
             :batch 6)))
 
-    ;; dl4clj.datasets.iterator.impl.multi-data-set-iterator-adapter
     (is (= org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter
            (type (new-multi-data-set-iterator-adapter
                   :as-code? false
@@ -300,7 +294,6 @@
             :iter
             (new-mnist-data-set-iterator :batch 5 :n-examples 100))))
 
-    ;; dl4clj.datasets.iterator.impl.singleton-multi-data-set-iterator
     (is (= org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator
            (type (new-singleton-multi-dataset-iterator
                   :as-code? false
@@ -323,7 +316,6 @@
                 :iter
                 (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))
 
-;; good
 (deftest ds-iteration-interaction-fns-test
   (testing "the api fns for ds iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100 :as-code? false)
@@ -338,7 +330,6 @@
                          :as-code? false)
           cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
                                                   :as-code? false)]
-      ;; nd4clj.linalg.api.ds-iter
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
       (is (= java.lang.Integer (type (get-current-cursor iter))))
@@ -361,7 +352,6 @@
       (is (= java.lang.Integer (type (get-total-examples iter))))
       (is (= java.lang.Integer (type (get-total-outcomes iter))))
 
-      ;; dl4clj.datasets.iterator.impl.default-datasets
       (is (= java.lang.Boolean (type (has-next? iter))))
       (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! iter-w-labels))))
 
@@ -371,7 +361,6 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
 
-;; good
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
     (is (= org.datavec.api.io.labels.ParentPathLabelGenerator
@@ -395,7 +384,6 @@
             (get-label-for-path :label-generator (new-parent-path-label-generator :as-code? false)
                                 :path "resources/paravec/labeled/finance"))))))
 
-;; good
 (deftest path-filter-tests
   (testing "the creation of path filters and their functionality"
     (is (= org.datavec.api.io.filters.BalancedPathFilter
@@ -451,7 +439,6 @@
                                                                :as-code? false)
                           :paths ["foo"]))))))
 
-;; good
 (deftest file-split-testing
   (testing "base level io stuffs"
     ;; file split
@@ -621,10 +608,8 @@
                                     :as-code? false)
                             :weights [50 50]))))))
 
-;; good
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
-    ;; datavec.api.writeable
     (let [f-split (new-filesplit :path "resources/poker/" :as-code? false)]
       (is (= java.lang.Long (type (length f-split))))
       (is (= java.net.URI (type (first (locations f-split)))))
@@ -634,10 +619,8 @@
              (type (locations-path-iterator f-split))))
       (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
-;; good
 (deftest record-readers-test
   (testing "the creation of record readers"
-    ;; datavec.api.records.readers
     ;; csv-nlines-seq-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVNLinesSequenceRecordReader
            (type (new-csv-nlines-seq-record-reader :as-code? false))))
@@ -715,7 +698,6 @@
     (is (= '(org.datavec.api.records.reader.impl.collection.ListStringRecordReader.)
            (new-list-string-record-reader)))))
 
-;; good
 (deftest record-readers-interface
   (testing "the api fns for record readers"
     (let [rr (new-file-record-reader :as-code? false)
@@ -728,10 +710,8 @@
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
       (is (= java.util.ArrayList (type (next-record! (reset-rr! init-rr))))))))
 
-;; good
 (deftest pre-processors-test
   (testing "testing the creation of pre-processors"
-    ;; nd4clj.linalg.dataset.api.pre-processors
     (is (= org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor
            (type (new-image-flattening-ds-preprocessor :as-code? false))))
     (is (= '(org.nd4j.linalg.dataset.api.preprocessor.ImageFlatteningDataSetPreProcessor.)
@@ -784,7 +764,6 @@
            (new-combined-pre-processor :pre-processor {0 (new-image-flattening-ds-preprocessor)
                                                        1 {:image-scaling {:min-range 0 :max-range 10}}})))))
 
-;; good
 (deftest ds-iterators-test
   (testing "the creation of various dataset iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
@@ -937,10 +916,9 @@
              (new-INDArray-dataset-iterator :features [1 2]
                                             :labels [2 2]
                                             :batch-size 2))))))
-;; will be updated
+
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
-    ;; dl4clj.datasets.datavec
     (let [fs (new-filesplit :path "resources/poker-hand-training.csv")
           rr `(initialize-rr! :rr ~(new-csv-record-reader)
                              :input-split ~fs)
