@@ -1070,11 +1070,35 @@
               :n-possible-labels 10
               :label-idx 10)))
 
-      ;; this fn + multimethod need to be refactored using builder-fn
-      #_(is (= org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator
+      (is (= org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator
              (type (new-record-reader-multi-dataset-iterator
                     :alignment-mode :equal-length
                     :batch-size 10
                     :add-seq-reader {:reader-name "foo" :record-reader seq-rr}
                     :add-reader {:reader-name "baz" :record-reader rr}
-                    :add-input {:reader-name "baz" :first-column 0 :last-column 11})))))))
+                    :add-input {:reader-name "baz" :first-column 0 :last-column 11}
+                    :as-code? false))))
+      (is (= '(.build
+               (doto
+                   (org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator$Builder. 10)
+                 (.sequenceAlignmentMode (dl4clj.constants/value-of {:multi-alignment-mode :equal-length}))
+                 (.addReader
+                  "baz"
+                  (dl4clj.datasets.api.record-readers/initialize-rr!
+                   :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                   :input-split (org.datavec.api.split.FileSplit.
+                                 (clojure.java.io/as-file
+                                  "resources/poker-hand-training.csv"))))
+                 (.addSequenceReader
+                  "foo" (dl4clj.datasets.api.record-readers/initialize-rr!
+                         :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                         :input-split (org.datavec.api.split.FileSplit.
+                                       (clojure.java.io/as-file
+                                        "resources/poker-hand-training.csv"))))
+                 (.addInput "baz" 0 11)))
+             (new-record-reader-multi-dataset-iterator
+              :alignment-mode :equal-length
+              :batch-size 10
+              :add-seq-reader {:reader-name "foo" :record-reader seq-rr}
+              :add-reader {:reader-name "baz" :record-reader rr}
+              :add-input {:reader-name "baz" :first-column 0 :last-column 11}))))))

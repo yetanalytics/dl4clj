@@ -23,7 +23,7 @@
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn]]
             [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
@@ -150,34 +150,32 @@
         {record-reader-name :reader-name
          rr :record-reader} add-reader
         {seq-reader-name :reader-name
-         seq-rr :record-reader} add-seq-reader]
-    (.build
-     ;; refactor with builder-fn
-     (let [b (RecordReaderMultiDataSetIterator$Builder. batch-size)
-           r (reset-rr! rr)
-           seq-r (reset-rr! seq-rr)]
-       (cond-> b
-         (and (contains? config :add-reader)
-              (contains-many? add-reader :reader-name :record-reader))
-         (doto (.addReader record-reader-name r))
-         (and (contains? config :add-seq-reader)
-              (contains-many? add-seq-reader :reader-name :record-reader))
-         (doto (.addSequenceReader seq-reader-name seq-r))
-         (and (contains? config :add-input)
-              (contains-many? add-input :first-column :last-column))
-         (doto (.addInput reader-name first-column last-column))
-         (and (contains? config :add-input-one-hot)
-              (contains-many? add-input-hot :reader-name :column :n-classes))
-         (doto (.addInputOneHot hot-reader-name hot-column hot-num-classes))
-         (and (contains? config :add-output)
-              (contains-many? add-output :first-column :last-column))
-         (doto (.addOutput output-reader-name output-first-column output-last-column))
-         (and (contains? config :add-output-one-hot)
-              (contains-many? add-output-hot :column :n-classes :reader-name))
-         (doto (.addOutputOneHot hot-output-reader-name hot-output-column
-                                   hot-output-n-classes))
-         (contains? config :alignment-mode)
-         (doto (.sequenceAlignmentMode (value-of {:multi-alignment-mode alignment}))))))))
+         seq-rr :record-reader} add-seq-reader
+        method-map {:input '.addInput
+                    :input-one-hot '.addInputOneHot
+                    :output '.addOutput
+                    :output-one-hot '.addOutputOneHot
+                    :reader '.addReader
+                    :seq-reader '.addSequenceReader
+                    :alignment '.sequenceAlignmentMode}
+        updated-opts {:alignment (if alignment (value-of-helper :multi-alignment-mode
+                                                                alignment))
+                      :reader (if add-reader [record-reader-name rr])
+                      :seq-reader (if add-seq-reader [seq-reader-name seq-rr])
+                      :output-one-hot (if add-output-hot [hot-output-reader-name
+                                                          hot-output-column
+                                                          hot-output-n-classes])
+                      :output (if add-output [output-reader-name
+                                              output-first-column
+                                              output-last-column])
+                      :input-one-hot (if add-input-hot [hot-reader-name
+                                                        hot-column
+                                                        hot-num-classes])
+                      :input (if add-input [reader-name first-column last-column])}
+        opts* (into {} (filter val updated-opts))
+        b `(RecordReaderMultiDataSetIterator$Builder. ~batch-size)]
+    `(.build
+      ~(builder-fn b method-map opts*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dataset iterator mulimethods
@@ -581,9 +579,13 @@
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderMultiDataSetIterator.Builder.html"
   [& {:keys [alignment-mode batch-size add-seq-reader
              add-reader add-output-one-hot add-output
-             add-input-one-hot add-input]
+             add-input-one-hot add-input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:multi-dataset-iter opts}))
+  (let [code (iterator {:multi-dataset-iter opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dataset iterators user facing fns
