@@ -65,15 +65,22 @@
 
   :input-split (input split) the split that defines the range of records to read
    -see datavec.api.split
+
   :conf (map) a configuration for initialization
+
+  :as-code? (boolean), do you want this fn to return as code?
 
   this is how data actually gets into the record reader"
   ;; add in the ability to detect if rr is a java object or code
-  [& {:keys [rr input-split conf]
+  [& {:keys [rr input-split conf as-code?]
+      :or {as-code? true}
       :as opts}]
-  (if conf
-    (doto rr (.initialize conf input-split))
-    (doto rr (.initialize input-split))))
+  (let [code (if conf
+               `(doto ~rr (.initialize ~conf ~input-split))
+               `(doto ~rr (.initialize ~input-split)))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn load-from-meta-data-rr
   "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)

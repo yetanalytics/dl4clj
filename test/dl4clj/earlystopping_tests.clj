@@ -83,8 +83,8 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def rr `(initialize-rr! :rr ~(new-csv-record-reader)
-                        :input-split ~fs))
+(def rr (initialize-rr! :rr (new-csv-record-reader)
+                        :input-split fs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of termination conditions
@@ -192,11 +192,10 @@
              :as-code? false))))
     (is (= '(org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
              (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-              (dl4clj.datasets.api.record-readers/reset-rr!
-               (dl4clj.datasets.api.record-readers/initialize-rr!
-                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                :input-split (org.datavec.api.split.FileSplit.
-                              (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
+              (dl4clj.datasets.api.record-readers/initialize-rr!
+               :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+               :input-split (org.datavec.api.split.FileSplit.
+                             (clojure.java.io/as-file "resources/poker-hand-training.csv")))
               5)
              true)
            (new-ds-loss-calculator
