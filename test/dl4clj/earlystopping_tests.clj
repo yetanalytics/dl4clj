@@ -2,15 +2,16 @@
   (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
             [dl4clj.earlystopping.early-stopping-result :refer [new-early-stopping-result]]
             [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
-            #_[dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
-            #_[dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
-            #_[dl4clj.earlystopping.api.model-saver :refer :all]
             [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
-            #_[dl4clj.earlystopping.api.score-calc :refer :all]
-            #_[dl4clj.earlystopping.termination-conditions :refer :all]
-            #_[dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
-            #_[dl4clj.earlystopping.api.iteration-termination-condition :refer :all]
+            [dl4clj.earlystopping.termination-conditions :refer :all]
+            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
+            #_[dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
+            [dl4clj.earlystopping.api.model-saver :refer :all]
+            [dl4clj.earlystopping.api.score-calc :refer :all]
+            [dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
+            [dl4clj.earlystopping.api.iteration-termination-condition :refer :all]
             #_[dl4clj.earlystopping.api.listener :refer :all]
+
             ;; namespaces I need to test the above namespaces
             [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
             [dl4clj.nn.conf.builders.nn :as nn]
@@ -21,7 +22,7 @@
             [dl4clj.datasets.input-splits :refer [new-filesplit]]
             #_[dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
-            #_[dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
+            [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
             [clojure.test :refer :all])
   (:import [java.nio.charset Charset]))
 
@@ -94,29 +95,66 @@
 (deftest termination-condition-creation-test
   (testing "the creation of termination conditions"
     (is (= org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition
-           (type (new-invalid-score-iteration-termination-condition))))
+           (type (new-invalid-score-iteration-termination-condition :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.)
+           (new-invalid-score-iteration-termination-condition)))
+
     (is (= org.deeplearning4j.earlystopping.termination.MaxScoreIterationTerminationCondition
-           (type (new-max-score-iteration-termination-condition :max-score 10))))
+           (type (new-max-score-iteration-termination-condition :max-score 10 :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.MaxScoreIterationTerminationCondition. 10)
+           (new-max-score-iteration-termination-condition :max-score 10)))
+
     (is (= org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition
            (type (new-max-time-iteration-termination-condition
                   :max-time-val 10
-                  :max-time-unit :seconds))))
+                  :max-time-unit :seconds
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition.
+             10 (dl4clj.constants/value-of {:time-unit :seconds}))
+           (new-max-time-iteration-termination-condition
+            :max-time-val 10
+            :max-time-unit :seconds)))
+
     (is (= org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition
            (type (new-score-improvement-epoch-termination-condition
                   :max-n-epoch-no-improve 10
-                  :min-improve 5.0))))
+                  :min-improve 5.0
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition. 10 5.0)
+           (new-score-improvement-epoch-termination-condition
+            :max-n-epoch-no-improve 10
+            :min-improve 5.0)))
+
     (is (= org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition
            (type (new-score-improvement-epoch-termination-condition
-                  :max-n-epoch-no-improve 10))))
-    (is (= org.deeplearning4j.earlystopping.termination.BestScoreEpochTerminationCondition
-           (type (new-best-score-epoch-termination-condition
-                  :best-expected-score 2.0))))
+                  :max-n-epoch-no-improve 10
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition. 10)
+           (new-score-improvement-epoch-termination-condition
+            :max-n-epoch-no-improve 10)))
+
     (is (= org.deeplearning4j.earlystopping.termination.BestScoreEpochTerminationCondition
            (type (new-best-score-epoch-termination-condition
                   :best-expected-score 2.0
-                  :less-is-better? false))))
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.BestScoreEpochTerminationCondition. 2.0)
+           (new-best-score-epoch-termination-condition
+            :best-expected-score 2.0)))
+
+    (is (= org.deeplearning4j.earlystopping.termination.BestScoreEpochTerminationCondition
+           (type (new-best-score-epoch-termination-condition
+                  :best-expected-score 2.0
+                  :is-less-better? false
+                  :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.BestScoreEpochTerminationCondition. 2.0 false)
+           (new-best-score-epoch-termination-condition
+            :best-expected-score 2.0
+            :is-less-better? false)))
+
     (is (= org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition
-           (type (new-max-epochs-termination-condition :max-n 5))))))
+           (type (new-max-epochs-termination-condition :max-n 5 :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition. 5)
+           (new-max-epochs-termination-condition :max-n 5)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of epoch termination condition interface
@@ -125,11 +163,13 @@
 
 (deftest epoch-term-interface-test
   (testing "the return types of the fns found in the epoch termination condition interface"
-    (let [max-epochs (new-max-epochs-termination-condition :max-n 5)
+    (let [max-epochs (new-max-epochs-termination-condition :max-n 5 :as-code? false)
           best-score (new-best-score-epoch-termination-condition
-                      :best-expected-score 2.0)
+                      :best-expected-score 2.0
+                      :as-code? false)
           score-imporve (new-score-improvement-epoch-termination-condition
-                         :max-n-epoch-no-improve 10)]
+                         :max-n-epoch-no-improve 10
+                         :as-code? false)]
       (is (= (type max-epochs) (type (initialize-epoch! max-epochs))))
       (is (= (type best-score) (type (initialize-epoch! best-score))))
       (is (= (type score-imporve) (type (initialize-epoch! score-imporve))))
@@ -157,10 +197,11 @@
 
 (deftest iteration-term-interface-test
   (testing "the return types of the fns found in the iteration termination condition interface"
-    (let [invalid-score (new-invalid-score-iteration-termination-condition)
-          max-score (new-max-score-iteration-termination-condition :max-score 2.0)
+    (let [invalid-score (new-invalid-score-iteration-termination-condition :as-code? false)
+          max-score (new-max-score-iteration-termination-condition :max-score 2.0 :as-code? false)
           max-time (new-max-time-iteration-termination-condition :max-time-val 50
-                                                                 :max-time-unit :seconds)]
+                                                                 :max-time-unit :seconds
+                                                                 :as-code? false)]
       (is (= (type invalid-score) (type (initialize-iteration! invalid-score))))
       (is (= (type max-score) (type (initialize-iteration! max-score))))
       (is (= (type max-time) (type (initialize-iteration! max-time))))
@@ -192,10 +233,10 @@
              :as-code? false))))
     (is (= '(org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
              (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-              (dl4clj.datasets.api.record-readers/initialize-rr!
-               :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-               :input-split (org.datavec.api.split.FileSplit.
-                             (clojure.java.io/as-file "resources/poker-hand-training.csv")))
+              (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                (.initialize (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv"))))
               5)
              true)
            (new-ds-loss-calculator
@@ -213,11 +254,12 @@
   (testing "the return type of the fns found in the score calculator interface"
     ;; this test takes about 15 seconds
     (let [calcer (new-ds-loss-calculator
-                :iter (new-mnist-data-set-iterator
-                       :batch-size 10
-                       :train? true
-                       :seed 123)
-                :average? true)]
+                  :as-code? false
+                  :iter (new-mnist-data-set-iterator
+                         :batch-size 10
+                         :train? true
+                         :seed 123)
+                  :average? true)]
       (is (= java.lang.Double
              (type
               (calculate-score :score-calculator calcer
@@ -234,13 +276,25 @@
 (deftest model-savers-test
   (testing "the creation of model savers"
     (is (= org.deeplearning4j.earlystopping.saver.InMemoryModelSaver
-           (type (new-in-memory-saver))))
+           (type (new-in-memory-saver :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.saver.InMemoryModelSaver.)
+           (new-in-memory-saver)))
+
     (is (= org.deeplearning4j.earlystopping.saver.LocalFileModelSaver
-           (type (new-local-file-model-saver :directory "resources/temp/testing"))))
+           (type (new-local-file-model-saver :directory "resources/temp/testing"
+                                             :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.saver.LocalFileModelSaver. "resources/temp/testing")
+           (new-local-file-model-saver :directory "resources/temp/testing")))
+
     (is (= org.deeplearning4j.earlystopping.saver.LocalFileModelSaver
            (type
             (new-local-file-model-saver :directory "resources/temp/testing"
-                                        :charset (Charset/defaultCharset)))))))
+                                        :charset `(Charset/defaultCharset)
+                                        :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.saver.LocalFileModelSaver.
+             "resources/temp/testing" (java.nio.charset.Charset/defaultCharset))
+           (new-local-file-model-saver :directory "resources/temp/testing"
+                                       :charset `(Charset/defaultCharset))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the return type of the model savers interface
@@ -249,8 +303,8 @@
 
 (deftest model-savers-iterface-test
   (testing "the return type of the fns found in the model saver interface"
-    (let [empty-saver (new-in-memory-saver)
-          non-empty-saver (new-in-memory-saver)]
+    (let [empty-saver (new-in-memory-saver :as-code? false)
+          non-empty-saver (new-in-memory-saver :as-code? false)]
       ;; we havent saved any models
       (is (= nil (get-best-model empty-saver)))
       (is (= nil (get-latest-model empty-saver)))
@@ -274,6 +328,8 @@
 ;; testing the creation of early stopping configurations
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingConfiguration.Builder.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; left off here
 
 (deftest early-stopping-conf-test
   (testing "the creation of an early stopping configuration"
@@ -306,6 +362,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of early stopping results
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.html
+;; going to be removed, user will never need to make one of these
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest early-stopping-result-test

@@ -53,9 +53,7 @@ Users need to specify the following:
                     :save-last-model?                 '.saveLastModel
                     :score-calculator                 '.scoreCalculator}
         b `(EarlyStoppingConfiguration$Builder.)]
-    ;; termination conditions need to be code
-    ;; model saver needs to be code
-    ;; score-calc needs to be code
+    ;; refactor with builder fn
    (cond-> (EarlyStoppingConfiguration$Builder.)
     (contains? opts :epoch-termination-conditions)
     (.epochTerminationConditions (array-of :data epoch-termination-conditions

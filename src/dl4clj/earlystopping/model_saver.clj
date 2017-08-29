@@ -19,9 +19,9 @@
   (let [config (:local-file opts)
         {dir :directory
          char-set :charset} config]
-    `(if ~char-set
-      (LocalFileModelSaver. ~dir ~char-set)
-      (LocalFileModelSaver. ~dir))))
+    (if char-set
+      `(LocalFileModelSaver. ~dir ~char-set)
+      `(LocalFileModelSaver. ~dir))))
 
 ;; local file graph no implemented as computational graphs are not implemented
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/LocalFileGraphSaver.html
@@ -33,9 +33,15 @@
 (defn new-in-memory-saver
   "Save the best (and latest) models for early stopping training to memory for later retrieval
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/InMemoryModelSaver.html"
-  []
-  (model-saver-type {:in-memory {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (model-saver-type {:in-memory {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-local-file-model-saver
   "Save the best (and latest/most recent) models learned during
@@ -53,7 +59,13 @@
   :charset (charset), a java character set.
    - for avialable char sets, eval (Charset/availableCharsets)
 
+  :as-code? (boolean), return java object or code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/LocalFileModelSaver.html"
-  [& {:keys [directory charset]
+  [& {:keys [directory charset as-code?]
+      :or {as-code? true}
       :as opts}]
-  (model-saver-type {:local-file opts}))
+  (let [code (model-saver-type {:local-file opts})]
+    (if as-code?
+      code
+      (eval code))))

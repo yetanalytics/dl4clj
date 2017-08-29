@@ -19,9 +19,11 @@
    - see: dl4clj.datasets.iterators
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/EarlyStoppingTrainer.html"
+  ;; need to figure out if this ever needs to be code
+  ;; should assume so, and give :as-code? option
   [& {:keys [early-stopping-conf mln iter]
       :as opts}]
-  (EarlyStoppingTrainer. early-stopping-conf mln (reset-iterator! iter)))
+  (EarlyStoppingTrainer. early-stopping-conf mln iter))
 
 (defn new-spark-early-stopping-trainer
   "object for conducting early stopping training via Spark with
