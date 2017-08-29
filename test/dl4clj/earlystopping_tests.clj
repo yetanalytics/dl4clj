@@ -5,7 +5,7 @@
             #_[dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
             #_[dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
             #_[dl4clj.earlystopping.api.model-saver :refer :all]
-            #_[dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
+            [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
             #_[dl4clj.earlystopping.api.score-calc :refer :all]
             #_[dl4clj.earlystopping.termination-conditions :refer :all]
             #_[dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
@@ -15,7 +15,7 @@
             [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
             [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.nn.api.model :refer [init! score!]]
-            #_[dl4clj.datasets.iterators :refer [new-record-reader-dataset-iterator
+            [dl4clj.datasets.iterators :refer [new-record-reader-dataset-iterator
                                                new-mnist-data-set-iterator]]
             [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.input-splits :refer [new-filesplit]]
@@ -83,8 +83,8 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def rr (initialize-rr! :rr (new-csv-record-reader)
-                        :input-split fs))
+(def rr `(initialize-rr! :rr ~(new-csv-record-reader)
+                        :input-split ~fs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of termination conditions
@@ -188,7 +188,22 @@
              :iter (new-record-reader-dataset-iterator
                        :record-reader rr
                        :batch-size 5)
-             :average? true))))))
+             :average? true
+             :as-code? false))))
+    (is (= '(org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
+             (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+              (dl4clj.datasets.api.record-readers/reset-rr!
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
+              5)
+             true)
+           (new-ds-loss-calculator
+            :iter (new-record-reader-dataset-iterator
+                   :record-reader rr
+                   :batch-size 5)
+            :average? true)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the return type of the score-calc interface

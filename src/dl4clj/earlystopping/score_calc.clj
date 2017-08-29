@@ -18,7 +18,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
   (let [conf (:dataset-loss opts)
         {iter :iter
          avg? :average?} conf]
-    (DataSetLossCalculator. (reset-iterator! iter) avg?)))
+    `(DataSetLossCalculator. ~iter ~avg?)))
 
 (defmethod score-calc :spark-ds-loss [opts]
   (let [conf (:spark-ds-loss opts)
@@ -39,10 +39,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
 
   :average? (boolean), Whether to return the average (sum of loss / N) or just (sum of loss)
 
+  :as-code? (boolean), Whether to return the Java object or the code for creating it
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/DataSetLossCalculator.html"
-  [& {:keys [iter average?]
+  [& {:keys [iter average? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (score-calc {:dataset-loss opts}))
+  (let [code (score-calc {:dataset-loss opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-spark-ds-loss-calculator
   "Score calculator to calculate the total loss for the MLN

@@ -286,10 +286,8 @@
                   :iter
                   (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))
     (is (= '(org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
-             (dl4clj.helpers/reset-iterator!
-              (:iter {:iter
-                      (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                       5 100)})))
+             (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+              5 100))
            (new-multi-data-set-iterator-adapter
             :iter
             (new-mnist-data-set-iterator :batch 5 :n-examples 100))))
@@ -306,9 +304,8 @@
     (is (= '(org.deeplearning4j.datasets.iterator.impl.SingletonMultiDataSetIterator.
              (dl4clj.datasets.api.iterators/next-example!
               (org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
-               (dl4clj.helpers/reset-iterator!
-                (:iter {:iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                               5 100)})))))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100))))
            (new-singleton-multi-dataset-iterator
             :multi-dataset
             `(next-example!
@@ -795,9 +792,8 @@
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
              (type (new-async-dataset-iterator :iter iter :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.AsyncDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                 5 100)))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100))
              (new-async-dataset-iterator :iter iter)))
 
       (is (= org.deeplearning4j.datasets.iterator.AsyncDataSetIterator
@@ -805,9 +801,8 @@
                                                :que-size 10
                                                :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.AsyncDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                 5 100))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100)
                10)
              (new-async-dataset-iterator :iter iter
                                          :que-size 10)))
@@ -815,9 +810,8 @@
       (is (= org.deeplearning4j.datasets.iterator.ExistingDataSetIterator
              (type (new-existing-dataset-iterator :iter iter :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.ExistingDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                 5 100)))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100))
              (new-existing-dataset-iterator :iter iter)))
 
       (is (= org.deeplearning4j.datasets.iterator.SamplingDataSetIterator
@@ -835,9 +829,8 @@
       (is (= org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator
              (type (new-reconstruction-dataset-iterator :iter iter :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.ReconstructionDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                 5 100)))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100))
              (new-reconstruction-dataset-iterator :iter iter)))
 
       (is (= org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator
@@ -846,11 +839,9 @@
                     :as-code? false
                     :que-length 10))))
       (is (= '(org.deeplearning4j.datasets.iterator.AsyncMultiDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
-                 (dl4clj.helpers/reset-iterator!
-                  (:iter {:iter (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                                 5 100)}))))
+               (org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter.
+                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                 5 100))
                10)
              (new-async-multi-dataset-iterator
               :multi-dataset-iter multi-iter
@@ -860,9 +851,8 @@
              (type (new-iterator-dataset-iterator :iter iter :batch-size 10
                                                   :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.IteratorDataSetIterator.
-               (dl4clj.helpers/reset-iterator!
-                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                 5 100))
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100)
                10)
              (new-iterator-dataset-iterator :iter iter :batch-size 10)))
 
@@ -870,9 +860,9 @@
              (type (new-multiple-epochs-iterator :iter iter :n-epochs 1
                                                  :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.iterator.MultipleEpochsIterator.
-               1 (dl4clj.helpers/reset-iterator!
-                  (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
-                   5 100)))
+               1
+               (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+                5 100))
              (new-multiple-epochs-iterator :iter iter :n-epochs 1)))
 
       (is (= org.deeplearning4j.datasets.iterator.DoublesDataSetIterator
@@ -930,12 +920,11 @@
                                                   :batch-size 10
                                                   :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10)))
@@ -948,12 +937,11 @@
                                                   :n-possible-labels 10
                                                   :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 6 10)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -969,12 +957,11 @@
                                                   :as-code? false
                                                   :regression? true))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 0 7 true)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -991,12 +978,11 @@
                                                   :n-possible-labels 10
                                                   :max-num-batches 2))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 6 10 2)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -1013,12 +999,11 @@
                   :as-code? false
                   :regression? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                5 10 10 false)
              (new-seq-record-reader-dataset-iterator
               :record-reader seq-rr
@@ -1035,12 +1020,11 @@
                     :as-code? false
                     :label-idx 10))))
       (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
-               (dl4clj.datasets.api.record-readers/reset-rr!
-                (dl4clj.datasets.api.record-readers/initialize-rr!
-                 :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
-                 :input-split (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                5 10 10)
              (new-seq-record-reader-dataset-iterator
               :record-reader seq-rr

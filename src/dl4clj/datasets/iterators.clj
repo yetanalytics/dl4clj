@@ -24,7 +24,6 @@
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn]]
-            [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -53,41 +52,40 @@
          regression? :regression?
          max-n-batches :max-num-batches
          converter :writeable-converter} config]
-    (let [r `(reset-rr! ~rr)]
-      (match [config]
-             [{:writeable-converter _ :batch-size _ :label-idx-from _
-               :label-idx-to _ :n-possible-labels _ :max-num-batches _
-               :regression? _ :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~l-idx-from
-                                           ~l-idx-to ~n-labels ~max-n-batches
-                                           ~regression?)
-             [{:writeable-converter _ :batch-size _ :label-idx _
-               :n-possible-labels _ :max-num-batches _ :regression? _
-               :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx
-                                           ~n-labels ~max-n-batches ~regression?)
-             [{:record-reader _ :batch-size _ :label-idx _
-               :n-possible-labels _ :max-num-batches _}]
-             `(RecordReaderDataSetIterator.
-              ~r ~batch-size ~label-idx ~n-labels ~max-n-batches)
-             [{:record-reader _ :batch-size _ :label-idx-from _
-               :label-idx-to _ :regression? _}]
-             `(RecordReaderDataSetIterator.
-              ~r ~batch-size ~l-idx-from ~l-idx-to ~regression?)
-             [{:writeable-converter _ :batch-size _ :label-idx _
-               :n-possible-labels _  :regression? _ :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx
-                                           ~n-labels ~regression?)
-             [{:writeable-converter _ :batch-size _ :label-idx _
-               :n-possible-labels _  :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size ~label-idx ~n-labels)
-             [{:record-reader _ :batch-size _ :label-idx _ :n-possible-labels _}]
-             `(RecordReaderDataSetIterator.
-              ~r ~batch-size ~label-idx ~n-labels)
-             [{:writeable-converter _ :batch-size _ :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~converter ~batch-size)
-             [{:batch-size _ :record-reader _}]
-             `(RecordReaderDataSetIterator. ~r ~batch-size)))))
+    (match [config]
+           [{:writeable-converter _ :batch-size _ :label-idx-from _
+             :label-idx-to _ :n-possible-labels _ :max-num-batches _
+             :regression? _ :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~l-idx-from
+                                          ~l-idx-to ~n-labels ~max-n-batches
+                                          ~regression?)
+           [{:writeable-converter _ :batch-size _ :label-idx _
+             :n-possible-labels _ :max-num-batches _ :regression? _
+             :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx
+                                          ~n-labels ~max-n-batches ~regression?)
+           [{:record-reader _ :batch-size _ :label-idx _
+             :n-possible-labels _ :max-num-batches _}]
+           `(RecordReaderDataSetIterator.
+             ~rr ~batch-size ~label-idx ~n-labels ~max-n-batches)
+           [{:record-reader _ :batch-size _ :label-idx-from _
+             :label-idx-to _ :regression? _}]
+           `(RecordReaderDataSetIterator.
+             ~rr ~batch-size ~l-idx-from ~l-idx-to ~regression?)
+           [{:writeable-converter _ :batch-size _ :label-idx _
+             :n-possible-labels _  :regression? _ :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx
+                                          ~n-labels ~regression?)
+           [{:writeable-converter _ :batch-size _ :label-idx _
+             :n-possible-labels _  :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx ~n-labels)
+           [{:record-reader _ :batch-size _ :label-idx _ :n-possible-labels _}]
+           `(RecordReaderDataSetIterator.
+             ~rr ~batch-size ~label-idx ~n-labels)
+           [{:writeable-converter _ :batch-size _ :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size)
+           [{:batch-size _ :record-reader _}]
+           `(RecordReaderDataSetIterator. ~rr ~batch-size))))
 
 (defmethod iterator :seq-rr-dataset-iter [opts]
   (let [config (:seq-rr-dataset-iter opts)
@@ -99,29 +97,26 @@
          labels-reader :labels-reader
          features-reader :features-reader
          alignment :alignment-mode} config]
-    (let [r (if rr `(reset-rr! ~rr))
-          features-r (if features-reader `(reset-rr! ~features-reader))
-          labels-r (if labels-reader `(reset-rr! ~labels-reader))]
-      (match [config]
-             [{:labels-reader _ :features-reader _ :mini-batch-size _
-               :n-possible-labels _ :regression? _ :alignment-mode _}]
-             `(SequenceRecordReaderDataSetIterator.
-              ~features-r ~labels-r ~m-batch-size ~n-labels ~regression?
-              ~(value-of-helper :seq-alignment-mode alignment))
-             [{:labels-reader _ :features-reader _ :mini-batch-size _
-               :n-possible-labels _ :regression? _}]
-             `(SequenceRecordReaderDataSetIterator.
-              ~features-r ~labels-r ~m-batch-size ~n-labels ~regression?)
-             [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
-             `(SequenceRecordReaderDataSetIterator.
-              ~features-r ~labels-r ~m-batch-size ~n-labels)
-             [{:record-reader _ :mini-batch-size _ :n-possible-labels _
-               :label-idx _ :regression? _}]
-             `(SequenceRecordReaderDataSetIterator.
-              ~r ~m-batch-size ~n-labels ~label-idx ~regression?)
-             [{:record-reader _ :mini-batch-size _ :n-possible-labels _ :label-idx _}]
-             `(SequenceRecordReaderDataSetIterator.
-              ~r ~m-batch-size ~n-labels ~label-idx)))))
+    (match [config]
+           [{:labels-reader _ :features-reader _ :mini-batch-size _
+             :n-possible-labels _ :regression? _ :alignment-mode _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~features-reader ~labels-reader ~m-batch-size ~n-labels ~regression?
+             ~(value-of-helper :seq-alignment-mode alignment))
+           [{:labels-reader _ :features-reader _ :mini-batch-size _
+             :n-possible-labels _ :regression? _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~features-reader ~labels-reader ~m-batch-size ~n-labels ~regression?)
+           [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~features-reader ~labels-reader ~m-batch-size ~n-labels)
+           [{:record-reader _ :mini-batch-size _ :n-possible-labels _
+             :label-idx _ :regression? _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~rr ~m-batch-size ~n-labels ~label-idx ~regression?)
+           [{:record-reader _ :mini-batch-size _ :n-possible-labels _ :label-idx _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~rr ~m-batch-size ~n-labels ~label-idx))))
 
 (defmethod iterator :multi-dataset-iter [opts]
   (assert (integer? (:batch-size (:multi-dataset-iter opts)))
@@ -212,19 +207,19 @@
   (let [config (:iterator-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          batch-size :batch-size} config]
-    `(IteratorMultiDataSetIterator. (reset-iterator! ~iter) ~batch-size)))
+    `(IteratorMultiDataSetIterator. ~iter ~batch-size)))
 
 (defmethod iterator :iterator-dataset-iter [opts]
   (let [config (:iterator-dataset-iter opts)
         {iter :iter
          batch-size :batch-size} config]
-    `(IteratorDataSetIterator. (reset-iterator! ~iter) ~batch-size)))
+    `(IteratorDataSetIterator. ~iter ~batch-size)))
 
 (defmethod iterator :async-multi-dataset-iter [opts]
   (let [config (:async-multi-dataset-iter opts)
         {iter :multi-dataset-iter
          que-l :que-length} config]
-    `(AsyncMultiDataSetIterator. (reset-iterator! ~iter) ~que-l)))
+    `(AsyncMultiDataSetIterator. ~iter ~que-l)))
 
 (defmethod iterator :moving-window-base-dataset-iter [opts]
   (let [config (:moving-window-base-dataset-iter opts)
@@ -244,20 +239,20 @@
          ds :dataset} config]
     (match [config]
            [{:n-epochs _ :iter _ :que-size _}]
-           `(MultipleEpochsIterator. ~n-epochs (reset-iterator! ~iter) ~q-size)
+           `(MultipleEpochsIterator. ~n-epochs ~iter ~q-size)
            [{:n-epochs _ :iter _}]
-           `(MultipleEpochsIterator. ~n-epochs (reset-iterator! ~iter))
+           `(MultipleEpochsIterator. ~n-epochs ~iter)
            [{:n-epochs _ :dataset _}]
            `(MultipleEpochsIterator. ~n-epochs ~ds)
            [{:iter _ :que-size _ :total-iterations _}]
-           `(MultipleEpochsIterator. (reset-iterator! ~iter) ~q-size ~t-iterations)
+           `(MultipleEpochsIterator. ~iter ~q-size ~t-iterations)
            [{:iter _ :total-iterations _}]
-           `(MultipleEpochsIterator. (reset-iterator! ~iter) ~t-iterations))))
+           `(MultipleEpochsIterator. ~iter ~t-iterations))))
 
 (defmethod iterator :reconstruction-dataset-iter [opts]
   (let [config (:reconstruction-dataset-iter opts)
         iter (:iter config)]
-    `(ReconstructionDataSetIterator. (reset-iterator! ~iter))))
+    `(ReconstructionDataSetIterator. ~iter)))
 
 (defmethod iterator :sampling-dataset-iter [opts]
   (let [config (:sampling-dataset-iter opts)
@@ -276,9 +271,9 @@
          ds-iter :iter} config]
     (match [config]
            [{:iter _ :labels _}]
-           `(ExistingDataSetIterator. (reset-iterator! ~ds-iter) ~labels)
+           `(ExistingDataSetIterator. ~ds-iter ~labels)
            [{:iter _}]
-           `(ExistingDataSetIterator. (reset-iterator! ~ds-iter))
+           `(ExistingDataSetIterator. ~ds-iter)
            [{:dataset _ :total-examples _ :n-features _ :n-labels _}]
            `(ExistingDataSetIterator. ~iterable ~n-examples ~n-features ~n-labels)
            [{:dataset _ :labels _}]
@@ -291,18 +286,17 @@
         {ds-iter :iter
          que-size :que-size
          que :que} config]
-    (let [i `(reset-iterator! ~ds-iter)]
-      (match [config]
-             [{:iter _ :que _ :que-size _}]
-             `(AsyncDataSetIterator. ~i ~que-size ~que)
-             [{:iter _ :que-size _}]
-             `(AsyncDataSetIterator. ~i ~que-size)
-             [{:iter _}]
-             `(AsyncDataSetIterator. ~i)))))
+    (match [config]
+           [{:iter _ :que _ :que-size _}]
+           `(AsyncDataSetIterator. ~ds-iter ~que-size ~que)
+           [{:iter _ :que-size _}]
+           `(AsyncDataSetIterator. ~ds-iter ~que-size)
+           [{:iter _}]
+           `(AsyncDataSetIterator. ~ds-iter))))
 
 (defmethod iterator :ds-iter-to-multi-ds-iter [opts]
   (let [conf (:ds-iter-to-multi-ds-iter opts)
-        iter `(reset-iterator! (:iter ~conf))]
+        iter (:iter conf)]
     `(MultiDataSetIteratorAdapter. ~iter)))
 
 (defmethod iterator :list-ds-iter [opts]
@@ -448,7 +442,7 @@
          iter :iter} config]
     (if str-paths
       (PathSparkDataSetIterator. str-paths)
-      (PathSparkDataSetIterator. (reset-iterator! iter)))))
+      (PathSparkDataSetIterator. iter))))
 
 (defmethod iterator :path-to-multi-ds [opts]
   (let [config (:path-to-multi-ds opts)
@@ -456,7 +450,7 @@
          iter :iter} config]
     (if str-paths
       (PathSparkMultiDataSetIterator. str-paths)
-      (PathSparkMultiDataSetIterator. (reset-iterator! iter)))))
+      (PathSparkMultiDataSetIterator. iter))))
 
 (defmethod iterator :portable-ds-stream [opts]
   (let [config (:portable-ds-stream opts)
@@ -464,7 +458,7 @@
          iter :iter} config]
     (if streams
       (PortableDataStreamDataSetIterator. streams)
-      (PortableDataStreamDataSetIterator. (reset-iterator! iter)))))
+      (PortableDataStreamDataSetIterator.  iter))))
 
 (defmethod iterator :portable-multi-ds-stream [opts]
   (let [config (:portable-multi-ds-stream opts)
@@ -472,7 +466,7 @@
          iter :iter} config]
     (if streams
       (PortableDataStreamMultiDataSetIterator. streams)
-      (PortableDataStreamMultiDataSetIterator. (reset-iterator! iter)))))
+      (PortableDataStreamMultiDataSetIterator.  iter))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns
