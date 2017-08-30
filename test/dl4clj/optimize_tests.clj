@@ -13,9 +13,7 @@
             [dl4clj.optimize.api.termination-condition :refer :all]
             [dl4clj.optimize.api.training-listener :refer :all]
             ;; utils
-            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn]
-            [dl4clj.nn.conf.builders.builders :as l]
+            [dl4clj.nn.conf.builders.nn :as nn]
             [clojure.test :refer :all]
             [dl4clj.utils :refer [array-of]]
             [dl4clj.nn.layers.layer-creation :refer [new-layer]]
@@ -24,15 +22,17 @@
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand vec-or-matrix->indarray]]
             [clojure.java.io :as io])
   (:import [org.deeplearning4j.optimize.api IterationListener]
-           [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]
-           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+           [org.deeplearning4j.datasets.iterator.impl MnistDataSetIterator]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; this stuff is for building custom setups
+;; not going to be part of core
+
 (def nn-conf
-  (nn/nn-conf-builder
+  (nn/builder
    :seed 123
    :optimization-algo :stochastic-gradient-descent
    :iterations 1
@@ -51,7 +51,7 @@
             :dist {:uniform {:lower -0.08, :upper 0.08}}}}))
 
 (def nn-conf-unsupervised
-  (nn/nn-conf-builder
+  (nn/builder
    :seed 123
    :iterations 1
    :optimization-algo :stochastic-gradient-descent

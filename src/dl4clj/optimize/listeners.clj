@@ -34,30 +34,30 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                         :print-min-max? :print-mean-abs-value?
                         :output-to-console? :output-to-file? :output-to-logger?
                         :file :delim)
-      (ParamAndGradientIterationListener. iterations print-header? print-mean?
-                                          print-min-max? print-mean-abs-value?
-                                          output-to-console? output-to-file?
-                                          output-to-logger? file delim)
-      (ParamAndGradientIterationListener.))))
+      `(ParamAndGradientIterationListener. ~iterations ~print-header? ~print-mean?
+                                          ~print-min-max? ~print-mean-abs-value?
+                                          ~output-to-console? ~output-to-file?
+                                          ~output-to-logger? ~file ~delim)
+      `(ParamAndGradientIterationListener.))))
 
 (defmethod listeners :collection-scores [opts]
   (let [conf (:collection-scores opts)
         frequency (:frequency conf)]
-    (if (nil? frequency)
-      (CollectScoresIterationListener.)
-      (CollectScoresIterationListener. frequency))))
+    (if frequency
+      `(CollectScoresIterationListener. ~frequency)
+      `(CollectScoresIterationListener.))))
 
 (defmethod listeners :composable [opts]
   (let [conf (:composable opts)
         listeners (:listeners conf)]
-    (ComposableIterationListener. listeners)))
+    `(ComposableIterationListener. ~listeners)))
 
 (defmethod listeners :score-iteration [opts]
   (let [conf (:score-iteration opts)
         print-every-n (:print-every-n conf)]
-    (if (nil? print-every-n)
-      (ScoreIterationListener.)
-      (ScoreIterationListener. print-every-n))))
+    (if print-every-n
+      `(ScoreIterationListener. ~print-every-n)
+      `(ScoreIterationListener.))))
 
 (defmethod listeners :performance [opts]
   (let [conf (:performance opts)
@@ -69,6 +69,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
          freq :frequency
          build? :build?} conf
         b (PerformanceListener$Builder.)]
+    ;; update this to use builder fn
     (cond-> b
       (contains? conf :report-batch?)
       (.reportBatch report-batch?)
@@ -121,6 +122,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
              report-score? report-time? build? frequency array?]
       :or {array? false}
       :as opts}]
+  ;; refactor
   (let [conf (if (nil? opts)
                {:build? true
                 :report-batch? true
@@ -142,17 +144,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
    - defaults to 10
 
   :array? (boolean), if you want to return the object in an array of type IterationListener
-   - defaults to false"
-  [& {:keys [print-every-n array?]
-      :or {array? false}
+   - defaults to false
+
+  :as-code? (boolean), return the java object or the code for creating it"
+  [& {:keys [print-every-n array? as-code?]
+      :or {array? false
+           as-code? true}
       :as opts}]
-  (let [conf (if (nil? opts)
-               {:print-every-n 10}
-               opts)]
-    (if (true? array?)
-      (array-of :data (listeners {:score-iteration conf})
-                :java-type IterationListener)
-      (listeners {:score-iteration conf}))))
+  (let [conf (if opts
+               opts
+               {:print-every-n 10})
+        code (if (true? array?)
+               `(array-of :data ~(listeners {:score-iteration conf})
+                         :java-type IterationListener)
+               (listeners {:score-iteration conf}))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-composable-iteration-listener
   "A group of listeners
@@ -160,14 +168,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   listeners (collection or array) multiple listeners to compose together
 
   :array? (boolean), if you want to return the object in an array of type IterationListener
-   - defaults to false"
-  [& {:keys [coll-of-listeners array?]
-      :or {array? false}
+   - defaults to false
+
+  :as-code? (boolean), return the java object or the code for creating it"
+  [& {:keys [coll-of-listeners array? as-code?]
+      :or {array? false
+           as-code? true}
       :as opts}]
-  (if (true? array?)
-    (array-of :data (listeners {:composable opts})
-             :java-type IterationListener)
-    (listeners {:composable opts})))
+  (let [code (if (true? array?)
+               `(array-of :data ~(listeners {:composable opts})
+                         :java-type IterationListener)
+               (listeners {:composable opts}))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-collection-scores-iteration-listener
   "CollectScoresIterationListener simply stores the model scores internally
@@ -178,17 +192,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
    - defaults to 1
 
   :array? (boolean), if you want to return the object in an array of type IterationListener
-   - defaults to false"
-  [& {:keys [frequency array?]
-      :or {array? false}
+   - defaults to false
+
+  :as-code? (boolean), return the java object or the code for creating it"
+  [& {:keys [frequency array? as-code?]
+      :or {array? false
+           as-code? true}
       :as opts}]
-  (let [conf (if (nil? opts)
-               {:frequency 1}
-               opts)]
-   (if (true? array?)
-      (array-of :data (listeners {:collection-scores conf})
-                :java-type IterationListener)
-      (listeners {:collection-scores conf}))))
+  (let [conf (if opts
+               opts
+               {:frequency 1})
+        code (if (true? array?)
+               `(array-of :data ~(listeners {:collection-scores conf})
+                         :java-type IterationListener)
+               (listeners {:collection-scores conf}))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-param-and-gradient-iteration-listener
   "An iteration listener that provides details on parameters and gradients at
@@ -235,13 +255,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
   :array? (boolean), if you want to return the object in an array of type IterationListener
    - defaults to false
 
+  :as-code? (boolean), return the java object or the code for creating it
+
   defaults are only used if no kw args are supplied"
   [& {:keys [iterations print-header? print-mean? print-min-max?
              print-mean-abs-value? output-to-console? output-to-file?
-             output-to-logger? file delimiter array?]
+             output-to-logger? file delimiter array? as-code?]
       :or {array? false}
       :as opts}]
-  (let [conf (if (nil? opts)
+  (let [conf (if opts
+               opts
                {:iterations 1
                 :print-header? true
                 :print-mean? true
@@ -251,9 +274,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                 :output-to-file? false
                 :output-to-logger? true
                 :file nil
-                :delimiter ","}
-               opts)]
-   (if (true? array?)
-    (array-of :data (listeners {:param-and-gradient conf})
-              :java-type IterationListener)
-    (listeners {:param-and-gradient conf}))))
+                :delimiter ","})
+        code (if (true? array?)
+               `(array-of :data ~(listeners {:param-and-gradient conf})
+                         :java-type IterationListener)
+               (listeners {:param-and-gradient conf}))]
+    (if as-code?
+      code
+      (eval code))))

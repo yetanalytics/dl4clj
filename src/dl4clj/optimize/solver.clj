@@ -27,6 +27,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/Solver.html"}
   [& {:keys [nn-conf single-listener multiple-listeners model build?]
       :or {build? true}
       :as opts}]
+  ;; refactor to use builder fn
   (let [b (Solver$Builder.)]
     (assert (contains? opts :nn-conf) "you must supply a neural network configuration")
     (cond-> b

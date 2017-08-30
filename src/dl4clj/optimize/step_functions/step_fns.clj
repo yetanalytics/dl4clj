@@ -14,6 +14,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/stepfunctions/pa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Multi method for calling the step function constructors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; not user facing, will be removed
 
 (defmulti step-fns identity)
 

@@ -236,20 +236,3 @@
       (= typez :recurrent)
       (InputType/recurrent size))))
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/inputs/InputType.html
-
-
-
-
-
-
-(comment
-  " for seq alignment mode
-EQUAL_LENGTH: Default. Assume that label and input time series are of equal length, and all examples are of the same length
-ALIGN_START: Align the label/input time series at the first time step, and zero pad either the labels or the input at the end
-ALIGN_END: Align the label/input at the last time step, zero padding either the input or the labels as required
-Note 1: When the time series for each example are of different lengths, the shorter time series will be padded to the length of the longest time series.
-Note 2: When ALIGN_START or ALIGN_END are used, the DataSet masking functionality is used. Thus, the returned DataSets will have the input and mask arrays set. These mask arrays identify whether an input/label is actually present, or whether the value is merely masked."
-
-  " for multi alignment mode
-When dealing with time series data of different lengths, how should we align the input/labels time series? For equal length: use EQUAL_LENGTH For sequence classification: use ALIGN_END"
-  )

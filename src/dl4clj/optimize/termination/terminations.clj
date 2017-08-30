@@ -12,7 +12,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/terminations/pac
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method for creating instances of termination conditions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; not core
 (defmulti termination-condition generic-dispatching-fn)
 
 (defmethod termination-condition :eps [opts]

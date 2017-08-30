@@ -51,6 +51,7 @@
            [org.apache.spark.api.java JavaRDD JavaSparkContext]
            [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
+;; remove things that arn't going to be apart of core
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns and defs used in testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
