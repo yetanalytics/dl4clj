@@ -6,7 +6,7 @@
             [dl4clj.eval.confusion-matrix :refer [new-confusion-matrix]]
             [dl4clj.eval.api.confusion-matrix :refer :all]
             ;; requireing early stopping ns for minimal training
-            [dl4clj.nn.conf.builders.nn-conf-builder :refer :all]
+            [dl4clj.nn.conf.builders.nn :refer :all]
             [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
             [dl4clj.utils :refer [get-labels]]
             [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
@@ -18,8 +18,7 @@
             [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
             [dl4clj.datasets.api.iterators :refer [reset-iter! next-example!]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
-            [dl4clj.nn.multilayer.multi-layer-network :refer :all])
-  (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+            [dl4clj.nn.multilayer.multi-layer-network :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; objects that I need for testing
@@ -27,26 +26,27 @@
 
 ;; fully train a network, save it and then import it here for testing
 ;; this set up doesn't produce any predictions bc of low training
-(def mln (new-multi-layer-network
-          :conf (nn-conf-builder
-                 :seed 123
-                 :optimization-algo :stochastic-gradient-descent
-                 :iterations 1
-                 :default-learning-rate 0.006
-                 :default-updater :nesterovs
-                 :default-momentum 0.9
-                 :regularization? true
-                 :default-l2 1e-4
-                 :build? true
-                 :layers {0 {:dense-layer {:n-in 784
-                                           :n-out 1000
-                                           :activation-fn :relu
-                                           :weight-init :xavier}}
-                          1 {:output-layer {:loss-fn :negativeloglikelihood
-                                            :n-in 1000
-                                            :n-out 10
-                                            :activation-fn :soft-max
-                                            :weight-init :xavier}}})))
+(def mln-code (new-multi-layer-network
+               :as-code? true
+               :conf (builder
+                      :seed 123
+                      :optimization-algo :stochastic-gradient-descent
+                      :iterations 1
+                      :default-learning-rate 0.006
+                      :default-updater :nesterovs
+                      :default-momentum 0.9
+                      :regularization? true
+                      :default-l2 1e-4
+                      :build? true
+                      :layers {0 {:dense-layer {:n-in 784
+                                                :n-out 1000
+                                                :activation-fn :relu
+                                                :weight-init :xavier}}
+                               1 {:output-layer {:loss-fn :negativeloglikelihood
+                                                 :n-in 1000
+                                                 :n-out 10
+                                                 :activation-fn :soft-max
+                                                 :weight-init :xavier}}})))
 
 (def mnist-train (new-mnist-data-set-iterator :batch-size 25 :train? true
                                               :seed 123 :n-examples 1024
@@ -72,7 +72,7 @@
 (def es-trained (get-best-model-from-result
                  (fit-trainer! (new-early-stopping-trainer
                                 :early-stopping-conf es-conf
-                                :mln mln
+                                :mln mln-code
                                 :iter mnist-train))))
 ;; don't think that will work for binary-rocs, so i will have to look into dl4j unit tests for rocs
 ;; to find a default dataset to use
@@ -89,42 +89,59 @@
 (deftest evaler-creation-test
   (testing "the creation of evaluators"
     ;; classification evaluation
-    (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler))))
+    (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler :as-code? false))))
+    (is (= '(org.deeplearning4j.eval.Evaluation.)  (new-classification-evaler)))
+
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
-                                                     :n-classes 5))))
+                                                     :n-classes 5 :as-code? false))))
+    (is (= '(org.deeplearning4j.eval.Evaluation. 5) (new-classification-evaler
+                                                     :n-classes 5)))
+
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
+                                                     :as-code? false
                                                      :label-to-idx {0 "foo" 1 "baz"}))))
+    (is (= '(org.deeplearning4j.eval.Evaluation. {0 "foo" 1 "baz"})
+           (new-classification-evaler
+            :label-to-idx {0 "foo" 1 "baz"})))
+
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
+                                                     :as-code? false
                                                      :labels ["foo" "baz"]))))
-    (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
-                                                     :labels '("foo" "baz")))))
+    (is (= '(org.deeplearning4j.eval.Evaluation. (clojure.core/into () ["foo" "baz"]))
+           (new-classification-evaler
+            :labels ["foo" "baz"])))
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
                                                      :labels ["foo" "baz"]
-                                                     :top-n 2))))
-
+                                                     :top-n 2
+                                                     :as-code? false))))
     ;; regression/timeseries evaluation
     (is (= org.deeplearning4j.eval.RegressionEvaluation
-           (type (new-regression-evaler :n-columns 2))))
-    (is (= org.deeplearning4j.eval.RegressionEvaluation
-           (type (new-regression-evaler :column-names ["foo" "baz"]))))
-    (is (= org.deeplearning4j.eval.RegressionEvaluation
-           (type (new-regression-evaler :column-names (list "foo" "baz")))))
-    (is (= org.deeplearning4j.eval.RegressionEvaluation
-           (type (new-regression-evaler :n-columns 2 :precision 2))))
+           (type (new-regression-evaler :n-columns 2 :as-code? false))))
+    (is (= '(org.deeplearning4j.eval.RegressionEvaluation. 2)
+           (new-regression-evaler :n-columns 2)))
+
     (is (= org.deeplearning4j.eval.RegressionEvaluation
            (type (new-regression-evaler :column-names ["foo" "baz"]
-                                        :precision 1))))
+                                        :as-code? false))))
+    (is (= '(org.deeplearning4j.eval.RegressionEvaluation. (clojure.core/into () ["foo" "baz"]))
+           (new-regression-evaler :column-names ["foo" "baz"])))
+    (is (= org.deeplearning4j.eval.RegressionEvaluation
+           (type (new-regression-evaler :n-columns 2 :precision 2 :as-code? false))))
+    (is (= org.deeplearning4j.eval.RegressionEvaluation
+           (type (new-regression-evaler :column-names ["foo" "baz"]
+                                        :precision 1
+                                        :as-code? false))))
 
     ;; ROC evaluation
-    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2))))
-    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2))))))
+    (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2 :as-code? false))))
+    (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2 :as-code? false))))))
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
-    (let [data (next-example! (reset-iter! mnist-test))
+    (let [data (next-example! (eval mnist-test))
           features (get-features data)
           mln-output (output :mln es-trained :input features)
-          evalr (new-classification-evaler)
+          evalr (new-classification-evaler :as-code? false)
           labels (get-labels data)
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)]
@@ -236,9 +253,9 @@
 
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
-    (let [data (next-example! (reset-iter! mnist-test))
+    (let [data (next-example! (eval mnist-test))
           features (get-features data)
-          evalr (new-classification-evaler)
+          evalr (new-classification-evaler :as-code? false)
           labels (get-labels data)
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)

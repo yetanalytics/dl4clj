@@ -4,6 +4,7 @@
   (:import [org.deeplearning4j.eval ConfusionMatrix])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; going to be removed in core
 (defn new-confusion-matrix
   "Creates a new confusion matrix.
 

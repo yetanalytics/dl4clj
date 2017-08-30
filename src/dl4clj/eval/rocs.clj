@@ -18,12 +18,14 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
 (defmulti rocs generic-dispatching-fn)
 
 (defmethod rocs :multi-class [opts]
-  (let [threshold (:threshold-steps (:multi-class opts))]
-    (ROCMultiClass. threshold)))
+  (let [conf (:multi-class opts)
+        threshold (:threshold-steps conf)]
+    `(ROCMultiClass. ~threshold)))
 
 (defmethod rocs :binary [opts]
-  (let [threshold (:threshold-steps (:binary opts))]
-    (ROC. threshold)))
+  (let [conf (:binary opts)
+        threshold (:threshold-steps conf)]
+    `(ROC. ~threshold)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns
@@ -35,10 +37,16 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
   This implementation currently uses fixed
   steps of size 1.0 / threshold-steps
 
+  :as-code? (boolean), return the java object or the code for creating it
+
   threshold-steps (int), controls the step size for generating the ROC curve"
-  [& {:keys [threshold-steps]
+  [& {:keys [threshold-steps as-code?]
+      :or {as-code? true}
       :as opts}]
-  (rocs {:binary opts}))
+  (let [code (rocs {:binary opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-multiclass-roc
   "creates a new ROC for multi-class classifiers
@@ -46,7 +54,13 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
   This implementation currently uses fixed
   steps of size 1.0 / threshold-steps
 
+  :as-code? (boolean), return the java object or the code for creating it
+
   threshold-steps (int), controls the step size for generating the ROC curve"
-  [& {:keys [threshold-steps]
+  [& {:keys [threshold-steps as-code?]
+      :or {as-code? true}
       :as opts}]
-  (rocs {:multi-class opts}))
+  (let [code (rocs {:multi-class opts})]
+    (if as-code?
+      code
+      (eval code))))

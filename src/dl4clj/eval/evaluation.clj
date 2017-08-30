@@ -3,7 +3,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html and
 https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html"}
     dl4clj.eval.evaluation
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+            [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod for creating the evaluation java object
@@ -17,35 +18,32 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
          top-n :top-n
          l-to-i-map :label-to-idx
          n-classes :n-classes} conf]
-    (cond (contains-many? conf :labels :top-n)
-          (Evaluation. labels top-n)
-          (contains? conf :labels)
-          (Evaluation. (into '() labels))
-          (contains? conf :label-to-idx)
-          (Evaluation. l-to-i-map)
-          (contains? conf :n-classes)
-          (Evaluation. n-classes)
-          :else
-          (Evaluation.))))
+    (match [conf]
+           [{:labels _ :top-n _}]
+           `(Evaluation. ~labels ~top-n)
+           [{:labels _}]
+           `(Evaluation. (into () ~labels))
+           [{:label-to-idx _}]
+           `(Evaluation. ~l-to-i-map)
+           [{:n-classes _}]
+           `(Evaluation. ~n-classes)
+           :else
+           `(Evaluation.))))
 
 (defmethod evaler :regression [opts]
   (let [conf (:regression opts)
         {column-names :column-names
          precision :precision
-         n-columns :n-columns} conf
-        c-names (into '() column-names)]
-    (cond (contains-many? conf :column-names :precision)
-          (RegressionEvaluation. c-names precision)
-          (contains-many? conf :n-columns :precision)
-          (RegressionEvaluation. n-columns precision)
-          (contains? conf :column-names)
-          (RegressionEvaluation. c-names)
-          (contains? conf :n-columns)
-          (RegressionEvaluation. n-columns)
-          :else
-          (assert
-           false
-           "you must supply either the number of columns or their names for regression evaluation"))))
+         n-columns :n-columns} conf]
+    (match [conf]
+           [{:column-names _ :precision _}]
+           `(RegressionEvaluation. (into () ~column-names) ~precision)
+           [{:n-columns _ :precision _}]
+           `(RegressionEvaluation. ~n-columns ~precision)
+           [{:column-names _}]
+           `(RegressionEvaluation. (into () ~column-names))
+           [{:n-columns _}]
+           `(RegressionEvaluation. ~n-columns))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns
@@ -63,10 +61,16 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
    :n-classes (int), the number of classes to account for in the evaluation
 
    :label-to-idx (map), {column-idx (int) label (str)}
-    - another way to set the labels for the classification"
-  [& {:keys [labels top-n label-to-idx n-classes]
+    - another way to set the labels for the classification
+
+   :as-code? (boolean), return the java object or the code for creating the object"
+  [& {:keys [labels top-n label-to-idx n-classes as-code?]
+      :or {as-code? true}
       :as opts}]
-  (evaler {:classification opts}))
+  (let [code (evaler {:classification opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-regression-evaler
   "Evaluation method for the evaluation of regression algorithms.
@@ -77,7 +81,13 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
 
    :precision (int), specified precision to be used
 
-   :n-columns (int), the number of columns in the dataset"
-  [& {:keys [column-names precision n-columns]
+   :n-columns (int), the number of columns in the dataset
+
+   :as-code? (boolean), return the java object or the code for creating it"
+  [& {:keys [column-names precision n-columns as-code?]
+      :or {as-code? true}
       :as opts}]
-  (evaler {:regression opts}))
+  (let [code (evaler {:regression opts})]
+    (if as-code?
+      code
+      (eval code))))
