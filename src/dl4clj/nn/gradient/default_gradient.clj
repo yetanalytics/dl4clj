@@ -3,7 +3,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/gradient/DefaultGradie
     dl4clj.nn.gradient.default-gradient
   (:import [org.deeplearning4j.nn.gradient DefaultGradient])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
-
+;; determine if this is necessary
 (defn new-default-gradient
   [& {:keys [flattened-gradient]
       :as opts}]

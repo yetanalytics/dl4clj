@@ -1,6 +1,7 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
     dl4clj.nn.conf.input-pre-processor
-  (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of]])
+  (:require [dl4clj.utils :refer [generic-dispatching-fn array-of]]
+            [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
            [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]
@@ -19,74 +20,91 @@
   generic-dispatching-fn)
 
 (defmethod pre-processors :binominal-sampling-pre-processor [opts]
-  (BinomialSamplingPreProcessor.))
+  `(BinomialSamplingPreProcessor.))
 
 (defmethod pre-processors :unit-variance-processor [opts]
-  (UnitVarianceProcessor.))
+  `(UnitVarianceProcessor.))
 
 (defmethod pre-processors :rnn-to-cnn-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
          num-channels :num-channels} (:rnn-to-cnn-pre-processor opts)]
-    (RnnToCnnPreProcessor. input-height input-width num-channels)))
+    `(RnnToCnnPreProcessor. ~input-height ~input-width ~num-channels)))
 
 (defmethod pre-processors :zero-mean-and-unit-variance-pre-processor [opts]
-  (ZeroMeanAndUnitVariancePreProcessor.))
+  `(ZeroMeanAndUnitVariancePreProcessor.))
 
 (defmethod pre-processors :zero-mean-pre-pre-processor [opts]
-  (ZeroMeanPrePreProcessor.))
+  `(ZeroMeanPrePreProcessor.))
 
 (defmethod pre-processors :cnn-to-feed-forward-pre-processor [opts]
   (let [conf (:cnn-to-feed-forward-pre-processor opts)
         {input-height :input-height
          input-width :input-width
          num-channels :num-channels} conf]
-    (cond (contains-many? conf :input-height :input-width :num-channels)
-          (CnnToFeedForwardPreProcessor. input-height input-width num-channels)
-          (contains-many? conf :input-height :input-width)
-          (CnnToFeedForwardPreProcessor. input-height input-width)
-          :else
-          (CnnToFeedForwardPreProcessor.))))
+    (match [conf]
+           [{:input-height _ :input-width _ :num-channels _}]
+           `(CnnToFeedForwardPreProcessor. ~input-height ~input-width ~num-channels)
+           [{:input-height _ :input-width _}]
+           `(CnnToFeedForwardPreProcessor. ~input-height ~input-width)
+           :else
+           `(CnnToFeedForwardPreProcessor.))))
 
 (defmethod pre-processors :cnn-to-rnn-pre-processor [opts]
   (let [{input-height :input-height
          input-width :input-width
          num-channels :num-channels} (:cnn-to-rnn-pre-processor opts)]
-    (CnnToRnnPreProcessor. input-height input-width num-channels)))
+    `(CnnToRnnPreProcessor. ~input-height ~input-width ~num-channels)))
 
 (defmethod pre-processors :feed-forward-to-cnn-pre-processor [opts]
   (let [conf (:feed-forward-to-cnn-pre-processor opts)
         {input-height :input-height
          input-width :input-width
          num-channels :num-channels} conf]
-    (if (contains-many? conf :input-height :input-width :num-channels)
-      (FeedForwardToCnnPreProcessor. input-height input-width num-channels)
-      (FeedForwardToCnnPreProcessor. input-width input-height))))
+    (match [conf]
+           [{:input-height _ :input-width _ :num-channels _}]
+           `(FeedForwardToCnnPreProcessor. ~input-height ~input-width ~num-channels)
+           :else
+           `(FeedForwardToCnnPreProcessor. ~input-width ~input-height))))
 
 (defmethod pre-processors :rnn-to-feed-forward-pre-processor [opts]
-  (RnnToFeedForwardPreProcessor.))
+  `(RnnToFeedForwardPreProcessor.))
 
 (defmethod pre-processors :feed-forward-to-rnn-pre-processor [opts]
-  (FeedForwardToRnnPreProcessor.))
+  `(FeedForwardToRnnPreProcessor.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-binominal-sampling-pre-processor
-  "Binomial sampling pre processor"
-  []
-  `(pre-processors {:binominal-sampling-pre-processor {}}))
+  "Binomial sampling pre processor
+
+  :as-code? (boolean), return java object or code for creating it"
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:binominal-sampling-pre-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-unit-variance-processor
-  "Unit variance operation"
-  []
-  `(pre-processors {:unit-variance-processor {}}))
+  "Unit variance operation
+
+  :as-code? (boolean), return java object or code for creating it"
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:unit-variance-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-rnn-to-cnn-pre-processor
   "A preprocessor to allow RNN and CNN layers to be used together
 
   args are:
+
+  :as-code? (boolean), return java object or code for creating it
 
   :input-height (int), the input height
 
@@ -107,19 +125,35 @@
       into 3d epsilons with shape [miniBatchSize, numChannels*inputHeight*inputWidth, timeSeriesLength]
       suitable to feed into CNN layers.
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
-  [& {:keys [input-height input-width num-channels]
+  [& {:keys [input-height input-width num-channels as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(pre-processors {:rnn-to-cnn-pre-processor ~opts}))
+  (let [code (pre-processors {:rnn-to-cnn-pre-processor opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-zero-mean-and-unit-variance-pre-processor
-  "Zero mean and unit variance operation"
-  []
-  `(pre-processors {:zero-mean-and-unit-variance-pre-processor {}}))
+  "Zero mean and unit variance operation
+
+  :as-code? (boolean), return java object or code for creating it"
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:zero-mean-and-unit-variance-pre-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-zero-mean-pre-pre-processor
-  "Zero mean and unit variance operation"
-  []
-  `(pre-processors {:zero-mean-pre-pre-processor {}}))
+  "Zero mean and unit variance operation
+
+  :as-code? (boolean), return java object or code for creating it"
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:zero-mean-pre-pre-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-cnn-to-feed-forward-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -128,6 +162,8 @@
   args are:
 
   :input-height (int), the input height
+
+  :as-code? (boolean), return java object or code for creating it
 
   :input-width (int), the width of the input
 
@@ -145,9 +181,13 @@
       for use in feed forward layer
 
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
-  [& {:keys [input-height input-width num-channels]
+  [& {:keys [input-height input-width num-channels as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(pre-processors {:cnn-to-feed-forward-pre-processor ~opts}))
+  (let [code (pre-processors {:cnn-to-feed-forward-pre-processor opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-cnn-to-rnn-pre-processor
   "A preprocessor to allow CNN and RNN layers to be used together.
@@ -159,6 +199,8 @@
   :input-width (int), the width of the input
 
   :num-channels (int), the number of channels
+
+  :as-code? (boolean), return java object or code for creating it
 
   For example, ConvolutionLayer -> GravesLSTM Functionally equivalent to combining
   CnnToFeedForwardPreProcessor + FeedForwardToRnnPreProcessor
@@ -175,9 +217,13 @@
   suitable to feed into CNN layers.
 
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
-  [& {:keys [input-height input-width num-channels]
+  [& {:keys [input-height input-width num-channels as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(pre-processors {:cnn-to-rnn-pre-processor ~opts}))
+  (let [code (pre-processors {:cnn-to-rnn-pre-processor opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-feed-forward-to-cnn-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -189,6 +235,8 @@
   :input-width (int), the width of the input
 
   :num-channels (int), the number of channels
+
+  :as-code? (boolean), return java object or code for creating it
 
   For example, DenseLayer -> CNN
   This does two things:
@@ -203,14 +251,20 @@
   for use in feed forward layer
 
   Note: numChannels is equivalent to depth or featureMaps referenced in different literature"
-  [& {:keys [input-height input-width num-channels]
+  [& {:keys [input-height input-width num-channels as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(pre-processors {:feed-forward-to-cnn-pre-processor ~opts}))
+  (let [code (pre-processors {:feed-forward-to-cnn-pre-processor ~opts})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-rnn-to-feed-forward-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
 
   For example, GravesLSTM -> OutputLayer or GravesLSTM -> DenseLayer
+
+  :as-code? (boolean), return java object or code for creating it
 
   This does two things:
   (a) Reshapes activations out of RNN layer
@@ -222,11 +276,17 @@
   [miniBatchSize*timeSeriesLength,layerSize]) into 3d epsilons
   (with shape [miniBatchSize,layerSize,timeSeriesLength]) for use in RNN layer"
 
-  []
- `(pre-processors {:rnn-to-feed-forward-pre-processor {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:rnn-to-feed-forward-pre-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-feed-forward-to-rnn-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
+
+  :as-code? (boolean), return java object or code for creating it
 
   For example, DenseLayer -> GravesLSTM
 
@@ -240,27 +300,37 @@
   (weights*deltas from RNN layer, with shape [miniBatchSize,layerSize,timeSeriesLength])
   into 2d epsilons (with shape [miniBatchSize*timeSeriesLength,layerSize])
   for use in feed forward layer"
-  []
-  `(pre-processors {:feed-forward-to-rnn-pre-processor {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (pre-processors {:feed-forward-to-rnn-pre-processor {}})]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
 
-  :pre-processors (coll), a collection of pre-processors
+  :components (coll), a collection of pre-processors
    - can be a mix of the above fns or a configuration map
      that is passed to the pre-processors multi method
 
+  :as-code? (boolean), return java object or code for creating it
+
   ie. (composable-input-pre-processor
-       :pre-processors [(zero-mean-pre-pre-processor)
+       :components [(zero-mean-pre-pre-processor)
                         (binominal-sampling-pre-processor)
                         {:cnn-to-feed-forward-pre-processor
                          {:input-height 2 :input-width 3 :num-channels 4}}])"
-  [& {:keys [pre-processors]
+  [& {:keys [components as-code?]
+      :or {as-code? true}
       :as opts}]
   (let [pp (into []
-                 (for [each pre-processors]
+                 (for [each components]
                    (if (map? each)
-                     `(pre-processors ~each)
-                     each)))]
-   `(ComposableInputPreProcessor.
-   (array-of :data ~pp :java-type InputPreProcessor))))
+                     (pre-processors each)
+                     each)))
+        pp-array `(array-of :data ~pp :java-type InputPreProcessor)
+        code `(ComposableInputPreProcessor. ~pp-array)]
+    (if as-code?
+      code
+      (eval code))))

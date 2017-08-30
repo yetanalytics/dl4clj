@@ -17,14 +17,13 @@
            [org.datavec.api.records.reader.impl.csv CSVSequenceRecordReader]
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader])
-  (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; replace contains-many? with core.match
 (defmulti record-reader
   "Multimethod that builds a record reader based on the supplied type and opts"
   generic-dispatching-fn)
@@ -186,28 +185,3 @@
     (if as-code?
       code
       (eval code))))
-
-(comment
-;; will implement when needed
-(ImageRecordReader. )
-;;https://deeplearning4j.org/datavecdoc/org/datavec/image/recordreader/ImageRecordReader.html
-(VideoRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/image/recordreader/VideoRecordReader.html
-(LibSvmRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/misc/LibSvmRecordReader.html
-(SVMLightRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/misc/SVMLightRecordReader.html
-(MatlabRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/misc/MatlabRecordReader.html
-;; constructor needs args
-(ComposableRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/ComposableRecordReader.html
-(JacksonRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/jackson/JacksonRecordReader.html
-(RegexLineRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/regex/RegexLineRecordReader.html
-(RegexSequenceRecordReader.)
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/regex/RegexSequenceRecordReader.html
-(CSVRegexRecordReader.) ;; constructor needs args
-;;https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/impl/csv/CSVRegexRecordReader.html
-)

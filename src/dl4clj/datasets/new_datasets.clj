@@ -5,6 +5,8 @@
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; update to produce code or java
+
 (defn new-ds
   "Creates a DataSet object with the specified input and output.
   if they are not supplied, creates a new empty DataSet object

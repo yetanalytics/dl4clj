@@ -9,6 +9,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/updater/LayerUpdater.h
   (:require [dl4clj.constants :as enum]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; dont think this is core. verify this
+
 (defn new-layer-updater
   "creates a new instance of the LayerUpdater class"
   []

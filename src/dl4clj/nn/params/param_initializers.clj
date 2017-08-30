@@ -11,6 +11,8 @@
             VariationalAutoencoderParamInitializer])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; dont htink this is core. verify this
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Multimethod for calling constructors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

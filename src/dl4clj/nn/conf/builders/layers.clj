@@ -487,6 +487,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; write specs to check for correct keys given a layer type
+;; update to have mm produce code, user facing determines if obj is created
 (defn activation-layer-builder
   "creates an activation layer with params supplied in opts map.
 

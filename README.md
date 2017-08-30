@@ -4,18 +4,22 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## Features
 
-Not all of these are fully tested and are most likely going to undergo breaking changes
-- TESTS ARE BROKEN, THEY POINT TO OLD NAMESPACES
+### Stable Features with tests
 
+- Neural Networks DSL
+- Early Stopping
+- Transfer Learning
+- Evaluation (needs more tests)
+- Data import (core features)
+- Optimize (tested but might be temporarly removed)
+
+### Features being worked on
+
+- Computational Graphs
+- NLP
 - Clustering (testing in progress)
-- Datasets (tested)
-- Early Stopping (tested)
-- Eval/Evaluation (tested)
-- Neural Networks DSL (tested)
-- Optimize (tested)
+- Datasets (needs refactor)
 - Spark training/hosting (not tested)
-
-Support for Computational Graphs and NLP will come in a future release
 
 ## Artifacts
 
@@ -52,247 +56,12 @@ With Maven:
 ## Usage
 
 TODO
-- verify in scratch that this README is accurate
 - add in clustering workflow/examples
 
-### Layers
+### Important
 
-Creating Layers
-
-``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]
-            [dl4clj.nn.conf.distribution.distribution :as dist]))
-
-(l/activation-layer-builder
- :activation-fn :relu
- :updater :adam
- :adam-mean-decay 0.2
- :adam-var-decay 0.1
- :learning-rate 0.006
- :weight-init :distribution
- :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
- :layer-name "example layer"
- :n-in 10
- :n-out 1)
-
-```
-
-There is also support for unsupervised learning layers
- - ie. Variational Autoencoders
-
-``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]
-            [dl4clj.nn.conf.variational.dist-builders :as v-dist]))
-
-(l/variational-autoencoder-builder
- :decoder-layer-sizes [2 2]
- :encoder-layer-sizes [2 2]
- :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
- :pzx-activation-function :identity)
-
-(l/variational-autoencoder-builder
- :decoder-layer-sizes [2 2]
- :encoder-layer-sizes [2 2]
- :reconstruction-distribution (v-dist/new-bernoulli-reconstruction-distribution
-                               :activation-fn :sigmoid)
- :pzx-activation-function :identity)
-
-;;these configurations are the same
-```
-
-There are a lot of utilities for working with Convolutional and Recurrent layers
-- see: dl4clj.nn.conf.layers.input-type-util
-
-And working with any type of layer
-- see: dl4clj.nn.conf.layers.shared-fns
-  - need to revisit this ns. make sure all the language is clear and no overlapping
-    fns with the model interface ns
-
-There is also configuration validation
-- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
-
-### Model configuration
-
-Creating input pre-processors
-- manipulate the incoming data at the layer level
-- each layer can have its own pre-processor
-
-``` clojure
-
-(ns my.ns
-  (:require [dl4clj.nn.conf.input-pre-processor :as pp]))
-
-;; single pre-processor
-
-(pp/new-cnn-to-feed-forward-pre-processor
- :input-height 2 :input-width 3 :num-channels 4)
-
-;; single pre-processor made of multiple pre-processors
-;; this fn also supports heterogeneous args
-
-(pp/new-composable-input-pre-processor
- :pre-processors [(new-zero-mean-pre-pre-processor)
-                  (new-binominal-sampling-pre-processor)
-                  {:cnn-to-feed-forward-pre-processor
-                   {:input-height 2
-                    :input-width 3
-                    :num-channels 4}}])
-
-```
-
-Adding the layers to a neural network configuration
-
-``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
-            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-            [dl4clj.nn.conf.distribution.distribution :as dist]
-            [dl4clj.nn.conf.step-fns :as s-fn]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; single layer nn-conf
-;; build? should be set to true
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
-                         :seed 123
-                         :iterations 1
-                         :minimize? true
-                         :use-drop-connect? false
-                         :lr-score-based-decay-rate 0.002
-                         :regularization? false
-                         :step-fn :default-step-fn
-                         :build? true
-                         :layer {:dense-layer {:activation-fn :relu
-                                               :updater :adam
-                                               :adam-mean-decay 0.2
-                                               :adam-var-decay 0.1
-                                               :learning-rate 0.006
-                                               :weight-init :xavier
-                                               :layer-name "single layer model example"
-                                               :n-in 10
-                                               :n-out 20}})
-
-;; there are several options within a nn-conf map which can be configuration maps
-;; or calls to fns
-;; It doesn't matter which option you choose and you don't have to stay consistent
-
-(nn-conf/nn-conf-builder :optimization-algo :stochastic-gradient-descent
-                         :seed 123
-                         :iterations 1
-                         :minimize? true
-                         :use-drop-connect? false
-                         :lr-score-based-decay-rate 0.002
-                         :regularization? false
-                         :step-fn (s-fn/new-default-step-fn)
-                         :build? true
-                         :layer (l/dense-layer-builder
-                                 :activation-fn :relu
-                                 :updater :adam
-                                 :adam-mean-decay 0.2
-                                 :adam-var-decay 0.1
-                                 :dist (dist/new-normal-distribution :mean 0 :std 1)
-                                 :learning-rate 0.006
-                                 :weight-init :xavier
-                                 :layer-name "single layer model example"
-                                 :n-in 10
-                                 :n-out 20))
-
-;; these configurations are the same
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; model with multiple layers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; defaults will apply to layers which do not specify those value in their config
-
-(def l-builder (nn-conf/nn-conf-builder
-                :optimization-algo :stochastic-gradient-descent
-                :seed 123
-                :iterations 1
-                :minimize? true
-                :use-drop-connect? false
-                :lr-score-based-decay-rate 0.002
-                :regularization? false
-                :default-activation-fn :sigmoid
-                :default-weight-init :uniform
-                :layers {0 (l/activation-layer-builder
-                            :activation-fn :relu
-                            :updater :adam
-                            :adam-mean-decay 0.2
-                            :adam-var-decay 0.1
-                            :learning-rate 0.006
-                            :weight-init :xavier
-                            :layer-name "example first layer"
-                            :n-in 10
-                            :n-out 20)
-                         1 {:output-layer {:n-in 20
-                                           :n-out 2
-                                           :loss-fn :mse
-                                           :layer-name "example output layer"}}}))
-
-;; here we can add in pre-processors
-;; pass in a map of either pre-processor fn calls or configuration maps
-;; can be heterogeneous just like any other place where you can pass fns or config maps
-;; keys are the indexs of the layers you want to add the pre-processor to
-
-(def multi-layer-conf
-  (mlb/multi-layer-config-builder
-   :list-builder l-builder
-   :backprop? true
-   :backprop-type :standard
-   :pretrain? false
-   :input-pre-processors {0 (new-zero-mean-pre-pre-processor)
-                          1 {:unit-variance-processor {}}}))
-
-;; we can also create multi-layer configurations using many single layer configurations
-
-(def first-layer-conf
-  (nn-conf/nn-conf-builder
-   :optimization-algo :stochastic-gradient-descent
-   :seed 123
-   :iterations 1
-   :minimize? true
-   :use-drop-connect? false
-   :lr-score-based-decay-rate 0.002
-   :regularization? false
-   :build? true
-   :layer {:dense-layer {:activation-fn :relu
-                         :updater :adam
-                         :adam-mean-decay 0.2
-                         :adam-var-decay 0.1
-                         :learning-rate 0.006
-                         :weight-init :xavier
-                         :layer-name "first layer"
-                         :n-in 10
-                         :n-out 20}}))
-
-(def second-layer-conf
-  (nn-conf/nn-conf-builder
-   :optimization-algo :stochastic-gradient-descent
-   :seed 123
-   :iterations 1
-   :minimize? true
-   :use-drop-connect? false
-   :lr-score-based-decay-rate 0.002
-   :regularization? false
-   :build? true
-   :layer {:output-layer {:n-in 20
-                          :n-out 2
-                          :loss-fn :mse
-                          :layer-name "second layer"
-                          :activation-fn :softmax}}))
-
-(def multi-from-multiple-single
- (multi-layer-config-builder :nn-confs [first-layer-conf second-layer-conf]))
-
-;; other args can also be passed just like when we added pre-processors to our other mln
-
-
-```
+- The option :as-code? determines if a fn returns a java object or the code for creating a java object
+- Typically defaults to true, so the code for creating objects is returned
 
 ### Importing data
 
@@ -300,12 +69,13 @@ Loading data from a file (here its a csv)
 
 ``` clojure
 
-(my.ns (:require [dl4clj.datasets.input-splits :as s]
-                 [dl4clj.datasets.record-readers :as rr]
-                 [dl4clj.datasets.api.record-readers :refer :all]
-                 [dl4clj.datasets.iterators :as ds-iter]
-                 [dl4clj.datasets.api.iterators :refer :all]
-                 [dl4clj.helpers :refer [data-from-iter]]))
+(ns my.ns
+ (:require [dl4clj.datasets.input-splits :as s]
+           [dl4clj.datasets.record-readers :as rr]
+           [dl4clj.datasets.api.record-readers :refer :all]
+           [dl4clj.datasets.iterators :as ds-iter]
+           [dl4clj.datasets.api.iterators :refer :all]
+           [dl4clj.helpers :refer [data-from-iter]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; file splits (convert the data to records)
@@ -316,7 +86,10 @@ Loading data from a file (here its a csv)
 
 (def file-split (s/new-filesplit :path poker-path))
 
-;; we can't look at the data until we create a record reader
+;; if we look at file split, we see its just code
+;; file-split =>
+;; (org.datavec.api.split.FileSplit.
+;;  (clojure.java.io/as-file "resources/poker-hand-training.csv"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record readers, (read the records created by the file split)
@@ -325,16 +98,42 @@ Loading data from a file (here its a csv)
 (def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
                                  :input-split file-split))
 
+;; when we look at csv-rr, we see its also just code
+;; csv-rr =>
+;;(clojure.core/doto
+;; (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+;; (.initialize
+;;  (org.datavec.api.split.FileSplit.
+;;   (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
+
+;; when we evaluate the code, we get the dl4j object
+;; (eval csv-rr)
+;; => #object[org.datavec.api.records.reader.impl.csv.CSVRecordReader 0x4681a3c
+;; org.datavec.api.records.reader.impl.csv.CSVRecordReader@4681a3c]
+
+;; we can also get the object by specifying :as-code? false
+
+(def csv-rr-obj (initialize-rr! :rr (rr/new-csv-record-reader
+                                     :skip-num-lines 0 :delimiter ",")
+                                :input-split file-split
+                                :as-code? false))
+;; csv-rr-obj => #object[org.datavec.api.records.reader.impl.csv.CSVRecordReader
+;; 0xf1b821a org.datavec.api.records.reader.impl.csv.CSVRecordReader@f1b821a]
+
+;; in general:
+;; code representations are used when passed as an arg to other java objects
+;; the java objects  would be used when passed to api fns
+
+
 ;; lets look at some data
-(println (next-record! csv-rr))
+(println (next-record! csv-rr-obj))
 ;; => #object[java.util.ArrayList 0x2473e02d [1, 10, 1, 11, 1, 13, 1, 12, 1, 1, 9]]
 ;; this is our first line from the csv
 
 ;; next-record! moves the record readers interal cursor
-;; all iterators are automaticaly reset before use when they are passed as args to fns which require them
-;; but if you need to manually reset one just call reset-rr!
+;; you can manually reset the cursor with reset-rr!
 
-(reset-rr! csv-rr)
+(reset-rr! csv-rr-obj)
 ;; will return the reset record reader
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -342,26 +141,51 @@ Loading data from a file (here its a csv)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
-                 :record-reader csv-rr ;; no need to reset manually, done for you behind the scene
+                 :record-reader csv-rr
                  :batch-size 1
                  :label-idx 10
                  :n-possible-labels 10))
+
+;; again this is just code that contains the code from our previous steps
+;; rr-ds-iter =>
+;; (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+;;  (clojure.core/doto
+;;   (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+;;   (.initialize
+;;   (org.datavec.api.split.FileSplit.
+;;    (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
+;; 1 10 10)
 
 ;; we use our record reader created above
 ;; we want to see one example per dataset obj returned (:batch-size = 1)
 ;; we know our label is at the last index, so :label-idx = 10
 ;; there are 10 possible types of poker hands so :n-possible-labels = 10
-
 ;; you can also set :label-idx to -1 to use the last index no matter the size of the seq
+
 (def other-rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
                        :record-reader csv-rr
                        :batch-size 1
                        :label-idx -1
                        :n-possible-labels 10))
 
-;; lets look at some data
+;; to look at data, we need the java object
+(def rr-ds-iter-obj
+  (ds-iter/new-record-reader-dataset-iterator
+   :record-reader csv-rr
+   :batch-size 1
+   :label-idx 10
+   :n-possible-labels 10
+   :as-code? false))
 
-(str (next-example! rr-ds-iter))
+(def other-rr-ds-iter-obj
+  (ds-iter/new-record-reader-dataset-iterator
+   :record-reader csv-rr
+   :batch-size 1
+   :label-idx -1
+   :n-possible-labels 10
+   :as-code? false))
+
+(str (next-example! rr-ds-iter-obj))
 ;; =>
 ;;===========INPUT===================
 ;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
@@ -369,48 +193,27 @@ Loading data from a file (here its a csv)
 ;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
 
 ;; manual reset also works on record-reader-dataset-iterators
-;; but again this is taken care of for you when you pass one as an arg to a fn
-(reset-iter! rr-ds-iter)
+(reset-iter! rr-ds-iter-obj)
 
 ;; and to show that :label-idx = -1 gives us the same output
 
-(= (next-example! (reset-iter! rr-ds-iter))
-   (next-example! (reset-iter! other-rr-ds-iter))) ;; => true
-
-;; we now have our csv data in a format that can be fed to a neural network
-
-;; if we want all the data out of our record-reader-dataset-iterator as a lazy seq
-
-(def lazy-seq-data (data-from-iter (reset-iter! rr-ds-iter)))
-
-(realized? lazy-seq-data) ;; => false
-
-(first lazy-seq-data) ;; =>
-
-;;===========INPUT===================
-;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
-;;=================OUTPUT==================
-;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
-
-;; getting the data out of a rr-ds-iter ourself becomes important
-;; when making javaRDDs for spark training but is not necessary
-;; for local machine training (it is possible tho)
-
-;; lazy-training will be described in the Configuration to Trained models section
+(= (next-example! (reset-iter! rr-ds-iter-obj))
+   (next-example! (reset-iter! other-rr-ds-iter-obj))) ;; => true
 
 ```
 
 Creating datasets from INDArrays (and creating INDArrays)
+- update the ns's to have :as-code?
 
 ``` clojure
 
-(my.ns
- (:require [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
-                                               indarray-of-zeros indarray-of-ones
-                                               indarray-of-rand vec-or-matrix->indarray]]
-           [dl4clj.datasets.new-datasets :refer [new-ds]]
-           [dl4clj.datasets.api.datasets :refer [as-list]]
-           [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]))
+(ns my.ns
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec->indarray matrix->indarray
+                                                indarray-of-zeros indarray-of-ones
+                                                indarray-of-rand vec-or-matrix->indarray]]
+            [dl4clj.datasets.new-datasets :refer [new-ds]]
+            [dl4clj.datasets.api.datasets :refer [as-list]]
+            [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
@@ -538,6 +341,247 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ```
 
+### Layers
+
+Creating Layers
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.distributions :as dist]))
+
+;; returning code
+
+(l/activation-layer-builder :activation-fn :relu :updater :adam :adam-mean-decay 0.2
+ :adam-var-decay 0.1 :learning-rate 0.006 :weight-init :distribution
+ :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
+ :layer-name "example layer" :n-in 10 :n-out 1)
+
+;; =>
+
+'(doto
+  (org.deeplearning4j.nn.conf.layers.ActivationLayer$Builder.)
+  (.nOut 1)
+  (.activation (dl4clj.constants/value-of {:activation-fn :relu}))
+  (.dist
+   (dl4clj.nn.conf.distributions/distribution
+    {:normal {:mean 0, :std 1.0}}))
+  (.weightInit (dl4clj.constants/value-of {:weight-init :distribution}))
+  (.adamVarDecay 0.1)
+  (.nIn 10)
+  (.updater (dl4clj.constants/value-of {:updater :adam}))
+  (.name "example layer")
+  (.learningRate 0.006)
+  (.adamMeanDecay 0.2))
+
+;; returning a java object
+
+(l/activation-layer-builder :activation-fn :relu :updater :adam :adam-mean-decay 0.2
+ :adam-var-decay 0.1 :learning-rate 0.006 :weight-init :distribution
+ :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
+ :layer-name "example layer" :n-in 10 :n-out 1 :as-code? false)
+
+;; =>
+
+#object[org.deeplearning4j.nn.conf.layers.ActivationLayer 0x34720508
+"ActivationLayer(super=FeedForwardLayer(super=Layer(layerName=example layer, activationFn=relu, weightInit=DISTRIBUTION, biasInit=NaN, dist=NormalDistribution{mean=0.0, std=1.0}, learningRate=0.006, biasLearningRate=NaN, learningRateSchedule=null, momentum=NaN, momentumSchedule=null, l1=NaN, l2=NaN, l1Bias=NaN, l2Bias=NaN, dropOut=NaN, updater=ADAM, rho=NaN, epsilon=NaN, rmsDecay=NaN, adamMeanDecay=0.2, adamVarDecay=0.1, gradientNormalization=null, gradientNormalizationThreshold=NaN), nIn=10, nOut=1))"]
+
+
+```
+
+There is also support for unsupervised learning layers
+ - ie. Variational Autoencoders
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.variational.dist-builders :as v-dist]))
+
+(l/variational-autoencoder-builder
+ :decoder-layer-sizes [2 2]
+ :encoder-layer-sizes [2 2]
+ :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
+ :pzx-activation-function :identity)
+
+(l/variational-autoencoder-builder
+ :decoder-layer-sizes [2 2]
+ :encoder-layer-sizes [2 2]
+ :reconstruction-distribution (v-dist/new-bernoulli-reconstruction-distribution
+                               :activation-fn :sigmoid)
+ :pzx-activation-function :identity)
+
+;;these configurations are the same
+
+'(doto
+  (org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder$Builder.)
+  (.pzxActivationFunction
+   (dl4clj.constants/value-of {:activation-fn :identity}))
+  (.encoderLayerSizes (clojure.core/int-array [2 2]))
+  (.reconstructionDistribution
+   (dl4clj.nn.conf.variational.dist-builders/distributions
+    {:bernoulli {:activation-fn :sigmoid}}))
+  (.decoderLayerSizes (clojure.core/int-array [2 2])))
+
+;; =>
+
+#object[org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder 0x38a3f9bc
+"VariationalAutoencoder(encoderLayerSizes=[2, 2], decoderLayerSizes=[2, 2], outputDistribution=BernoulliReconstructionDistribution(afn=sigmoid), pzxActivationFn=identity, numSamples=1)"]
+
+```
+ADD EXAMPLES!
+
+There are a lot of utilities for working with Convolutional and Recurrent layers
+- see: dl4clj.nn.conf.layers.input-type-util
+
+And working with any type of layer
+- see: dl4clj.nn.conf.layers.shared-fns
+  - need to revisit this ns. make sure all the language is clear and no overlapping
+    fns with the model interface ns
+
+There is also configuration validation
+- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
+
+### Model configuration
+
+Adding the layers to a neural network configuration
+
+``` clojure
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.nn.conf.distributions :as dist]
+            [dl4clj.nn.conf.input-pre-processor :as pp]
+            [dl4clj.nn.conf.step-fns :as s-fn]))
+
+;; nn/builder has 3 types of args
+;; 1) args which set network configuration params
+;; 2) args which set default values for layers
+;; 3) args which set multi layer network configuration params
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; single layer nn configuration
+;; build? should be set to true
+;; here we are setting network configuration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(nn/builder :optimization-algo :stochastic-gradient-descent
+            :seed 123
+            :iterations 1
+            :minimize? true
+            :use-drop-connect? false
+            :lr-score-based-decay-rate 0.002
+            :regularization? false
+            :step-fn :default-step-fn
+            :build? true
+            :layers {:dense-layer {:activation-fn :relu
+                                   :updater :adam
+                                   :adam-mean-decay 0.2
+                                   :adam-var-decay 0.1
+                                   :learning-rate 0.006
+                                   :weight-init :xavier
+                                   :layer-name "single layer model example"
+                                   :n-in 10
+                                   :n-out 20}})
+
+;; there are several options within a nn-conf map which can be configuration maps
+;; or calls to fns
+;; It doesn't matter which option you choose and you don't have to stay consistent
+
+(nn/builder :optimization-algo :stochastic-gradient-descent
+            :seed 123
+            :iterations 1
+            :minimize? true
+            :use-drop-connect? false
+            :lr-score-based-decay-rate 0.002
+            :regularization? false
+            :step-fn (s-fn/new-default-step-fn)
+            :build? true
+            ;; dont need to specify layer order, theres only one
+            :layers (l/dense-layer-builder
+                    :activation-fn :relu
+                    :updater :adam
+                    :adam-mean-decay 0.2
+                    :adam-var-decay 0.1
+                    :dist (dist/new-normal-distribution :mean 0 :std 1)
+                    :learning-rate 0.006
+                    :weight-init :xavier
+                    :layer-name "single layer model example"
+                    :n-in 10
+                    :n-out 20))
+
+;; these configurations are the same
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multi-layer configuration
+;; here we are also setting layer defaults
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; defaults will apply to layers which do not specify those value in their config
+
+(nn/builder
+ :optimization-algo :stochastic-gradient-descent
+ :seed 123
+ :iterations 1
+ :minimize? true
+ :use-drop-connect? false
+ :lr-score-based-decay-rate 0.002
+ :regularization? false
+ :default-activation-fn :sigmoid
+ :default-weight-init :uniform
+ ;; we need to specify the layer order
+ :layers {0 (l/activation-layer-builder
+             :activation-fn :relu
+             :updater :adam
+             :adam-mean-decay 0.2
+             :adam-var-decay 0.1
+             :learning-rate 0.006
+             :weight-init :xavier
+             :layer-name "example first layer"
+             :n-in 10
+             :n-out 20)
+          1 {:output-layer {:n-in 20
+                            :n-out 2
+                            :loss-fn :mse
+                            :layer-name "example output layer"}}})
+
+;; specifying multi-layer config params
+
+(nn/builder
+ ;; network args
+ :optimization-algo :stochastic-gradient-descent
+ :seed 123
+ :iterations 1
+ :minimize? true
+ :use-drop-connect? false
+ :lr-score-based-decay-rate 0.002
+ :regularization? false
+ ;; layer defaults
+ :default-activation-fn :sigmoid
+ :default-weight-init :uniform
+ ;; the layers
+ :layers {0 (l/activation-layer-builder
+             :activation-fn :relu
+             :updater :adam
+             :adam-mean-decay 0.2
+             :adam-var-decay 0.1
+             :learning-rate 0.006
+             :weight-init :xavier
+             :layer-name "example first layer"
+             :n-in 10
+             :n-out 20)
+          1 {:output-layer {:n-in 20
+                            :n-out 2
+                            :loss-fn :mse
+                            :layer-name "example output layer"}}}
+ ;; multi layer network args
+ :backprop? true
+ :backprop-type :standard
+ :pretrain? false
+ :input-pre-processors {0 (pp/new-zero-mean-pre-pre-processor)
+                        1 {:unit-variance-processor {}}})
+
+```
+
 ### Configuration to Trained models
 
 Multi Layer models
@@ -546,47 +590,51 @@ Multi Layer models
 
 ``` clojure
 
-(my.ns (:require [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator
-                                                    new-record-reader-dataset-iterator]]
-                 [dl4clj.datasets.input-splits :refer [new-filesplit]]
-                 [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
-                 [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
-                 [dl4clj.optimize.listeners :refer [new-score-iteration-listener]]
-                 [dl4clj.nn.conf.builders.nn-conf-builder :refer [nn-conf-builder]]
-                 [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-                 [dl4clj.nn.multilayer.multi-layer-network :as mln]
-                 [dl4clj.nn.api.model :refer [init! set-listeners!]]
-                 [dl4clj.helpers :refer [data-from-iter]]))
+(ns my.ns
+  (:require [dl4clj.datasets.iterators :as iter]
+            [dl4clj.datasets.input-splits :as split]
+            [dl4clj.datasets.record-readers :as rr]
+            [dl4clj.optimize.listeners :as listener]
+            [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.nn.api.model :refer [init! set-listeners!]]
+            [dl4clj.nn.api.classifier :refer [fit-classifier!]]
+            [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; nn-conf -> multi-layer-conf -> multi-layer-network
+;; nn-conf -> multi-layer-network
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def l-builder (nn-conf-builder
-                :optimization-algo :stochastic-gradient-descent
-                :seed 123 :iterations 1 :default-activation-fn :relu
-                :regularization? true :default-l2 7.5e-6
-                :default-weight-init :xavier :default-learning-rate 0.0015
-                :default-updater :nesterovs :default-momentum 0.98
-                :layers {0 {:dense-layer
-                            {:layer-name "example first layer"
-                             :n-in 784 :n-out 500}}
-                         1 {:dense-layer
-                            {:layer-name "example second layer"
-                             :n-in 500 :n-out 100}}
-                         2 {:output-layer
-                            {:n-in 100 :n-out 10 :loss-fn :negativeloglikelihood
-                             :activation-fn :softmax
-                             :layer-name "example output layer"}}}))
-
-(def multi-layer-conf
-  (mlb/multi-layer-config-builder
-   :list-builder l-builder
+(def nn-conf
+  (nn/builder
+   ;; network args
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :regularization? true
+   ;; setting layer defaults
+   :default-activation-fn :relu :default-l2 7.5e-6
+   :default-weight-init :xavier :default-learning-rate 0.0015
+   :default-updater :nesterovs :default-momentum 0.98
+   ;; setting layer configuration
+   :layers {0 {:dense-layer
+               {:layer-name "example first layer"
+                :n-in 784 :n-out 500}}
+            1 {:dense-layer
+               {:layer-name "example second layer"
+                :n-in 500 :n-out 100}}
+            2 {:output-layer
+               {:n-in 100 :n-out 10
+                ;; layer specific params
+                :loss-fn :negativeloglikelihood
+                :activation-fn :softmax
+                :layer-name "example output layer"}}}
+   ;; multi layer args
    :backprop? true
-   :pretrain? false))
+   :pretrain? false
+   ;; we want the dl4j object
+   :as-code? false))
 
 (def multi-layer-network
-  (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
+  (init! :model (mln/new-multi-layer-network :conf nn-conf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; local cpu training with dl4j iterators
@@ -594,9 +642,11 @@ Multi Layer models
 
 ;; lets use the pre-built Mnist data set iterator
 
-(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? true :seed 123))
+(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? true
+                                                   :seed 123 :as-code? false))
 
-(def test-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? false :seed 123))
+(def test-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? false
+                                                  :seed 123 :as-code? false))
 
 ;; and lets set a listener so we can know how training is going
 
@@ -607,71 +657,12 @@ Multi Layer models
 (def mln-with-listener (set-listeners! :model multi-layer-network
                                        :listeners [score-listener]))
 
-(def trained-mln (train-mln-with-ds-iter! :mln mln-with-listener
-                                          :ds-iter train-mnist-iter
-                                          :n-epochs 15))
+(def trained-mln (mln/train-mln-with-ds-iter! :mln mln-with-listener
+                                              :iter train-mnist-iter
+                                              :n-epochs 15))
 
 ;; we now have a trained model that has seen the training dataset 15 times
-;; - feel free to change this if youre following along
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; local cpu training with lazy-iterators
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; lets load our csv data like we did in the Importing data section
-;; but we are going to want a test set and a training set
-;; these are not real datasets (only have about 10 records each)
-;; the dl4j mnist model is not a great model for the data even if it was a full dataset
-
-(def poker-path "resources/poker-hand-training.csv")
-
-(def test-poker-path "resources/poker-hand-testing.csv")
-
-(def file-split (new-filesplit :path poker-path))
-
-(def test-file-split (new-filesplit :path test-poker-path))
-
-(def csv-rr (initialize-rr! :rr (new-csv-record-reader :skip-num-lines 0 :delimiter ",")
-                            :input-split file-split))
-
-(def test-csv-rr (initialize-rr! :rr (new-csv-record-reader :skip-num-lines 0 :delimiter ",")
-                                 :input-split test-file-split))
-
-(def rr-ds-iter (new-record-reader-dataset-iterator
-                 :record-reader csv-rr
-                 :batch-size 1
-                 :label-idx 10
-                 :n-possible-labels 10))
-
-(def test-rr-ds-iter (new-record-reader-dataset-iterator
-                      :record-reader test-csv-rr
-                      :batch-size 1
-                      :label-idx 10
-                      :n-possible-labels 10))
-
-;; reset-if-empty? needs to be called as its not built into data-from-iter
-;; would only NEED to be called if any changes were made to the internal state of either rr-ds-iters
-
-(def lazy-seq-data (data-from-iter (reset-if-empty?! rr-ds-iter)))
-
-(def test-lazy-seq-data (data-from-iter (reset-if-empty?! test-rr-ds-iter)))
-
-;; we are going to use the same multi layer network from above but give it a new name
-
-(def fresh-multi-layer-network
-  (init! :model (mln/new-multi-layer-network :conf multi-layer-conf)))
-
-(def fresh-mln-to-train (set-listeners! :model fresh-multi-layer-network
-                                        :listeners [score-listener]))
-
-(def fresh-trained-mln (mlb/train-mln-with-lazy-seq! :lazy-seq-data lazy-seq-data
-                                                     :mln fresh-mln-to-train
-                                                     :n-epochs 10))
-
-;; training using the prebuilt mnsit dataset iterator faster than training
-;; using a lazy-seq generated from that dataset
-;; different of about 40 seconds for the mnist example
-;; see if I can improve this via type hints
 ```
 
 Evaluation of Models
@@ -682,14 +673,11 @@ Evaluation of Models
 ;;Create an evaluation object
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(my.ns
- (:require [dl4clj.eval.evaluation :refer [new-classification-evaler]]
-           [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]
-           [dl4clj.helpers :refer [new-lazy-iter]]))
+(ns my.ns
+  (:require [dl4clj.eval.evaluation :refer [new-classification-evaler]]
+            [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]))
 
-(def example-evaler-obj (new-classification-evaler :n-classes 10))
-
-(def lazy-evaler-obj (new-classification-evaler :n-classes 10))
+(def example-evaler-obj (new-classification-evaler :n-classes 10 :as-code? false))
 
 ;; always remember that these objects are stateful, dont use the same eval-obj
 ;; to eval two different networks
@@ -698,12 +686,8 @@ Evaluation of Models
 ;; we trained the model on a training dataset.  We evaluate on a test set
 
 ;; for dl4j iterators
-(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :eval-obj example-evaler-obj
+(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :evaler example-evaler-obj
                                             :iter test-mnist-iter))
-
-;; for lazy iterators
-(def lazy-evaler-wtih-stats (eval-model-whole-ds :mln trained-mln :eval-obj lazy-evaler-obj
-                                                 :lazy-data test-lazy-seq-data))
 
 ;; this will print the stats to standard out for each feature/label pair
 ;; this is only for our evaler-wtih-stats object.
@@ -794,11 +778,7 @@ Evaluation of Models
 ;; can get the stats that are printed via fns in the evaluation namespace
 ;; after running eval-model-whole-ds
 
-(get-summary evaler-with-stats) ;; => above but as a string
 (get-accuracy evaler-with-stats) ;; => 0.9808
-
-;; this good score, but what if it wasnt?
-;; we would want to refine the model
 
 ```
 ### Model Tuning
@@ -806,17 +786,61 @@ Evaluation of Models
 Early Stopping (controlling training)
 - it is recommened you start here when designing models
   - gives you more control than just setting the number of epochs
-  - requires dl4j dataset iterators
 
 ``` clojure
-(my.ns
- (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
-           [dl4clj.earlystopping.termination-conditions :refer :all]
-           [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
-           [dl4clj.earlystopping.score-calc :refer [new-data-set-loss-calculator]]
-           [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
-           [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
-           [dl4clj.utils :refer [load-model!]]))
+(ns my.ns
+  (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
+            [dl4clj.earlystopping.termination-conditions :refer :all]
+            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver new-local-file-model-saver]]
+            [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
+            [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
+            [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
+            [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.utils :refer [load-model!]]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; start with our network config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def nn-conf
+  (nn/builder
+   ;; network args
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :regularization? true
+   ;; setting layer defaults
+   :default-activation-fn :relu :default-l2 7.5e-6
+   :default-weight-init :xavier :default-learning-rate 0.0015
+   :default-updater :nesterovs :default-momentum 0.98
+   ;; setting layer configuration
+   :layers {0 {:dense-layer
+               {:layer-name "example first layer"
+                :n-in 784 :n-out 500}}
+            1 {:dense-layer
+               {:layer-name "example second layer"
+                :n-in 500 :n-out 100}}
+            2 {:output-layer
+               {:n-in 100 :n-out 10
+                ;; layer specific params
+                :loss-fn :negativeloglikelihood
+                :activation-fn :softmax
+                :layer-name "example output layer"}}}
+   ;; multi layer args
+   :backprop? true
+   :pretrain? false))
+
+;; as-code? is true because we need our mln to build our early training trainer
+(def mln (mln/new-multi-layer-network :conf nn-conf :as-code? true))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; the training/testing data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def train-iter (new-mnist-data-set-iterator :batch-size 64 :train? true
+                                             :seed 123))
+
+(def test-iter (new-mnist-data-set-iterator :batch-size 64 :train? false
+                                            :seed 123))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we are going to need termination conditions
@@ -844,7 +868,7 @@ Early Stopping (controlling training)
 
 (def target-score-condition (new-best-score-epoch-termination-condition :best-expected-score 0.009))
 
-(def max-number-epochs-condition (new-max-epochs-termination-condition :max-n 10))
+(def max-number-epochs-condition (new-max-epochs-termination-condition :max-n 20))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we also need a way to save our model
@@ -860,15 +884,11 @@ Early Stopping (controlling training)
 ;; set up your score calculator
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; we need our dataset iterator here
-;; going to use the mnist iterator from before
-;; need to make sure its reset
-
-(def score-calcer (new-data-set-loss-calculator :iter train-mnist-iter
-                                                :average? true))
+(def score-calcer (new-ds-loss-calculator :iter train-iter
+                                          :average? true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; create an early stopping configuration using the objs we just created
+;; create an early stopping configuration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; termination conditions
@@ -883,7 +903,7 @@ Early Stopping (controlling training)
    :iteration-termination-conditions [invalid-score-condition
                                       max-score-condition
                                       max-time-condition]
-   :n-epochs 7
+   :n-epochs 5
    :model-saver local-file-saver
    :save-last-model? true
    :score-calculator score-calcer))
@@ -893,10 +913,13 @@ Early Stopping (controlling training)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def es-trainer (new-early-stopping-trainer :early-stopping-conf early-stopping-conf
-                                            :mln mln-with-listener
-                                            :iter train-mnist-iter))
+                                            :mln mln
+                                            :iter train-iter))
 
-;; now fit that trainer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; fit and use our early stopping trainer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def es-trainer-fitted (fit-trainer! es-trainer))
 
 ;; when the trainer terminates, you will see something like this

@@ -3,7 +3,6 @@
             [dl4clj.eval.evaluation :refer :all]
             [dl4clj.eval.api.eval :refer :all]
             [dl4clj.eval.rocs :refer :all]
-            [dl4clj.eval.confusion-matrix :refer [new-confusion-matrix]]
             [dl4clj.eval.api.confusion-matrix :refer :all]
             ;; requireing early stopping ns for minimal training
             [dl4clj.nn.conf.builders.nn :refer :all]
@@ -259,29 +258,7 @@
           labels (get-labels data)
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)
-          confusion (get-confusion-matrix evaler-with-data)
-          other-confusion (new-confusion-matrix :existing-confusion-matrix confusion)]
-      (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type (new-confusion-matrix
-                    :existing-confusion-matrix confusion))))
-      (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type (new-confusion-matrix
-                    :classes [java.lang.Double java.lang.Double]))))
-      (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type
-              (add! :base-confusion-matrix confusion
-                    :other-confusion-matrix other-confusion))))
-      (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type
-              (add! :base-confusion-matrix confusion
-                    :actual 2.0
-                    :predicted 1.0))))
-      (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type
-              (add! :base-confusion-matrix confusion
-                    :actual 2.0
-                    :predicted 1.0
-                    :n 2))))
+          confusion (get-confusion-matrix evaler-with-data)]
       (is (= java.lang.Integer (type
                                 (get-actual-total :confusion-matrix confusion
                                                   :actual 1))))

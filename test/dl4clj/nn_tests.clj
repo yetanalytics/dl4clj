@@ -196,6 +196,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest pre-processors-test
+  ;; Update
   (testing "the creation of input preprocessors for use in multi-layer-conf"
     ;; binominal sampling pre-processor
     (is (= org.deeplearning4j.nn.conf.preprocessor.BinomialSamplingPreProcessor
