@@ -95,13 +95,13 @@ Loading data from a file (here its a csv)
 ;; record readers, (read the records created by the file split)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-num-lines 0 :delimiter ",")
+(def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-n-lines 0 :delimiter ",")
                                  :input-split file-split))
 
 ;; when we look at csv-rr, we see its also just code
 ;; csv-rr =>
 ;;(clojure.core/doto
-;; (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+;; (org.datavec.api.records.reader.impl.csv.CSVRecordReader. 0 ",")
 ;; (.initialize
 ;;  (org.datavec.api.split.FileSplit.
 ;;   (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
@@ -114,15 +114,15 @@ Loading data from a file (here its a csv)
 ;; we can also get the object by specifying :as-code? false
 
 (def csv-rr-obj (initialize-rr! :rr (rr/new-csv-record-reader
-                                     :skip-num-lines 0 :delimiter ",")
+                                     :skip-n-lines 0 :delimiter ",")
                                 :input-split file-split
                                 :as-code? false))
 ;; csv-rr-obj => #object[org.datavec.api.records.reader.impl.csv.CSVRecordReader
 ;; 0xf1b821a org.datavec.api.records.reader.impl.csv.CSVRecordReader@f1b821a]
 
 ;; in general:
-;; code representations are used when passed as an arg to other java objects
-;; the java objects  would be used when passed to api fns
+;; code representations are used when passed as an arg to fns creating other dl4j objects
+;; the java objects would be used when passed as args to api fns
 
 
 ;; lets look at some data
@@ -150,7 +150,7 @@ Loading data from a file (here its a csv)
 ;; rr-ds-iter =>
 ;; (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
 ;;  (clojure.core/doto
-;;   (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+;;   (org.datavec.api.records.reader.impl.csv.CSVRecordReader. 0 ",")
 ;;   (.initialize
 ;;   (org.datavec.api.split.FileSplit.
 ;;    (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
@@ -599,7 +599,9 @@ Multi Layer models
             [dl4clj.nn.multilayer.multi-layer-network :as mln]
             [dl4clj.nn.api.model :refer [init! set-listeners!]]
             [dl4clj.nn.api.classifier :refer [fit-classifier!]]
-            [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]))
+            [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
+            [dl4clj.eval.evaluation :refer [new-classification-evaler]]
+            [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf -> multi-layer-network
@@ -662,12 +664,7 @@ Multi Layer models
                                               :n-epochs 15))
 
 ;; we now have a trained model that has seen the training dataset 15 times
-
-```
-
-Evaluation of Models
-
-``` clojure
+;; time to evaluate our model
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;Create an evaluation object
@@ -780,7 +777,9 @@ Evaluation of Models
 
 (get-accuracy evaler-with-stats) ;; => 0.9808
 
+
 ```
+
 ### Model Tuning
 
 Early Stopping (controlling training)
