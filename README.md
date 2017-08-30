@@ -2,6 +2,14 @@
 
 Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
+## TODO
+- decide the fate of some of the directories in nn
+- update creation of new datasets
+- update spark
+- update examples dir
+- finish README
+- finish tests
+
 ## Features
 
 ### Stable Features with tests
@@ -10,7 +18,7 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - Early Stopping
 - Transfer Learning
 - Evaluation (needs more tests)
-- Data import (core features)
+- Data import
 - Optimize (tested but might be temporarly removed)
 
 ### Features being worked on
@@ -19,7 +27,7 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - NLP
 - Clustering (testing in progress)
 - Datasets (needs refactor)
-- Spark training/hosting (not tested)
+- Spark training/hosting (not tested, needs refactor)
 
 ## Artifacts
 
@@ -54,9 +62,6 @@ With Maven:
 ```
 
 ## Usage
-
-TODO
-- add in clustering workflow/examples
 
 ### Important
 
@@ -1089,10 +1094,6 @@ How it is done in dl4clj
 ;; also need to figure out JavaRDD<org.nd4j.linalg.dataset.DataSet> -> JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>
 ;; this is for single fn call training (fit-spark-layer!...)
 ```
-
-### Putting it all together
-
-- not sure if i still need this section
 
 ## NOTES
 
