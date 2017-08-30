@@ -670,10 +670,6 @@ Multi Layer models
 ;;Create an evaluation object
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(ns my.ns
-  (:require [dl4clj.eval.evaluation :refer [new-classification-evaler]]
-            [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]))
-
 (def example-evaler-obj (new-classification-evaler :n-classes 10 :as-code? false))
 
 ;; always remember that these objects are stateful, dont use the same eval-obj
