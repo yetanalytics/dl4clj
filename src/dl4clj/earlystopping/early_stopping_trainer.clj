@@ -21,9 +21,13 @@
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/EarlyStoppingTrainer.html"
   ;; need to figure out if this ever needs to be code
   ;; should assume so, and give :as-code? option
-  [& {:keys [early-stopping-conf mln iter]
+  [& {:keys [early-stopping-conf mln iter as-code?]
+      :or {as-code? false}
       :as opts}]
-  (EarlyStoppingTrainer. early-stopping-conf mln iter))
+  (let [code `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter)]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn new-spark-early-stopping-trainer
   "object for conducting early stopping training via Spark with

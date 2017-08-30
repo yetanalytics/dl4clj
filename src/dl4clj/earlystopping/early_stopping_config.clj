@@ -12,7 +12,7 @@ Users need to specify the following:
             IterationTerminationCondition
             EpochTerminationCondition]
            [org.deeplearning4j.earlystopping EarlyStoppingModelSaver])
-  (:require [dl4clj.utils :refer [array-of builder-fn]]))
+  (:require [dl4clj.utils :refer [array-of builder-fn replace-map-vals]]))
 
 (defn new-early-stopping-config
   "Builder for setting up an early stopping configuration.  Mainly used during testing
@@ -40,11 +40,14 @@ Users need to specify the following:
   :build? (boolean), build the configuration?
    - defaults to true
 
+  :as-code? (boolean), return the code for creating this java obect or the object itself
+
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingConfiguration.Builder.html"
   [& {:keys [epoch-termination-conditions n-epochs
              iteration-termination-conditions model-saver
-             save-last-model? score-calculator build?]
-      :or {build? true}
+             save-last-model? score-calculator build? as-code?]
+      :or {build? true
+           as-code? true}
       :as opts}]
   (let [method-map {:epoch-termination-conditions     '.epochTerminationConditions
                     :n-epochs                         '.evaluateEveryNEpochs
@@ -52,24 +55,26 @@ Users need to specify the following:
                     :model-saver                      '.modelSaver
                     :save-last-model?                 '.saveLastModel
                     :score-calculator                 '.scoreCalculator}
-        b `(EarlyStoppingConfiguration$Builder.)]
-    ;; refactor with builder fn
-   (cond-> (EarlyStoppingConfiguration$Builder.)
-    (contains? opts :epoch-termination-conditions)
-    (.epochTerminationConditions (array-of :data epoch-termination-conditions
-                                           :java-type EpochTerminationCondition))
-    (contains? opts :n-epochs)
-    (.evaluateEveryNEpochs n-epochs)
-    (contains? opts :iteration-termination-conditions)
-    (.iterationTerminationConditions (array-of :data iteration-termination-conditions
-                                               :java-type IterationTerminationCondition))
-    (contains? opts :model-saver)
-    (.modelSaver (first
-                  (array-of :java-type EarlyStoppingModelSaver
-                            :data model-saver)))
-    (contains? opts :save-last-model?)
-    (.saveLastModel save-last-model?)
-    (contains? opts :score-calculator)
-    (.scoreCalculator score-calculator)
-    (true? build?)
-    (.build))))
+        b `(EarlyStoppingConfiguration$Builder.)
+        epoch-term (if epoch-termination-conditions
+                     `(array-of :data ~epoch-termination-conditions
+                                :java-type EpochTerminationCondition))
+        iter-term (if iteration-termination-conditions
+                    `(array-of :data ~iteration-termination-conditions
+                               :java-type IterationTerminationCondition))
+        saver (if model-saver
+                `(first
+                 (array-of :java-type EarlyStoppingModelSaver
+                           :data ~model-saver)))
+        opts* (replace-map-vals (dissoc opts :build? :as-code?)
+                                {:epoch-termination-conditions epoch-term
+                                 :iteration-termination-conditions iter-term
+                                 :model-saver saver})
+        code (builder-fn b method-map opts*)
+
+        add-build? (if build?
+                     `(.build ~code)
+                     code)]
+    (if as-code?
+      add-build?
+      (eval add-build?))))
