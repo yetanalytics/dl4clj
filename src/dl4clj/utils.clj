@@ -8,6 +8,19 @@
     code
     (eval code)))
 
+(defmacro fn-chain
+  ;; add doc string
+  ;; this is for chaining fn calls which need things to be objects
+  ;; but are passed data
+  [a-fn & args]
+  (let [v `(var ~a-fn)
+        m `(meta ~v)
+        ns-n `(str (:ns ~m))
+        fn-n `(str (:name ~m))
+        the-fn `(list (symbol (str ~ns-n "/" ~fn-n)))
+        a `(list ~@args)]
+    `(into ~a ~the-fn)))
+
 (defn multi-arg-helper
   "takes elements from the args data structure and puts in a
   list which contains the method."

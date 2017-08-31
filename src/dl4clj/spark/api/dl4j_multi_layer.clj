@@ -106,6 +106,7 @@
 
   either :rdd or :path-to-data should be supplied, not both"
   [& {:keys [spark-mln rdd path-to-data n-epochs]
+      :or {n-epochs 10}
       :as opts}]
   (if (contains? opts :rdd)
     (do (dotimes [n n-epochs]

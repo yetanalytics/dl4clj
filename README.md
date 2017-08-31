@@ -3,12 +3,11 @@
 Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 ## TODO
-- decide the fate of some of the directories in nn
-- update creation of new datasets
-- update spark
 - update examples dir
 - finish README
 - finish tests
+- revist spark for updates
+- update api fns which need to deal with code
 
 ## Features
 
@@ -16,7 +15,7 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
 - Neural Networks DSL
 - Early Stopping
-- Transfer Learning
+- Transfer Learning (needs readme examples)
 - Evaluation (needs more tests)
 - Data import
 - Optimize (tested but might be temporarly removed)
