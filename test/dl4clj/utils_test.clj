@@ -4,6 +4,8 @@
             [dl4clj.constants :refer :all]
             [clojure.core.match :refer [match]]))
 
+;; add tests for helper fns from .helpers
+
 (deftest util-tests
   (testing "the fns in utils"
     (is (= :fooBar (camelize :foo-bar )))
@@ -66,7 +68,7 @@
   (match [pattern]
          [(_ :guard boolean?)] :boolean
          [(_ :guard number?)] :number
-         [(_ :guard map?)]
+         [(_ :guard map?)] :map
          [[(_ :guard vector?) & _]] :vec-of-vecs
          [[& _]] :vec-of-args
          [([(_ :guard symbol?) (_ :guard keyword?)] :seq)] :fn-take-keyword

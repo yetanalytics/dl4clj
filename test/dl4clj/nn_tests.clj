@@ -122,17 +122,17 @@
 
     ;; composite
     (is (= org.deeplearning4j.nn.conf.layers.variational.CompositeReconstructionDistribution
-           (type (distributions
-                  {:composite
-                   {:distributions-to-add
-                    [{:bernoulli {:activation-fn :sigmoid
-                                  :dist-size     5}}
-                     {:exponential {:activation-fn :sigmoid
-                                    :dist-size     3}}
-                     {:gaussian {:activation-fn :hard-tanh
-                                 :dist-size     1}}
-                     {:bernoulli {:activation-fn :sigmoid
-                                  :dist-size     4}}]}}))))
+           (type (eval (distributions
+                        {:composite
+                         {:distributions-to-add
+                          [{:bernoulli {:activation-fn :sigmoid
+                                        :dist-size     5}}
+                           {:exponential {:activation-fn :sigmoid
+                                          :dist-size     3}}
+                           {:gaussian {:activation-fn :hard-tanh
+                                       :dist-size     1}}
+                           {:bernoulli {:activation-fn :sigmoid
+                                        :dist-size     4}}]}})))))
     (is (= '(dl4clj.nn.conf.variational.dist-builders/distributions
              {:composite
               {:distributions-to-add
@@ -732,7 +732,7 @@
                  :updater :adam :weight-init :distribution}}]
       (is (= :variational-autoencoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.variational.VariationalAutoencoder
-               (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
+             (type (layer-creation/new-layer :nn-conf (quick-nn-conf conf))))))))
 
 (deftest frozen-layer-test
   (testing "the creation of a frozen layer from an existing layer"

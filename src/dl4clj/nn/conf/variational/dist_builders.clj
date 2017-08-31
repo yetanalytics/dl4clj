@@ -48,9 +48,9 @@
                                   data (k each)
                                   dist-size (:dist-size data)]]
                         [dist-size (distributions {k data})]))]
-    (eval-and-build (builder-fn `(CompositeReconstructionDistribution$Builder.)
-                                {:to-add '.addDistribution}
-                                {:to-add m-calls}))))
+    `(.build ~(builder-fn `(CompositeReconstructionDistribution$Builder.)
+                {:to-add '.addDistribution}
+                {:to-add m-calls}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns which provide documentation on distribution creation

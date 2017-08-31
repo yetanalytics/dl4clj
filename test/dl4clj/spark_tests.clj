@@ -21,9 +21,7 @@
             [dl4clj.helpers :refer [data-from-iter
                                     reset-iterator!]]
             ;; multi-ds
-            [nd4clj.linalg.dataset.multi-ds :refer [new-multi-ds]]
-
-            [nd4clj.linalg.dataset.data-set :refer [data-set]]
+            [dl4clj.datasets.new-datasets :refer [new-multi-ds new-ds]]
             [dl4clj.datasets.api.datasets :refer [new-ds-iter]]
 
             ;; data for multi-ds
@@ -58,7 +56,7 @@
 
 (def hadoop-home-dir (System/setProperty "hadoop.home.dir" "/"))
 
-(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
+(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5 :as-code? false))
 
 ;; this way of making an iter from an existing multi-dataset needs to
 ;; be migrated over to the multi-dataset ns or have its own
@@ -67,8 +65,9 @@
   (TestMultiDataSetIterator.
    2
    (array-of :data (new-multi-ds
-                    :features (indarray-of-rand :rows 2 :columsn 4)
-                    :labels (indarray-of-rand :rows 2 :columns 2))
+                    :features `(indarray-of-rand :rows 2 :columsn 4)
+                    :labels `(indarray-of-rand :rows 2 :columns 2)
+                    :as-code? false)
              :java-type MultiDataSet)))
 
 (defn consistent-ds-save
@@ -88,7 +87,8 @@
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
 (def csv-rr (initialize-rr! :rr (new-csv-record-reader)
-                            :input-split fs))
+                            :input-split fs
+                            :as-code? false))
 
 (def poker-training-file-byte-size
   (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))
@@ -246,7 +246,8 @@
                   :the-fn (new-string-to-ds-export-fn
                            :output-directory "resources/tests/spark/export/"
                            :record-reader (initialize-rr! :rr (new-csv-record-reader)
-                                                          :input-split fs)
+                                                          :input-split fs
+                                                          :as-code? false)
                            :batch-size 1
                            :regression? false
                            :label-idx 10
