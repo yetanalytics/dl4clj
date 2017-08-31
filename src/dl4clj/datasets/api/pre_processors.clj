@@ -50,7 +50,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
   returns the fit normalizer"
   [& {:keys [normalizer iter]}]
-  (doto normalizer (.fit (reset-iterator! iter))))
+  (doto normalizer (.fit iter)))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.

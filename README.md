@@ -218,7 +218,10 @@ Creating datasets from INDArrays (and creating INDArrays)
                                                 indarray-of-rand vec-or-matrix->indarray]]
             [dl4clj.datasets.new-datasets :refer [new-ds]]
             [dl4clj.datasets.api.datasets :refer [as-list]]
-            [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]))
+            [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]
+            [dl4clj.datasets.api.iterators :refer :all]
+            [dl4clj.datasets.pre-processors :as ds-pp]
+            [dl4clj.datasets.api.pre-processors :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
@@ -297,7 +300,8 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ds-with-single-example (new-ds :input [1 2 3 4]
-                                    :output [0.0 1.0 0.0]))
+                                    :output [0.0 1.0 0.0]
+                                    :as-code? false))
 (as-list ds-with-single-example)
 ;; =>
 ;; #object[java.util.ArrayList 0x5d703d12
@@ -308,7 +312,8 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 (def ds-with-multiple-examples (new-ds
                                 :input [[1 2 3 4] [2 4 6 8]]
-                                :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
+                                :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]
+                                :as-code? false))
 
 (as-list ds-with-multiple-examples)
 ;; =>
@@ -322,20 +327,26 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;;=================OUTPUT==================
 ;;[0.00, 0.00, 1.00]]]
 
-;; we can create a dataset iterator directly from a dataset
+;; we can create a dataset iterator from the code which creates datasets
 ;; and set the labels for our outputs (optional)
-(new-existing-dataset-iterator :dataset ds-with-multiple-examples :labels ["foo" "baz" "foobaz"])
 
+(def ds-with-multiple-examples-code (new-ds
+                                     :input [[1 2 3 4] [2 4 6 8]]
+                                     :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
+;; iterator code
+(new-existing-dataset-iterator :dataset ds-with-multiple-examples-code :labels ["foo" "baz" "foobaz"])
+
+;; iterator object
+(def training-rr-ds-iter (new-existing-dataset-iterator :dataset ds-with-multiple-examples-code :labels ["foo" "baz" "foobaz"]
+                               :as-code? false))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set normalization
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(my.ns
- (:require [dl4clj.datasets.pre-processors :as ds-pp]
-           [dl4clj.datasets.api.pre-processors :refer :all]))
+;; UPDATE THIS TO WORK AS JUST CODE
 
-(def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
+(def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor :as-code? false)
                            :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
 
@@ -989,23 +1000,18 @@ How it is done in dl4clj
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def mln-conf
-  (nn-conf/nn-conf-builder
+  (nn/builder
    :optimization-algo :stochastic-gradient-descent
-   :learning-rate 0.006
-   :build? false
-   :layers {0 (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)
+   :default-learning-rate 0.006
+   :layers {0 (l/dense-layer-builder :n-in 4 :n-out 2 :activation-fn :relu)
             1 {:output-layer
                {:loss-fn :negativeloglikelihood
-                :n-in 2 :n-out 1
+                :n-in 2 :n-out 3
                 :activation-fn :soft-max
-                :weight-init :xavier}}}))
-
-(def multi-layer-model
-  (mln/new-multi-layer-network :conf
-   (mlb/multi-layer-config-builder
-    :list-builder mln-conf
-    :backprop? true
-    :backprop-type :standard)))
+                :weight-init :xavier}}}
+   :backprop? true
+   :as-code? false
+   :backprop-type :standard))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 2, create a training master
@@ -1014,12 +1020,12 @@ How it is done in dl4clj
 ;; not all options specified, but most are
 
 (def training-master
- (master/new-parameter-averaging-training-master
- :build? true :rdd-n-examples 10 :n-workers 4 :averaging-freq 10
- :batch-size-per-worker 2 :export-dir "resources/spark/master/"
- :rdd-training-approach :direct :repartition-data :always
- :repartition-strategy :balanced :seed 1234 :save-updater? true
- :storage-level :none))
+  (master/new-parameter-averaging-training-master
+   :build? true :rdd-n-examples 10 :n-workers 4 :averaging-freq 10
+   :batch-size-per-worker 2 :export-dir "resources/spark/master/"
+   :rdd-training-approach :direct :repartition-data :always
+   :repartition-strategy :balanced :seed 1234 :save-updater? true
+   :storage-level :none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 3, create a Spark Multi Layer Network
@@ -1036,7 +1042,7 @@ How it is done in dl4clj
 (def spark-mln
   (spark-mln/new-spark-multi-layer-network
    :spark-context your-spark-context
-   :mln multi-layer-model
+   :mln mln-conf
    :training-master training-master))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1048,7 +1054,7 @@ How it is done in dl4clj
 ;; see: nd4clj.linalg.dataset.api.data-set and nd4clj.linalg.dataset.data-set
 ;; we are going to use a pre-built one
 
-(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5))
+(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5 :as-code? false))
 
 ;; now lets convert the data into a javaRDD
 
@@ -1058,7 +1064,7 @@ How it is done in dl4clj
 ;; Step 5, fit and evaluate the model
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def fitted-spark-mln (fit-spark-mln! :spark-mln spark-mln :rdd our-rdd))
+(def fitted-spark-mln (fit-spark-mln! :spark-mln spark-mln :rdd our-rdd :n-epochs 5))
 ;; this fn also has the option to supply :path-to-data instead of :rdd
 ;; that path should point to a directory containing a number of dataset objects
 
@@ -1069,18 +1075,19 @@ How it is done in dl4clj
 
 ;; lets get the stats for how our model performed
 
-(get-stats :evaler eval-obj)
+(clojure.pprint/pprint (get-stats :evaler eval-obj))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; It is also possible to train single layer models via spark
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def single-layer-model
-  (nn-conf/nn-conf-builder
+  (nn/builder
    :optimization-algo :stochastic-gradient-descent
-   :learning-rate 0.006
+   :default-learning-rate 0.006
    :build? true
-   :layer (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)))
+   :as-code? false
+   :layers (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)))
 
 (def spark-layer (new-spark-dl4j-layer :spark-context your-spark-context
                                        :nn-conf single-layer-model))
@@ -1137,6 +1144,9 @@ Refactor overall structure of this project
 - ensure no cascading config maps
 - seperation of interfaces from the classes/namespaces that implement/use them (api namespaces)
 - general refinement
+
+API FNS
+- adapt to function with code as input and return code
 
 Improve examples within src
 - minimal importing

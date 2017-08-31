@@ -105,11 +105,14 @@
      each serialized using (save-dataset! DataSet OutputStream)
 
   either :rdd or :path-to-data should be supplied, not both"
-  [& {:keys [spark-mln rdd path-to-data]
+  [& {:keys [spark-mln rdd path-to-data n-epochs]
       :as opts}]
   (if (contains? opts :rdd)
-    (.fit spark-mln rdd)
-    (.fit spark-mln path-to-data)))
+    (do (dotimes [n n-epochs]
+          (if (contains? opts :rdd)
+            (.fit spark-mln rdd)
+            (.fit spark-mln path-to-data)))
+        spark-mln)))
 
 (defn fit-continous-labeled-point!
   "Fits a MultiLayerNetwork using Spark MLLib LabeledPoint instances

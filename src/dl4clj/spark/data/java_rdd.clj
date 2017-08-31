@@ -2,7 +2,8 @@
     dl4clj.spark.data.java-rdd
   (:import [org.apache.spark.api.java JavaRDD JavaSparkContext]
            [org.apache.spark SparkConf])
-  (:require [dl4clj.helpers :refer [data-from-iter reset-iterator!]]))
+  (:require [dl4clj.helpers :refer [data-from-iter reset-iterator!]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 (defn new-java-spark-context
   "creates a java spark context from a spark conf
@@ -10,16 +11,18 @@
   if no spark conf is supplied, one will be create
    - master is will be set to local
    - app name will be set to :app-name or 'default app name'"
-  [& {:keys [spark-conf app-name]
+  [& {:keys [spark-conf app-name as-code?]
+      :or {as-code? false}
       :as opts}]
-  (if (contains? opts :spark-conf)
-    (JavaSparkContext. spark-conf)
-    (-> (SparkConf.)
-        (.setMaster "local[*]")
-        (.setAppName (if (string? app-name)
-                       app-name
-                       "default app name"))
-        (JavaSparkContext.))))
+  (let [code (if (contains? opts :spark-conf)
+               `(JavaSparkContext. ~spark-conf)
+               `(-> (SparkConf.)
+                    (.setMaster "local[*]")
+                    (.setAppName ~(if (string? app-name)
+                                    app-name
+                                    "default app name"))
+                    (JavaSparkContext.)))]
+    (obj-or-code? as-code? code)))
 
 (defn text-file
   "Reads a text file from HDFS, a local file system (available on all nodes),
@@ -83,7 +86,7 @@
 (defn java-rdd-from-iter
   "given a spark context and an iterator, creates a javaRDD from the
   data in the iterator"
-  [& {:keys [spark-context iter num-slices]}]
+  [& {:keys [spark-context iter num-slices as-code?]}]
   (let [data (data-from-iter (reset-iterator! iter))]
     (parallelize :spark-context spark-context
                  :data data

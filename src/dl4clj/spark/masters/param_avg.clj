@@ -2,8 +2,8 @@
   (:import [org.deeplearning4j.spark.impl.paramavg
             ParameterAveragingTrainingMaster
             ParameterAveragingTrainingMaster$Builder])
-  (:require [dl4clj.utils :refer [contains-many?]]
-            [dl4clj.constants :refer [value-of]]))
+  (:require [dl4clj.utils :refer [contains-many? builder-fn replace-map-vals obj-or-code?]]
+            [dl4clj.helpers :refer [value-of-helper]]))
 
 (defn new-parameter-averaging-training-master
   "used for training networks on Spark.
@@ -11,10 +11,6 @@
 
   :build? (boolean), whether or not to build the training master
    - defaults to true
-
-  :builder (training master builder), an existing training master builder
-   - if not supplied, a fresh builder will be created
-     - to create the fresh builder, :rdd-n-examples must be supplied
 
   :rdd-n-examples (int), specifies how many examples are in each DataSet object
    - If you are training with pre-processed DataSet objects, this will be the size of those preprocessed DataSets
@@ -63,42 +59,60 @@
 
   :worker-prefetch-n-batches (int), the number of mini-batches to asynchronously
    prefetch in the worker"
-  [& {:keys [build? builder rdd-n-examples n-workers averaging-freq
+  [& {:keys [build? rdd-n-examples n-workers averaging-freq
              batch-size-per-worker export-dir rdd-training-approach
              repartition-data repartition-strategy seed save-updater?
              storage-level storage-level-streams training-hooks
-             worker-prefetch-n-batches]
-      :or {build? true}
+             worker-prefetch-n-batches as-code?]
+      :or {build? true
+           as-code? false}
       :as opts}]
   (let [rdd-n-e (int rdd-n-examples)
-        b (if (contains? opts :builder)
-            builder
-            (if (contains-many? opts :rdd-n-examples :n-workers)
-              (ParameterAveragingTrainingMaster$Builder. rdd-n-e (int n-workers))
-              (ParameterAveragingTrainingMaster$Builder. rdd-n-e)))]
-    (cond-> b
-      (contains? opts :averaging-freq)
-      (.averagingFrequency (int averaging-freq))
-      (contains? opts :batch-size-per-worker)
-      (.batchSizePerWorker (int batch-size-per-worker))
-      (contains? opts :export-dir)
-      (.exportDirectory export-dir)
-      (contains? opts :rdd-training-approach)
-      (.rddTrainingApproach (value-of {:rdd-training-approach rdd-training-approach}))
-      (contains? opts :repartition-data)
-      (.repartionData (value-of {:repartition repartition-data}))
-      (contains? opts :repartition-strategy)
-      (.repartitionStrategy (value-of {:repartition-strategy repartition-strategy}))
-      (contains? opts :seed)
-      (.rngSeed (long seed))
-      (contains? opts :save-updater?)
-      (.saveUpdater save-updater?)
-      (contains? opts :storage-level)
-      (.storageLevel (value-of {:storage-level storage-level}))
-      (contains? opts :storage-level-streams)
-      (.storageLevelStreams (value-of {:storage-level storage-level-streams}))
-      (contains? opts :training-hooks)
-      (.trainingHooks training-hooks)
-      (contains? opts :worker-prefetch-n-batches)
-      (.workerPrefetchNumBatches (int worker-prefetch-n-batches))
-      (true? build?) .build)))
+        b (if (contains-many? opts :rdd-n-examples :n-workers)
+            `(ParameterAveragingTrainingMaster$Builder. ~rdd-n-e ~(int n-workers))
+            `(ParameterAveragingTrainingMaster$Builder. ~rdd-n-e))
+        method-map {:averaging-freq            '.averagingFrequency
+                    :batch-size-per-worker     '.batchSizePerWorker
+                    :export-dir                '.exportDirectory
+                    :rdd-training-approach     '.rddTrainingApproach
+                    :repartition-data          '.repartionData
+                    :repartition-strategy      '.repartitionStrategy
+                    :seed                      '.rngSeed
+                    :save-updater?             '.saveUpdater
+                    :storage-level             '.storageLevel
+                    :storage-level-streams     '.storageLevelStreams
+                    :training-hooks            '.trainingHooks
+                    :worker-prefetch-n-batches '.workerPrefetchNumBatches}
+        updated-opts {:averaging-freq           (if averaging-freq
+                                                  (int averaging-freq))
+                      :batch-size-per-worker    (if batch-size-per-worker
+                                                  (int batch-size-per-worker))
+                      :rdd-training-approach    (if rdd-training-approach
+                                                  (value-of-helper
+                                                   :rdd-training-approach
+                                                   rdd-training-approach))
+                      :repartition-data         (if repartition-data
+                                                  (value-of-helper
+                                                   :repartition repartition-data))
+                      :repartition-strategy     (if repartition-strategy
+                                                  (value-of-helper
+                                                   :repartition-strategy
+                                                   repartition-strategy))
+                      :seed                     (if seed (long seed))
+                      :storage-level            (if storage-level
+                                                  (value-of-helper
+                                                   :storage-level storage-level))
+                      :storage-level-streams    (if storage-level-streams
+                                                  (value-of-helper
+                                                   :storage-level
+                                                   storage-level-streams))
+                      :worker-prefetch-n-batches (if worker-prefetch-n-batches
+                                                   (int worker-prefetch-n-batches))}
+        args (replace-map-vals (dissoc opts :build? :as-code?
+                                       :rdd-n-examples :n-workers)
+                               updated-opts)
+        code (builder-fn b method-map args)
+        add-build (if build?
+                    `(.build ~code)
+                    code)]
+    (obj-or-code? as-code? add-build)))

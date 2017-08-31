@@ -11,7 +11,7 @@
 
   :mln (model or conf), this can be a multi-layer-config or a multi-layer-network
    - see: dl4clj.nn.multilayer.multi-layer-network and dl4clj.nn.conf.builders.multi-layer-builders"
-  [& {:keys [spark-context mln training-master]}]
+  [& {:keys [spark-context mln training-master as-code?]}]
   (SparkDl4jMultiLayer. spark-context mln training-master))
 
 (defn set-collect-training-stats?!
