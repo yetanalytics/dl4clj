@@ -18,7 +18,7 @@
           (match [pp]
                  [(_ :guard seq?)] {idx pp}
                  :else
-                 {idx `(pre-process/pre-processors ~pp)}))))
+                 {idx (pre-process/pre-processors pp)}))))
 
 (defn value-of-helper
   [k v]
@@ -29,14 +29,14 @@
   (match [opts]
          [(_ :guard seq?)] opts
          :else
-         `(distribution/distribution ~opts)))
+         (distribution/distribution opts)))
 
 (defn step-fn-helper
   [opts]
   (match [opts]
          [(_ :guard seq?)] opts
          :else
-         `(step-functions/step-fn ~opts)))
+         (step-functions/step-fn opts)))
 
 (defn input-type-helper
   [input-type]

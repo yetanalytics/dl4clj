@@ -1,6 +1,5 @@
 (ns dl4clj.earlystopping-tests
   (:require [dl4clj.earlystopping.early-stopping-config :refer [new-early-stopping-config]]
-            [dl4clj.earlystopping.early-stopping-result :refer [new-early-stopping-result]]
             [dl4clj.earlystopping.early-stopping-trainer :refer [new-early-stopping-trainer]]
             [dl4clj.earlystopping.score-calc :refer [new-ds-loss-calculator]]
             [dl4clj.earlystopping.termination-conditions :refer :all]
@@ -381,34 +380,6 @@
                                         :model-saver model-saver
                                         :save-last-model? false
                                         :score-calculator score-c))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; testing the creation of early stopping results
-;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingResult.html
-;; going to be removed, user will never need to make one of these
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest early-stopping-result-test
-  (testing "the creation of an early stopping result obj"
-    (is (= org.deeplearning4j.earlystopping.EarlyStoppingResult
-           (type
-            (new-early-stopping-result :termination-reason :error
-                                       :termination-details "foo"
-                                       :score-vs-epoch {2.0 0}
-                                       :best-model-epoch 0
-                                       :best-model-score 2.0
-                                       :total-epochs 1
-                                       :best-model mln))))
-    (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-           (type
-            (get-best-model-from-result
-             (new-early-stopping-result :termination-reason :error
-                                        :termination-details "foo"
-                                        :score-vs-epoch {2.0 0}
-                                        :best-model-epoch 0
-                                        :best-model-score 2.0
-                                        :total-epochs 1
-                                        :best-model mln)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of early stopping trainer

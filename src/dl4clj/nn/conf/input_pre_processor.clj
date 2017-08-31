@@ -240,7 +240,7 @@
   [& {:keys [input-height input-width num-channels as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (pre-processors {:feed-forward-to-cnn-pre-processor ~opts})]
+  (let [code (pre-processors {:feed-forward-to-cnn-pre-processor opts})]
     (obj-or-code? as-code? code)))
 
 (defn new-rnn-to-feed-forward-pre-processor

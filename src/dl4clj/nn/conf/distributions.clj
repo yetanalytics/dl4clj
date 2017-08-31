@@ -53,7 +53,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   [& {:keys [lower upper as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (distribution {:uniform ~opts})]
+  (let [code (distribution {:uniform opts})]
     (obj-or-code? as-code? code)))
 
 (defn new-normal-distribution
@@ -65,7 +65,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   [& {:keys [mean std as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (distribution {:normal ~opts})]
+  (let [code (distribution {:normal opts})]
     (obj-or-code? as-code? code)))
 
 (defn new-gaussian-distribution
@@ -79,7 +79,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   [& {:keys [mean std as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (distribution {:gaussian ~opts})]
+  (let [code (distribution {:gaussian opts})]
     (obj-or-code? as-code? code)))
 
 (defn new-binomial-distribution
@@ -93,5 +93,5 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
   [& {:keys [number-of-trials probability-of-success as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (distribution {:binomial ~opts})]
+  (let [code (distribution {:binomial opts})]
     (obj-or-code? as-code? code)))

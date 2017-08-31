@@ -5,7 +5,8 @@
             GradientStepFunction
             NegativeDefaultStepFunction
             NegativeGradientStepFunction]
-           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
+           [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder])
+  (:require [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
@@ -31,20 +32,28 @@
 
 (defn new-default-step-fn
   "creates a new default step fn object"
-  []
-  (step-fn :default-step-fn))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (step-fn :default-step-fn)]
+    (obj-or-code? as-code? code)))
 
 (defn new-gradient-step-fn
   "creates a new gradient step fn object"
-  []
-  (step-fn :gradient-step-fn))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (step-fn :gradient-step-fn)]
+    (obj-or-code? as-code? code)))
 
 (defn new-negative-default-step-fn
   "creates a new negative default step fn object"
-  []
-  (step-fn :negative-default-step-fn))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (step-fn :negative-default-step-fn)]
+    (obj-or-code? as-code? code)))
 
 (defn new-negative-gradient-step-fn
   "creates a new negative gradient step fn object"
-  []
-  (step-fn :negative-gradient-step-fn))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (step-fn :negative-gradient-step-fn)]
+    (obj-or-code? as-code? code)))
