@@ -201,7 +201,7 @@
         encoder-l-size (if encoder-layer-sizes `(int-array ~encoder-layer-sizes))
         decoder-l-size (if decoder-layer-sizes `(int-array ~decoder-layer-sizes))
         reconst-dist (if reconstruction-distribution
-                       `(reconstruction-dist/distributions ~reconstruction-distribution))
+                       (reconstruction-dist/distributions reconstruction-distribution))
         p-dim (if pooling-dimensions `(int-array ~pooling-dimensions))
         ;; update our methods with the code for creating java objects
         obj-opts {:activation-fn a-fn

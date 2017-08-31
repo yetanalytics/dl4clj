@@ -49,7 +49,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
 
 (defmethod listeners :composable [opts]
   (let [conf (:composable opts)
-        listeners (:listeners conf)]
+        listeners (:coll-of-listeners conf)]
     `(ComposableIterationListener. ~listeners)))
 
 (defmethod listeners :score-iteration [opts]
