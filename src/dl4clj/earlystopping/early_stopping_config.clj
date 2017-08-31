@@ -12,7 +12,7 @@ Users need to specify the following:
             IterationTerminationCondition
             EpochTerminationCondition]
            [org.deeplearning4j.earlystopping EarlyStoppingModelSaver])
-  (:require [dl4clj.utils :refer [array-of builder-fn replace-map-vals]]))
+  (:require [dl4clj.utils :refer [array-of builder-fn replace-map-vals obj-or-code?]]))
 
 (defn new-early-stopping-config
   "Builder for setting up an early stopping configuration.  Mainly used during testing
@@ -75,6 +75,4 @@ Users need to specify the following:
         add-build? (if build?
                      `(.build ~code)
                      code)]
-    (if as-code?
-      add-build?
-      (eval add-build?))))
+    (obj-or-code? as-code? add-build?)))

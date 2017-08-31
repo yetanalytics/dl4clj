@@ -2,6 +2,12 @@
   (:require [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.util ModelSerializer]))
 
+(defn obj-or-code?
+  [as-code? code]
+  (if as-code?
+    code
+    (eval code)))
+
 (defn multi-arg-helper
   "takes elements from the args data structure and puts in a
   list which contains the method."

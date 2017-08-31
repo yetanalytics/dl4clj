@@ -3,7 +3,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/Evaluation.html and
 https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html"}
     dl4clj.eval.evaluation
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -68,9 +68,7 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
       :or {as-code? true}
       :as opts}]
   (let [code (evaler {:classification opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-regression-evaler
   "Evaluation method for the evaluation of regression algorithms.
@@ -88,6 +86,4 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
       :or {as-code? true}
       :as opts}]
   (let [code (evaler {:regression opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

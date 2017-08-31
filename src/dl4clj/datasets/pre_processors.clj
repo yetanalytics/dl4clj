@@ -8,7 +8,7 @@
            [org.deeplearning4j.datasets.iterator
             CombinedPreProcessor CombinedPreProcessor$Builder])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? array-of
-                                  builder-fn eval-and-build]]
+                                  builder-fn eval-and-build obj-or-code?]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -73,9 +73,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:image-flattening {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-image-scaling-ds-preprocessor
   "A preprocessor specifically for images that applies min max scaling
@@ -94,9 +92,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:image-scaling opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-min-max-normalization-ds-preprocessor
   "Pre processor for DataSets that normalizes feature values (and optionally label values)
@@ -115,9 +111,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:min-max-normalization opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-standardize-normalization-ds-preprocessor
   "ormalizes feature values (and optionally label values)
@@ -136,9 +130,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:standardize-normalization opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 
 (defn new-vgg16-image-preprocessor
@@ -149,9 +141,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:vgg16 {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-combined-pre-processor
   "This is special preProcessor, that allows to combine multiple prerpocessors,

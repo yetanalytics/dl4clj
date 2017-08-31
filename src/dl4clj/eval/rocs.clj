@@ -9,7 +9,7 @@ for info on the multi-class ROCs, see: https://deeplearning4j.org/doc/org/deeple
 all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
     dl4clj.eval.rocs
   (:import [org.deeplearning4j.eval ROCMultiClass ROC])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod for creating rocs
@@ -44,9 +44,7 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
       :or {as-code? true}
       :as opts}]
   (let [code (rocs {:binary opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-multiclass-roc
   "creates a new ROC for multi-class classifiers
@@ -61,6 +59,4 @@ all fns in dl4clj.eval.api.i-evaluation work with ROCs"}
       :or {as-code? true}
       :as opts}]
   (let [code (rocs {:multi-class opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

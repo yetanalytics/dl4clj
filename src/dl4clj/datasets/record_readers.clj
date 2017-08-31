@@ -17,7 +17,7 @@
            [org.datavec.api.records.reader.impl.csv CSVSequenceRecordReader]
            [org.datavec.api.records.reader.impl.misc MatlabRecordReader]
            [org.datavec.api.records.reader.impl.regex RegexSequenceRecordReader])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,9 +103,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (record-reader {:csv-nlines-seq-rr opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-csv-record-reader
   "Simple csv record reader
@@ -121,9 +119,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (record-reader {:csv-rr opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-csv-seq-record-reader
   "This reader is intended to read sequences of data in CSV format,
@@ -140,9 +136,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (record-reader {:csv-seq-rr opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-file-record-reader
   "File reader/writer, no args required
@@ -153,9 +147,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (record-reader {:file-rr {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-line-record-reader
   "Reads files line by line, no args required
@@ -166,9 +158,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (record-reader {:line-rr {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-list-string-record-reader
   "Iterates through a list of strings return a record.
@@ -182,6 +172,4 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (record-reader {:list-string-rr {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

@@ -23,7 +23,8 @@
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
-            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn]]
+            [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn
+                                  obj-or-code?]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -509,9 +510,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:rr-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-seq-record-reader-dataset-iterator
   "creates a new sequence record reader dataset iterator by calling its constructor
@@ -542,9 +541,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:seq-rr-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-record-reader-multi-dataset-iterator
   ;; update after refactor of multi method
@@ -577,9 +574,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:multi-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dataset iterators user facing fns
@@ -609,9 +604,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:async-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-existing-dataset-iterator
   "This wrapper provides DataSetIterator interface to existing datasets or dataset iterators
@@ -636,9 +629,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:existing-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-sampling-dataset-iterator
   "A wrapper for a dataset to sample from.
@@ -657,9 +648,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:sampling-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-reconstruction-dataset-iterator
   "Wraps a dataset iterator, setting the first (feature matrix) as the labels.
@@ -674,9 +663,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:reconstruction-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-multiple-epochs-iterator
   "A dataset iterator for doing multiple passes over a dataset
@@ -699,9 +686,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:multiple-epochs-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-moving-window-base-dataset-iterator
   ;; currently can't test this until I figure out the issue im running into with
@@ -726,9 +711,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:moving-window-base-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-async-multi-dataset-iterator
   "Async prefetching iterator wrapper for MultiDataSetIterator implementations
@@ -746,9 +729,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:async-multi-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-iterator-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -769,9 +750,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:iterator-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-iterator-multi-dataset-iterator
   "A DataSetIterator that works on an Iterator, combining and splitting the input
@@ -791,9 +770,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:iterator-multi-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-doubles-dataset-iterator
   "creates a dataset iterator which iterates over the supplied features and labels
@@ -813,9 +790,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:doubles-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-floats-dataset-iterator
   "creates a dataset iterator which iterates over the supplied iterable
@@ -833,9 +808,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:floats-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
@@ -855,9 +828,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:INDArray-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-multi-data-set-iterator-adapter
   "Iterator that adapts a DataSetIterator to a MultiDataSetIterator
@@ -872,9 +843,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:ds-iter-to-multi-ds-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-list-dataset-iterator
   "creates a new list data set iterator given a collection of datasets.
@@ -891,9 +860,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:list-ds-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-singleton-multi-dataset-iterator
   "A very simple adapter class for converting a single MultiDataSet to a MultiDataSetIterator.
@@ -905,9 +872,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:multi-ds-to-multi-ds-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; default dataset iterators user facing fns
@@ -927,9 +892,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:curves-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-cifar-data-set-iterator
   "Load the images from the cifar dataset,
@@ -960,9 +923,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:cifar-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-iris-data-set-iterator
   "IrisDataSetIterator handles traversing through the Iris Data Set.
@@ -978,9 +939,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:iris-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-lfw-data-set-iterator
   "Creates a dataset iterator for the LFW image dataset.
@@ -1015,9 +974,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:lfw-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-mnist-data-set-iterator
   "creates a dataset iterator for the Mnist dataset
@@ -1045,9 +1002,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:mnist-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-raw-mnist-data-set-iterator
   "Mnist data with scaled pixels
@@ -1063,9 +1018,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:raw-mnist-dataset-iter opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; spark dataset iterator user facing fns

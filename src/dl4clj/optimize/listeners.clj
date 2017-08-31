@@ -10,7 +10,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
             CollectScoresIterationListener]
            [org.deeplearning4j.optimize.api IterationListener])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn
-                                  array-of]]))
+                                  array-of obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method that sets up the constructor/builder
@@ -158,9 +158,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                `(array-of :data ~(listeners {:score-iteration conf})
                          :java-type IterationListener)
                (listeners {:score-iteration conf}))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-composable-iteration-listener
   "A group of listeners
@@ -179,9 +177,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                `(array-of :data ~(listeners {:composable opts})
                          :java-type IterationListener)
                (listeners {:composable opts}))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-collection-scores-iteration-listener
   "CollectScoresIterationListener simply stores the model scores internally
@@ -206,9 +202,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                `(array-of :data ~(listeners {:collection-scores conf})
                          :java-type IterationListener)
                (listeners {:collection-scores conf}))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-param-and-gradient-iteration-listener
   "An iteration listener that provides details on parameters and gradients at
@@ -279,6 +273,4 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                `(array-of :data ~(listeners {:param-and-gradient conf})
                          :java-type IterationListener)
                (listeners {:param-and-gradient conf}))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

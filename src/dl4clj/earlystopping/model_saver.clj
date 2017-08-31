@@ -4,7 +4,7 @@
             InMemoryModelSaver
             LocalFileModelSaver]
            [java.nio.charset Charset])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethods for calling the dl4j constructors
@@ -39,9 +39,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (model-saver-type {:in-memory {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-local-file-model-saver
   "Save the best (and latest/most recent) models learned during
@@ -66,6 +64,4 @@
       :or {as-code? true}
       :as opts}]
   (let [code (model-saver-type {:local-file opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

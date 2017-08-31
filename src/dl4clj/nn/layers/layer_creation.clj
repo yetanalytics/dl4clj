@@ -25,6 +25,8 @@
 ;; multi fn
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; this is most likely not core
+
 (defn layer-type
   [opts]
   (let [single-layer-nn-conf (:nn-conf opts)]

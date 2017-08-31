@@ -6,7 +6,7 @@
             ExponentialReconstructionDistribution
             GaussianReconstructionDistribution])
   (:require [dl4clj.utils :refer [generic-dispatching-fn contains-many? builder-fn
-                                  eval-and-build]]
+                                  eval-and-build obj-or-code?]]
             [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -19,25 +19,25 @@
   (let [conf (:exponential opts)
         activation-fn (:activation-fn conf)]
     (if (contains? conf :activation-fn)
-      (ExponentialReconstructionDistribution.
-       (enum/value-of {:activation-fn activation-fn}))
-      (ExponentialReconstructionDistribution.))))
+      `(ExponentialReconstructionDistribution.
+       (enum/value-of {:activation-fn ~activation-fn}))
+      `(ExponentialReconstructionDistribution.))))
 
 (defmethod distributions :bernoulli [opts]
   (let [conf (:bernoulli opts)
         activation-fn (:activation-fn conf)]
     (if (contains? conf :activation-fn)
-      (BernoulliReconstructionDistribution.
-       (enum/value-of {:activation-fn activation-fn}))
-      (BernoulliReconstructionDistribution.))))
+      `(BernoulliReconstructionDistribution.
+       (enum/value-of {:activation-fn ~activation-fn}))
+      `(BernoulliReconstructionDistribution.))))
 
 (defmethod distributions :gaussian [opts]
   (let [conf (:gaussian opts)
         activation-fn (:activation-fn conf)]
     (if (contains? conf :activation-fn)
-      (GaussianReconstructionDistribution.
-       (enum/value-of {:activation-fn activation-fn}))
-      (GaussianReconstructionDistribution.))))
+      `(GaussianReconstructionDistribution.
+       (enum/value-of {:activation-fn ~activation-fn}))
+      `(GaussianReconstructionDistribution.))))
 
 (defmethod distributions :composite [opts]
   (let [conf (:composite opts)
@@ -96,9 +96,11 @@
 
   :activation-fn (keyword), the activation fn to be used with the dist
    -see https://deeplearning4j.org/features#activation-functions"
-  [& {:keys [activation-fn]
+  [& {:keys [activation-fn as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(distributions {:bernoulli ~opts}))
+  (let [code (distributions {:bernoulli opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-exponential-reconstruction-distribution
   "Exponential reconstruction distribution. Supports data in range 0-infinity
@@ -116,9 +118,11 @@
 
   :activation-fn (keyword), the activation fn to be used with the dist
    -see https://deeplearning4j.org/features#activation-functions"
-  [& {:keys [activation-fn]
+  [& {:keys [activation-fn as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(distributions {:exponential ~opts}))
+  (let [code (distributions {:exponential opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-gaussian-reconstruction-distribution
   "Gaussian reconstruction distribution for variational autoencoder.
@@ -139,6 +143,8 @@
 
   :activation-fn (keyword), the activation fn to be used with the dist
    -see https://deeplearning4j.org/features#activation-functions"
-  [& {:keys [activation-fn]
+  [& {:keys [activation-fn as-code?]
+      :or {as-code? true}
       :as opts}]
-  `(distributions {:gaussian ~opts}))
+  (let [code (distributions {:gaussian opts})]
+    (obj-or-code? as-code? code)))

@@ -1,6 +1,6 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/InputPreProcessor.html"}
     dl4clj.nn.conf.input-pre-processor
-  (:require [dl4clj.utils :refer [generic-dispatching-fn array-of]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn array-of obj-or-code?]]
             [clojure.core.match :refer [match]])
   (:import [org.deeplearning4j.nn.conf InputPreProcessor]
            [org.deeplearning4j.nn.conf.inputs InputType]
@@ -84,9 +84,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:binominal-sampling-pre-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-unit-variance-processor
   "Unit variance operation
@@ -95,9 +93,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:unit-variance-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-rnn-to-cnn-pre-processor
   "A preprocessor to allow RNN and CNN layers to be used together
@@ -129,9 +125,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:rnn-to-cnn-pre-processor opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-zero-mean-and-unit-variance-pre-processor
   "Zero mean and unit variance operation
@@ -140,9 +134,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:zero-mean-and-unit-variance-pre-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-zero-mean-pre-pre-processor
   "Zero mean and unit variance operation
@@ -151,9 +143,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:zero-mean-pre-pre-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-cnn-to-feed-forward-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -185,9 +175,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:cnn-to-feed-forward-pre-processor opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-cnn-to-rnn-pre-processor
   "A preprocessor to allow CNN and RNN layers to be used together.
@@ -221,9 +209,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:cnn-to-rnn-pre-processor opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-feed-forward-to-cnn-pre-processor
   "A preprocessor to allow CNN and standard feed-forward network layers to be used together.
@@ -255,9 +241,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (pre-processors {:feed-forward-to-cnn-pre-processor ~opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-rnn-to-feed-forward-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
@@ -279,9 +263,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:rnn-to-feed-forward-pre-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-feed-forward-to-rnn-pre-processor
   "A preprocessor to allow RNN and feed-forward network layers to be used together.
@@ -303,9 +285,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (pre-processors {:feed-forward-to-rnn-pre-processor {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-composable-input-pre-processor
   "allows you to combine multiple pre-processors into a single pre-processor
@@ -331,6 +311,4 @@
                      each)))
         pp-array `(array-of :data ~pp :java-type InputPreProcessor)
         code `(ComposableInputPreProcessor. ~pp-array)]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

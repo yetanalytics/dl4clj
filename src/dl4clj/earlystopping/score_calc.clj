@@ -5,7 +5,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
   (:import [org.deeplearning4j.earlystopping.scorecalc
             DataSetLossCalculator ScoreCalculator]
            [org.deeplearning4j.spark.earlystopping SparkDataSetLossCalculator])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,9 +46,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
       :or {as-code? true}
       :as opts}]
   (let [code (score-calc {:dataset-loss opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-spark-ds-loss-calculator
   "Score calculator to calculate the total loss for the MLN

@@ -962,7 +962,7 @@ Transfer Learning (freezing layers)
 
 
 ### Spark Training
-For a walk through on how to use [Spark](https://deeplearning4j.org/spark) wtih dl4j
+dl4j [Spark](https://deeplearning4j.org/spark) usage
 
 How it is done in dl4clj
 - same [workflow](https://deeplearning4j.org/spark#Overview)

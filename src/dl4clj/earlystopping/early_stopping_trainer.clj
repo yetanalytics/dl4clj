@@ -3,7 +3,7 @@
   (:import [org.deeplearning4j.earlystopping.trainer
             EarlyStoppingTrainer BaseEarlyStoppingTrainer]
            [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer])
-  (:require [dl4clj.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many? obj-or-code?]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
 (defn new-early-stopping-trainer
@@ -25,9 +25,7 @@
       :or {as-code? false}
       :as opts}]
   (let [code `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter)]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-spark-early-stopping-trainer
   "object for conducting early stopping training via Spark with

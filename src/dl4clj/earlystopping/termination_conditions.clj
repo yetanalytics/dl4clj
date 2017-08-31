@@ -9,7 +9,7 @@
             MaxEpochsTerminationCondition
             IterationTerminationCondition
             EpochTerminationCondition])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]
             [dl4clj.helpers :refer [value-of-helper]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -67,9 +67,7 @@
   [& {:keys [as-code?]
       :or {as-code? true}}]
   (let [code (termination-condition {:invalid-score-iteration {}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-max-score-iteration-termination-condition
   "Iteration termination condition for terminating training if the minibatch score exceeds a certain value.
@@ -84,9 +82,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (termination-condition {:max-score-iteration opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-max-time-iteration-termination-condition
   "Terminate training based on max time.
@@ -104,9 +100,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (termination-condition {:max-time-iteration opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-score-improvement-epoch-termination-condition
   "Terminate training if best model score does not improve for N epochs
@@ -122,9 +116,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (termination-condition {:score-improvement-epoch opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-best-score-epoch-termination-condition
   "Stop the training once we achieved an expected score.
@@ -145,9 +137,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (termination-condition {:best-score-epoch opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-max-epochs-termination-condition
   "Terminate training if the number of epochs exceeds the maximum number of epochs
@@ -161,6 +151,4 @@
       :or {as-code? true}
       :as opts}]
   (let [code (termination-condition {:max-epochs opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

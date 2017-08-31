@@ -7,7 +7,7 @@
             PatternPathLabelGenerator])
   (:require [clojure.java.io :as io]
             [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [array-of generic-dispatching-fn]]))
+            [dl4clj.utils :refer [array-of generic-dispatching-fn obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split multimethod
@@ -111,9 +111,7 @@
   (let [code `(if ~pattern-position
                (PatternPathLabelGenerator. ~pattern ~pattern-position)
                (PatternPathLabelGenerator. ~pattern))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; path-filter
@@ -164,9 +162,7 @@
                ~min-paths-per-label ~max-paths-per-label
                (array-of :data ~labels
                          :java-type java.lang.String))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-random-path-filter
   "Randomizes the order of paths in an array.
@@ -189,9 +185,7 @@
                (array-of :data ~extensions
                          :java-type java.lang.String)
                ~max-paths)]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input split user facing fns
@@ -215,9 +209,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:file-split opts})]
-   (if as-code?
-    code
-    (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-collection-input-split
   "creates a new collection input split
@@ -231,9 +223,7 @@
   [& {:keys [coll as-code?]
       :or {as-code? true}}]
   (let [code (input-split {:collection-input-split {:collection coll}})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-input-stream-input-split
   "Input stream input split.
@@ -251,9 +241,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:input-stream-input-split opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-list-string-split
   "An input split that already has delimited data of some kind.
@@ -267,9 +255,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:list-string-split opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-numbered-file-input-split
   "InputSplit for sequences of numbered files.
@@ -292,9 +278,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:numbered-file-input-split opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-string-split
   "String split used for single line inputs
@@ -308,9 +292,7 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:string-split opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
 
 (defn new-transform-split
   "input-split implementation that maps the URIs of a given base-input-split to new URIs.
@@ -331,6 +313,4 @@
       :or {as-code? true}
       :as opts}]
   (let [code (input-split {:transform-split opts})]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))
