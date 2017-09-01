@@ -6,7 +6,6 @@
                                   replace-map-vals eval-and-build
                                   obj-or-code?]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
-            [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist]
             [clojure.core.match :refer [match]])
   (:import
    [org.deeplearning4j.nn.conf.layers ActivationLayer$Builder
@@ -202,7 +201,7 @@
         encoder-l-size (if encoder-layer-sizes `(int-array ~encoder-layer-sizes))
         decoder-l-size (if decoder-layer-sizes `(int-array ~decoder-layer-sizes))
         reconst-dist (if reconstruction-distribution
-                       (reconstruction-dist/distributions reconstruction-distribution))
+                       (distribution-helper reconstruction-distribution))
         p-dim (if pooling-dimensions `(int-array ~pooling-dimensions))
         ;; update our methods with the code for creating java objects
         obj-opts {:activation-fn a-fn

@@ -28,7 +28,7 @@
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand]]
 
             ;; used in multi-ds-iter
-            [dl4clj.utils :refer [array-of]]
+            [dl4clj.utils :refer [array-of as-code]]
 
             ;; need record readers
             [dl4clj.datasets.record-readers :refer [new-csv-record-reader
@@ -86,9 +86,9 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def csv-rr (initialize-rr! :rr (new-csv-record-reader)
-                            :input-split fs
-                            :as-code? false))
+(def csv-rr (eval (as-code initialize-rr! :rr (new-csv-record-reader)
+                           :input-split fs
+                           :as-code? false)))
 
 (def poker-training-file-byte-size
   (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))
@@ -235,7 +235,7 @@
                   (new-record-reader-fn :record-reader csv-rr
                                         :label-idx 10
                                         :n-labels 10)
-                                         :string-ds (slurp "resources/poker-spark-test.csv")))))
+                  :string-ds (slurp "resources/poker-spark-test.csv")))))
     (is (= org.nd4j.linalg.dataset.DataSet
            (type (call-record-reader-fn! :the-fn {:record-reader-fn {:record-reader csv-rr
                                                                      :label-idx 10
@@ -245,9 +245,10 @@
            (keys (call-string-to-ds-export-fn!
                   :the-fn (new-string-to-ds-export-fn
                            :output-directory "resources/tests/spark/export/"
-                           :record-reader (initialize-rr! :rr (new-csv-record-reader)
-                                                          :input-split fs
-                                                          :as-code? false)
+                           :record-reader (eval (as-code initialize-rr!
+                                                         :rr (new-csv-record-reader)
+                                                         :input-split fs
+                                                         :as-code? false))
                            :batch-size 1
                            :regression? false
                            :label-idx 10
@@ -259,9 +260,9 @@
                             .listIterator)))))
     ;; to test fns which require tuple inputs, datavec.spark packages need to be implemented
     #_(is (= "" (call-datavec-byte-ds-fn! :the-fn (new-datavec-byte-ds-fn :label-idx 10
-                                                                        :n-labels 10
-                                                                        :batch-size 1
-                                                                        :byte-file-len poker-training-file-byte-size))))
+                                                                          :n-labels 10
+                                                                          :batch-size 1
+                                                                          :byte-file-len poker-training-file-byte-size))))
 
     ;; implement the higher level implementation fns
     ;; see when we get back to the low level

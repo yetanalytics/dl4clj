@@ -13,7 +13,8 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
             CompositeReconstructionDistribution$Builder
             ExponentialReconstructionDistribution
             GaussianReconstructionDistribution])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code? builder-fn]]))
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code? builder-fn]]
+            [dl4clj.constants :as enum]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method
@@ -62,7 +63,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
       `(BernoulliReconstructionDistribution.))))
 
 (defmethod distribution :gaussian-reconstruction [opts]
-  (let [conf (:gaussian opts)
+  (let [conf (:gaussian-reconstruction opts)
         activation-fn (:activation-fn conf)]
     (if (contains? conf :activation-fn)
       `(GaussianReconstructionDistribution.
@@ -71,7 +72,7 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
 
 (defmethod distribution :composite [opts]
   (let [conf (:composite opts)
-        dists (:distributions-to-add conf)
+        dists (:distributions conf)
         m-calls (into []
                       (for [each dists
                             :let [k (first (keys each))
@@ -161,9 +162,9 @@ http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/distribution/BinomialDi
    would result in the code to create a composite distribution containing both distributions specified above
 
   the result will need to be evaluated and built at the proper time"
-  [& {:keys [distributions-to-add as-code?]
+  [& {:keys [distributions as-code?]
       :or {as-code? true}}]
-  (let [code `(distribution {:composite {:distributions-to-add ~distributions-to-add}})]
+  (let [code `(distribution {:composite {:distributions ~distributions}})]
     (obj-or-code? as-code? code)))
 
 (defn new-bernoulli-reconstruction-distribution

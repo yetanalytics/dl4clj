@@ -8,7 +8,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shared fns from the ReconstructionDistribution interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; move to api dir
 
 (defn distribution-input-size
   "Get the number of distribution parameters for the given input data size.

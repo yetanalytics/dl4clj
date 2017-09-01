@@ -17,6 +17,7 @@
             [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
             [dl4clj.datasets.api.iterators :refer [reset-iter! next-example!]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
+            [dl4clj.nn.api.multi-layer-network :refer :all]
             [dl4clj.nn.multilayer.multi-layer-network :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -72,7 +73,8 @@
                  (fit-trainer! (new-early-stopping-trainer
                                 :early-stopping-conf es-conf
                                 :mln mln-code
-                                :iter mnist-train))))
+                                :iter mnist-train
+                                :as-code? false))))
 ;; don't think that will work for binary-rocs, so i will have to look into dl4j unit tests for rocs
 ;; to find a default dataset to use
 

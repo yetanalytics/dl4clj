@@ -22,6 +22,7 @@
             [dl4clj.datasets.record-readers :refer [new-csv-record-reader]]
             [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
             [dl4clj.datasets.default-datasets :refer [new-mnist-ds]]
+            [dl4clj.utils :refer [as-code]]
             [clojure.test :refer :all])
   (:import [java.nio.charset Charset]))
 
@@ -77,14 +78,15 @@
                                      :n-out 10
                                      :updater :nesterovs
                                      :activation-fn :soft-max
-                                     :weight-init :xavier}}})))
+                                     :weight-init :xavier}}})
+   :as-code? false))
 
 (def init-mln (init! :model mln))
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def rr (initialize-rr! :rr (new-csv-record-reader)
-                        :input-split fs))
+(def rr (as-code initialize-rr! :rr (new-csv-record-reader)
+                 :input-split fs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of termination conditions
@@ -232,10 +234,12 @@
              :as-code? false))))
     (is (= '(org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
              (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-              (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                (.initialize (org.datavec.api.split.FileSplit.
-                              (clojure.java.io/as-file
-                               "resources/poker-hand-training.csv"))))
+              (dl4clj.datasets.api.record-readers/initialize-rr!
+               :rr
+               (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+               :input-split
+               (org.datavec.api.split.FileSplit.
+                (clojure.java.io/as-file "resources/poker-hand-training.csv")))
               5)
              true)
            (new-ds-loss-calculator
@@ -264,7 +268,7 @@
               (calculate-score :score-calculator calcer
                                :mln (score!
                                      :model init-mln
-                                     :dataset (new-mnist-ds)
+                                     :dataset (new-mnist-ds :as-code? false)
                                      :return-model? true))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -350,30 +354,42 @@
                                          :score-calculator score-c
                                          :as-code? false))))
       (is (= '(.build
-               (doto (org.deeplearning4j.earlystopping.EarlyStoppingConfiguration$Builder.)
+               (doto
+                   (org.deeplearning4j.earlystopping.EarlyStoppingConfiguration$Builder.)
                  (.evaluateEveryNEpochs 5)
                  (.scoreCalculator
                   (org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
                    (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-                    (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                      (.initialize (org.datavec.api.split.FileSplit.
-                                    (clojure.java.io/as-file
-                                     "resources/poker-hand-training.csv"))))
+                    (dl4clj.datasets.api.record-readers/initialize-rr!
+                     :rr
+                     (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                     :input-split
+                     (org.datavec.api.split.FileSplit.
+                      (clojure.java.io/as-file "resources/poker-hand-training.csv")))
                     5)
                    true))
                  (.saveLastModel false)
-                 (.modelSaver (clojure.core/first
-                               (dl4clj.utils/array-of
-                                :java-type org.deeplearning4j.earlystopping.EarlyStoppingModelSaver
-                                :data (org.deeplearning4j.earlystopping.saver.InMemoryModelSaver.))))
+                 (.modelSaver
+                  (clojure.core/first
+                   (dl4clj.utils/array-of
+                    :java-type
+                    org.deeplearning4j.earlystopping.EarlyStoppingModelSaver
+                    :data
+                    (org.deeplearning4j.earlystopping.saver.InMemoryModelSaver.))))
                  (.iterationTerminationConditions
                   (dl4clj.utils/array-of
-                   :data (org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.)
-                   :java-type org.deeplearning4j.earlystopping.termination.IterationTerminationCondition))
+                   :data
+                   (org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.)
+                   :java-type
+                   org.deeplearning4j.earlystopping.termination.IterationTerminationCondition
+                   ))
                  (.epochTerminationConditions
                   (dl4clj.utils/array-of
-                   :data (org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition. 5)
-                   :java-type org.deeplearning4j.earlystopping.termination.EpochTerminationCondition))))
+                   :data
+                   (org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition.
+                    5)
+                   :java-type
+                   org.deeplearning4j.earlystopping.termination.EpochTerminationCondition))))
              (new-early-stopping-config :epoch-termination-conditions epoch-term
                                         :iteration-termination-conditions iteration-term
                                         :n-epochs 5
@@ -408,50 +424,90 @@
                :average? true))
              :mln mln-code
              :iter (new-mnist-data-set-iterator
-                                         :batch-size 5
-                                         :train? true
-                                         :seed 123)))))
+                    :batch-size 5
+                    :train? true
+                    :seed 123)
+             :as-code? false))))
     (is (= '(org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer.
-             (.build (doto (org.deeplearning4j.earlystopping.EarlyStoppingConfiguration$Builder.)
-                       (.evaluateEveryNEpochs 5)
-                       (.scoreCalculator (org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
-                                          (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-                                           (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                                             (.initialize (org.datavec.api.split.FileSplit.
-                                                           (clojure.java.io/as-file
-                                                            "resources/poker-hand-training.csv"))))
-                                           5)
-                                          true))
-                       (.saveLastModel false)
-                       (.modelSaver (clojure.core/first
-                                     (dl4clj.utils/array-of
-                                      :java-type org.deeplearning4j.earlystopping.EarlyStoppingModelSaver
-                                      :data (org.deeplearning4j.earlystopping.saver.InMemoryModelSaver.))))
-                       (.iterationTerminationConditions
-                        (dl4clj.utils/array-of
-                         :data (org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.)
-                         :java-type org.deeplearning4j.earlystopping.termination.IterationTerminationCondition))
-                       (.epochTerminationConditions
-                        (dl4clj.utils/array-of
-                         :data (org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition. 5)
-                         :java-type org.deeplearning4j.earlystopping.termination.EpochTerminationCondition))))
+             (.build
+              (doto
+                  (org.deeplearning4j.earlystopping.EarlyStoppingConfiguration$Builder.)
+                (.evaluateEveryNEpochs 5)
+                (.scoreCalculator
+                 (org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
+                  (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
+                   (dl4clj.datasets.api.record-readers/initialize-rr!
+                    :rr
+                    (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                    :input-split
+                    (org.datavec.api.split.FileSplit.
+                     (clojure.java.io/as-file "resources/poker-hand-training.csv")))
+                   5)
+                  true))
+                (.saveLastModel false)
+                (.modelSaver
+                 (clojure.core/first
+                  (dl4clj.utils/array-of
+                   :java-type
+                   org.deeplearning4j.earlystopping.EarlyStoppingModelSaver
+                   :data
+                   (org.deeplearning4j.earlystopping.saver.InMemoryModelSaver.))))
+                (.iterationTerminationConditions
+                 (dl4clj.utils/array-of
+                  :data
+                  (org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.
+                   )
+                  :java-type
+                  org.deeplearning4j.earlystopping.termination.IterationTerminationCondition))
+                (.epochTerminationConditions
+                 (dl4clj.utils/array-of
+                  :data
+                  (org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition.
+                   5)
+                  :java-type
+                  org.deeplearning4j.earlystopping.termination.EpochTerminationCondition))))
              (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
-              (.build (doto (.list (doto (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
-                                     (.l2 1.0E-4) (.regularization true)
-                                     (.updater (dl4clj.constants/value-of {:updater :nesterovs}))
-                                     (.seed 123) (.momentum 0.9) (.iterations 1) (.learningRate 0.006)
-                                     (.optimizationAlgo (dl4clj.constants/value-of
-                                                         {:optimization-algorithm :stochastic-gradient-descent}))))
-                        (.layer 0 (dl4clj.utils/eval-and-build
-                                   (dl4clj.nn.conf.builders.layers/builder
-                                    {:dense-layer {:n-in 784, :n-out 1000, :updater :nesterovs,
-                                                   :activation-fn :relu, :weight-init :xavier}})))
-                        (.layer 1 (dl4clj.utils/eval-and-build
-                                   (dl4clj.nn.conf.builders.layers/builder
-                                    {:output-layer {:loss-fn :negativeloglikelihood, :n-in 1000,
-                                                    :n-out 10, :updater :nesterovs,
-                                                    :activation-fn :soft-max, :weight-init :xavier}}))))))
-             (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator. 5 true 123))
+              (.build
+               (doto
+                   (.list
+                    (doto
+                        (org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder.)
+                      (.l2 1.0E-4)
+                      (.regularization true)
+                      (.updater (dl4clj.constants/value-of {:updater :nesterovs}))
+                      (.seed 123)
+                      (.momentum 0.9)
+                      (.iterations 1)
+                      (.learningRate 0.006)
+                      (.optimizationAlgo
+                       (dl4clj.constants/value-of
+                        {:optimization-algorithm :stochastic-gradient-descent}))))
+                 (.layer
+                  0
+                  (dl4clj.utils/eval-and-build
+                   (dl4clj.nn.conf.builders.layers/builder
+                    {:dense-layer
+                     {:n-in 784,
+                      :n-out 1000,
+                      :updater
+                      :nesterovs,
+                      :activation-fn :relu,
+                      :weight-init :xavier}})))
+                 (.layer
+                  1
+                  (dl4clj.utils/eval-and-build
+                   (dl4clj.nn.conf.builders.layers/builder
+                    {:output-layer
+                     {:loss-fn :negativeloglikelihood,
+                      :n-in 1000,
+                      :n-out 10,
+                      :updater :nesterovs,
+                      :activation-fn :soft-max,
+                      :weight-init :xavier}}))))))
+             (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
+              5
+              true
+              123))
            (new-early-stopping-trainer
             :as-code? true
             :early-stopping-conf
@@ -504,4 +560,5 @@
                     (new-early-stopping-trainer
                             :early-stopping-conf es-conf
                             :mln mln-code
-                            :iter mnist-train))))))))
+                            :iter mnist-train
+                            :as-code? false))))))))

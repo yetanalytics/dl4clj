@@ -4,7 +4,7 @@
   (:require [dl4clj.utils :refer [contains-many? get-labels]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
             ;; this is going to change
-            [dl4clj.nn.multilayer.multi-layer-network :refer [output]]
+            [dl4clj.nn.api.multi-layer-network :refer [output]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
             [dl4clj.helpers :refer [reset-iterator! new-lazy-iter]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
