@@ -20,6 +20,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
          avg? :average?} conf]
     `(DataSetLossCalculator. ~iter ~avg?)))
 
+;; should produce code
 (defmethod score-calc :spark-ds-loss [opts]
   (let [conf (:spark-ds-loss opts)
         {rdd :rdd

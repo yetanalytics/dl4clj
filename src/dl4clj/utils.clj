@@ -8,7 +8,7 @@
     code
     (eval code)))
 
-(defmacro fn-chain
+(defmacro as-code
   ;; add doc string
   ;; this is for chaining fn calls which need things to be objects
   ;; but are passed data

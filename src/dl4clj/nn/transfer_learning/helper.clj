@@ -13,7 +13,7 @@
   (:import [org.deeplearning4j.nn.transferlearning TransferLearningHelper]
            [org.nd4j.linalg.api.ndarray INDArray])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
-            [dl4clj.utils :refer [array-of]]
+            [dl4clj.utils :refer [array-of obj-or-code?]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
             [clojure.core.match :refer [match]]))
 
@@ -28,12 +28,15 @@
   if :frozen-til is supplied, Will modify the given MLN (in place!
   to freeze layers (hold params constant during training) specified and below
   otherwise expects a mln where some layers are already frozen"
-  [& {:keys [mln frozen-til]
+  [& {:keys [mln frozen-til as-code?]
+      :or {as-code? true}
       :as opts}]
-  (if frozen-til
-    (TransferLearningHelper. mln frozen-til)
-    (TransferLearningHelper. mln)))
+  (let [code (if frozen-til
+               `(TransferLearningHelper. ~mln ~frozen-til)
+               `(TransferLearningHelper. ~mln))]
+    (obj-or-code? as-code? code)))
 
+;; move to api dir
 (defn featurize
   "During training frozen vertices/layers can be treated as featurizing the input
   The forward pass through these frozen layer/vertices can be done in advance

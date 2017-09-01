@@ -49,9 +49,9 @@
         {in :in-stream
          path :file-path} config]
     ;; worried about input streams being objects
-    `(if ~path
-      (InputStreamInputSplit. ~in (io/as-file ~path))
-      (InputStreamInputSplit. ~in))))
+    (if path
+      `(InputStreamInputSplit. ~in (io/as-file ~path))
+      `(InputStreamInputSplit. ~in))))
 
 (defmethod input-split :list-string-split [opts]
   (let [config (:list-string-split opts)
@@ -108,9 +108,9 @@
   [& {:keys [pattern pattern-position as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code `(if ~pattern-position
-               (PatternPathLabelGenerator. ~pattern ~pattern-position)
-               (PatternPathLabelGenerator. ~pattern))]
+  (let [code (if pattern-position
+               `(PatternPathLabelGenerator. ~pattern ~pattern-position)
+               `(PatternPathLabelGenerator. ~pattern))]
     (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

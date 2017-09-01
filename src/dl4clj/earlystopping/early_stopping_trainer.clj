@@ -19,15 +19,14 @@
    - see: dl4clj.datasets.iterators
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/EarlyStoppingTrainer.html"
-  ;; need to figure out if this ever needs to be code
-  ;; should assume so, and give :as-code? option
   [& {:keys [early-stopping-conf mln iter as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter)]
     (obj-or-code? as-code? code)))
 
 (defn new-spark-early-stopping-trainer
+  ;; this should also produce code
   "object for conducting early stopping training via Spark with
    multi-layer networks
 

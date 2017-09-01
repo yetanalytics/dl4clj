@@ -62,10 +62,90 @@ With Maven:
 
 ## Usage
 
-### Important
+### Things you need to know
+- all functions for creating dl4j objects return code by default
+- all of these functions have an option to return the dl4j object
+  - :as-code? = false
 
-- The option :as-code? determines if a fn returns a java object or the code for creating a java object
-- Typically defaults to true, so the code for creating objects is returned
+``` clojure
+(ns my.ns
+ (:require [dl4clj.nn.conf.builders.nn :as nn]))
+
+;; as code
+(def nn-conf-code
+  (nn/builder
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :regularization? true
+   :default-activation-fn :relu :default-l2 7.5e-6
+   :default-weight-init :xavier :default-learning-rate 0.0015
+   :default-updater :nesterovs :default-momentum 0.98
+   :layers {0 {:dense-layer
+               {:layer-name "example first layer"
+                :n-in 784 :n-out 500}}
+            1 {:dense-layer
+               {:layer-name "example second layer"
+                :n-in 500 :n-out 100}}
+            2 {:output-layer
+               {:n-in 100 :n-out 10
+                :loss-fn :negativeloglikelihood
+                :activation-fn :softmax
+                :layer-name "example output layer"}}}
+   :backprop? true
+   :pretrain? false))
+
+;; as a dl4j object
+(def nn-conf
+  (nn/builder
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123 :iterations 1 :regularization? true
+   :default-activation-fn :relu :default-l2 7.5e-6
+   :default-weight-init :xavier :default-learning-rate 0.0015
+   :default-updater :nesterovs :default-momentum 0.98
+   :layers {0 {:dense-layer
+               {:layer-name "example first layer"
+                :n-in 784 :n-out 500}}
+            1 {:dense-layer
+               {:layer-name "example second layer"
+                :n-in 500 :n-out 100}}
+            2 {:output-layer
+               {:n-in 100 :n-out 10
+                :loss-fn :negativeloglikelihood
+                :activation-fn :softmax
+                :layer-name "example output layer"}}}
+   :backprop? true
+   :pretrain? false
+   :as-code? false))
+```
+
+- as-code macro:
+- API functions expect dl4j objects
+- macro allows you to pass code for creating dl4j objects to api fns
+- allows you to chain api calls without creating the dl4j objects
+
+``` clojure
+
+(ns my.ns
+ (:require [dl4clj.datasets.input-splits :as s]
+           [dl4clj.datasets.record-readers :as rr]
+           [dl4clj.datasets.iterators :as ds-iter]
+           [dl4clj.datasets.api.record-readers :refer :all]))
+
+;; must initialize a record reader before use in a record reader dataset iterator
+(def poker-path "resources/poker-hand-training.csv")
+
+(def file-split (s/new-filesplit :path poker-path))
+
+(def csv-rr (as-code initialize-rr!
+                     :rr (rr/new-csv-record-reader :skip-n-lines 0 :delimiter ",")
+                     :input-split file-split))
+
+(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
+                 :record-reader csv-rr
+                 :batch-size 1
+                 :label-idx 10
+                 :n-possible-labels 10))
+```
+- The fns in core use these to properties to set up typical work flows
 
 ### Importing data
 
@@ -343,8 +423,6 @@ Creating datasets from INDArrays (and creating INDArrays)
 ;; data-set normalization
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; UPDATE THIS TO WORK AS JUST CODE
-
 (def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor :as-code? false)
                            :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
@@ -454,6 +532,7 @@ And working with any type of layer
     fns with the model interface ns
 
 There is also configuration validation
+- this should be removed from core, happens implicilty
 - see: dl4clj.nn.conf.layers.layer-testing.layer-validation
 
 ### Model configuration
@@ -667,7 +746,7 @@ Multi Layer models
 
 ;; and lets set a listener so we can know how training is going
 
-(def score-listener (new-score-iteration-listener :print-every-n 5))
+(def score-listener (listener/new-score-iteration-listener :print-every-n 5))
 
 ;; and attach it to our model
 

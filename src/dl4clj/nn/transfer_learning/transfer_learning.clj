@@ -174,7 +174,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
   [& {:keys [mln fine-tune-conf input-pre-processor remove-last-n-layers
              replacement-layer set-feature-extractor-idx add-layers
              remove-output-layer? as-code? tlb]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [b (if tlb
             tlb

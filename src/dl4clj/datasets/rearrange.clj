@@ -4,7 +4,7 @@
             [clojure.java.io :as io]))
 
 ;; this namespace is not reflected in the datasets_test namespace
-
+;; should return code
 (defn new-unstructured-formatter
   "Rearrange an unstructured dataset in to split test/train on the file system
 

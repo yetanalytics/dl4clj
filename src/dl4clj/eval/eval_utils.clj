@@ -4,6 +4,8 @@
   (:import [org.deeplearning4j.eval EvaluationUtils])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; move to api dir
+
 (defn extract-non-masked-time-steps
   "returns the original time series given the labels, the output of a model
   and the mask applied to that output"

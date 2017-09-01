@@ -68,19 +68,13 @@
 
   :conf (map) a configuration for initialization
 
-  :as-code? (boolean), do you want this fn to return as code?
-
   this is how data actually gets into the record reader"
-  ;; add in the ability to detect if rr is a java object or code
-  [& {:keys [rr input-split conf as-code?]
+  [& {:keys [rr input-split conf]
       :or {as-code? true}
       :as opts}]
-  (let [code (if conf
-               `(doto ~rr (.initialize ~conf ~input-split))
-               `(doto ~rr (.initialize ~input-split)))]
-    (if as-code?
-      code
-      (eval code))))
+  (if conf
+    (doto rr (.initialize conf input-split))
+    (doto rr (.initialize input-split))))
 
 (defn load-from-meta-data-rr
   "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)

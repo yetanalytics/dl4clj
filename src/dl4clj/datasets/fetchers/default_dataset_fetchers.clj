@@ -1,12 +1,13 @@
 (ns dl4clj.datasets.fetchers.default-dataset-fetchers
   (:import [org.deeplearning4j.datasets.fetchers
             MnistDataFetcher IrisDataFetcher CurvesDataFetcher])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 (defn curves-fetcher
   "gets the Curves dataset."
   [& {:keys [as-code?]
-      :or {as-code? false}}]
+      :or {as-code? true}}]
   (if as-code?
     `(CurvesDataFetcher.)
     (CurvesDataFetcher.)))
@@ -14,7 +15,7 @@
 (defn iris-fetcher
   "fetches the iris dataset"
   [& {:keys [as-code?]
-      :or {as-code? false}}]
+      :or {as-code? true}}]
   (if as-code?
     `(IrisDataFetcher.)
     (IrisDataFetcher.)))
@@ -32,7 +33,7 @@
 
   :as-code? (boolean), determines if the java object or the code for creating the object is returned"
   [& {:keys [binarize? train? shuffle? seed as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (match [opts]
                     [{:binarize? _ :train? _ :shuffle? _ :seed _}]
@@ -41,6 +42,4 @@
                     `(MnistDataFetcher. ~binarize?)
                     :else
                     `(MnistDataFetcher.))]
-    (if as-code?
-      code
-      (eval code))))
+    (obj-or-code? as-code? code)))

@@ -7,3 +7,6 @@
 
 ;; add a basic example here in a single fn to illistrate the flow
 ;; add in printlns and listeners and everything
+
+;; look into refactoring with list*
+;; https://clojuredocs.org/clojure.core/list*

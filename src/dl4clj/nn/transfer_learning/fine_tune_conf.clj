@@ -50,7 +50,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply the fine tune conf
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; move these to api dir
 (defn applied-to-nn-conf!
   "applies a fine tune configuration to a supplied neural network configuration.
 

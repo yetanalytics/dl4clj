@@ -8,6 +8,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/layers/feedforward/aut
   (:require [dl4clj.utils :refer [contains-many?]]))
 
 ;; needs to be revisited
+;; move to a dif dir
 
 (defn new-tree
   "creates a new tree if supplied a list of tokens (strings), another tree, or

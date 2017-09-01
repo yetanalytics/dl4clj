@@ -14,17 +14,19 @@
   "constructor for a multi-layer-network given a config and optionaly
   some params (INDArray or vec)"
   [& {:keys [conf params as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (match [opts]
          [{:conf _ :params _ :as-code? true}]
          `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
          [{:conf _ :params _ :as-code? false}]
          (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
-         [{:conf _  :as-code? true}]
-          `(MultiLayerNetwork. ~conf)
+         [{:conf _  :as-code? false}]
+         (MultiLayerNetwork. conf)
          :else
-         (MultiLayerNetwork. conf)))
+         `(MultiLayerNetwork. ~conf)))
+
+;; move these to api dir
 
 (defn initialize!
   "Sets the input and labels from this dataset

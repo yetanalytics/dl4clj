@@ -4,6 +4,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
   (:import [org.deeplearning4j.evaluation EvaluationTools])
   (:require [clojure.java.io :as io]))
 
+;; move to api dir
+
 (defn export-roc-charts-to-html-file
   "Given a ROC or ROCMultiClass chart, export the chart to an html file"
   [& {:keys [roc file-path]}]
