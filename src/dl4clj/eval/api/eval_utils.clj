@@ -1,10 +1,8 @@
 (ns ^{:doc "Utility fns for performing evaluation.
  see: https://deeplearning4j.org/doc/org/deeplearning4j/eval/EvaluationUtils.html"}
-    dl4clj.eval.eval-utils
+    dl4clj.eval.api.eval-utils
   (:import [org.deeplearning4j.eval EvaluationUtils])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
-
-;; move to api dir
 
 (defn extract-non-masked-time-steps
   "returns the original time series given the labels, the output of a model

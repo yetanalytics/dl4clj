@@ -46,26 +46,3 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
     (if as-code?
       fn-chain
       (eval-and-build fn-chain))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; apply the fine tune conf
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; move these to api dir
-(defn applied-to-nn-conf!
-  "applies a fine tune configuration to a supplied neural network configuration.
-
-   Returns the mutated nn-conf"
-  [& {:keys [fine-tune-conf nn-conf]}]
-  (.appliedNeuralNetConfiguration fine-tune-conf nn-conf))
-
-(defn nn-conf-from-fine-tune-conf
-  "creates a neural network configuration builder from a fine tune configuration.
-
-  the resulting nn-conf has the fine-tune-confs opts applied.
-
-  :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
-  [& {:keys [fine-tune-conf build?]
-      :or {build? false}}]
-  (if build?
-    (.build (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
-    (.appliedNeuralNetConfigurationBuilder fine-tune-conf)))

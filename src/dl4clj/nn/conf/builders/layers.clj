@@ -3,7 +3,8 @@
   (:require [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.constants :as constants]
             [dl4clj.utils :refer [generic-dispatching-fn builder-fn
-                                  replace-map-vals eval-and-build]]
+                                  replace-map-vals eval-and-build
+                                  obj-or-code?]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [dl4clj.nn.conf.variational.dist-builders :as reconstruction-dist]
             [clojure.core.match :refer [match]])
@@ -503,8 +504,9 @@
              gradient-normalization gradient-normalization-threshold
              l1 l2 layer-name learning-rate learning-rate-policy
              learning-rate-schedule momentum momentum-after rho
-             rms-decay updater weight-init n-in n-out l1-bias l2-bias]
-      :or {}
+             rms-decay updater weight-init n-in n-out l1-bias l2-bias
+             as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:activation-layer opts}))
 
@@ -532,8 +534,8 @@
              l1 l2 layer-name learning-rate learning-rate-policy
              learning-rate-schedule momentum momentum-after rho
              rms-decay updater weight-init n-in n-out loss-fn
-             l1-bias l2-bias]
-      :or {}
+             l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:output-layer opts}))
 
@@ -556,8 +558,9 @@
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
-             rho rms-decay updater weight-init n-in n-out loss-fn l1-bias l2-bias]
-      :or {}
+             rho rms-decay updater weight-init n-in n-out loss-fn l1-bias l2-bias
+             as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:rnn-output-layer opts}))
 
@@ -598,8 +601,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out loss-fn corruption-level
-             sparsity l1-bias l2-bias pre-train-iterations visible-bias-init]
-      :or {}
+             sparsity l1-bias l2-bias pre-train-iterations visible-bias-init as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:auto-encoder opts}))
 
@@ -642,8 +645,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out loss-fn hidden-unit visible-unit
-             sparsity l1-bias l2-bias pre-train-iterations visible-bias-init]
-      :or {}
+             sparsity l1-bias l2-bias pre-train-iterations visible-bias-init as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:rbm opts}))
 
@@ -670,8 +673,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out forget-gate-bias-init
-             l1-bias l2-bias gate-activation-fn]
-      :or {}
+             l1-bias l2-bias gate-activation-fn as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:graves-bidirectional-lstm opts}))
 
@@ -698,8 +701,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out forget-gate-bias-init
-             l1-bias l2-bias gate-activation-fn]
-      :or {}
+             l1-bias l2-bias gate-activation-fn as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:graves-lstm opts}))
 
@@ -739,8 +742,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out beta decay eps gamma
-             mini-batch? lock-gamma-beta? l1-bias l2-bias]
-      :or {}
+             mini-batch? lock-gamma-beta? l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:batch-normalization opts}))
 
@@ -771,8 +774,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init n-in n-out kernel-size padding
-             stride l1-bias l2-bias]
-      :or {}
+             stride l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:convolutional-layer opts}))
 
@@ -793,8 +796,8 @@
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
-             rho rms-decay updater weight-init n-in n-out l1-bias l2-bias]
-      :or {}
+             rho rms-decay updater weight-init n-in n-out l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:dense-layer opts}))
 
@@ -823,8 +826,8 @@
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
-             rho rms-decay updater weight-init n-in n-out l1-bias l2-bias]
-      :or {}
+             rho rms-decay updater weight-init n-in n-out l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:embedding-layer opts}))
 
@@ -847,8 +850,9 @@
              bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
-             rho rms-decay updater weight-init alpha beta k n l1-bias l2-bias]
-      :or {}
+             rho rms-decay updater weight-init alpha beta k n l1-bias l2-bias
+             as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:local-response-normalization opts}))
 
@@ -877,8 +881,8 @@
              gradient-normalization-threshold l1 l2 layer-name learning-rate
              learning-rate-policy learning-rate-schedule momentum momentum-after
              rho rms-decay updater weight-init kernel-size padding pooling-type
-             stride l1-bias l2-bias]
-      :or {}
+             stride l1-bias l2-bias as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:subsampling-layer opts}))
 
@@ -898,8 +902,8 @@
              bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
-             momentum-after rho rms-decay updater weight-init]
-      :or {}
+             momentum-after rho rms-decay updater weight-init as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:loss-layer opts}))
 
@@ -927,8 +931,8 @@
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
              momentum-after rho rms-decay updater weight-init alpha gradient-check?
-             lambda]
-      :or {}
+             lambda as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:center-loss-output-layer opts}))
 
@@ -964,8 +968,8 @@
              bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
-             momentum-after rho rms-decay updater weight-init]
-      :or {}
+             momentum-after rho rms-decay updater weight-init as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:convolution-1d-layer opts}))
 
@@ -981,8 +985,8 @@
              bias-init bias-learning-rate dist drop-out epsilon gradient-normalization
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
-             momentum-after rho rms-decay updater weight-init]
-      :or {}
+             momentum-after rho rms-decay updater weight-init as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:dropout-layer opts}))
 
@@ -1037,8 +1041,8 @@
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
              momentum-after rho rms-decay updater weight-init collapse-dimensions?
-             pnorm pooling-dimensions pooling-type]
-      :or {}
+             pnorm pooling-dimensions pooling-type as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:global-pooling-layer opts}))
 
@@ -1077,8 +1081,8 @@
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
              momentum-after rho rms-decay updater weight-init convolution-mode
-             eps kernel-size padding pnorm pooling-type stride]
-      :or {}
+             eps kernel-size padding pnorm pooling-type stride as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:subsampling-1d-layer opts}))
 
@@ -1110,8 +1114,8 @@
              gradient-normalization-threshold l1 l1-bias l2 l2-bias layer-name
              learning-rate learning-rate-policy learning-rate-schedule momentum
              momentum-after rho rms-decay updater weight-init padding pad-height
-             pad-width pad-top pad-bot pad-left pad-right]
-      :or {}
+             pad-width pad-top pad-bot pad-left pad-right as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:zero-padding-layer opts}))
 
@@ -1171,7 +1175,7 @@
              rms-decay updater weight-init encoder-layer-sizes
              decoder-layer-sizes pzx-activation-function
              reconstruction-distribution num-samples
-             learning-rate-schedule]
-      :or {}
+             learning-rate-schedule as-code?]
+      :or {as-code? true}
       :as opts}]
   (builder {:variational-auto-encoder opts}))

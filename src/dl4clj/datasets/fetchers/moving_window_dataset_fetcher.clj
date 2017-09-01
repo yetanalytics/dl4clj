@@ -2,7 +2,8 @@
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MovingWindowDataSetFetcher.html"}
     dl4clj.datasets.fetchers.move-window-data-set-fetcher
-  (:import [org.deeplearning4j.datasets.iterator.impl MovingWindowDataSetFetcher]))
+  (:import [org.deeplearning4j.datasets.iterator.impl MovingWindowDataSetFetcher])
+  (:require [dl4clj.utils :refer [obj-or-code?]]))
 
 ;; can't get this working in tests
 ;; run into: java.lang.IllegalArgumentException: Only rotating matrices
@@ -11,7 +12,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/Mo
 
 ;; this guy is called internally by MovingWindowBaseDataSetIterator
 
-;; convert to return code
 (defn new-moving-window-data-set-fetcher
   "Moving window data fetcher. Handles rotation of matrices in all directions
   to generate more examples.
@@ -23,5 +23,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/Mo
   :window-columns (int), number of columns to rotate
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/MovingWindowDataSetFetcher.html"
-  [& {:keys [data-set window-rows window-columns]}]
-  (MovingWindowDataSetFetcher. data-set window-rows window-columns))
+  [& {:keys [data-set window-rows window-columns as-code?]
+      :or {as-code? true}}]
+  (let [code `(MovingWindowDataSetFetcher. ~data-set ~window-rows ~window-columns)]
+    (obj-or-code? as-code? code)))

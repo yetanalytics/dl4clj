@@ -1,7 +1,7 @@
 (ns dl4clj.datasets-test
   (:refer-clojure :exclude [reset! rand])
   (:require [clojure.test :refer :all]
-            [dl4clj.utils :refer [array-of get-labels]]
+            [dl4clj.utils :refer [array-of get-labels as-code]]
             [nd4clj.linalg.factory.nd4j :refer [indarray-of-rand]]
             [dl4clj.datasets.fetchers.default-dataset-fetchers :refer :all]
             [dl4clj.datasets.default-datasets :refer :all]
@@ -22,29 +22,32 @@
 
 (deftest dataset-fetchers-test
   (testing "dataset fetchers"
-    (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher (type (iris-fetcher))))
+    (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher
+           (type (iris-fetcher :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.fetchers.IrisDataFetcher.)
-           (iris-fetcher :as-code? true)))
+           (iris-fetcher)))
 
-    (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher (type (mnist-fetcher))))
-    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.)
-           (mnist-fetcher :as-code? true)))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
-           (type (mnist-fetcher :binarize? true))))
+           (type (mnist-fetcher :as-code? false))))
+    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.)
+           (mnist-fetcher)))
+    (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
+           (type (mnist-fetcher :binarize? true :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true)
-           (mnist-fetcher :binarize? true :as-code? true)))
+           (mnist-fetcher :binarize? true)))
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type
-            (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123))))
+            (mnist-fetcher :binarize? true :train? true :shuffle? true
+                           :seed 123 :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true true true 123)
-           (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123 :as-code? true)))
-    (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher)))))
-    (is (= java.lang.Boolean (type (has-more? (iris-fetcher)))))
-    (is (= java.lang.Integer (type (input-column-length (iris-fetcher)))))
+           (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123)))
+    (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Boolean (type (has-more? (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (input-column-length (iris-fetcher :as-code? false)))))
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher
-           (type (reset-fetcher! (iris-fetcher)))))
-    (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher)))))
-    (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher)))))))
+           (type (reset-fetcher! (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher :as-code? false)))))))
 
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
@@ -366,15 +369,11 @@
            (new-parent-path-label-generator)))
     (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
            (type (new-pattern-path-label-generator :pattern "." :as-code? false))))
-    (is (= '(if nil
-              (org.datavec.api.io.labels.PatternPathLabelGenerator. "." nil)
-              (org.datavec.api.io.labels.PatternPathLabelGenerator. "."))
+    (is (= '(org.datavec.api.io.labels.PatternPathLabelGenerator. ".")
            (new-pattern-path-label-generator :pattern ".")))
     (is (= org.datavec.api.io.labels.PatternPathLabelGenerator
            (type (new-pattern-path-label-generator :pattern "." :pattern-position 0 :as-code? false))))
-    (is (= '(if 0
-              (org.datavec.api.io.labels.PatternPathLabelGenerator. "." 0)
-              (org.datavec.api.io.labels.PatternPathLabelGenerator. "."))
+    (is (= '(org.datavec.api.io.labels.PatternPathLabelGenerator. "." 0)
            (new-pattern-path-label-generator :pattern "." :pattern-position 0)))
     (is (= org.datavec.api.writable.Text
            (type
@@ -698,12 +697,13 @@
 (deftest record-readers-interface
   (testing "the api fns for record readers"
     (let [rr (new-file-record-reader)
-          init-rr (initialize-rr!
-                   :as-code? false
-                   :rr rr
-                   :input-split
-                   (new-filesplit
-                    :path "resources/poker-hand-testing.csv"))]
+          init-rr (eval
+                   (as-code
+                    initialize-rr!
+                    :rr rr
+                    :input-split
+                    (new-filesplit
+                     :path "resources/poker-hand-testing.csv")))]
       ;; these tests do not cover the entire ns but the most imporant fns
       (is (= java.lang.Boolean (type (has-next-record? init-rr))))
       (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
@@ -912,20 +912,20 @@
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"
     (let [fs (new-filesplit :path "resources/poker-hand-training.csv")
-          rr (initialize-rr! :rr (new-csv-record-reader)
-                             :input-split fs)
-          seq-rr (initialize-rr! :rr (new-csv-seq-record-reader)
-                                 :input-split fs)]
+          rr  (as-code initialize-rr! :rr (new-csv-record-reader)
+                       :input-split fs)
+          seq-rr  (as-code initialize-rr! :rr (new-csv-seq-record-reader)
+                           :input-split fs)]
       (is (= org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator
              (type
               (new-record-reader-dataset-iterator :record-reader rr
                                                   :batch-size 10
                                                   :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file "resources/poker-hand-training.csv")))
                10)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10)))
@@ -938,11 +938,11 @@
                                                   :n-possible-labels 10
                                                   :as-code? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (clojure.core/doto
-                   (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 6 10)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -958,11 +958,11 @@
                                                   :as-code? false
                                                   :regression? true))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (clojure.core/doto
-                   (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 0 7 true)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -979,10 +979,11 @@
                                                   :n-possible-labels 10
                                                   :max-num-batches 2))))
       (is (= '(org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-               (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                10 6 10 2)
              (new-record-reader-dataset-iterator :record-reader rr
                                                  :batch-size 10
@@ -999,10 +1000,11 @@
                   :as-code? false
                   :regression? false))))
       (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
-               (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                5 10 10 false)
              (new-seq-record-reader-dataset-iterator
               :record-reader seq-rr
@@ -1019,10 +1021,11 @@
                     :as-code? false
                     :label-idx 10))))
       (is (= '(org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator.
-               (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
-                 (.initialize (org.datavec.api.split.FileSplit.
-                               (clojure.java.io/as-file
-                                "resources/poker-hand-training.csv"))))
+               (dl4clj.datasets.api.record-readers/initialize-rr!
+                :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                :input-split (org.datavec.api.split.FileSplit.
+                              (clojure.java.io/as-file
+                               "resources/poker-hand-training.csv")))
                5 10 10)
              (new-seq-record-reader-dataset-iterator
               :record-reader seq-rr
@@ -1041,14 +1044,20 @@
       (is (= '(.build
                (doto (org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator$Builder. 10)
                  (.sequenceAlignmentMode (dl4clj.constants/value-of {:multi-alignment-mode :equal-length}))
-                 (.addReader "baz" (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                                     (.initialize (org.datavec.api.split.FileSplit.
-                                                   (clojure.java.io/as-file
-                                                    "resources/poker-hand-training.csv")))))
-                 (.addSequenceReader "foo" (clojure.core/doto (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
-                                             (.initialize (org.datavec.api.split.FileSplit.
-                                                           (clojure.java.io/as-file
-                                                            "resources/poker-hand-training.csv")))))
+                 (.addReader
+                  "baz"
+                  (dl4clj.datasets.api.record-readers/initialize-rr!
+                   :rr (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                   :input-split (org.datavec.api.split.FileSplit.
+                                 (clojure.java.io/as-file
+                                  "resources/poker-hand-training.csv"))))
+                 (.addSequenceReader
+                  "foo"
+                  (dl4clj.datasets.api.record-readers/initialize-rr!
+                   :rr (org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader.)
+                   :input-split (org.datavec.api.split.FileSplit.
+                                 (clojure.java.io/as-file
+                                  "resources/poker-hand-training.csv"))))
                  (.addInput "baz" 0 11)))
              (new-record-reader-multi-dataset-iterator
               :alignment-mode :equal-length

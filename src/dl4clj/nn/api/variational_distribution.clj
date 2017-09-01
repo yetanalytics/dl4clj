@@ -1,6 +1,6 @@
 (ns ^{:doc "fucntions from the Reconstruction Distribution class in dl4j.
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variational/ReconstructionDistribution.html"}
-    dl4clj.nn.conf.variational.dists-interface
+    dl4clj.nn.api.variational-distribution
   (:import [org.deeplearning4j.nn.conf.layers.variational ReconstructionDistribution
             CompositeReconstructionDistribution])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))

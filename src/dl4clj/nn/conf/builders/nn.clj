@@ -406,6 +406,7 @@
       (eval build-mln?))))
 
 (defn mln-from-nn-confs
+  ;; refactor, should just return code
   "creates a multi layer network from the supplied options and nn-confs
 
   the elelemts of the nn-confs data structure need to be homogeneous

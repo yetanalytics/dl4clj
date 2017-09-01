@@ -7,6 +7,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/listener/Ea
     dl4clj.earlystopping.api.listener
   (:import [org.deeplearning4j.earlystopping.listener EarlyStoppingListener]))
 
+;; dont think this is core
+
 (defn on-completion!
   "Method that is called at the end of early stopping training
 

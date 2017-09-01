@@ -1,8 +1,6 @@
-(ns dl4clj.nn.conf.layers.input-type-util
+(ns dl4clj.nn.api.input-type
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
   (:require [dl4clj.constants :as enum]))
-
-;; move to api dir
 
 (defn get-output-type-cnn-layers
   "returns the output type from cnn layers
