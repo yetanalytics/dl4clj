@@ -14,8 +14,14 @@
   "applies a fine tune configuration to a supplied neural network configuration.
 
    Returns the mutated nn-conf"
-  [& {:keys [fine-tune-conf nn-conf]}]
-  (.appliedNeuralNetConfiguration fine-tune-conf nn-conf))
+  [& {:keys [fine-tune-conf nn-conf]
+      :as opts}]
+  (match [opts]
+         [{:fine-tune-conf (_ :guard seq?)
+           :nn-conf (_ :guard seq?)}]
+         `(.appliedNeuralNetConfiguration ~fine-tune-conf ~nn-conf)
+         :else
+         (.appliedNeuralNetConfiguration fine-tune-conf nn-conf)))
 
 (defn nn-conf-from-fine-tune-conf
   "creates a neural network configuration builder from a fine tune configuration.
@@ -25,9 +31,17 @@
   :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
   [& {:keys [fine-tune-conf build?]
       :or {build? false}}]
-  (if build?
-    (.build (.appliedNeuralNetConfigurationBuilder fine-tune-conf))
-    (.appliedNeuralNetConfigurationBuilder fine-tune-conf)))
+  (let [m-call (match [fine-tune-conf]
+                      [(_ :guard seq?)]
+                      `(.appliedNeuralNetConfigurationBuilder ~fine-tune-conf)
+                      :else
+                      (.appliedNeuralNetConfigurationBuilder fine-tune-conf))]
+    (cond (and build? (seq? fine-tune-conf))
+          `(.build ~m-call)
+          build?
+          (.build m-call)
+          :else
+          m-call)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fine tune helpers
@@ -46,8 +60,14 @@
    - see: nd4clj.linalg.dataset.data-set (under construction)
 
   warning, this can crash if the dataset is too large"
-  [& {:keys [helper data-set]}]
-  (.featurize helper data-set))
+  [& {:keys [helper data-set]
+      :as opts}]
+  (match [opts]
+         [{:helper (_ :guard seq?)
+           :data-set (_ :guard seq?)}]
+         `(.featurize ~helper ~data-set)
+         :else
+         (.featurize helper data-set)))
 
 (defn fit-featurized!
   "Fit from a featurized dataset
@@ -66,8 +86,14 @@
   [& {:keys [helper data-set iter]
    :as opts}]
   (match [opts]
-         [{:helper _ :data-set _}] (doto helper (.fitFeaturized data-set))
-         [{:helper _ :iter _}] (doto helper (.fitFeaturized (reset-iterator! iter)))
+         [{:helper (_ :guard seq?) :data-set (_ :guard seq?)}]
+         `(doto ~helper (.fitFeaturized ~data-set))
+         [{:helper _ :data-set _}]
+         (doto helper (.fitFeaturized data-set))
+         [{:helper (_ :guard seq?) :iter (_ :guard seq?)}]
+         `(doto ~helper (.fitFeaturized ~iter))
+         [{:helper _ :iter _}]
+         (doto helper (.fitFeaturized (reset-iterator! iter)))
          :else
          (assert false "you must supply either a data-set or a dat-set iterator")))
 
@@ -78,13 +104,26 @@
 
   :featurized-input (INDArray or vec), featurized data
 
-  :array-of-featurized-input (coll of INDArrays), multiple featurized inputs"
+  :array-of-featurized-input (coll of INDArrays or the code to create them),
+   - multiple featurized inputs"
   [& {:keys [helper featurized-input array-of-featurized-input]
       :as opts}]
-  (if array-of-featurized-input
-    (.outputFromFeaturized helper (array-of :data array-of-featurized-input
-                                            :java-type INDArray))
-    (.outputFromFeaturized helper (vec-or-matrix->indarray featurized-input))))
+  (match [opts]
+         [{:helper (_ :guard seq?)
+           :array-of-featurized-input _}]
+         `(.outputFromFeaturized ~helper (array-of :data ~array-of-featurized-input
+                                                   :java-type INDArray))
+         [{:helper _
+           :array-of-featurized-input _}]
+         (.outputFromFeaturized helper (array-of :data array-of-featurized-input
+                                                 :java-type INDArray))
+         [{:helper (_ :guard seq?)
+           :featurized-input (:or (_ :guard vector?)
+                                  (_ :guard seq?))}]
+         `(.outputFromFeaturized ~helper (vec-or-matrix->indarray ~featurized-input))
+         [{:helper _
+           :featurized-input _}]
+         (.outputFromFeaturized helper (vec-or-matrix->indarray featurized-input))))
 
 (defn unfrozen-mln
   "Returns the unfrozen layers of the MultiLayerNetwork as a multilayernetwork
@@ -94,4 +133,8 @@
    - if its just the previously frozen layers, will need to merge back into og model
      - og model may have been mutated"
   [helper]
-  (.unfrozenMLN helper))
+  (match [helper]
+         [(_ :guard seq?)]
+         `(.unfrozenMLN ~helper)
+         :else
+         (.unfrozenMLN helper)))

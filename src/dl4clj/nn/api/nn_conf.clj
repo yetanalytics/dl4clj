@@ -2,6 +2,7 @@
   dl4clj.nn.api.nn-conf
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration]))
 
+;; left off updating API fns here
 (defn add-variable!
   ":var-name (str), the name of the variable you want to add to the nn-conf"
   [& {:keys [nn-conf var-name]}]

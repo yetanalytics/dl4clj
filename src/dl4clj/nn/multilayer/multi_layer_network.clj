@@ -12,18 +12,18 @@
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
   some params (INDArray or vec)"
-  [& {:keys [conf params as-code?]
+  [& {:keys [conf params]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:conf _ :params _ :as-code? true}]
+         [{:conf (_ :guard seq?) :params _}]
          `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
-         [{:conf _ :params _ :as-code? false}]
+         [{:conf _ :params _}]
          (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
-         [{:conf _  :as-code? false}]
-         (MultiLayerNetwork. conf)
+         [{:conf (_ :guard seq?)}]
+         `(MultiLayerNetwork. ~conf)
          :else
-         `(MultiLayerNetwork. ~conf)))
+         (MultiLayerNetwork. conf)))
 
 ;; move to core
 (defn train-mln-with-ds-iter!

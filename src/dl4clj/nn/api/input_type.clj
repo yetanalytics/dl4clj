@@ -1,6 +1,7 @@
 (ns dl4clj.nn.api.input-type
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
-  (:require [dl4clj.constants :as enum]))
+  (:require [dl4clj.constants :as enum]
+            [clojure.core.match :refer [match]]))
 
 (defn get-output-type-cnn-layers
   "returns the output type from cnn layers
@@ -30,14 +31,41 @@
   [& {:keys [input-type kernel-size
              stride padding convolution-mode
              output-depth layer-idx layer-name
-             layer-class]}]
-  (InputTypeUtil/getOutputTypeCnnLayers
-   (enum/input-types input-type)
-   (int-array kernel-size)
-   (int-array stride)
-   (int-array padding)
-   (enum/value-of {:convolution-mode convolution-mode})
-   output-depth layer-idx layer-name layer-class))
+             layer-class]
+      :as opts}]
+  (match [opts]
+         [{:input-type (:or (_ :guard map?)
+                            (_ :guard seq?))
+           :kernel-size (:or (_ :guard vector?)
+                             (_ :guard seq?))
+           :stride (:or (_ :guard vector?)
+                        (_ :guard seq?))
+           :padding (:or (_ :guard vector?)
+                         (_ :guard seq?))
+           :convolution-mode (:or (_ :guard keyword?)
+                                  (_ :guard seq?))
+           :output-depth (:or (_ :guard number?)
+                              (_ :guard seq?))
+           :layer-idx (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :layer-name (:or (_ :guard string?)
+                            (_ :guard seq?))
+           :layer-class _}]
+         `(InputTypeUtil/getOutputTypeCnnLayers
+           (enum/input-types ~input-type)
+           (int-array ~kernel-size)
+           (int-array ~stride)
+           (int-array ~padding)
+           (enum/value-of {:convolution-mode ~convolution-mode})
+           ~output-depth ~layer-idx ~layer-name ~layer-class)
+         :else
+         (InputTypeUtil/getOutputTypeCnnLayers
+          (enum/input-types input-type)
+          (int-array kernel-size)
+          (int-array stride)
+          (int-array padding)
+          (enum/value-of {:convolution-mode convolution-mode})
+          output-depth layer-idx layer-name layer-class)))
 
 (defn get-pre-processor-for-input-type-cnn-layers
   "Utility method for determining the appropriate preprocessor for CNN layers
@@ -50,8 +78,18 @@
   :layer-name (str), the name of the layer
 
   if no preprocessor is required, will return nil"
-  [& {:keys [input-type layer-name]}]
-  (InputTypeUtil/getPreProcessorForInputTypeCnnLayers input-type layer-name))
+  [& {:keys [input-type layer-name]
+      :as opts}]
+  (match [opts]
+         [{:input-type (:or (_ :guard map?)
+                            (_ :guard seq?))
+           :layer-name (:or (_ :guard string?)
+                            (_ :guard seq?))}]
+         `(InputTypeUtil/getPreProcessorForInputTypeCnnLayers
+           (enum/input-types ~input-type) ~layer-name)
+         :else
+         (InputTypeUtil/getPreProcessorForInputTypeCnnLayers
+          (enum/input-types input-type) layer-name)))
 
 (defn get-pre-processor-for-input-type-rnn-layers
   "Utility method for determining the appropriate preprocessor for recurrent layers
@@ -64,5 +102,15 @@
   :layer-name (str), the name of the layer
 
   if no preprocessor is required, will return nil"
-  [& {:keys [input-type layer-name]}]
-  (InputTypeUtil/getPreprocessorForInputTypeRnnLayers input-type layer-name))
+  [& {:keys [input-type layer-name]
+      :as opts}]
+  (match [opts]
+         [{:input-type (:or (_ :guard map?)
+                            (_ :guard seq?))
+           :layer-name (:or (_ :guard string?)
+                            (_ :guard seq?))}]
+         `(InputTypeUtil/getPreprocessorForInputTypeRnnLayers
+           (enum/input-types ~input-type) ~layer-name)
+         :else
+         (InputTypeUtil/getPreprocessorForInputTypeRnnLayers
+          (enum/input-types input-type) layer-name)))

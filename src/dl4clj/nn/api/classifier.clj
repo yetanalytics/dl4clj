@@ -20,8 +20,18 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   [& {:keys [classifier dataset examples labels]
       :as opts}]
   (match [opts]
+         [{:classifier (_ :guard seq?) :dataset (_ :guard seq?)}]
+         `(.f1Score ~classifier ~dataset)
          [{:classifier _ :dataset _}]
          (.f1Score classifier dataset)
+         [{:classifier (_ :guard seq?)
+           :examples (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(.f1Score ~classifier
+                    (vec-or-matrix->indarray ~examples)
+                    (vec-or-matrix->indarray ~labels))
          [{:classifier _ :examples _ :labels _}]
          (.f1Score classifier
                    (vec-or-matrix->indarray examples)
@@ -46,10 +56,21 @@ examples and their labels")))
   [& {:keys [classifier dataset iter examples labels]
       :as opts}]
   (match [opts]
+         [{:classifier (_ :guard seq?) :dataset (_ :guard seq?)}]
+         `(doto ~classifier (.fit ~dataset))
          [{:classifier _ :dataset _}]
          (doto classifier (.fit dataset))
+         [{:classifier (_ :guard seq?) :iter (_ :guard seq?)}]
+         `(doto ~classifier (.fit ~iter))
          [{:classifier _ :iter _}]
          (doto classifier (.fit (reset-iterator! iter)))
+         [{:classifier (_ :guard seq?)
+           :examples (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(doto ~classifier (.fit (vec-or-matrix->indarray ~examples)
+                                  (vec-or-matrix->indarray ~labels)))
          [{:classifier _ :examples _ :labels _}]
          (doto classifier (.fit (vec-or-matrix->indarray examples)
                                 (vec-or-matrix->indarray labels)))
@@ -61,13 +82,23 @@ examples and their labels")))
   "Returns the probabilities for each label for each example row wise
 
   :examples (INDArray or vec), the examples to classify (one example in each row)"
-  [& {:keys [classifier examples]}]
-  (.labelProbabilities classifier (vec-or-matrix->indarray examples)))
+  [& {:keys [classifier examples]
+      :as opts}]
+  (match [opts]
+         [{:classifier (_ :guard seq?) :examples (:or (_ :guard vector?)
+                                                      (_ :guard seq?))}]
+         `(.labelProbabilities ~classifier (vec-or-matrix->indarray ~examples))
+         [{:classifier _ :examples _}]
+         (.labelProbabilities classifier (vec-or-matrix->indarray examples))))
 
 (defn num-labels
   "Returns the number of possible labels"
   [classifier]
-  (.numLabels classifier))
+  (match [classifier]
+         [(_ :guard seq?)]
+         `(.numLabels ~classifier)
+         :else
+         (.numLabels classifier)))
 
 (defn predict
   "Takes in a list of examples for each row (INDArray or vec), returns a label
@@ -78,8 +109,13 @@ examples and their labels")))
   [& {:keys [classifier examples dataset]
       :as opts}]
   (match [opts]
+         [{:classifier (_ :guard seq?) :examples (:or (_ :guard vector?)
+                                                      (_ :guard seq?))}]
+         `(.predict ~classifier (vec-or-matrix->indarray ~examples))
          [{:classifier _ :examples _}]
          (.predict classifier (vec-or-matrix->indarray examples))
+         [{:classifier (_ :guard seq?) :dataset (_ :guard seq?)}]
+         `(.predict ~classifier ~dataset)
          [{:classifier _ :dataset _}]
          (.predict classifier dataset)
          :else
