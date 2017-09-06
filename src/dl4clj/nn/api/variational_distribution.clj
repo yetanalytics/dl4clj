@@ -3,7 +3,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
     dl4clj.nn.api.variational-distribution
   (:import [org.deeplearning4j.nn.conf.layers.variational ReconstructionDistribution
             CompositeReconstructionDistribution])
-  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shared fns from the ReconstructionDistribution interface
@@ -15,8 +16,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   :data-size (int) Size of the data. i.e., nIn value
 
   :dist (distribution), the distribution for a variational layer"
-  [& {:keys [dist data-size]}]
-  (.distributionInputSize dist data-size))
+  [& {:keys [dist data-size]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :data-size (:or (_ :guard number?)
+                           (_ :guard seq?))}]
+         `(.distributionInputSize ~dist (int ~data-size))
+         :else
+         (.distributionInputSize dist data-size)))
 
 (defn example-neg-log-probability
   "Calculate the negative log probability for each example individually
@@ -27,10 +35,21 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
 
   :pre-out-dist-params (INDArray or vec), Distribution parameters used by :dist
    - before applying activation fn"
-  [& {:keys [dist features pre-out-dist-params]}]
-  (.exampleNegLogProbability dist
-                             (vec-or-matrix->indarray features)
-                             (vec-or-matrix->indarray pre-out-dist-params)))
+  [& {:keys [dist features pre-out-dist-params]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :pre-out-dist-params (:or (_ :guard vector?)
+                                     (_ :guard seq?))}]
+         `(.exampleNegLogProbability ~dist
+                                     (vec-or-matrix->indarray ~features)
+                                     (vec-or-matrix->indarray ~pre-out-dist-params))
+         :else
+         (.exampleNegLogProbability dist
+                                    (vec-or-matrix->indarray features)
+                                    (vec-or-matrix->indarray pre-out-dist-params))))
 
 (defn generate-at-mean
   "Generate a sample from P(x|z), where x = E[P(x|z)]
@@ -40,8 +59,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
 
   :pre-out-dist-params (INDArray or vec), Distribution parameters used by :dist
    - before applying activation fn"
-  [& {:keys [dist pre-out-dist-params]}]
-  (.generateAtMean dist (vec-or-matrix->indarray pre-out-dist-params)))
+  [& {:keys [dist pre-out-dist-params]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :pre-out-dist-params (:or (_ :guard vector?)
+                                     (_ :guard seq?))}]
+         `(.generateAtMean ~dist (vec-or-matrix->indarray ~pre-out-dist-params))
+         :else
+         (.generateAtMean dist (vec-or-matrix->indarray pre-out-dist-params))))
 
 (defn generate-random
   "Randomly sample from P(x|z) using the specified distribution parameters
@@ -50,8 +76,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
 
   :pre-out-dist-params (INDArray or vec), Distribution parameters used by :dist
    - before applying activation fn"
-  [& {:keys [dist pre-out-dist-params]}]
-  (.generateRandom dist (vec-or-matrix->indarray pre-out-dist-params)))
+  [& {:keys [dist pre-out-dist-params]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :pre-out-dist-params (:or (_ :guard vector?)
+                                     (_ :guard seq?))}]
+         `(.generateRandom ~dist (vec-or-matrix->indarray ~pre-out-dist-params))
+         :else
+         (.generateRandom dist (vec-or-matrix->indarray pre-out-dist-params))))
 
 (defn gradient
   "Calculate the gradient of the negative log probability with
@@ -63,16 +96,30 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
 
   :pre-out-dist-params (INDArray or vec), Distribution parameters used by :dist
    - before applying activation fn"
-  [& {:keys [dist features pre-out-dist-params]}]
-  (.gradient dist (vec-or-matrix->indarray features)
-             (vec-or-matrix->indarray pre-out-dist-params)))
+  [& {:keys [dist features pre-out-dist-params]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :pre-out-dist-params (:or (_ :guard vector?)
+                                     (_ :guard seq?))}]
+         `(.gradient ~dist (vec-or-matrix->indarray ~features)
+                     (vec-or-matrix->indarray ~pre-out-dist-params))
+         :else
+         (.gradient dist (vec-or-matrix->indarray features)
+                    (vec-or-matrix->indarray pre-out-dist-params))))
 
 (defn has-loss-fn?
   "Does this reconstruction distribution has a standard neural network loss function
   (such as mean squared error, which is deterministic)
   or is it a standard VAE with a probabilistic reconstruction distribution?"
   [dist]
-  (.hasLossFunction dist))
+  (match [dist]
+         [(_ :guard seq?)]
+         `(.hasLossFunction ~dist)
+         :else
+         (.hasLossFunction dist)))
 
 (defn neg-log-probability
   "Calculate the negative log probability
@@ -86,9 +133,21 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
    - before applying activation fn
 
   :average? (boolean), Whether the log probability should be averaged over the minibatch, or simply summed."
-  [& {:keys [dist features pre-out-dist-params average?]}]
-  (.negLogProbability dist (vec-or-matrix->indarray features)
-                      (vec-or-matrix->indarray pre-out-dist-params) average?))
+  [& {:keys [dist features pre-out-dist-params average?]
+      :as opts}]
+  (match [opts]
+         [{:dist (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :pre-out-dist-params (:or (_ :guard vector?)
+                                     (_ :guard seq?))
+           :average? (:or (_ :guard boolean?)
+                          (_ :guard seq?))}]
+         `(.negLogProbability ~dist (vec-or-matrix->indarray ~features)
+                              (vec-or-matrix->indarray ~pre-out-dist-params) ~average?)
+         :else
+         (.negLogProbability dist (vec-or-matrix->indarray features)
+                      (vec-or-matrix->indarray pre-out-dist-params) average?)))
 
 (defn compute-loss-fn-score-array
   "computes the loss function score.
@@ -99,6 +158,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   :features (INDArray or vec), the input data
 
   :reconstruction (INDArray or vec), the output of a variational model"
-  [& {:keys [composite-dist features reconstruction]}]
-  (.computeLossFunctionScoreArray composite-dist (vec-or-matrix->indarray features)
-                                  (vec-or-matrix->indarray reconstruction)))
+  [& {:keys [composite-dist features reconstruction]
+      :as opts}]
+  (match [opts]
+         [{:composite-dist (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :reconstruction (:or (_ :guard vector?)
+                                (_ :guard seq?))}]
+         `(.computeLossFunctionScoreArray ~composite-dist (vec-or-matrix->indarray ~features)
+                                          (vec-or-matrix->indarray ~reconstruction))
+         :else
+         (.computeLossFunctionScoreArray composite-dist (vec-or-matrix->indarray features)
+                                  (vec-or-matrix->indarray reconstruction))))

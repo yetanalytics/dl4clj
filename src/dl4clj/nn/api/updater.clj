@@ -5,6 +5,8 @@ see https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Updater.html"}
   (:require [dl4clj.utils :refer [contains-many?]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; going to be removed
+
 (defn get-state-view-array
   "returns an INDArray of the state-view of the updater"
   [updater]

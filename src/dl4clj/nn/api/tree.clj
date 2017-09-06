@@ -2,6 +2,8 @@
   (:import [org.deeplearning4j.nn.layers.feedforward.autoencoder.recursive Tree])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; update when tree actually gets updated
+
 (defn get-ancestor
   "returns the ancestor of the given tree.
   --note see if tree (this) and root are the same thing"

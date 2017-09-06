@@ -2,14 +2,18 @@
 see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/ParamInitializer.html"}
     dl4clj.nn.api.param-initializer
   (:import [org.deeplearning4j.nn.api ParamInitializer])
-  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+  (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [clojure.core.match :refer [match]]))
+
+;; I think this is being removed from core
 
 (defn get-gradients-from-flattened
   "Return a map of gradients (in their standard non-flattened representation),
   taken from the flattened (row vector) :gradient-view INDArray or vec.
 
   :conf is a NeuralNetConfiguration"
-  [& {:keys [param-init conf gradient-view]}]
+  [& {:keys [param-init conf gradient-view]
+      :as opts}]
   (.getGradientsFromFlattened param-init conf (vec-or-matrix->indarray gradient-view)))
 
 (defn init
