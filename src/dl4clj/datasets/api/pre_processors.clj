@@ -17,24 +17,37 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
             [dl4clj.utils :refer [array-of]]
+            [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 (defn pre-process-dataset!
   "Pre process a dataset
 
   returns a the dataset"
-  [& {:keys [pre-processor ds]}]
-  (.preProcess pre-processor ds)
-  ds)
+  [& {:keys [pre-processor ds]
+      :as opts}]
+  (match [opts]
+         [{:pre-processor (_ :guard seq?)
+           :ds (_ :guard seq?)}]
+         `(do (.preProcess ~pre-processor ~ds)
+              ~ds)
+         :else
+         (do (.preProcess pre-processor ds)
+             ds)))
 
 (defn pre-process-iter-combined-pp!
   "Pre process a dataset sequentially using a combined pre-processor
    - the pre-processor is attached to the dataset
 
   returns the iterator for the dataset"
-  [& {:keys [iter dataset]}]
-  (let [ds-iter (reset-iterator! iter)]
-    (doto ds-iter (.preProcess dataset))))
+  [& {:keys [iter dataset]
+      :as opts}]
+  (match [opts]
+         [{:iter (_ :guard seq?)
+           :dataset (_ :guard seq?)}]
+         `(doto ~iter (.preProcess ~dataset))
+         :else
+         (doto (reset-iterator! iter) (.preProcess dataset))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generic normalizer (pre-processor) fns
@@ -43,26 +56,47 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 (defn get-normalizer-type
   "Get the enum type of this normalizer"
   [normalizer]
-  (.getType normalizer))
+  (match [normalizer]
+         [(_ :guard seq?)]
+         `(.getType ~normalizer)
+         :else
+         (.getType normalizer)))
 
 (defn fit-iter!
   "Iterates over a dataset accumulating statistics for normalization
 
   returns the fit normalizer"
-  [& {:keys [normalizer iter]}]
-  (doto normalizer (.fit iter)))
+  [& {:keys [normalizer iter]
+      :as opts}]
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         `(doto ~normalizer (.fit ~iter))
+         :else
+         (doto normalizer (.fit iter))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.
 
   returns the normalizer"
-  [& {:keys [normalizer fit-labels?]}]
-  (doto normalizer (.fitLabel fit-labels?)))
+  [& {:keys [normalizer fit-labels?]
+      :as opts}]
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :fit-labels (:or (_ :guard boolean?)
+                            (_ :guard seq?))}]
+         `(doto ~normalizer (.fitLabel ~fit-labels?))
+         :else
+         (doto normalizer (.fitLabel fit-labels?))))
 
 (defn normalize-labels?
   "Whether normalization for the labels is also enabled."
   [normalizer]
-  (.isFitLabel normalizer))
+  (match [normalizer]
+         [(_ :guard seq?)]
+         `(.isFitLabel ~normalizer)
+         :else
+         (.isFitLabel normalizer)))
 
 (defn revert-features!
   "Undo the normalization applied by the normalizer on the features array
@@ -74,10 +108,26 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   returns the (un)normalized features"
   [& {:keys [normalizer features features-mask]
       :as opts}]
-  (let [f (vec-or-matrix->indarray features)]
-    (if features-mask
-      (.revertFeatures normalizer f (vec-or-matrix->indarray features-mask))
-      (.revertFeatures normalizer f))))
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :features-mask (:or (_ :guard vector?)
+                               (_ :guard seq?))}]
+         `(.revertFeatures ~normalizer (vec-or-matrix->indarray ~features)
+                           (vec-or-matrix->indarray ~features-mask))
+         [{:normalizer _
+           :features _
+           :features-mask _}]
+         (.revertFeatures normalizer (vec-or-matrix->indarray features)
+                          (vec-or-matrix->indarray features-mask))
+         [{:normalizer (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))}]
+         `(.revertFeatures ~normalizer (vec-or-matrix->indarray ~features))
+         [{:normalizer _
+           :features _}]
+         (.revertFeatures normalizer (vec-or-matrix->indarray features))))
 
 (defn revert-labels!
   "Undo the normalization applied by the normalizer on the labels array
@@ -89,10 +139,26 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   returns the (un)normalized labels"
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
-  (let [l (vec-or-matrix->indarray labels)]
-    (if labels-mask
-      (.revertLabels normalizer l (vec-or-matrix->indarray labels-mask))
-      (.revertLabels normalizer l))))
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))
+           :labels-mask (:or (_ :guard vector?)
+                             (_ :guard seq?))}]
+         `(.revertLabels ~normalizer (vec-or-matrix->indarray ~labels)
+                         (vec-or-matrix->indarray ~labels-mask))
+         [{:normalizer _
+           :labels _
+           :labels-mask _}]
+         (.revertLabels normalizer (vec-or-matrix->indarray labels)
+                        (vec-or-matrix->indarray labels-mask))
+         [{:normalizer (_ :guard seq?)
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(.revertLabels ~normalizer (vec-or-matrix->indarray ~labels))
+         [{:normalizer _
+           :labels _}]
+         (.revertLabels normalizer (vec-or-matrix->indarray labels))))
 
 (defn transform-features!
   "applies the transform specified by the normalizer to the features
@@ -104,10 +170,26 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   returns the normalized features"
   [& {:keys [normalizer features features-mask]
       :as opts}]
-  (let [f (vec-or-matrix->indarray features)]
-    (if features-mask
-      (.transform normalizer f (vec-or-matrix->indarray features-mask))
-      (.transform normalizer f))))
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :features-mask (:or (_ :guard vector?)
+                               (_ :guard seq?))}]
+         `(.transform ~normalizer (vec-or-matrix->indarray ~features)
+                      (vec-or-matrix->indarray ~features-mask))
+         [{:normalizer _
+           :features _
+           :features-mask _}]
+         (.transform normalizer (vec-or-matrix->indarray features)
+                     (vec-or-matrix->indarray features-mask))
+         [{:normalizer (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))}]
+         `(.transform ~normalizer (vec-or-matrix->indarray ~features))
+         [{:normalizer _
+           :features _}]
+         (.transform normalizer (vec-or-matrix->indarray features))))
 
 (defn transform-labels!
   "applies the transform specified by the normalizer to the labels
@@ -119,10 +201,26 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   returns the normalized labels"
   [& {:keys [normalizer labels labels-mask]
       :as opts}]
-  (let [l (vec-or-matrix->indarray labels)]
-    (if labels-mask
-      (.transformLabel normalizer l (vec-or-matrix->indarray labels-mask))
-      (.transformLabel normalizer l))))
+  (match [opts]
+         [{:normalizer (_ :guard seq?)
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))
+           :labels-mask (:or (_ :guard vector?)
+                             (_ :guard seq?))}]
+         `(.transformLabel ~normalizer (vec-or-matrix->indarray ~labels)
+                           (vec-or-matrix->indarray ~labels-mask))
+         [{:normalizer _
+           :labels _
+           :labels-mask _}]
+         (.transformLabel normalizer (vec-or-matrix->indarray labels)
+                          (vec-or-matrix->indarray labels-mask))
+         [{:normalizer (_ :guard seq?)
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(.transformLabel ~normalizer (vec-or-matrix->indarray ~labels))
+         [{:normalizer _
+           :labels _}]
+         (.transformLabel normalizer (vec-or-matrix->indarray labels))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; min-max-normalization specific fns
@@ -130,27 +228,51 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
 (defn get-labels-max
   [min-max-pp]
-  (.getLabelMax min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getLabelMax ~min-max-pp)
+         :else
+         (.getLabelMax min-max-pp)))
 
 (defn get-labels-min
   [min-max-pp]
-  (.getLabelMin min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getLabelMin ~min-max-pp)
+         :else
+         (.getLabelMin min-max-pp)))
 
 (defn get-max
   [min-max-pp]
-  (.getMax min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getMax ~min-max-pp)
+         :else
+         (.getMax min-max-pp)))
 
 (defn get-min
   [min-max-pp]
-  (.getMin min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getMin ~min-max-pp)
+         :else
+         (.getMin min-max-pp)))
 
 (defn get-target-max
   [min-max-pp]
-  (.getTargetMax min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getTargetMax ~min-max-pp)
+         :else
+         (.getTargetMax min-max-pp)))
 
 (defn get-target-min
   [min-max-pp]
-  (.getTargetMin min-max-pp))
+  (match [min-max-pp]
+         [(_ :guard seq?)]
+         `(.getTargetMin ~min-max-pp)
+         :else
+         (.getTargetMin min-max-pp)))
 
 (defn load-min-max
   "Load the given min and max form the supplied file(s)
@@ -158,9 +280,17 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   :files (coll), collection of file paths to be loaded
 
   :pp (pre-processor). can be the standardizer or the min-max"
-  [& {:keys [pp files]}]
-  (.load pp (array-of :data (map clojure.java.io/as-file files)
-                      :java-type java.io.File)))
+  [& {:keys [pp files]
+      :as opts}]
+  (match [opts]
+         [{:pp (_ :guard seq?)
+           :files (:or (_ :guard coll?)
+                       (_ :guard seq?))}]
+         `(.load ~pp (array-of :data (map clojure.java.io/as-file ~files)
+                               :java-type java.io.File))
+         :else
+         (.load pp (array-of :data (map clojure.java.io/as-file files)
+                             :java-type java.io.File))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; standardize specific fns
@@ -168,19 +298,35 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
 (defn get-label-std
   [standardize-pp]
-  (.getLabelStd standardize-pp))
+  (match [standardize-pp]
+         [(_ :guard seq?)]
+         `(.getLabelStd ~standardize-pp)
+         :else
+         (.getLabelStd standardize-pp)))
 
 (defn get-mean
   [standardize-pp]
-  (.getMean standardize-pp))
+  (match [standardize-pp]
+         [(_ :guard seq?)]
+         `(.getMean ~standardize-pp)
+         :else
+         (.getMean standardize-pp)))
 
 (defn get-std
   [standardize-pp]
-  (.getStd standardize-pp))
+  (match [standardize-pp]
+         [(_ :guard seq?)]
+         `(.getStd ~standardize-pp)
+         :else
+         (.getStd standardize-pp)))
 
 (defn get-label-mean
   [standardize-pp]
-  (.getLabelMean standardize-pp))
+  (match [standardize-pp]
+         [(_ :guard seq?)]
+         `(.getLabelMean ~standardize-pp)
+         :else
+         (.getLabelMean standardize-pp)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vgg16 specific fn
@@ -192,5 +338,12 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   :features (vec or INDArray), the features
 
   returns the processed features"
-  [& {:keys [vgg16-pp features]}]
-  (.preProcess vgg16-pp (vec-or-matrix->indarray features)))
+  [& {:keys [vgg16-pp features]
+      :as opts}]
+  (match [opts]
+         [{:vgg16-99 (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))}]
+         `(.preProcess ~vgg16-pp (vec-or-matrix->indarray ~features))
+         :else
+         (.preProcess vgg16-pp (vec-or-matrix->indarray features))))
