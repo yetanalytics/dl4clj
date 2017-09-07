@@ -16,7 +16,9 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:conf (_ :guard seq?) :params _}]
+         [{:conf (_ :guard seq?)
+           :params (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
          `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
          [{:conf _ :params _}]
          (MultiLayerNetwork. conf (vec-or-matrix->indarray params))

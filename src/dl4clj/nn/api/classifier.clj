@@ -20,7 +20,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   [& {:keys [classifier dataset examples labels]
       :as opts}]
   (match [opts]
-         [{:classifier (_ :guard seq?) :dataset (_ :guard seq?)}]
+         [{:classifier (_ :guard seq?)
+           :dataset (_ :guard seq?)}]
          `(.f1Score ~classifier ~dataset)
          [{:classifier _ :dataset _}]
          (.f1Score classifier dataset)
