@@ -147,9 +147,6 @@
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)]
       (is (= java.lang.Double (type (get-accuracy evaler-with-data))))
-      (is (= (type evalr) (type
-                           (add-to-confusion
-                            :evaler evalr :real-value 2 :guess-value 1))))
       (is (= java.lang.Integer (type
                                 (class-count :evaler evaler-with-data
                                              :class-label-idx 0))))
@@ -202,18 +199,6 @@
 
       (is (= java.lang.Integer (type (get-top-n-correct-count evaler-with-data))))
       (is (= java.lang.Integer (type (get-top-n-total-count evaler-with-data))))
-      (is (= org.deeplearning4j.eval.Evaluation (type
-                                                 (increment-false-negatives!
-                                                  :evaler evalr :class-label-idx 0))))
-      (is (= org.deeplearning4j.eval.Evaluation (type
-                                                 (increment-false-positives!
-                                                  :evaler evalr :class-label-idx 0))))
-      (is (= org.deeplearning4j.eval.Evaluation (type
-                                                 (increment-true-negatives!
-                                                  :evaler evalr :class-label-idx 0))))
-      (is (= org.deeplearning4j.eval.Evaluation (type
-                                                 (increment-true-positives!
-                                                  :evaler evalr :class-label-idx 0))))
       (is (= java.util.HashMap (type (total-negatives evaler-with-data))))
       (is (= java.util.HashMap (type (total-positives evaler-with-data))))
       (is (= java.lang.Double (type (get-precision :evaler evaler-with-data))))

@@ -7,10 +7,6 @@
             [dl4clj.earlystopping.api.early-stopping-trainer :refer :all]
             [dl4clj.earlystopping.api.model-saver :refer :all]
             [dl4clj.earlystopping.api.score-calc :refer :all]
-            [dl4clj.earlystopping.api.epoch-termination-condition :refer :all]
-            [dl4clj.earlystopping.api.iteration-termination-condition :refer :all]
-            [dl4clj.earlystopping.api.listener :refer :all]
-
             ;; namespaces I need to test the above namespaces
             [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
             [dl4clj.nn.conf.builders.nn :as nn]
@@ -158,66 +154,6 @@
            (new-max-epochs-termination-condition :max-n 5)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; testing return type of epoch termination condition interface
-;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/EpochTerminationCondition.html
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest epoch-term-interface-test
-  (testing "the return types of the fns found in the epoch termination condition interface"
-    (let [max-epochs (new-max-epochs-termination-condition :max-n 5 :as-code? false)
-          best-score (new-best-score-epoch-termination-condition
-                      :best-expected-score 2.0
-                      :as-code? false)
-          score-imporve (new-score-improvement-epoch-termination-condition
-                         :max-n-epoch-no-improve 10
-                         :as-code? false)]
-      (is (= (type max-epochs) (type (initialize-epoch! max-epochs))))
-      (is (= (type best-score) (type (initialize-epoch! best-score))))
-      (is (= (type score-imporve) (type (initialize-epoch! score-imporve))))
-
-      (is (= java.lang.Boolean (type
-                                (terminate-now-epoch?
-                                 :epoch-term-cond max-epochs
-                                 :epoch-n 5
-                                 :score 3.0))))
-      (is (= java.lang.Boolean (type
-                                (terminate-now-epoch?
-                                 :epoch-term-cond best-score
-                                 :epoch-n 5
-                                 :score 3.0))))
-      (is (= java.lang.Boolean (type
-                                (terminate-now-epoch?
-                                 :epoch-term-cond score-imporve
-                                 :epoch-n 5
-                                 :score 3.0)))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; testing return type of iteration termination condition interface
-;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/termination/IterationTerminationCondition.html
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest iteration-term-interface-test
-  (testing "the return types of the fns found in the iteration termination condition interface"
-    (let [invalid-score (new-invalid-score-iteration-termination-condition :as-code? false)
-          max-score (new-max-score-iteration-termination-condition :max-score 2.0 :as-code? false)
-          max-time (new-max-time-iteration-termination-condition :max-time-val 50
-                                                                 :max-time-unit :seconds
-                                                                 :as-code? false)]
-      (is (= (type invalid-score) (type (initialize-iteration! invalid-score))))
-      (is (= (type max-score) (type (initialize-iteration! max-score))))
-      (is (= (type max-time) (type (initialize-iteration! max-time))))
-
-      (is (= java.lang.Boolean (type
-                                (terminate-now-iteration? :iter-term-cond invalid-score
-                                                          :last-mini-batch-score 3.0))))
-      (is (= java.lang.Boolean (type
-                                (terminate-now-iteration? :iter-term-cond max-score
-                                                          :last-mini-batch-score 3.0))))
-      (is (= java.lang.Boolean (type
-                                (terminate-now-iteration? :iter-term-cond max-time
-                                                          :last-mini-batch-score 3.0)))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of score calculators
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/DataSetLossCalculator.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -298,34 +234,6 @@
              "resources/temp/testing" (java.nio.charset.Charset/defaultCharset))
            (new-local-file-model-saver :directory "resources/temp/testing"
                                        :charset `(Charset/defaultCharset))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; testing the return type of the model savers interface
-;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingModelSaver.html
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest model-savers-iterface-test
-  (testing "the return type of the fns found in the model saver interface"
-    (let [empty-saver (new-in-memory-saver :as-code? false)
-          non-empty-saver (new-in-memory-saver :as-code? false)]
-      ;; we havent saved any models
-      (is (= nil (get-best-model empty-saver)))
-      (is (= nil (get-latest-model empty-saver)))
-
-      ;; lets save a model
-      (is (= (type non-empty-saver) (type
-                                     (save-best-model! :saver non-empty-saver
-                                                       :net mln
-                                                       :score 5.0))))
-      (is (= (type non-empty-saver) (type
-                                     (save-latest-model! :saver non-empty-saver
-                                                         :net mln
-                                                         :score 4.0))))
-      ;; and show that it got saved
-      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (get-best-model non-empty-saver))))
-      (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (get-latest-model non-empty-saver)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing the creation of early stopping configurations
