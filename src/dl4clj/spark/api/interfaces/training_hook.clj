@@ -6,6 +6,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingHook.ht
 ;; no implemented training hook classes If i remember correctly
 ;; this should be worth keeping around
 
+
+
+;; come back to this now that 0.9.0 is a thing
 (defn post-update!
   "A hook method for post update
 

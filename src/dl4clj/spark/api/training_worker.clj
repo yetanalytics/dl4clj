@@ -4,7 +4,8 @@ TrainingWorker implementations provide a layer of abstraction for network learni
 
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.html"}
     dl4clj.spark.api.training-worker
-  (:import [org.deeplearning4j.spark.api TrainingWorker]))
+  (:import [org.deeplearning4j.spark.api TrainingWorker])
+  (:require [clojure.core.match :refer [match]]))
 
 ;; param-avg-worker currently only implementer
 
@@ -12,48 +13,90 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   "Add a training hook to be used during training of the worker
 
   returns the worker (currently only a param averaging worker)"
-  [& {:keys [worker training-hook]}]
-  (doto worker (.addHook training-hook)))
+  [& {:keys [worker training-hook]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :training-hook (_ :guard seq?)}]
+         `(doto ~worker (.addHook ~training-hook))
+         :else
+         (doto worker (.addHook training-hook))))
 
 (defn remove-hook!
   "removes a training hook from the worker
 
   returns the worker (currently only a param averaging worker)"
-  [& {:keys [worker training-hook]}]
-  (doto worker (.removeHook training-hook)))
+  [& {:keys [worker training-hook]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :training-hook (_ :guard seq?)}]
+         `(doto ~worker (.removeHook ~training-hook))
+         :else
+         (doto worker (.removeHook training-hook))))
 
 (defn get-data-config
   "returns the worker config that contains info such as minibatch size"
   [worker]
-  (.getDataConfiguration worker))
+  (match [worker]
+         [(_ :guard seq?)]
+         `(.getDataConfiguration ~worker)
+         :else
+         (.getDataConfiguration worker)))
 
 (defn get-final-result
+  "Get the final result to be returned to the driver"
+  ;; this method can also take a comp graph
+  [& {:keys [worker mln]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :mln (_ :guard seq?)}]
+         `(.getFinalResult ~worker ~mln)
+         :else
+         (.getFinalResult worker mln)))
+
+(defn get-final-result-with-stats
   "Get the final result to be returned to the driver
 
-  :with-stats? (boolean), defaults to false
-   - should be set to true when spark training stats are being collected"
-  ;; this method can also take a comp graph
-  [& {:keys [worker mln with-stats?]
-      :or {with-stats? false}}]
-  (if (true? with-stats?)
-    (.getFinalResultWithStats worker mln)
-    (.getFinalResult worker mln)))
+  used when spark training stats are being collected"
+  [& {:keys [worker mln]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :mln (_ :guard seq?)}]
+         `(.getFinalResultWithStats ~worker ~mln)
+         :else
+         (.getFinalResultWithStats worker mln)))
 
 (defn get-final-result-no-data
+  "Get the final result to be returned to the driver, if no data was available for this executor"
+  [worker]
+  (match [worker]
+         [(_ :guard seq?)]
+         `(.getFinalResultNoData ~worker)
+         :else
+         (.getFinalResultNoData worker)))
+
+(defn get-final-result-no-data-with-stats
   "Get the final result to be returned to the driver, if no data was available for this executor
 
-  :with-stats? (boolean), defaults to false
-   - should be set to true when spark training stats are being collected"
-  [& {:keys [worker with-stats?]
-      :or {with-stats? false}}]
-  (if with-stats?
-    (.getFinalResultNoDataWithStats worker)
-    (.getFinalResultNoData worker)))
+   should be used when spark training stats are being collected"
+  [worker]
+  (match [worker]
+         [(_ :guard seq?)]
+         `(.getFinalResultNoDataWithStats ~worker)
+         :else
+         (.getFinalResultNoDataWithStats worker)))
 
 (defn get-initial-model
   "Get the initial model when training a MultiLayerNetwork/SparkDl4jMultiLayer"
   [worker]
-  (.getInitialModel worker))
+  (match [worker]
+         [(_ :guard seq?)]
+         `(.getInitialModel ~worker)
+         :else
+         (.getInitialModel worker)))
 
 (defn process-mini-batch!
   "Process (fit) a minibatch for a MultiLayerNetwork
@@ -64,14 +107,38 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
   :is-last? (boolean), is this the last dataset or will more be processed after this one
 
-  :with-stats? (boolean), defaults to false
-   - should be set to true when spark training stats are being collected
+  returns the worker"
+  [& {:keys [data-set mln is-last? worker]
+      :as opts}]
+  (match [opts]
+         [{:data-set (_ :guard seq?)
+           :mln (_ :guard seq?)
+           :is-last? (:or (_ :guard boolean?)
+                          (_ :guard seq?))
+           :worker (_ :guard seq?)}]
+         `(doto ~worker (.processMinibatch ~data-set ~mln ~is-last?))
+         :else
+         (doto worker (.processMinibatch data-set mln is-last?))))
 
-  returns a map of the mln and the worker when with-stats? is false
-  otherwise returns a pair containing the stats"
-  [& {:keys [data-set mln is-last? with-stats? worker]
-      :or {with-stats? false}}]
-  (if with-stats?
-    (.processMinibatchWithStats worker data-set mln is-last?)
-    (do (.processMinibatch worker data-set mln is-last?)
-        {:mln mln :worker worker})))
+(defn process-mini-batch-with-stats!
+  "Process (fit) a minibatch for a MultiLayerNetwork
+
+  :data-set (ds), the dataset to train on
+
+  :mln (nn), the multi layer network to train
+
+  :is-last? (boolean), is this the last dataset or will more be processed after this one
+
+  returns a pair containing the stats"
+  [& {:keys [data-set mln is-last? worker]
+      :as opts}]
+
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :data-set (_ :guard seq?)
+           :mln (_ :guard seq?)
+           :is-last? (:or (_ :guard boolean?)
+                          (_ :guard seq?))}]
+         `(.processMinibatchWithStats ~worker ~data-set ~mln ~is-last?)
+         :else
+         (.processMinibatchWithStats worker data-set mln is-last?)))
