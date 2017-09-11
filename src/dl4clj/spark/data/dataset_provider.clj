@@ -5,6 +5,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/DataSetProvide
   (:import [org.deeplearning4j.spark.data DataSetProvider]))
 
 (defn spark-context-to-dataset-rdd
+  ;; revisit, is this a DataSetProvider or an actual data-set?
   "Return an rdd of type dataset"
   ;; not sure what this is here
   ;; docs dont specify any implementing classes

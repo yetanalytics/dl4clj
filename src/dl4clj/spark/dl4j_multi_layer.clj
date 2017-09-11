@@ -3,6 +3,8 @@
   (:import [org.deeplearning4j.spark.impl.multilayer SparkDl4jMultiLayer])
   (:require [dl4clj.utils :refer [contains-many?]]))
 
+;; update to deaulting to code
+
 (defn new-spark-multi-layer-network
   "Creates a multi layer network which can be trained via spark.
 

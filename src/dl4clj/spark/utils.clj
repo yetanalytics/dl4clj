@@ -3,6 +3,8 @@
            [org.deeplearning4j.spark.util SparkUtils])
   (:require [dl4clj.constants :refer [value-of]]))
 
+;; update to work with code
+
 (defn convert-ds-to-multi-ds
   "Convert a JavaRDD<DataSet> to a JavaRDD<MultiDataSet>"
   [data-set]

@@ -24,6 +24,8 @@
                     (JavaSparkContext.)))]
     (obj-or-code? as-code? code)))
 
+;; update things bellow this to work with objs or code
+
 (defn text-file
   "Reads a text file from HDFS, a local file system (available on all nodes),
   or any Hadoop-supported file system URI, and returns it as an `JavaRDD` of Strings.

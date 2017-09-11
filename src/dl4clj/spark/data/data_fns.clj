@@ -15,6 +15,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   (:require [dl4clj.utils :refer [generic-dispatching-fn]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
+;; need to update to default to code
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method for constructor calling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

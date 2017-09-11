@@ -2,6 +2,8 @@
     dl4clj.spark.dl4j-layer
   (:import [org.deeplearning4j.spark.impl.layer SparkDl4jLayer]))
 
+;; update to deaulting to code
+
 (defn new-spark-dl4j-layer
   "creates a layer to be trained by spark given a nn-conf.
 
