@@ -2,138 +2,106 @@
 see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimizer.html"}
     dl4clj.optimize.api.convex-optimizer
   (:import [org.deeplearning4j.optimize.api ConvexOptimizer])
-  (:require [dl4clj.berkeley :refer [new-pair]]))
+  (:require [clojure.core.match :refer [match]]))
 
 (defn get-batch-size
   "returns the batch size for the optimizer"
   [optim]
-  (.batchSize optim))
-
-(defn check-terminal-conditions?
-  ;; dont think this is a user facing fn
-  ;; will be removed in the core branch
-  "Check termination conditions, sets up a search state
-
-  :optim (optimizer), the optimizer
-
-  :gradient (INDArray), layer gradients
-
-  :old-score (double), the old score for the optimizer
-
-  :score (double), the desired new score for the optimizer
-
-  :iteration (int), what iteration the optimizer is on
-
-  returns a boolean"
-  [& {:keys [optim gradient old-score score iteration]}]
-  (.checkTerminalConditions optim gradient old-score score iteration))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.batchSize ~optim)
+         :else
+         (.batchSize optim)))
 
 (defn get-conf
   "get the nn-conf associated with this optimizer"
   [optim]
-  (.getConf optim))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.getConf ~optim)
+         :else
+         (.getConf optim)))
 
 (defn get-updater
   "returns the updater associated with this optimizer"
   [optim]
-  (.getUpdater optim))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.getUpdater ~optim)
+         :else
+         (.getUpdater optim)))
 
 (defn get-gradient-and-score
   "the gradient and score for this optimizer"
   [optim]
-  (.gradientAndScore optim))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.gradientAndScore ~optim)
+         :else
+         (.gradientAndScore optim)))
 
 (defn optimize
   "calls optimize! returns a boolean"
   [optim]
-  (.optimize optim))
-
-(defn post-step!
-  ;; not a user facing fn
-  ;; will be removed in the core branch
-  "After the step has been made, do an action
-
-  :line (INDArray)
-
-  returns the optimizer"
-  [& {:keys [optim line]}]
-  (doto optim (.postStep line)))
-
-(defn pre-process-line!
-  ;; dont think this is a user facing fn
-  ;; will be removed in the core branch
-  "Pre preProcess a line before an iteration
-
-  returns the optimizer"
-  [optim]
-  (doto optim (.preProcessLine)))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.optimize ~optim)
+         :else
+         (.optimize optim)))
 
 (defn get-score
   "The score for the optimizer so far"
   [optim]
-  (.score optim))
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.score ~optim)
+         :else
+         (.score optim)))
 
 (defn set-batch-size!
-  ;; this is not a user facing fn
-  ;; will be removed in the core branch
   "set the batch size for the optimizer
 
   :batch-size (int), the batch size
 
   returns the optimizer"
-  [& {:keys [optim batch-size]}]
-  (doto optim (.setBatchSize batch-size)))
+  [& {:keys [optim batch-size]
+      :as opts}]
+  (match [opts]
+         [{:optim (_ :guard seq?)
+           :batch-size (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+         `(doto ~optim (.setBatchSize (int ~batch-size)))
+         :else
+         (doto optim (.setBatchSize batch-size))))
 
 (defn set-listeners!
-  ;; dont think this is a user facing fn
-  ;; will be removed in the core branch
   "sets the listeners for the supplied optimizer
 
   :listeners (collection), a collection of listeners
    - clojure data structures can be used
 
   returns the optimizer"
-  [& {:keys [optim listeners]}]
-  (doto optim (.setListeners listeners)))
+  [& {:keys [optim listeners]
+      :as opts}]
+  (match [opts]
+         [{:optim (_ :guard seq?)
+           :listeners (:or (_ :guard coll?)
+                           (_ :guard seq?))}]
+         `(doto ~optim (.setListeners ~listeners))
+         :else
+         (doto optim (.setListeners listeners))))
 
 (defn set-updater!
-  ;; dont think this is a user facing fn
-  ;; will be removed in the core branch
   "sets the updater for the optimizer
 
   :updater (updater), an updater to add to the optimizer
 
   returns the optimizer"
-  [& {:keys [optim updater]}]
-  (doto optim (.setUpdater updater)))
-
-(defn set-up-search-state!
-  ;; not a user facing fn
-  ;; will be removed in the core branch
-  "Based on the gradient and score, set up a search state
-
-  :gradient (gradient), the gradient used to set up search state
-   - see: dl4clj.nn.gradient.default-gradient
-
-  :score (double), the score used to set up search state
-
-  returns the optimizer"
-  [& {:keys [optim gradient score]}]
-  (doto optim (.setupSearchState (new-pair :p1 gradient
-                                           :p2 score))))
-
-(defn update-gradient-according-to-params!
-  ;; not a user facing fn
-  ;; will be removed in the core branch
-  "Update the gradient according to the configuration suc as adagrad, momentum and sparsity
-
-  :gradient (gradient), see: dl4clj.nn.gradient.default-gradient
-
-  :model (model), A Model is meant for predicting something from data.
-   - either a nn-layer or a multi-layer-network
-
-  :batch-size (int), the batch size
-
-  returns the optimizer"
-  [& {:keys [optim gradient model batch-size]}]
-  (doto optim (.updateGradientAccordingToParams gradient model batch-size)))
+  [& {:keys [optim updater]
+      :as opts}]
+  (match [opts]
+         [{:optim (_ :guard seq?)
+           :updater (_ :guard seq?)}]
+         `(doto ~optim (.setUpdater ~updater))
+         :else
+         (doto optim (.setUpdater updater))))

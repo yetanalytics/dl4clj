@@ -1,17 +1,22 @@
 (ns dl4clj.optimize.api.listeners
   (:import [org.deeplearning4j.optimize.api IterationListener])
-  (:require [dl4clj.utils :refer [contains-many?]]))
+  (:require [clojure.core.match :refer [match]]
+            [clojure.java.io :refer [as-file]]))
 
 (defn invoked?
   "Was the listener invoked?"
   [listener]
-  (.invoked listener))
+  (match [listener]
+         [(_ :guard seq?)]
+         `(.invoked ~listener)
+         :else
+         (.invoked listener)))
 
 (defn export-scores!
   "exports the scores from the collection scores listener
   to a file or output stream
 
-  :file (java.io.File), a file to write to
+  :file (str), a file to write to (its path)
 
   :delim (str), the delimiter for the file or output stream
 
@@ -20,16 +25,39 @@
   returns the listener"
   [& {:keys [listener file delim output-stream]
       :as opts}]
-  (cond (contains-many? opts :file :delim)
-        (doto listener (.exportScores file delim))
-        (contains-many? opts :output-stream :delim)
-        (doto listener (.exportScores output-stream delim))
-        (contains? opts :file)
-        (doto listener (.exportScores file))
-        (contains? opts :output-stream)
-        (doto listener (.exportScores output-stream))
-        :else
-        (assert false "you must supply alteast a file or output stream to export to")))
+  (match [opts]
+         [{:listener (_ :guard seq?)
+           :file (:or (_ :guard string?)
+                      (_ :guard seq?))
+           :delim (:or (_ :guard string?)
+                       (_ :guard seq?))}]
+         `(doto ~listener (.exportScores (as-file ~file) ~delim))
+         [{:listener _
+           :file _
+           :delim _}]
+         (doto listener (.exportScores (as-file file) delim))
+         [{:listener (_ :guard seq?)
+           :output-stream (_ :guard seq?)
+           :delim (:or (_ :guard string?)
+                       (_ :guard seq?))}]
+         `(doto ~listener (.exportScores ~output-stream ~delim))
+         [{:listener _
+           :output-stream _
+           :delim _}]
+         (doto listener (.exportScores output-stream delim))
+         [{:listener (_ :guard seq?)
+           :file (:or (_ :guard string?)
+                      (_ :guard seq?))}]
+         `(doto ~listener (.exportScores (as-file ~file)))
+         [{:listener _
+           :file _}]
+         (doto listener (.exportScores (as-file file)))
+         [{:listener (_ :guard seq?)
+           :output-stream (_ :guard seq?)}]
+         `(doto ~listener (.exportScores ~output-stream))
+         [{:listener _
+           :output-stream _}]
+         (doto listener (.exportScores output-stream))))
 
 (defn get-scores-vs-iter
   "currently results in a stack over flow error,
@@ -38,4 +66,8 @@
 
   this is not a user facing method"
   [listener]
-  (.getScoreVsIter listener))
+  (match [listener]
+         [(_ :guard seq?)]
+         `(.getScoreVsIter ~listener)
+         :else
+         (.getScoreVsIter listener)))
