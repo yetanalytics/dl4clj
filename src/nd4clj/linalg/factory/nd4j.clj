@@ -36,22 +36,34 @@
     data))
 
 (defn indarray-of-zeros
-  [& {:keys [rows columns]
+  [& {:keys [rows columns as-code?]
       :or {rows 1
-           columns 1}}]
-  (Nd4j/zeros (int rows) (int columns)))
+           columns 1
+           as-code? false}}]
+  (let [code `(Nd4j/zeros (int ~rows) (int ~columns))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn indarray-of-ones
-  [& {:keys [rows columns]
+  [& {:keys [rows columns as-code?]
       :or {rows 1
-           columns 1}}]
-  (Nd4j/ones (int rows) (int columns)))
+           columns 1
+           as-code? false}}]
+  (let [code `(Nd4j/ones (int ~rows) (int ~columns))]
+    (if as-code?
+      code
+      (eval code))))
 
 (defn indarray-of-rand
-  [& {:keys [rows columns]
+  [& {:keys [rows columns as-code?]
       :or {rows 1
-           columns 1}}]
-  (Nd4j/rand (int rows) (int columns)))
+           columns 1
+           as-code? false}}]
+  (let [code (Nd4j/rand (int rows) (int columns))]
+    (if as-code?
+      code
+      (eval code))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

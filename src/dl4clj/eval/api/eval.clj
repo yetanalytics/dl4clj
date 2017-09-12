@@ -169,6 +169,7 @@
 
 (defn eval-model-whole-ds
   ;; move to core, update then
+  ;; currently assumes classifcation
   "evaluate the model performance on an entire data set and print the final result
 
   :mln (multi layer network), a trained mln you want to get classification stats for

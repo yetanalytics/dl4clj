@@ -68,18 +68,6 @@
 ;; setters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn set-conf-rr!
-  "Set the configuration to be used by this record reader."
-  [& {:keys [rr conf]
-      :as opts}]
-  ;; not sure if i have code for creating confs
-  (match [opts]
-         [{:rr (_ :guard seq?)
-           :conf (_ :guard seq?)}]
-         `(doto ~rr (.setConf ~conf))
-         :else
-         (doto rr (.setConf conf))))
-
 (defn set-listeners-rr!
   "Set the record listeners for this record reader."
   [& {:keys [rr listeners]
