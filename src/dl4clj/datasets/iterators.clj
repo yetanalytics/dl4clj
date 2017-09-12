@@ -442,32 +442,32 @@
         {str-paths :string-paths
          iter :iter} config]
     (if str-paths
-      (PathSparkDataSetIterator. str-paths)
-      (PathSparkDataSetIterator. iter))))
+      `(PathSparkDataSetIterator. ~str-paths)
+      `(PathSparkDataSetIterator. ~iter))))
 
 (defmethod iterator :path-to-multi-ds [opts]
   (let [config (:path-to-multi-ds opts)
         {str-paths :string-paths
          iter :iter} config]
     (if str-paths
-      (PathSparkMultiDataSetIterator. str-paths)
-      (PathSparkMultiDataSetIterator. iter))))
+      `(PathSparkMultiDataSetIterator. ~str-paths)
+      `(PathSparkMultiDataSetIterator. ~iter))))
 
 (defmethod iterator :portable-ds-stream [opts]
   (let [config (:portable-ds-stream opts)
         {streams :streams
          iter :iter} config]
     (if streams
-      (PortableDataStreamDataSetIterator. streams)
-      (PortableDataStreamDataSetIterator.  iter))))
+      `(PortableDataStreamDataSetIterator. ~streams)
+      `(PortableDataStreamDataSetIterator. ~iter))))
 
 (defmethod iterator :portable-multi-ds-stream [opts]
   (let [config (:portable-multi-ds-stream opts)
         {streams :streams
          iter :iter} config]
     (if streams
-      (PortableDataStreamMultiDataSetIterator. streams)
-      (PortableDataStreamMultiDataSetIterator.  iter))))
+      `(PortableDataStreamMultiDataSetIterator. ~streams)
+      `(PortableDataStreamMultiDataSetIterator. ~iter))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns
@@ -1041,9 +1041,11 @@
    to using the collection of string paths
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PathSparkDataSetIterator.html"
-  [& {:keys [string-paths iter]
+  [& {:keys [string-paths iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:path-to-ds opts}))
+  (let [code (iterator {:path-to-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-path-spark-multi-ds-iterator
   "A DataSetIterator that loads serialized MultiDataSet objects
@@ -1060,9 +1062,11 @@
    to using the collection of string paths
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PathSparkMultiDataSetIterator.html"
-  [& {:keys [string-paths iter]
+  [& {:keys [string-paths iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:path-to-multi-ds opts}))
+  (let [code (iterator {:path-to-multi-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-spark-portable-datastream-ds-iterator
   "A DataSetIterator that loads serialized DataSet objects
@@ -1077,9 +1081,11 @@
    using the collection of portable datastreams
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PortableDataStreamDataSetIterator.html"
-  [& {:keys [streams iter]
+  [& {:keys [streams iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:portable-ds-stream opts}))
+  (let [code (iterator {:portable-ds-stream opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-spark-portable-datastream-multi-ds-iterator
   "A DataSetIterator that loads serialized MultiDataSet objects
@@ -1094,6 +1100,8 @@
    using the collection of portable datastreams
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/iterator/PortableDataStreamMultiDataSetIterator.html"
-  [& {:keys [streams iter]
+  [& {:keys [streams iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (iterator {:portable-multi-ds-stream opts}))
+  (let [code (iterator {:portable-multi-ds-stream opts})]
+    (obj-or-code? as-code? code)))

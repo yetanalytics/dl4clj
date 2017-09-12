@@ -12,7 +12,6 @@
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
-;; replace contains-many? with core.match
 (defmulti pre-processors generic-dispatching-fn)
 
 (defmethod pre-processors :image-flattening [opts]

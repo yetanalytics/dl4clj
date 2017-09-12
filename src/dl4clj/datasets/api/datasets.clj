@@ -6,120 +6,9 @@
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
-(defn add-feature-vector!
-  "adds a feature vector to a dataset, if :to-add is supplied, the fn adds a
-   feature for each example on to the current feature vector.  Otherwise,
-   this fn expects :feature and :example-idx.  Those args will add the feature
-   to the example at the given idx
-
-   :feature (INDArray or vector), the feature vector to add
-
-   :example-idx (int), index of the example you want to add the feature vector to
-
-   :to-add (INDArray or vector), need to test to clarify
-
-  returns the supplied dataset"
-  [& {:keys [ds feature example-idx to-add]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :feature (:or (_ :guard vector?)
-                         (_ :guard seq?))
-           :example-idx (:or (_ :guard number?)
-                             (_ :guard seq?))}]
-         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
-                                       (int ~example-idx)))
-         [{:ds _ :feature _ :example-idx _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray feature)
-                                     example-idx))
-         [{:ds (_ :guard seq?)
-           :to-add (:or (_ :guard vector?)
-                        (_ :guard seq?))}]
-         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add)))
-         [{:ds _ :to-add _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray to-add)))))
-
-(defn add-row!
-  "adds a dataset object to an existing datset object as a new row
-
-  :row (DataSet), the datset to add as a row
-
-  :idx (int), the index at which to add the row
-
-  returns the dataset"
-  [& {:keys [ds row idx]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :row (_ :guard seq?)
-           :idx (:or (_ :guard number?)
-                     (_ :guard seq?))}]
-         `(doto ~ds (.addRow ~row ~idx))
-         :else
-         (doto ds (.addRow row idx))))
-
-(defn as-list
-  "Extract each example in the DataSet into its own DataSet object,
-  and return all of them as a list"
-  [ds]
-  (match [ds]
-         [(_ :guard seq?)]
-         `(.asList ~ds)
-         :else
-         (.asList ds)))
-
-(defn batch-by!
-  "Partitions a dataset in to mini batches where each dataset in each list
-  is of the specified number of examples
-
-  :n-examples (int), the desired number of examples within each datset"
-  [& {:keys [ds n-examples]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :n-examples (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-         `(.batchBy ~ds (int ~n-examples))
-         :else
-         (.batchBy ds n-examples)))
-
-(defn batch-by-n-labels!
-  "partitions a dataset in to mini batches where each datset in each list
-   has n-labels examples in it"
-  [ds]
-  (match [ds]
-         [(_ :guard seq?)]
-         `(.batchByNumLabels ~ds)
-         :else
-         (.batchByNumLabels ds)))
-
-(defn binarize!
-  "Binarizes the dataset such that any number greater than :cutoff is 1 otherwise zero"
-  [& {:keys [ds cutoff]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :cutoff (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-         `(doto ~ds (.binarize (double ~cutoff)))
-         [{:ds _ :cutoff _}]
-         (doto ds (.binarize cutoff))
-         [{:ds (_ :guard seq?)}]
-         `(doto ~ds .binarize)
-         :else
-         (doto ds .binarize)))
-
-(defn divide-by!
-  "divide the features in a datset by a scalar"
-  [& {:keys [ds scalar]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :scalar (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-         `(doto ~ds (.divideBy (int ~scalar)))
-         :else
-         (doto ds (.divideBy scalar))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-eample-maxs
   "returns the max from each example (i believe)"
@@ -147,35 +36,6 @@
          `(.exampleSums ~ds)
          :else
          (.exampleSums ds)))
-
-(defn filt-and-strip-labels!
-  "Strips the dataset down to the specified labels (by indexs) and remaps them
-
-  :label-idxs (coll), a collection of label indexes"
-  [& {:keys [ds label-idxs]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :label-idxs (:or (_ :guard coll?)
-                            (_ :guard seq?))}]
-         `(doto ~ds (.filterAndStrip (int-array ~label-idxs)))
-         :else
-         (doto ds (.filterAndStrip (int-array label-idxs)))))
-
-(defn filter-by!
-  "Strips the data set of all but the passed in labels
-
-  :label-idxs (coll), a collection of albel indexes"
-  [& {:keys [ds label-idxs]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :label-idxs (:or (_ :guard coll?)
-                            (_ :guard seq?))}]
-         `(.filterBy ~ds (int-array ~label-idxs))
-         :else
-         (.filterBy ds (int-array label-idxs))))
-
 (defn get-example
   "returns a specified example(s) from a dataset
 
@@ -283,15 +143,6 @@
          :else
          (.getRange ds from to)))
 
-(defn has-mask-arrays?
-  "does this dataset contain any mask arrays?"
-  [ds]
-  (match [ds]
-         [(_ :guard seq?)]
-         `(.hasMaskArrays ~ds)
-         :else
-         (.hasMaskArrays ds)))
-
 (defn get-ds-id
   "returns the id of the dataset"
   [ds]
@@ -301,15 +152,6 @@
          :else
          (.id ds)))
 
-(defn new-ds-iter
-  "creates an iterator for the supplied dataset"
-  [ds]
-  (match [ds]
-         [(_ :guard seq?)]
-         `(.iterator ~ds)
-         :else
-         (.iterator ds)))
-
 (defn get-label-counts
   "Calculate and return a count of each label, by index."
   [ds]
@@ -318,48 +160,6 @@
          `(.labelCounts ~ds)
          :else
          (.labelCounts ds)))
-
-(defn load-ds!
-  "loads a dataset from a given input stream or a file path
-
-  :in (InputStream), a source to load a dataset from
-
-  :file-path (str), the path to a file containing the dataset"
-  [& {:keys [file-path in]
-      :as opts}]
-  (match [opts]
-         [{:file-path (:or (_ :guard string?)
-                           (_ :guard seq?))}]
-         `(.load (clojure.java.io/as-file ~file-path))
-         [{:file-path _}]
-         (.load (clojure.java.io/as-file file-path))
-         [{:in (_ :guard seq?)}]
-         `(.load ~in)
-         :else
-         (.load in)))
-
-(defn multiply-by!
-  "multiply the features in a dataset by a scalar
-
-  the scalar should be a double"
-  [& {:keys [ds scalar]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :scalar (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-         `(doto ~ds (.multiplyBy (double ~scalar)))
-         :else
-         (doto ds (.multiplyBy scalar))))
-
-(defn normalize!
-  "normalize the dataset to have a mean of 0 and a stdev of 1 per input"
-  [ds]
-  (match [ds]
-         [(_ :guard seq?)]
-         `(doto ~ds .normalize)
-         :else
-         (doto ds .normalize)))
 
 (defn num-examples
   "returns the number of examples in the dataset"
@@ -399,118 +199,9 @@
          :else
          (.outcome ds)))
 
-(defn reshape!
-  "reshapes a datset to have the desired number of rows and columns"
-  [& {:keys [ds rows cols]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :rows (:or (_ :guard number?)
-                      (_ :guard seq?))
-           :cols (:or (_ :guard number?)
-                      (_ :guard seq?))}]
-         `(.reshape ~ds ~rows ~cols)
-         :else
-         (.reshape ds rows cols)))
-
-(defn round-to-the-nearest!
-  "rounts values in the dataset to the supplied nearest value
-
-  :round-to (int), the value you want things rounded to"
-  [& {:keys [ds round-to]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :round-to (:or (_ :guard number?)
-                          (_ :guard seq?))}]
-         `(doto ~ds (.roundToTheNearest ~round-to))
-         :else
-         (doto ds (.roundToTheNearest round-to))))
-
-(defn sample-ds
-  "Sample with/without replacement and a given/random rng"
-  [& {:keys [ds n-samples with-replacement? seed]
-      :as opts}]
-  (let [rng (new Random seed)]
-    (match [opts]
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :with-replacement? (:or (_ :guard boolean?)
-                                     (_ :guard seq?))
-             :seed (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?)
-           [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
-           (.sample ds n-samples (new Random seed) with-replacement?)
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :seed (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) (new Random ~seed))
-           [{:ds _ :n-samples _  :seed _}]
-           (.sample ds n-samples (new Random seed))
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :with-replacement? (:or (_ :guard boolean?)
-                                     (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) ~with-replacement?)
-           [{:ds _ :n-samples _ :with-replacement? _}]
-           (.sample ds n-samples with-replacement?)
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples))
-           :else
-           (.sample ds n-samples))))
-
-(defn save-ds!
-  "saves a datset to a given file or output stream
-
-  :out (OutputStream), an output stream to save the dataset to
-
-  :file-path (str), a string to a file you want to save the dataset in"
-  [& {:keys [ds file-path out]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :out (_ :guard seq?)}]
-         `(doto ~ds (.save ~out))
-         [{:ds _
-           :out _}]
-         (doto ds (.save out))
-         [{:ds (_ :guard seq?)
-           :file-path (:or (_ :guard string?)
-                           (_ :guard seq?))}]
-         `(doto ~ds (.save (clojure.java.io/as-file ~file-path)))
-         [{:ds _
-           :file-path _}]
-         (doto ds (.save (clojure.java.io/as-file file-path)))))
-
-(defn scale-ds!
-  "scales a the input data to be in the range of :max-val and :min-val if supplied.
-
-  otherwise divides the input data by the max value in each row"
-  [& {:keys [ds max-val min-val]
-      :as opts}]
-  (match [opts]
-         [{:ds (_ :guard seq?)
-           :max-val (:or (_ :guard number?)
-                         (_ :guard seq?))
-           :min-val (:or (_ :guard number?)
-                         (_ :guard seq?))}]
-         `(doto ~ds (.scaleMinAndMax (double ~min-val)
-                                     (double ~max-val)))
-         [{:ds _
-           :max-val _
-           :min-val _}]
-         (doto ds (.scaleMinAndMax min-val max-val))
-         [{:ds (_ :guard seq?)}]
-         `(doto ~ds .scale)
-         [{:ds _}]
-         (doto ds .scale)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; setters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-column-names!
   "sets the column names for the dataset and returns the dataset
@@ -620,6 +311,217 @@
          :else
          (doto ds (.setOutcome example-idx label-idx))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; manipulation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-feature-vector!
+  "adds a feature vector to a dataset, if :to-add is supplied, the fn adds a
+   feature for each example on to the current feature vector.  Otherwise,
+   this fn expects :feature and :example-idx.  Those args will add the feature
+   to the example at the given idx
+
+   :feature (INDArray or vector), the feature vector to add
+
+   :example-idx (int), index of the example you want to add the feature vector to
+
+   :to-add (INDArray or vector), need to test to clarify
+
+  returns the supplied dataset"
+  [& {:keys [ds feature example-idx to-add]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :feature (:or (_ :guard vector?)
+                         (_ :guard seq?))
+           :example-idx (:or (_ :guard number?)
+                             (_ :guard seq?))}]
+         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
+                                       (int ~example-idx)))
+         [{:ds _ :feature _ :example-idx _}]
+         (doto ds (.addFeatureVector (vec-or-matrix->indarray feature)
+                                     example-idx))
+         [{:ds (_ :guard seq?)
+           :to-add (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add)))
+         [{:ds _ :to-add _}]
+         (doto ds (.addFeatureVector (vec-or-matrix->indarray to-add)))))
+
+(defn add-row!
+  "adds a dataset object to an existing datset object as a new row
+
+  :row (DataSet), the datset to add as a row
+
+  :idx (int), the index at which to add the row
+
+  returns the dataset"
+  [& {:keys [ds row idx]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :row (_ :guard seq?)
+           :idx (:or (_ :guard number?)
+                     (_ :guard seq?))}]
+         `(doto ~ds (.addRow ~row ~idx))
+         :else
+         (doto ds (.addRow row idx))))
+
+(defn batch-by!
+  "Partitions a dataset in to mini batches where each dataset in each list
+  is of the specified number of examples
+
+  :n-examples (int), the desired number of examples within each datset"
+  [& {:keys [ds n-examples]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :n-examples (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+         `(.batchBy ~ds (int ~n-examples))
+         :else
+         (.batchBy ds n-examples)))
+
+(defn batch-by-n-labels!
+  "partitions a dataset in to mini batches where each datset in each list
+   has n-labels examples in it"
+  [ds]
+  (match [ds]
+         [(_ :guard seq?)]
+         `(.batchByNumLabels ~ds)
+         :else
+         (.batchByNumLabels ds)))
+
+(defn binarize!
+  "Binarizes the dataset such that any number greater than :cutoff is 1 otherwise zero"
+  [& {:keys [ds cutoff]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :cutoff (:or (_ :guard number?)
+                        (_ :guard seq?))}]
+         `(doto ~ds (.binarize (double ~cutoff)))
+         [{:ds _ :cutoff _}]
+         (doto ds (.binarize cutoff))
+         [{:ds (_ :guard seq?)}]
+         `(doto ~ds .binarize)
+         :else
+         (doto ds .binarize)))
+
+(defn divide-by!
+  "divide the features in a datset by a scalar"
+  [& {:keys [ds scalar]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :scalar (:or (_ :guard number?)
+                        (_ :guard seq?))}]
+         `(doto ~ds (.divideBy (int ~scalar)))
+         :else
+         (doto ds (.divideBy scalar))))
+
+(defn filt-and-strip-labels!
+  "Strips the dataset down to the specified labels (by indexs) and remaps them
+
+  :label-idxs (coll), a collection of label indexes"
+  [& {:keys [ds label-idxs]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :label-idxs (:or (_ :guard coll?)
+                            (_ :guard seq?))}]
+         `(doto ~ds (.filterAndStrip (int-array ~label-idxs)))
+         :else
+         (doto ds (.filterAndStrip (int-array label-idxs)))))
+
+(defn filter-by!
+  "Strips the data set of all but the passed in labels
+
+  :label-idxs (coll), a collection of albel indexes"
+  [& {:keys [ds label-idxs]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :label-idxs (:or (_ :guard coll?)
+                            (_ :guard seq?))}]
+         `(.filterBy ~ds (int-array ~label-idxs))
+         :else
+         (.filterBy ds (int-array label-idxs))))
+
+(defn multiply-by!
+  "multiply the features in a dataset by a scalar
+
+  the scalar should be a double"
+  [& {:keys [ds scalar]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :scalar (:or (_ :guard number?)
+                        (_ :guard seq?))}]
+         `(doto ~ds (.multiplyBy (double ~scalar)))
+         :else
+         (doto ds (.multiplyBy scalar))))
+
+(defn normalize!
+  "normalize the dataset to have a mean of 0 and a stdev of 1 per input"
+  [ds]
+  (match [ds]
+         [(_ :guard seq?)]
+         `(doto ~ds .normalize)
+         :else
+         (doto ds .normalize)))
+
+(defn reshape!
+  "reshapes a datset to have the desired number of rows and columns"
+  [& {:keys [ds rows cols]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :rows (:or (_ :guard number?)
+                      (_ :guard seq?))
+           :cols (:or (_ :guard number?)
+                      (_ :guard seq?))}]
+         `(.reshape ~ds ~rows ~cols)
+         :else
+         (.reshape ds rows cols)))
+
+(defn round-to-the-nearest!
+  "rounts values in the dataset to the supplied nearest value
+
+  :round-to (int), the value you want things rounded to"
+  [& {:keys [ds round-to]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :round-to (:or (_ :guard number?)
+                          (_ :guard seq?))}]
+         `(doto ~ds (.roundToTheNearest ~round-to))
+         :else
+         (doto ds (.roundToTheNearest round-to))))
+
+(defn scale-ds!
+  "scales a the input data to be in the range of :max-val and :min-val if supplied.
+
+  otherwise divides the input data by the max value in each row"
+  [& {:keys [ds max-val min-val]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :max-val (:or (_ :guard number?)
+                         (_ :guard seq?))
+           :min-val (:or (_ :guard number?)
+                         (_ :guard seq?))}]
+         `(doto ~ds (.scaleMinAndMax (double ~min-val)
+                                     (double ~max-val)))
+         [{:ds _
+           :max-val _
+           :min-val _}]
+         (doto ds (.scaleMinAndMax min-val max-val))
+         [{:ds (_ :guard seq?)}]
+         `(doto ~ds .scale)
+         [{:ds _}]
+         (doto ds .scale)))
+
 (defn shuffle-ds!
   [ds]
   (match [ds]
@@ -685,6 +587,119 @@
          `(doto ~ds (.squishToRange (double ~min-val) (double ~max-val)))
          :else
          (doto ds (.squishToRange min-val max-val))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn as-list
+  "Extract each example in the DataSet into its own DataSet object,
+  and return all of them as a list"
+  [ds]
+  (match [ds]
+         [(_ :guard seq?)]
+         `(.asList ~ds)
+         :else
+         (.asList ds)))
+
+(defn has-mask-arrays?
+  "does this dataset contain any mask arrays?"
+  [ds]
+  (match [ds]
+         [(_ :guard seq?)]
+         `(.hasMaskArrays ~ds)
+         :else
+         (.hasMaskArrays ds)))
+
+(defn new-ds-iter
+  "creates an iterator for the supplied dataset"
+  [ds]
+  (match [ds]
+         [(_ :guard seq?)]
+         `(.iterator ~ds)
+         :else
+         (.iterator ds)))
+
+(defn load-ds!
+  "loads a dataset from a given input stream or a file path
+
+  :in (InputStream), a source to load a dataset from
+
+  :file-path (str), the path to a file containing the dataset"
+  [& {:keys [file-path in]
+      :as opts}]
+  (match [opts]
+         [{:file-path (:or (_ :guard string?)
+                           (_ :guard seq?))}]
+         `(.load (clojure.java.io/as-file ~file-path))
+         [{:file-path _}]
+         (.load (clojure.java.io/as-file file-path))
+         [{:in (_ :guard seq?)}]
+         `(.load ~in)
+         :else
+         (.load in)))
+
+(defn sample-ds
+  "Sample with/without replacement and a given/random rng"
+  [& {:keys [ds n-samples with-replacement? seed]
+      :as opts}]
+  (let [rng (new Random seed)]
+    (match [opts]
+           [{:ds (_ :guard seq?)
+             :n-samples (:or (_ :guard number?)
+                             (_ :guard seq?))
+             :with-replacement? (:or (_ :guard boolean?)
+                                     (_ :guard seq?))
+             :seed (:or (_ :guard number?)
+                        (_ :guard seq?))}]
+           `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?)
+           [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
+           (.sample ds n-samples (new Random seed) with-replacement?)
+           [{:ds (_ :guard seq?)
+             :n-samples (:or (_ :guard number?)
+                             (_ :guard seq?))
+             :seed (:or (_ :guard number?)
+                        (_ :guard seq?))}]
+           `(.sample ~ds (int ~n-samples) (new Random ~seed))
+           [{:ds _ :n-samples _  :seed _}]
+           (.sample ds n-samples (new Random seed))
+           [{:ds (_ :guard seq?)
+             :n-samples (:or (_ :guard number?)
+                             (_ :guard seq?))
+             :with-replacement? (:or (_ :guard boolean?)
+                                     (_ :guard seq?))}]
+           `(.sample ~ds (int ~n-samples) ~with-replacement?)
+           [{:ds _ :n-samples _ :with-replacement? _}]
+           (.sample ds n-samples with-replacement?)
+           [{:ds (_ :guard seq?)
+             :n-samples (:or (_ :guard number?)
+                             (_ :guard seq?))}]
+           `(.sample ~ds (int ~n-samples))
+           :else
+           (.sample ds n-samples))))
+
+(defn save-ds!
+  "saves a datset to a given file or output stream
+
+  :out (OutputStream), an output stream to save the dataset to
+
+  :file-path (str), a string to a file you want to save the dataset in"
+  [& {:keys [ds file-path out]
+      :as opts}]
+  (match [opts]
+         [{:ds (_ :guard seq?)
+           :out (_ :guard seq?)}]
+         `(doto ~ds (.save ~out))
+         [{:ds _
+           :out _}]
+         (doto ds (.save out))
+         [{:ds (_ :guard seq?)
+           :file-path (:or (_ :guard string?)
+                           (_ :guard seq?))}]
+         `(doto ~ds (.save (clojure.java.io/as-file ~file-path)))
+         [{:ds _
+           :file-path _}]
+         (doto ds (.save (clojure.java.io/as-file file-path)))))
 
 (defn validate-ds!
   "validates a dataset"

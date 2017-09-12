@@ -4,6 +4,10 @@
            [java.io Closeable])
   (:require [clojure.core.match :refer [match]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn get-conf-rr
   "Return the configuration used by this record reader"
   [rr]
@@ -12,18 +16,6 @@
          `(.getConf ~rr)
          :else
          (.getConf rr)))
-
-(defn set-conf-rr!
-  "Set the configuration to be used by this record reader."
-  [& {:keys [rr conf]
-      :as opts}]
-  ;; not sure if i have code for creating confs
-  (match [opts]
-         [{:rr (_ :guard seq?)
-           :conf (_ :guard seq?)}]
-         `(doto ~rr (.setConf ~conf))
-         :else
-         (doto rr (.setConf conf))))
 
 (defn get-labels-reader
   "List of label strings"
@@ -53,6 +45,57 @@
          :else
          (.nextRecord rr)))
 
+(defn get-listeners-rr
+  "Get the record listeners for this record reader."
+  [rr]
+  (match [rr]
+         [(_ :guard seq?)]
+         `(.getListeners ~rr)
+         :else
+         (.getListeners rr)))
+
+(defn next-seq!
+  "Similar to sequence-record, but returns a Record object,
+  that may include metadata such as the source of the data"
+  [rr]
+  (match [rr]
+         [(_ :guard seq?)]
+         `(.nextSequence ~rr)
+         :else
+         (.nextSequence rr)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; setters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn set-conf-rr!
+  "Set the configuration to be used by this record reader."
+  [& {:keys [rr conf]
+      :as opts}]
+  ;; not sure if i have code for creating confs
+  (match [opts]
+         [{:rr (_ :guard seq?)
+           :conf (_ :guard seq?)}]
+         `(doto ~rr (.setConf ~conf))
+         :else
+         (doto rr (.setConf conf))))
+
+(defn set-listeners-rr!
+  "Set the record listeners for this record reader."
+  [& {:keys [rr listeners]
+      :as opts}]
+  (match [opts]
+         [{:rr (_ :guard seq?)
+           :listeners (:or (_ :guard coll?)
+                           (_ :guard seq?))}]
+         `(doto ~rr (.setListeners ~listeners))
+         :else
+         (doto rr (.setListeners listeners))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn has-next-record?
   "Check whether there are anymore records"
   [rr]
@@ -67,31 +110,9 @@
   [rr]
   (match [rr]
          [(_ :guard seq?)]
-         ;; cant reset something that doesnt exist yets
-         rr
+         `(doto ~rr .reset)
          :else
          (doto rr .reset)))
-
-(defn get-listeners-rr
-  "Get the record listeners for this record reader."
-  [rr]
-  (match [rr]
-         [(_ :guard seq?)]
-         `(.getListeners ~rr)
-         :else
-         (.getListeners rr)))
-
-(defn set-listeners-rr!
-  "Set the record listeners for this record reader."
-  [& {:keys [rr listeners]
-      :as opts}]
-  (match [opts]
-         [{:rr (_ :guard seq?)
-           :listeners (:or (_ :guard coll?)
-                           (_ :guard seq?))}]
-         `(doto ~rr (.setListeners ~listeners))
-         :else
-         (doto rr (.setListeners listeners))))
 
 (defn load-record
   "Load the record from the given data-in-stream
@@ -171,16 +192,6 @@
          `(doto ~rr .close)
          :else
          (doto rr .close)))
-
-(defn next-seq!
-  "Similar to sequence-record, but returns a Record object,
-  that may include metadata such as the source of the data"
-  [rr]
-  (match [rr]
-         [(_ :guard seq?)]
-         `(.nextSequence ~rr)
-         :else
-         (.nextSequence rr)))
 
 (defn sequence-record
   "Load a sequence record from the given data-in-stream

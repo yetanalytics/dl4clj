@@ -6,7 +6,7 @@
   (:require [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; dataset iterators
+;; getters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn current-batch
@@ -26,45 +26,6 @@
          `(.batch ~iter)
          :else
          (.batch iter)))
-
-(defn load-from-meta-data
-  [& {:keys [iter meta-data]
-      :as opts}]
-  (match [opts]
-         [{:iter (_ :guard seq?)
-           :meta-data (_ :guard seq?)}]
-         `(.loadFromMetaData ~iter ~meta-data)
-         :else
-         (.loadFromMetaData iter meta-data)))
-
-(defn remove-data!
-  [iter]
-  (match [iter]
-         [(_ :guard seq?)]
-         `(doto ~iter .remove)
-         :else
-         (doto iter .remove)))
-
-(defn async-supported?
-  "Does this DataSetIterator support asynchronous prefetching of multiple DataSet objects?
-  Most DataSetIterators do, but in some cases it may not make sense to wrap
-  this iterator in an iterator that does asynchronous prefetching."
-  [iter]
-  (match [iter]
-         [(_ :guard seq?)]
-         `(.asyncSupported ~iter)
-         :else
-         (.asyncSupported iter)))
-
-(defn reset-supported?
-  "Is resetting supported by this DataSetIterator?
-  Many DataSetIterators do support resetting, but some don't"
-  [iter]
-  (match [iter]
-         [(_ :guard seq?)]
-         `(.resetSupported ~iter)
-         :else
-         (.resetSupported iter)))
 
 (defn get-current-cursor
   "The current cursor if applicable"
@@ -124,6 +85,67 @@
          :else
          (.numExamples iter)))
 
+(defn get-total-examples
+  "Total examples in the iterator"
+  [iter]
+  (match [iter]
+         [(_ :guard seq?)]
+         `(.totalExamples ~iter)
+         :else
+         (.totalExamples iter)))
+
+(defn get-total-outcomes
+  "The number of labels for the dataset"
+  [iter]
+  (match [iter]
+         [(_ :guard seq?)]
+         `(.totalOutcomes ~iter)
+         :else
+         (.totalOutcomes iter)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn load-from-meta-data
+  [& {:keys [iter meta-data]
+      :as opts}]
+  (match [opts]
+         [{:iter (_ :guard seq?)
+           :meta-data (_ :guard seq?)}]
+         `(.loadFromMetaData ~iter ~meta-data)
+         :else
+         (.loadFromMetaData iter meta-data)))
+
+(defn remove-data!
+  [iter]
+  (match [iter]
+         [(_ :guard seq?)]
+         `(doto ~iter .remove)
+         :else
+         (doto iter .remove)))
+
+(defn async-supported?
+  "Does this DataSetIterator support asynchronous prefetching of multiple DataSet objects?
+  Most DataSetIterators do, but in some cases it may not make sense to wrap
+  this iterator in an iterator that does asynchronous prefetching."
+  [iter]
+  (match [iter]
+         [(_ :guard seq?)]
+         `(.asyncSupported ~iter)
+         :else
+         (.asyncSupported iter)))
+
+(defn reset-supported?
+  "Is resetting supported by this DataSetIterator?
+  Many DataSetIterators do support resetting, but some don't"
+  [iter]
+  (match [iter]
+         [(_ :guard seq?)]
+         `(.resetSupported ~iter)
+         :else
+         (.resetSupported iter)))
+
 (defn reset-iter!
   "Resets the iterator back to the beginning"
   [iter]
@@ -155,21 +177,3 @@
                  iter
                  (reset-iter! iter))
            (.setPreProcessor pre-processor))))
-
-(defn get-total-examples
-  "Total examples in the iterator"
-  [iter]
-  (match [iter]
-         [(_ :guard seq?)]
-         `(.totalExamples ~iter)
-         :else
-         (.totalExamples iter)))
-
-(defn get-total-outcomes
-  "The number of labels for the dataset"
-  [iter]
-  (match [iter]
-         [(_ :guard seq?)]
-         `(.totalOutcomes ~iter)
-         :else
-         (.totalOutcomes iter)))
