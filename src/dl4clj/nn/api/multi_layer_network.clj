@@ -7,6 +7,8 @@
             [dl4clj.constants :as enum]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; come back and figure out how to combine with model-api and eval-api
+
 (defn initialize!
   "Sets the input and labels from this dataset
 

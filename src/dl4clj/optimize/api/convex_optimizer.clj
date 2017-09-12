@@ -4,6 +4,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   (:import [org.deeplearning4j.optimize.api ConvexOptimizer])
   (:require [clojure.core.match :refer [match]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn get-batch-size
   "returns the batch size for the optimizer"
   [optim]
@@ -40,15 +44,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
          :else
          (.gradientAndScore optim)))
 
-(defn optimize
-  "calls optimize! returns a boolean"
-  [optim]
-  (match [optim]
-         [(_ :guard seq?)]
-         `(.optimize ~optim)
-         :else
-         (.optimize optim)))
-
 (defn get-score
   "The score for the optimizer so far"
   [optim]
@@ -57,6 +52,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
          `(.score ~optim)
          :else
          (.score optim)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; setters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-batch-size!
   "set the batch size for the optimizer
@@ -105,3 +104,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
          `(doto ~optim (.setUpdater ~updater))
          :else
          (doto optim (.setUpdater updater))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn optimize
+  "calls optimize! returns a boolean"
+  [optim]
+  (match [optim]
+         [(_ :guard seq?)]
+         `(.optimize ~optim)
+         :else
+         (.optimize optim)))

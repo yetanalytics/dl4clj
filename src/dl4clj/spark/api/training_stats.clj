@@ -9,6 +9,57 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   (:import [org.deeplearning4j.spark.api.stats SparkTrainingStats])
   (:require [clojure.core.match :refer [match]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-key-set-for-stats
+  "returns the key set for the training stats instance"
+  [training-stats]
+  (match [training-stats]
+         [(_ :guard seq?)]
+         `(.getKeySet ~training-stats)
+         :else
+         (.getKeySet training-stats)))
+
+(defn get-nested-training-stats
+  "Return the nested training stats - if any."
+  [training-stats]
+  (match [training-stats]
+         [(_ :guard seq?)]
+         `(.getNestedTrainingStats ~training-stats)
+         :else
+         (.getNestedTrainingStats training-stats)))
+
+(defn get-short-name-for-key
+  "Return a short (display) name for the given key.
+
+  :stat-key (str), the identifier for the key you want the short name of"
+  [& {:keys [training-stats stat-key]
+      :as opts}]
+  (match [opts]
+         [{:training-stats (_ :guard seq?)
+           :stat-key (:or (_ :guard string?)
+                          (_ :guard seq?))}]
+         `(.getShortNameForKey ~training-stats ~stat-key)
+         :else
+         (.getShortNameForKey training-stats stat-key)))
+
+(defn get-value-for-key
+  "Get the statistic value for this key"
+  [& {:keys [training-stats stat-key]
+      :as opts}]
+  (match [opts]
+         [{:training-stats (_ :guard seq?)
+           :stat-key (:or (_ :guard string?)
+                          (_ :guard seq?))}]
+         `(.getValue ~training-stats ~stat-key)
+         :else
+         (.getValue training-stats stat-key)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn add-other-training-stats!
   "Combine the two training stats instances.
 
@@ -62,50 +113,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
          `(doto ~training-stats (.exportStatFiles ~path ~spark-context))
          :else
          (doto training-stats (.exportStatFiles path spark-context))))
-
-(defn get-key-set-for-stats
-  "returns the key set for the training stats instance"
-  [training-stats]
-  (match [training-stats]
-         [(_ :guard seq?)]
-         `(.getKeySet ~training-stats)
-         :else
-         (.getKeySet training-stats)))
-
-(defn get-nested-training-stats
-  "Return the nested training stats - if any."
-  [training-stats]
-  (match [training-stats]
-         [(_ :guard seq?)]
-         `(.getNestedTrainingStats ~training-stats)
-         :else
-         (.getNestedTrainingStats training-stats)))
-
-(defn get-short-name-for-key
-  "Return a short (display) name for the given key.
-
-  :stat-key (str), the identifier for the key you want the short name of"
-  [& {:keys [training-stats stat-key]
-      :as opts}]
-  (match [opts]
-         [{:training-stats (_ :guard seq?)
-           :stat-key (:or (_ :guard string?)
-                          (_ :guard seq?))}]
-         `(.getShortNameForKey ~training-stats ~stat-key)
-         :else
-         (.getShortNameForKey training-stats stat-key)))
-
-(defn get-value-for-key
-  "Get the statistic value for this key"
-  [& {:keys [training-stats stat-key]
-      :as opts}]
-  (match [opts]
-         [{:training-stats (_ :guard seq?)
-           :stat-key (:or (_ :guard string?)
-                          (_ :guard seq?))}]
-         `(.getValue ~training-stats ~stat-key)
-         :else
-         (.getValue training-stats stat-key)))
 
 (defn stats-as-string
   "get the stats as a string"

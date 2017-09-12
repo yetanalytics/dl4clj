@@ -9,31 +9,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
 ;; param-avg-worker currently only implementer
 
-(defn add-hook!
-  "Add a training hook to be used during training of the worker
-
-  returns the worker (currently only a param averaging worker)"
-  [& {:keys [worker training-hook]
-      :as opts}]
-  (match [opts]
-         [{:worker (_ :guard seq?)
-           :training-hook (_ :guard seq?)}]
-         `(doto ~worker (.addHook ~training-hook))
-         :else
-         (doto worker (.addHook training-hook))))
-
-(defn remove-hook!
-  "removes a training hook from the worker
-
-  returns the worker (currently only a param averaging worker)"
-  [& {:keys [worker training-hook]
-      :as opts}]
-  (match [opts]
-         [{:worker (_ :guard seq?)
-           :training-hook (_ :guard seq?)}]
-         `(doto ~worker (.removeHook ~training-hook))
-         :else
-         (doto worker (.removeHook training-hook))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-data-config
   "returns the worker config that contains info such as minibatch size"
@@ -97,6 +75,36 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
          `(.getInitialModel ~worker)
          :else
          (.getInitialModel worker)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-hook!
+  "Add a training hook to be used during training of the worker
+
+  returns the worker (currently only a param averaging worker)"
+  [& {:keys [worker training-hook]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :training-hook (_ :guard seq?)}]
+         `(doto ~worker (.addHook ~training-hook))
+         :else
+         (doto worker (.addHook training-hook))))
+
+(defn remove-hook!
+  "removes a training hook from the worker
+
+  returns the worker (currently only a param averaging worker)"
+  [& {:keys [worker training-hook]
+      :as opts}]
+  (match [opts]
+         [{:worker (_ :guard seq?)
+           :training-hook (_ :guard seq?)}]
+         `(doto ~worker (.removeHook ~training-hook))
+         :else
+         (doto worker (.removeHook training-hook))))
 
 (defn process-mini-batch!
   "Process (fit) a minibatch for a MultiLayerNetwork

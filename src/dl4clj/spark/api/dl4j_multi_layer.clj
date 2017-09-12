@@ -2,6 +2,59 @@
   (:import [org.deeplearning4j.spark.impl.multilayer SparkDl4jMultiLayer])
   (:require [clojure.core.match :refer [match]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-network
+  "returns the mln from the Spark-mln"
+  [spark-mln]
+  (match [spark-mln]
+         [(_ :guard seq?)]
+         `(.getNetwork ~spark-mln)
+         :else
+         (.getNetwork spark-mln)))
+
+(defn get-score
+  "Gets the last (average) minibatch score from calling fit."
+  [spark-mln]
+  (match [spark-mln]
+         [(_ :guard seq?)]
+         `(.getScore ~spark-mln)
+         :else
+         (.getScore spark-mln)))
+
+(defn get-spark-context
+  "returns the spark context from the spark-mln"
+  [spark-mln]
+  (match [spark-mln]
+         [(_ :guard seq?)]
+         `(.getSparkContext ~spark-mln)
+         :else
+         (.getSparkContext spark-mln)))
+
+(defn get-spark-training-stats
+  "Get the training statistics, after collection of stats has been enabled"
+  [spark-mln]
+  (match [spark-mln]
+         [(_ :guard seq?)]
+         `(.getSparkTrainingStats ~spark-mln)
+         :else
+         (.getSparkTrainingStats spark-mln)))
+
+(defn get-training-master
+  "return the training master used to configure the spark-mln"
+  [spark-mln]
+  (match [spark-mln]
+         [(_ :guard seq?)]
+         `(.getTrainingMaster ~spark-mln)
+         :else
+         (.getTrainingMaster spark-mln)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn spark-calc-score
   "Calculate the score for all examples in the provided rdd
 
@@ -253,51 +306,6 @@
          `(.fitPaths ~spark-mln ~rdd)
          :else
          (.fitPaths spark-mln rdd)))
-
-(defn get-network
-  "returns the mln from the Spark-mln"
-  [spark-mln]
-  (match [spark-mln]
-         [(_ :guard seq?)]
-         `(.getNetwork ~spark-mln)
-         :else
-         (.getNetwork spark-mln)))
-
-(defn get-score
-  "Gets the last (average) minibatch score from calling fit."
-  [spark-mln]
-  (match [spark-mln]
-         [(_ :guard seq?)]
-         `(.getScore ~spark-mln)
-         :else
-         (.getScore spark-mln)))
-
-(defn get-spark-context
-  "returns the spark context from the spark-mln"
-  [spark-mln]
-  (match [spark-mln]
-         [(_ :guard seq?)]
-         `(.getSparkContext ~spark-mln)
-         :else
-         (.getSparkContext spark-mln)))
-
-(defn get-spark-training-stats
-  "Get the training statistics, after collection of stats has been enabled"
-  [spark-mln]
-  (match [spark-mln]
-         [(_ :guard seq?)]
-         `(.getSparkTrainingStats ~spark-mln)
-         :else
-         (.getSparkTrainingStats spark-mln)))
-
-(defn get-training-master
-  "return the training master used to configure the spark-mln"
-  [spark-mln]
-  (match [spark-mln]
-         [(_ :guard seq?)]
-         `(.getTrainingMaster ~spark-mln)
-         :else
-         (.getTrainingMaster spark-mln)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; remember to look into creation of the spark matrices/vectors

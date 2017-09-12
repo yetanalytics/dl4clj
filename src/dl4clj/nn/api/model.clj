@@ -8,7 +8,126 @@
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
-;; add .setBackpropGradientsViewArray and .validateInput
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; getters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn batch-size
+  "The current inputs batch size"
+  [model]
+  (match [model]
+         [(_ :guard seq?)]
+         `(.batchSize ~model)
+         :else
+         (.batchSize model)))
+
+(defn conf
+  "The configuration for the neural network"
+  [model]
+  (match [model]
+         [(_ :guard seq?)]
+         `(.conf ~model)
+         :else
+         (.conf model)))
+
+(defn get-optimizer
+  "Returns this models optimizer"
+  [model]
+  (match [model]
+         [(_ :guard seq?)]
+         `(.getOptimizer ~model)
+         :else
+         (.getOptimizer model)))
+
+(defn get-param
+  "Get the parameter"
+  [& {:keys [model param]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :param (:or (_ :guard string?)
+                       (_ :guard seq?))}]
+         `(.getParam ~model ~param)
+         :else
+         (.getParam model param)))
+
+(defn gradient-and-score
+  "Get the gradient and score"
+  [model]
+  (match [model]
+         [(_ :guard seq?)]
+         `(.gradientAndScore ~model)
+         :else
+         (.gradientAndScore model)))
+
+(defn input
+  "returns the input/feature matrix for the model"
+  [model]
+  (match [model]
+         [(_ :guard seq?)]
+         `(.input ~model)
+         :else
+         (.input model)))
+
+(defn num-params
+  "the number of parameters for the model
+   - 1 x m vector where the vector is composed of a flattened vector of all
+     of the weights for the various neuralNets and output layer"
+  [& {:keys [model backwards?]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :backwards (:or (_ :guard boolean?)
+                           (_ :guard seq?))}]
+         `(.numParams ~model ~backwards?)
+         [{:model _
+           :backwards _}]
+         (.numParams model backwards?)
+         [{:model (_ :guard seq?)}]
+         `(.numParams ~model)
+         :else
+         (.numParams model)))
+
+(defn params
+  "Returns a 1 x m vector where the vector is composed of a flattened vector
+  of all of the weights for the various neuralNets(w,hbias NOT VBIAS)
+  and output layer"
+  [& {:keys [model backward-only?]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :backward-only (:or (_ :guard boolean?)
+                               (_ :guard seq?))}]
+
+         `(.params ~model ~backward-only?)
+         [{:model _
+           :backward-only _}]
+         (.params model backward-only?)
+         [{:model (_ :guard seq?)}]
+         `(.params ~model)
+         :else
+         (.params model)))
+
+(defn param-table
+  "The param table"
+  [& {:keys [model backprop-params-only?]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :backprop-params-only? (:or (_ :guard boolean?)
+                                       (_ :guard seq?))}]
+         `(.paramTable ~model ~backprop-params-only?)
+         [{:model _
+           :backprop-params-only? _}]
+         (.paramTable model backprop-params-only?)
+         [{:model (_ :guard seq?)}]
+         `(.paramTable ~model)
+         :else
+         (.paramTable model)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; setters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn accumulate-score!
   "Sets a rolling tally for the score."
@@ -24,25 +143,81 @@
          (doto model
            (.accumulateScore accum))))
 
-(defn apply-learning-rate-score-decay!
-  "Update learningRate using for this model."
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
+(defn set-conf!
+  "Setter for the configuration"
+  [& {:keys [model conf]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :conf (_ :guard seq?)}]
          `(doto ~model
-            .applyLearningRateScoreDecay)
+            (.setConf ~conf))
          :else
          (doto model
-           .applyLearningRateScoreDecay)))
+           (.setConf conf))))
 
-(defn batch-size
-  "The current inputs batch size"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(.batchSize ~model)
+(defn set-listeners!
+  "set the iteration listeners for the computational graph"
+  [& {:keys [model listeners]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :listeners _}]
+         `(doto ~model
+            (.setListeners ~listeners))
          :else
-         (.batchSize model)))
+         (doto model
+           (.setListeners listeners))))
+
+(defn set-param!
+  "Set the parameter with a new ndarray
+
+  :k (str), the key to set
+
+  :v (INDArray or vec), the value to be set"
+  [& {:keys [model k v]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :k (:or (_ :guard string?)
+                   (_ :guard seq?))
+           :v (:or (_ :guard vector?)
+                   (_ :guard seq?))}]
+         `(doto ~model
+            (.setParam ~k (vec-or-matrix->indarray ~v)))
+         :else
+         (doto model
+           (.setParam k (vec-or-matrix->indarray v)))))
+
+(defn set-params!
+  "Set the parameters for this model."
+  [& {:keys [model params]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :params (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(doto ~model
+            (.setParams (vec-or-matrix->indarray ~params)))
+         :else
+         (doto model
+           (.setParams (vec-or-matrix->indarray params)))))
+
+(defn set-param-table!
+  "Setter for the param table"
+  [& {:keys [model param-table-map]
+      :as opts}]
+  (match [opts]
+         [{:model (_ :guard seq?)
+           :param-table-map (:or (_ :guard map?)
+                                 (_ :guard seq?))}]
+         `(doto ~model (.setParamTable ~param-table-map))
+         :else
+         (doto model (.setParamTable param-table-map))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn clear-model!
   "Clear input"
@@ -55,17 +230,6 @@
          (doto model
            .clear)))
 
-(defn compute-gradient-and-score!
-  "Update the score"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(doto ~model
-            .computeGradientAndScore)
-         :else
-         (doto model
-           .computeGradientAndScore)))
-
 (defn init-params!
   "Initialize the parameters and return the model"
   [model]
@@ -74,15 +238,6 @@
          `(doto ~model .initParams)
          :else
          (doto model .initParams)))
-
-(defn conf
-  "The configuration for the neural network"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(.conf ~model)
-         :else
-         (.conf model)))
 
 (defn fit!
   "Fit/train the model
@@ -158,27 +313,6 @@
          :else
          (doto mln .fit)))
 
-(defn get-optimizer
-  "Returns this models optimizer"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(.getOptimizer ~model)
-         :else
-         (.getOptimizer model)))
-
-(defn get-param
-  "Get the parameter"
-  [& {:keys [model param]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :param (:or (_ :guard string?)
-                       (_ :guard seq?))}]
-         `(.getParam ~model ~param)
-         :else
-         (.getParam model param)))
-
 (defn calc-gradient
   "Calculate a gradient"
   [model]
@@ -187,15 +321,6 @@
          `(.gradient ~model)
          :else
          (.gradient model)))
-
-(defn gradient-and-score
-  "Get the gradient and score"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(.gradientAndScore ~model)
-         :else
-         (.gradientAndScore model)))
 
 (defn init!
   "initialize the model"
@@ -214,15 +339,6 @@
          :else
          (doto model .init)))
 
-(defn input
-  "returns the input/feature matrix for the model"
-  [model]
-  (match [model]
-         [(_ :guard seq?)]
-         `(.input ~model)
-         :else
-         (.input model)))
-
 (defn iterate-once!
   "Run one iteration"
   [& {:keys [model input]
@@ -236,62 +352,6 @@
          :else
          (doto model
            (.iterate (vec-or-matrix->indarray input)))))
-
-(defn num-params
-  "the number of parameters for the model
-   - 1 x m vector where the vector is composed of a flattened vector of all
-     of the weights for the various neuralNets and output layer"
-  [& {:keys [model backwards?]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :backwards (:or (_ :guard boolean?)
-                           (_ :guard seq?))}]
-         `(.numParams ~model ~backwards?)
-         [{:model _
-           :backwards _}]
-         (.numParams model backwards?)
-         [{:model (_ :guard seq?)}]
-         `(.numParams ~model)
-         :else
-         (.numParams model)))
-
-(defn params
-  "Returns a 1 x m vector where the vector is composed of a flattened vector
-  of all of the weights for the various neuralNets(w,hbias NOT VBIAS)
-  and output layer"
-  [& {:keys [model backward-only?]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :backward-only (:or (_ :guard boolean?)
-                               (_ :guard seq?))}]
-
-         `(.params ~model ~backward-only?)
-         [{:model _
-           :backward-only _}]
-         (.params model backward-only?)
-         [{:model (_ :guard seq?)}]
-         `(.params ~model)
-         :else
-         (.params model)))
-
-(defn param-table
-  "The param table"
-  [& {:keys [model backprop-params-only?]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :backprop-params-only? (:or (_ :guard boolean?)
-                                       (_ :guard seq?))}]
-         `(.paramTable ~model ~backprop-params-only?)
-         [{:model _
-           :backprop-params-only? _}]
-         (.paramTable model backprop-params-only?)
-         [{:model (_ :guard seq?)}]
-         `(.paramTable ~model)
-         :else
-         (.paramTable model)))
 
 (defn score!
   "only model supplied: Score of the model (relative to the objective function)
@@ -359,78 +419,6 @@
          (doto model .score)
          :else
          (.score model)))
-
-(defn set-conf!
-  "Setter for the configuration"
-  [& {:keys [model conf]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :conf (_ :guard seq?)}]
-         `(doto ~model
-            (.setConf ~conf))
-         :else
-         (doto model
-           (.setConf conf))))
-
-(defn set-listeners!
-  "set the iteration listeners for the computational graph"
-  [& {:keys [model listeners]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :listeners _}]
-         `(doto ~model
-            (.setListeners ~listeners))
-         :else
-         (doto model
-           (.setListeners listeners))))
-
-(defn set-param!
-  "Set the parameter with a new ndarray
-
-  :k (str), the key to set
-
-  :v (INDArray or vec), the value to be set"
-  [& {:keys [model k v]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :k (:or (_ :guard string?)
-                   (_ :guard seq?))
-           :v (:or (_ :guard vector?)
-                   (_ :guard seq?))}]
-         `(doto ~model
-            (.setParam ~k (vec-or-matrix->indarray ~v)))
-         :else
-         (doto model
-           (.setParam k (vec-or-matrix->indarray v)))))
-
-(defn set-params!
-  "Set the parameters for this model."
-  [& {:keys [model params]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :params (:or (_ :guard vector?)
-                        (_ :guard seq?))}]
-         `(doto ~model
-            (.setParams (vec-or-matrix->indarray ~params)))
-         :else
-         (doto model
-           (.setParams (vec-or-matrix->indarray params)))))
-
-(defn set-param-table!
-  "Setter for the param table"
-  [& {:keys [model param-table-map]
-      :as opts}]
-  (match [opts]
-         [{:model (_ :guard seq?)
-           :param-table-map (:or (_ :guard map?)
-                                 (_ :guard seq?))}]
-         `(doto ~model (.setParamTable ~param-table-map))
-         :else
-         (doto model (.setParamTable param-table-map))))
 
 (defn update!
   "if gradient comes from deafult-gradient-implementation:
