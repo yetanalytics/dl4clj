@@ -72,8 +72,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
          `(doto ~es-trainer (.fitMulti ~rdd))
          [{:es-trainer (_ :guard seq?)
            :rdd (_ :guard seq?)
-           :multi-ds? (:or false
-                           (_ :guard nil?))}]
+           :multi-ds? (:or false nil)}]
          `(doto ~es-trainer (.fit ~rdd))
          [{:es-trainer _
            :rdd _
@@ -81,8 +80,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
          (doto es-trainer (.fitMulti rdd))
          [{:es-trainer _
            :rdd _
-           :multi-ds? (:or false
-                           (_ :guard nil?))}]
+           :multi-ds? (:or false nil)}]
          (doto es-trainer (.fit rdd))))
 
 (defn get-score-spark-es-trainer

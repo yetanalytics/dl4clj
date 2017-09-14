@@ -16,7 +16,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
    - see: dl4clj.nn.multilayer.multi-layer-network and dl4clj.nn.conf.builders.multi-layer-builders"
   [& {:keys [score-calculator mln]
       :as opts}]
-  ;; this also works for computation graphs but they have not been implemented yet
   (match [opts]
          [{:score-calculator (_ :guard seq?)
            :mln (_ :guard seq?)}]

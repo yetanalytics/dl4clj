@@ -55,12 +55,7 @@
   :class-idx (int), the index of the class you care about
    - shoud only be supplied when the roc is a multi-class roc
 
-  :as-array? (boolean), defaults to false
-
-   - when true, return the curve as a set of
-   (false-positive, true-positive) points
-
-   - when false, return the curve as a set of pionts"
+  returns the curve as a set of pionts"
   [& {:keys [roc class-idx]
       :as opts}]
   (match [opts]
@@ -77,6 +72,14 @@
          (.getResults roc)))
 
 (defn get-results-as-array
+  "Get the ROC curve
+
+  :roc (roc), either a binary or multi-class roc
+
+  :class-idx (int), the index of the class you care about
+   - shoud only be supplied when the roc is a multi-class roc
+
+  returns the curve as a set of (false-positive, true-positive) points"
   [& {:keys [roc class-idx]
       :as opts}]
   (match [opts]

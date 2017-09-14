@@ -68,7 +68,6 @@
            :else
            `(CSVSequenceRecordReader.))))
 
-
 (defmethod record-reader :file-rr [opts]
   `(FileRecordReader.))
 

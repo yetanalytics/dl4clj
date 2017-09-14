@@ -5,32 +5,48 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 ## TODO
 - update examples dir
 - finish README
-- finish tests
+  - add in examples using Transfer Learning
+  - refine other aspects of the readme
+- finish tests (update to test/show api fns can accept objs or code?)
+  - eval is missing regression tests, roc tests
+  - nn-test is missing regression tests
+  - spark needs to be updated
+  - possibly add more tests to util-tests
 - revist spark for updates
-- update api fns which need to deal with code
+- add :as-code? arg to all api fns now that they can return code
 
 ## Features
 
 ### Stable Features with tests
 
 - Neural Networks DSL
-- Early Stopping
-- Transfer Learning (needs readme examples)
-- Evaluation (needs more tests)
+- Early Stopping Training
+- Transfer Learning
+- Evaluation
 - Data import
-- Optimize (tested but might be temporarly removed)
 
-### Features being worked on
+### Features being worked on for current release
 
-- Computational Graphs
-- NLP
 - Clustering (testing in progress)
-- Datasets (needs refactor)
 - Spark training/hosting (not tested, needs refactor)
+- Front End (maybe current release, maybe future release. Not sure yet)
+- Version of dl4j is 0.0.8 in this project.  Current dl4j version is 0.0.9
+- API fns passed code can return the result of the method call instead of just code
+- Parallelism
+
+### Features being worked on for future releases
+
+- NLP
+- Computational Graphs
+- Reinforement Learning
+- Arbiter
+- Ability to extend dl4j using methods and objects called behind the scenes
+- Kafka support
 
 ## Artifacts
 
 dl4clj artifacts are released to Clojars. (original authors work)
+- this iteration of the library is not currently on Clojars
 
 If using Maven add the following repository definition to your pom.xml:
 
@@ -63,13 +79,23 @@ With Maven:
 ## Usage
 
 ### Things you need to know
-- all functions for creating dl4j objects return code by default
-- all of these functions have an option to return the dl4j object
+- All functions for creating dl4j objects return code by default
+- All of these functions have an option to return the dl4j object
   - :as-code? = false
+- This is because all builders require code for creating dl4j objects
+- API functions return code when args are provided as code
+  - when dl4j objects are passed, the methods are executed
+  - when args are provided as code, you WILL have the option to exectue the method
+    - provide the :as-code argument with the value of false
+
+### Examples of obj/code duality
 
 ``` clojure
 (ns my.ns
- (:require [dl4clj.nn.conf.builders.nn :as nn]))
+  (:require [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
+            [dl4clj.nn.api.model :refer [init!]]
+            [dl4clj.nn.api.multi-layer-network :refer [summary]]))
 
 ;; as code
 (def nn-conf-code
@@ -93,6 +119,9 @@ With Maven:
    :backprop? true
    :pretrain? false))
 
+;; update this once :as-code? is added to all api fns
+(def code-for-string-summary (summary (init! :model (new-multi-layer-network :conf nn-conf-code))))
+
 ;; as a dl4j object
 (def nn-conf
   (nn/builder
@@ -115,39 +144,14 @@ With Maven:
    :backprop? true
    :pretrain? false
    :as-code? false))
+
+(def string-summary (summary (init! :model (new-multi-layer-network :conf nn-conf-obj))))
+
 ```
 
-- as-code macro:
-- API functions expect dl4j objects
-- macro allows you to pass code for creating dl4j objects to api fns
-- allows you to chain api calls without creating the dl4j objects
+### General usage examples
 
-``` clojure
-
-(ns my.ns
- (:require [dl4clj.datasets.input-splits :as s]
-           [dl4clj.datasets.record-readers :as rr]
-           [dl4clj.datasets.iterators :as ds-iter]
-           [dl4clj.datasets.api.record-readers :refer :all]))
-
-;; must initialize a record reader before use in a record reader dataset iterator
-(def poker-path "resources/poker-hand-training.csv")
-
-(def file-split (s/new-filesplit :path poker-path))
-
-(def csv-rr (as-code initialize-rr!
-                     :rr (rr/new-csv-record-reader :skip-n-lines 0 :delimiter ",")
-                     :input-split file-split))
-
-(def rr-ds-iter (ds-iter/new-record-reader-dataset-iterator
-                 :record-reader csv-rr
-                 :batch-size 1
-                 :label-idx 10
-                 :n-possible-labels 10))
-```
-- The fns in core use these to properties to set up typical work flows
-
-### Importing data
+#### Importing data
 
 Loading data from a file (here its a csv)
 
@@ -286,8 +290,7 @@ Loading data from a file (here its a csv)
 
 ```
 
-Creating datasets from INDArrays (and creating INDArrays)
-- update the ns's to have :as-code?
+#### INDArrays and Datasets from clojure data structures
 
 ``` clojure
 
@@ -434,9 +437,9 @@ Creating datasets from INDArrays (and creating INDArrays)
 
 ```
 
-### Layers
+#### Layers
 
-Creating Layers
+Creating Layers for neural network configurations
 
 ``` clojure
 (ns my.ns
@@ -482,43 +485,11 @@ Creating Layers
 
 ```
 
-There is also support for unsupervised learning layers
- - ie. Variational Autoencoders
+Creating Layers for testing input/output relationships
 
 ``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.layers :as l]
-            [dl4clj.nn.conf.variational.dist-builders :as v-dist]))
-
-(l/variational-autoencoder-builder
- :decoder-layer-sizes [2 2]
- :encoder-layer-sizes [2 2]
- :reconstruction-distribution {:bernoulli {:activation-fn :sigmoid}}
- :pzx-activation-function :identity)
-
-(l/variational-autoencoder-builder
- :decoder-layer-sizes [2 2]
- :encoder-layer-sizes [2 2]
- :reconstruction-distribution (v-dist/new-bernoulli-reconstruction-distribution
-                               :activation-fn :sigmoid)
- :pzx-activation-function :identity)
-
-;;these configurations are the same
-
-'(doto
-  (org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder$Builder.)
-  (.pzxActivationFunction
-   (dl4clj.constants/value-of {:activation-fn :identity}))
-  (.encoderLayerSizes (clojure.core/int-array [2 2]))
-  (.reconstructionDistribution
-   (dl4clj.nn.conf.variational.dist-builders/distributions
-    {:bernoulli {:activation-fn :sigmoid}}))
-  (.decoderLayerSizes (clojure.core/int-array [2 2])))
-
-;; =>
-
-#object[org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder 0x38a3f9bc
-"VariationalAutoencoder(encoderLayerSizes=[2, 2], decoderLayerSizes=[2, 2], outputDistribution=BernoulliReconstructionDistribution(afn=sigmoid), pzxActivationFn=identity, numSamples=1)"]
+;; UPDATE ME
+;; should be examples of dl4clj.nn.layer-creation and then the associated api fns and helper fns
 
 ```
 ADD EXAMPLES!
@@ -528,16 +499,11 @@ There are a lot of utilities for working with Convolutional and Recurrent layers
 
 And working with any type of layer
 - see: dl4clj.nn.conf.layers.shared-fns
-  - need to revisit this ns. make sure all the language is clear and no overlapping
-    fns with the model interface ns
+  - need to revisit this ns. make sure all the language is clear
 
-There is also configuration validation
-- this should be removed from core, happens implicilty
-- see: dl4clj.nn.conf.layers.layer-testing.layer-validation
+#### Model configuration
 
-### Model configuration
-
-Adding the layers to a neural network configuration
+Creating a neural network configuration with singe and multiple layers
 
 ``` clojure
 (ns my.ns
@@ -676,7 +642,7 @@ Adding the layers to a neural network configuration
 
 ```
 
-### Configuration to Trained models
+#### Configuration to Trained models
 
 Multi Layer models
 - an implementation of the dl4j [mnist classification example](https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/feedforward/mnist/MLPMnistTwoLayerExample.java)
@@ -733,7 +699,7 @@ Multi Layer models
   (init! :model (mln/new-multi-layer-network :conf nn-conf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; local cpu training with dl4j iterators
+;; local cpu training with dl4j pre-built iterators
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; lets use the pre-built Mnist data set iterator
@@ -773,8 +739,12 @@ Multi Layer models
 ;; we trained the model on a training dataset.  We evaluate on a test set
 
 ;; for dl4j iterators
+********************************************************************************
+;;;; UPDATE THIS, EVAL_MODEL_WHOLE_DS was not necessary
+;;;; just use dl4clj.nn.api.multi-layer-network/evaluate-classification
 (def evaler-with-stats (eval-model-whole-ds :mln trained-mln :evaler example-evaler-obj
                                             :iter test-mnist-iter))
+********************************************************************************
 
 ;; this will print the stats to standard out for each feature/label pair
 ;; this is only for our evaler-wtih-stats object.
@@ -870,11 +840,10 @@ Multi Layer models
 
 ```
 
-### Model Tuning
+#### Model Tuning
 
 Early Stopping (controlling training)
 - it is recommened you start here when designing models
-  - gives you more control than just setting the number of epochs
 
 ``` clojure
 (ns my.ns
@@ -1181,6 +1150,8 @@ How it is done in dl4clj
 ```
 
 ## NOTES
+-- MOVE THIS SECTION TO BEFORE EXAMPLES
+-- UPDATE DESCRIPTION OF FNS FOUND IN THIS LIBRARY
 
 There are 3 types of arg structures for fns found in this libarary
 - single arg, just pass the arg to the function
@@ -1211,37 +1182,7 @@ The namespaces contain dl4j user facing functions and functions that are called 
 
 Coming soon
 
-
-## TODO
-
-Finish tests of currently implemented classes/interfaces
-- dl4clj.nn.layers.feedforward.recursive.tree
-
-Refactor overall structure of this project
-- ensure consistency in stlye (multimethods for heavy lifting and fns for use)
-- ensure no cascading config maps
-- seperation of interfaces from the classes/namespaces that implement/use them (api namespaces)
-- general refinement
-
-API FNS
-- adapt to function with code as input and return code
-
-Improve examples within src
-- minimal importing
-- replace method calls with fn calls
-
-Update doc strings
-- content and formatting
-
-Update release section
-
-Spark and Kafka streaming
-- test and add examples
-
-Parallelism (single machine)
-- implement
-
-## Packages to implement:
+## Packages to come back to:
 
 Implement ComputationGraphs and the classes which use them
 - <https://deeplearning4j.org/doc/org/deeplearning4j/nn/graph/package-summary.html>

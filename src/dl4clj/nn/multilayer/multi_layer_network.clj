@@ -11,7 +11,7 @@
 
 (defn new-multi-layer-network
   "constructor for a multi-layer-network given a config and optionaly
-  some params (INDArray or vec)"
+  some params (INDArray or vec).  The network is initialized "
   [& {:keys [conf params]
       :or {as-code? true}
       :as opts}]

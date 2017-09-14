@@ -23,9 +23,6 @@
       `(LocalFileModelSaver. ~dir ~char-set)
       `(LocalFileModelSaver. ~dir))))
 
-;; local file graph no implemented as computational graphs are not implemented
-;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/saver/LocalFileGraphSaver.html
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns for creating model savers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

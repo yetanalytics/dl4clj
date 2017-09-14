@@ -24,8 +24,6 @@
 ;; objects that I need for testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; fully train a network, save it and then import it here for testing
-;; this set up doesn't produce any predictions bc of low training
 (def mln-code (new-multi-layer-network
                :as-code? true
                :conf (builder
@@ -108,7 +106,8 @@
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
                                                      :as-code? false
                                                      :labels ["foo" "baz"]))))
-    (is (= '(org.deeplearning4j.eval.Evaluation. (clojure.core/into () ["foo" "baz"]))
+    (is (= '(org.deeplearning4j.eval.Evaluation.
+             (clojure.core/reverse (clojure.core/into () ["foo" "baz"])))
            (new-classification-evaler
             :labels ["foo" "baz"])))
     (is (= org.deeplearning4j.eval.Evaluation (type (new-classification-evaler
@@ -124,7 +123,8 @@
     (is (= org.deeplearning4j.eval.RegressionEvaluation
            (type (new-regression-evaler :column-names ["foo" "baz"]
                                         :as-code? false))))
-    (is (= '(org.deeplearning4j.eval.RegressionEvaluation. (clojure.core/into () ["foo" "baz"]))
+    (is (= '(org.deeplearning4j.eval.RegressionEvaluation.
+             (clojure.core/reverse (clojure.core/into () ["foo" "baz"])))
            (new-regression-evaler :column-names ["foo" "baz"])))
     (is (= org.deeplearning4j.eval.RegressionEvaluation
            (type (new-regression-evaler :n-columns 2 :precision 2 :as-code? false))))

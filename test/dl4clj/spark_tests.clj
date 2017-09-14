@@ -65,8 +65,8 @@
   (TestMultiDataSetIterator.
    2
    (array-of :data (new-multi-ds
-                    :features `(indarray-of-rand :rows 2 :columsn 4)
-                    :labels `(indarray-of-rand :rows 2 :columns 2)
+                    :features (as-code indarray-of-rand :rows 2 :columsn 4)
+                    :labels (as-code indarray-of-rand :rows 2 :columns 2)
                     :as-code? false)
              :java-type MultiDataSet)))
 
@@ -86,9 +86,11 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def csv-rr (eval (as-code initialize-rr! :rr (new-csv-record-reader)
-                           :input-split fs
-                           :as-code? false)))
+;; should not need to eval here
+;; need to add the as-code? flag to all api fns
+(def csv-rr (eval (initialize-rr! :rr (new-csv-record-reader)
+                                  :input-split fs
+                                  :as-code? false)))
 
 (def poker-training-file-byte-size
   (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))
@@ -245,10 +247,10 @@
            (keys (call-string-to-ds-export-fn!
                   :the-fn (new-string-to-ds-export-fn
                            :output-directory "resources/tests/spark/export/"
-                           :record-reader (eval (as-code initialize-rr!
-                                                         :rr (new-csv-record-reader)
-                                                         :input-split fs
-                                                         :as-code? false))
+                           :record-reader (eval (initialize-rr!
+                                                 :rr (new-csv-record-reader)
+                                                 :input-split fs
+                                                 :as-code? false))
                            :batch-size 1
                            :regression? false
                            :label-idx 10

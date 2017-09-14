@@ -243,6 +243,7 @@
   "Fit/train the model
 
   if you supply an iterator, it is only reset if it is at the end of the collection"
+  ;; data is used for unsupervised training
   [& {:keys [mln dataset iter data labels
              features features-mask labels-mask
              examples label-idxs]

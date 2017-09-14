@@ -32,15 +32,13 @@
             [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
             [dl4clj.datasets.api.datasets :refer [get-features get-example]]
             [dl4clj.eval.evaluation :refer [new-classification-evaler]]
-            [dl4clj.eval.api.eval :refer [eval-classification! get-stats
-                                          eval-model-whole-ds]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
             [cheshire.core :refer [parse-string]]
             [clojure.test :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fn for layer creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; this might get replaced...
 (defn quick-nn-conf
   [layer]
   (nn/builder :optimization-algo     :stochastic-gradient-descent
@@ -805,7 +803,6 @@
                                                            :activation-fn :tanh
                                                            :gradient-normalization :none)))))
     ;; we can also pass our multi layer args to nn/builder for single or multi layer confs
-
     (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
          (type
           (nn/builder :default-activation-fn :relu
@@ -1009,8 +1006,9 @@
           input (get-features (get-example :ds (new-mnist-ds :as-code? false) :idx 0))
           eval (new-classification-evaler :n-classes 10 :as-code? false)
           init-no-ds (model/init! :model mln)
+          evaled (mln/evaluate-classification :mln init-no-ds :iter mnist-iter)
           _ (println "\n example evaluation stats \n")
-          evaled (eval-model-whole-ds :mln init-no-ds :iter mnist-iter :evaler eval)]
+          _ (println (get-stats :evaler evaled))]
       ;;other-input (get-mln-input :mln init-mln)
       ;;^ this currently crashes all of emacs
       ;; need a fitted mln for (is (= "" (type (get-epsilon :mln ...))))
@@ -1148,7 +1146,7 @@
                                                                :weight-init :xavier}}})
           mln-conf-obj (eval mln-conf-code)
           ;; initialized multi layer newtork
-          mln (as-code model/init! :model (multi-layer-network/new-multi-layer-network
+          mln (model/init! :model (multi-layer-network/new-multi-layer-network
                                    :conf mln-conf-code))
 
           mln-code (multi-layer-network/new-multi-layer-network

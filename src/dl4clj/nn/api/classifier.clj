@@ -41,7 +41,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
          (assert false "you must supply a classifier and either a dataset or
 examples and their labels")))
 
-(defn fit-classifier!
+;; redundant, covered by fit! in model
+#_(defn fit-classifier!
   "If dataset-iterator is supplied, trains the classifier based on the dataset-iterator
   if dataset or examples and labels are supplied, fits the classifier.
 

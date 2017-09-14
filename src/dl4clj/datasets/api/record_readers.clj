@@ -124,6 +124,7 @@
    -see datavec.api.split
 
   :conf (map) a configuration for initialization
+   - need to determine what this configuration is and if it should be included at all
 
   this is how data actually gets into the record reader"
   [& {:keys [rr input-split conf]

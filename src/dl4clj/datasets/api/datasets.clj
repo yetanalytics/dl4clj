@@ -709,4 +709,4 @@
          [(_ :guard seq?)]
          `(doto ~ds .validate)
          :else
-         (doto ds (.validate))))
+         (doto ds .validate)))

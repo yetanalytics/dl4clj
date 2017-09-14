@@ -31,6 +31,234 @@
            [org.datavec.spark.transform.misc StringToWritablesFunction]
            [java.util.List]
            ))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; loading data to be used in a model
+;; the flow is:
+;; 1) create an input split
+;; 2) create a record reader
+;; 3) initialize the record reader using the input split
+;; 4) create an iterator from the initialized record reader
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 1) create an input split
+;; how to pick an input split:
+;; what is the source of my data?
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;; - set up flow from input split + rr (you must initialize a rr with a is) -> iter
+
+
+
+
+;; doc string should refrence
+;; dl4clj.datasets.input-splits
+;; - for the creation of input splits
+;; dl4clj.datasets.record-readers
+;; - for the creation of record readers
+;; these are needed to call dl4clj.datasets.api.record-readers/initialize-rr!
+;; once rr is initialized, we can create our iterators
+;; reference dl4clj.datasets.iterators
+
+;; could always move user facing fns here
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; create model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; creation of nn-config stays where it is
+;; here we want create the multi layer network and initialize it
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; train model on data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; - this is where train-model! comes in
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; evaluate model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; - dl4clj.nn.api.multi-layer-network/evaluate-classification -> create eval obj
+;; then get the stats from the object
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; refine model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ability to create an early stopping trainer from the mln
+
+
+
+
+
+
+
+#_(defn train-model!
+  ;; need to indicate that this also works with early stopping trainers
+  "Fit/train the multi layer network
+
+  :mln
+
+  if you supply an iterator, it is only reset if it is at the end of the collection"
+  ;; data is for unsupervised learning
+  [& {:keys [mln dataset iter data labels features features-mask
+             labels-mask examples label-idxs]
+      :as opts}]
+  (match [opts]
+         [{:mln (_ :guard seq?)
+           :features (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))
+           :features-mask (:or (_ :guard vector?)
+                               (_ :guard seq?))
+           :labels-mask (:or (_ :guard vector?)
+                             (_ :guard seq?))}]
+         `(doto ~mln
+           (.fit (vec-or-matrix->indarray ~features)
+                 (vec-or-matrix->indarray ~labels)
+                 (vec-or-matrix->indarray ~features-mask)
+                 (vec-or-matrix->indarray ~labels-mask)))
+         [{:mln _ :features _ :labels _ :features-mask _ :labels-mask _}]
+         (doto mln
+           (.fit (vec-or-matrix->indarray features)
+                 (vec-or-matrix->indarray labels)
+                 (vec-or-matrix->indarray features-mask)
+                 (vec-or-matrix->indarray labels-mask)))
+         [{:mln (_ :guard seq?)
+           :examples (:or (_ :guard vector?)
+                          (_ :guard seq?))
+           :label-idxs (:or (_ :guard vector?)
+                            (_ :guard seq?))}]
+         `(doto ~mln
+           (.fit (vec-or-matrix->indarray ~examples)
+                 (int-array ~label-idxs)))
+         [{:mln _ :examples _ :label-idxs _}]
+         (doto mln
+           (.fit (vec-or-matrix->indarray examples)
+                 (int-array label-idxs)))
+         [{:mln (_ :guard seq?)
+           :data (:or (_ :guard vector?)
+                      (_ :guard seq?))
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(doto ~mln
+            (.fit (vec-or-matrix->indarray ~data) (vec-or-matrix->indarray ~labels)))
+         [{:mln _ :data _ :labels _}]
+         (doto mln
+           (.fit (vec-or-matrix->indarray data) (vec-or-matrix->indarray labels)))
+         [{:mln (_ :guard seq?)
+           :data (:or (_ :guard vector?)
+                      (_ :guard seq?))}]
+         `(doto ~mln
+            (.fit (vec-or-matrix->indarray ~data)))
+         [{:mln _ :data _}]
+         (doto mln
+           (.fit (vec-or-matrix->indarray data)))
+         [{:mln (_ :guard seq?) :iter (_ :guard seq?)}]
+         `(doto ~mln
+            (.fit ~iter))
+         [{:mln _ :iter _}]
+         (doto mln
+           (.fit (reset-if-empty?! iter)))
+         [{:mln (_ :guard seq?) :dataset (_ :guard seq?)}]
+         `(doto ~mln (.fit ~dataset))
+         [{:mln _ :dataset _}]
+         (doto mln (.fit dataset))
+         [{:mln (_ :guard seq?)}]
+         `(doto ~mln .fit)
+         :else
+         (doto mln .fit)))
+
+;; add a basic example here in a single fn to illistrate the flow
+;; add in printlns and listeners and everything
+
+;; look into refactoring with list*
+;; https://clojuredocs.org/clojure.core/list*
+
+
+
+;; for local training, this is one of:
+;; early-stopping-trainer, classifier, mln
+
+;; are are:
+;; just-this, dataset/iter/examples/labels,
+;; dataset/iter/data/labels/features/features-mask/labels-mask/examples/label-idxs
+
+;; (.fit trainer)
+;; (doto classifier (.fit dataset))
+;; (doto classifier (.fit (reset-iterator! iter)))
+;; (doto classifier (.fit (vec-or-matrix->indarray examples)
+;;                        (vec-or-matrix->indarray labels)))
+
+
+
+#_(doto mln
+    (.fit (vec-or-matrix->indarray features)
+          (vec-or-matrix->indarray labels)
+          (vec-or-matrix->indarray features-mask)
+          (vec-or-matrix->indarray labels-mask)))
+#_(doto mln
+    (.fit (vec-or-matrix->indarray examples)
+          (int-array label-idxs)))
+
+#_(doto mln
+    (.fit (vec-or-matrix->indarray data) (vec-or-matrix->indarray labels)))
+
+#_(doto mln
+    (.fit (vec-or-matrix->indarray data)))
+
+#_(doto mln
+    (.fit (reset-if-empty?! iter)))
+
+#_(doto mln (.fit dataset))
+
+#_(doto mln .fit)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;;TODO
 

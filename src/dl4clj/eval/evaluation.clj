@@ -17,12 +17,18 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
         {labels :labels
          top-n :top-n
          l-to-i-map :label-to-idx
-         n-classes :n-classes} conf]
+         n-classes :n-classes} conf
+        l (cond (vector? labels)
+                `(reverse (into () ~labels))
+                (list? labels)
+                labels
+                :else
+                `(into () ~labels))]
     (match [conf]
            [{:labels _ :top-n _}]
-           `(Evaluation. ~labels ~top-n)
+           `(Evaluation. ~l ~top-n)
            [{:labels _}]
-           `(Evaluation. (into () ~labels))
+           `(Evaluation. ~l)
            [{:label-to-idx _}]
            `(Evaluation. ~l-to-i-map)
            [{:n-classes _}]
@@ -34,14 +40,20 @@ https://deeplearning4j.org/doc/org/deeplearning4j/eval/RegressionEvaluation.html
   (let [conf (:regression opts)
         {column-names :column-names
          precision :precision
-         n-columns :n-columns} conf]
+         n-columns :n-columns} conf
+        c-n (cond (vector? column-names)
+                  `(reverse (into () ~column-names))
+                  (list? column-names)
+                  column-names
+                  :else
+                  `(into () ~column-names))]
     (match [conf]
            [{:column-names _ :precision _}]
-           `(RegressionEvaluation. (into () ~column-names) ~precision)
+           `(RegressionEvaluation. ~c-n ~precision)
            [{:n-columns _ :precision _}]
            `(RegressionEvaluation. ~n-columns ~precision)
            [{:column-names _}]
-           `(RegressionEvaluation. (into () ~column-names))
+           `(RegressionEvaluation. ~c-n)
            [{:n-columns _}]
            `(RegressionEvaluation. ~n-columns))))
 

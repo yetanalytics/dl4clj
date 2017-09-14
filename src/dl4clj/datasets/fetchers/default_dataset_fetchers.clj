@@ -35,10 +35,19 @@
   [& {:keys [binarize? train? shuffle? seed as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [code (match [opts]
-                    [{:binarize? _ :train? _ :shuffle? _ :seed _}]
-                    `(MnistDataFetcher. ~binarize? ~train? ~shuffle? ~seed)
-                    [{:binarize? _}]
+  (let [opts* (dissoc opts :as-code?)
+        code (match [opts*]
+                    [{:binarize? (:or (_ :guard boolean?)
+                                      (_ :guard seq?))
+                      :train? (:or (_ :guard boolean?)
+                                   (_ :guard seq?))
+                      :shuffle? (:or (_ :guard boolean?)
+                                     (_ :guard seq?))
+                      :seed (:or (_ :guard number?)
+                                 (_ :guard seq?))}]
+                    `(MnistDataFetcher. ~binarize? ~train? ~shuffle? (long ~seed))
+                    [{:binarize? (:or (_ :guard boolean?)
+                                      (_ :guard seq?))}]
                     `(MnistDataFetcher. ~binarize?)
                     :else
                     `(MnistDataFetcher.))]

@@ -10,8 +10,9 @@
 
 (defmacro as-code
   ;; add doc string
-  ;; this is for chaining fn calls which need things to be objects
-  ;; but are passed data
+  ;; all api fns now respond according to objs and data
+  ;; doc string should indicate this is a replacement for
+  ;; back tick so the user doesn't have to bother with macro syntax
   [a-fn & args]
   (let [v `(var ~a-fn)
         m `(meta ~v)
@@ -20,6 +21,8 @@
         the-fn `(list (symbol (str ~ns-n "/" ~fn-n)))
         a `(list ~@args)]
     `(into ~a ~the-fn)))
+
+;; look into refactor using list*
 
 (defn multi-arg-helper
   "takes elements from the args data structure and puts in a

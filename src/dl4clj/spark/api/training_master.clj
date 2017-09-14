@@ -115,6 +115,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
          (.deleteTempFiles master spark-context)))
 
 (defn execute-training!
+  ;; this prob isnt core
   "Train the SparkDl4jMultiLayer with the specified data set
 
   :spark-mln (SparkDl4jmultilayer), the spark representation of a mln

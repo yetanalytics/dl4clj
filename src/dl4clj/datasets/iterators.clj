@@ -40,8 +40,6 @@
 ;; record reader dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; is there still a need to reset record readers if they haven't even been created yet?
-
 (defmethod iterator :rr-dataset-iter [opts]
   (let [config (:rr-dataset-iter opts)
         {rr :record-reader
@@ -183,8 +181,8 @@
          labels :labels
          batch-size :batch-size} config]
     `(DoublesDataSetIterator. [(new-pair :p1 (double-array ~features)
-                                        :p2 (double-array ~labels))]
-                             ~batch-size)))
+                                         :p2 (double-array ~labels))]
+                              ~batch-size)))
 
 (defmethod iterator :floats-dataset-iter [opts]
   (let [config (:floats-dataset-iter opts)
@@ -192,8 +190,8 @@
          labels :labels
          batch-size :batch-size} config]
     `(FloatsDataSetIterator. [(new-pair :p1 (float-array ~features)
-                                       :p2 (float-array ~labels))]
-                            ~batch-size)))
+                                        :p2 (float-array ~labels))]
+                             ~batch-size)))
 
 (defmethod iterator :INDArray-dataset-iter [opts]
   (let [config (:INDArray-dataset-iter opts)
@@ -201,8 +199,8 @@
          labels :labels
          batch-size :batch-size} config]
     `(INDArrayDataSetIterator. [(new-pair :p1 (vec-or-matrix->indarray ~features)
-                                         :p2 (vec-or-matrix->indarray ~labels))]
-                              ~batch-size)))
+                                          :p2 (vec-or-matrix->indarray ~labels))]
+                               ~batch-size)))
 
 (defmethod iterator :iterator-multi-dataset-iter [opts]
   (let [config (:iterator-multi-dataset-iter opts)
@@ -337,7 +335,7 @@
            [{:batch-size _ :n-examples _ :img-dims _ :n-possible-labels _
              :img-transform _ :use-special-pre-process-cifar? _ :train? _}]
            `(CifarDataSetIterator. ~batch-size ~n-examples ~img ~n-possible-labels
-                                  ~img-transform ~use-special-pre-process-cifar? ~train?)
+                                   ~img-transform ~use-special-pre-process-cifar? ~train?)
            [{:batch-size _ :n-examples _ :img-dims _
              :use-special-pre-process-cifar? _ :train? _}]
            `(CifarDataSetIterator. ~batch-size ~n-examples ~img
@@ -380,17 +378,17 @@
              :use-subset? _ :label-generator _ :train? _ :split-train-test _
              :seed _ :image-transform _}]
            `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
-                                ~label-generator ~train? ~split-train-test ~image-transform
-                                ~rng)
+                                 ~label-generator ~train? ~split-train-test ~image-transform
+                                 ~rng)
            [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
              :use-subset? _ :label-generator _ :train? _ :split-train-test _
              :seed _}]
            `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
-                                ~label-generator ~train? ~split-train-test ~rng)
+                                 ~label-generator ~train? ~split-train-test ~rng)
            [{:batch-size _ :n-examples _ :img-dims _ :n-labels _
              :use-subset? _ :train? _ :split-train-test _ :seed _}]
            `(LFWDataSetIterator. ~batch-size ~n-examples ~img ~n-labels ~use-subset?
-                                ~train? ~split-train-test ~rng)
+                                 ~train? ~split-train-test ~rng)
            [{:batch-size _ :n-examples _  :n-labels _ :train? _ :split-train-test _}]
            `(LFWDataSetIterator. ~batch-size ~n-examples ~n-labels ~train? ~split-train-test)
            [{:batch-size _ :n-examples _ :img-dims _  :train? _ :split-train-test _}]
@@ -1023,8 +1021,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; spark dataset iterator user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; update after multi methods are updated
 
 (defn new-path-spark-ds-iterator
   "A DataSetIterator that loads serialized DataSet objects

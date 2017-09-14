@@ -22,11 +22,7 @@
 
   :mask-array (vec or INDArray), the mask array for the data if there is one
 
-  :record-meta-data (coll) meta data that extends java.io.Serializable
-
-  NOTE: for evaluating classification problems, use eval-classification! in
-   dl4clj.eval.evaluation, (when the evaler is created by new-classification-evaler)"
-  ;; update this docstring
+  :record-meta-data (coll) meta data that extends java.io.Serializable"
   [& {:keys [labels network-predictions mask-array record-meta-data evaler
              mln features predicted-idx actual-idx]
       :as opts}]
@@ -166,37 +162,6 @@
          (.stats evaler)
          [{:evaler _}]
          (.stats evaler)))
-
-(defn eval-model-whole-ds
-  ;; move to core, update then
-  ;; currently assumes classifcation
-  "evaluate the model performance on an entire data set and print the final result
-
-  :mln (multi layer network), a trained mln you want to get classification stats for
-
-  :eval-obj (evaler), the object created by new-classification-evaler
-
-  :iter (iter), the dataset iterator which has the data you want to evaluate the model on
-
-  :lazy-data (lazy-seq), a lazy sequence of dataset objects
-
-  you should supply either a dl4j dataset-iterator (:iter) or a lazy-seq (:lazy-data), not both
-
-  returns the evaluation object"
-  [& {:keys [mln evaler iter lazy-data]
-      :as opts}]
-  (let [ds-iter (if (contains? opts :lazy-data)
-                  (new-lazy-iter lazy-data)
-                  (reset-iterator! iter))]
-    (while (has-next? ds-iter)
-      (let [nxt (next-example! ds-iter)
-            prediction (output :mln mln :input (get-features nxt))]
-        (eval-classification!
-         :evaler evaler
-         :labels (get-labels nxt)
-         :network-predictions prediction))))
-  (println (get-stats :evaler evaler))
-  evaler)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; classification evaluator interaction fns

@@ -24,7 +24,7 @@
          fmt :allow-format
          recursive? :recursive?} config
         a-fmt `(array-of :data ~fmt
-                        :java-type java.lang.String)
+                         :java-type java.lang.String)
         a-file `(io/as-file ~root)
         seed `(java.util.Random. ~rng)]
     (match [config]
@@ -48,7 +48,8 @@
   (let [config (:input-stream-input-split opts)
         {in :in-stream
          path :file-path} config]
-    ;; worried about input streams being objects
+    ;; worried about input streams coming in as objects
+    ;; build this into the spec for the user facing fn
     (if path
       `(InputStreamInputSplit. ~in (io/as-file ~path))
       `(InputStreamInputSplit. ~in))))
@@ -56,7 +57,12 @@
 (defmethod input-split :list-string-split [opts]
   (let [config (:list-string-split opts)
         data (:data config)]
-    `(ListStringSplit. (reverse (into () ~data)))))
+    (cond (vector? data)
+          `(ListStringSplit. (reverse (into () ~data)))
+          (list? data)
+          `(ListStringSplit. ~data)
+          (string? data)
+          `(ListStringSplit. (into () ~data)))))
 
 (defmethod input-split :numbered-file-input-split [opts]
   (let [config (:numbered-file-input-split opts)
@@ -78,7 +84,7 @@
     `(TransformSplit/ofSearchReplace ~src-split ~t ~u)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; label generators
+;; label generators (this should be moved to its own namespace)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-parent-path-label-generator
@@ -114,7 +120,7 @@
     (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; path-filter
+;; path-filter (moved to its own namespace)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn new-balanced-path-filter
@@ -157,7 +163,7 @@
            as-code? true}}]
   (let [code `(BalancedPathFilter.
                (java.util.Random. ~seed) (array-of :data ~extensions
-                              :java-type java.lang.String)
+                                                   :java-type java.lang.String)
                ~label-generator ~max-paths ~max-labels
                ~min-paths-per-label ~max-paths-per-label
                (array-of :data ~labels
@@ -200,7 +206,7 @@
 
   :seed (int or long), seed for consistent randomization
 
-  :allow-format (collection of string(s)), the file formats allowed
+  :allow-format (collection of string(s) or just a string), the file formats allowed
 
   :recursive? (boolean), how the files should be read in
 
@@ -246,7 +252,7 @@
 (defn new-list-string-split
   "An input split that already has delimited data of some kind.
 
-  :data should be a vector of strings
+  :data (coll) should be a vector or list of strings
 
   :as-code? (boolean), return java object or code for creating it
 

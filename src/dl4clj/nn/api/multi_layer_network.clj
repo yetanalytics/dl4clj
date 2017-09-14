@@ -10,6 +10,7 @@
 ;; come back and figure out how to combine with model-api and eval-api
 
 (defn initialize!
+  ;; colapse with init from model
   "Sets the input and labels from this dataset
 
   :ds (dataset), a dataset
@@ -37,6 +38,7 @@
   :labels (coll), a collection of strings (the labels)
 
   :top-n (int), N value for top N accuracy evaluation"
+  ;; returns an evaluation object?
   [& {:keys [mln iter labels top-n]
       :as opts}]
   (match [opts]

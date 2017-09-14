@@ -20,13 +20,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
          avg? :average?} conf]
     `(DataSetLossCalculator. ~iter ~avg?)))
 
-;; should produce code
 (defmethod score-calc :spark-ds-loss [opts]
   (let [conf (:spark-ds-loss opts)
         {rdd :rdd
          average? :average?
          sc :spark-context} conf]
-    (SparkDataSetLossCalculator. rdd average? sc)))
+    `(SparkDataSetLossCalculator. ~rdd ~average? ~sc)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fn
@@ -61,12 +60,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/D
   :spark-context (org.apache.spark.SparkContext), the spark context
 
   see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/earlystopping/SparkDataSetLossCalculator.html"
-  [& {:keys [rdd average? spark-context]
+  [& {:keys [rdd average? spark-context as-code?]
+      :or {as-code? true}
       :as opts}]
-  (score-calc {:spark-ds-loss opts}))
-
-
-;; the sister fn for computational graphs is not implemented as cgs are not implemented...yet
-
-;; comp-graph versions will be implemented later
-;; https://deeplearning4j.org/doc/org/deeplearning4j/spark/earlystopping/SparkLossCalculatorComputationGraph.html
+  (let [code (score-calc {:spark-ds-loss opts})]
+    (obj-or-code? as-code? code)))

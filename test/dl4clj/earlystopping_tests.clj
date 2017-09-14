@@ -240,8 +240,6 @@
 ;; https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppingConfiguration.Builder.html
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; left off here
-
 (deftest early-stopping-conf-test
   (testing "the creation of an early stopping configuration"
     (let [epoch-term (new-max-epochs-termination-condition :max-n 5)

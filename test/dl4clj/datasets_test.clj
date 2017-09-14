@@ -26,7 +26,6 @@
            (type (iris-fetcher :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.fetchers.IrisDataFetcher.)
            (iris-fetcher)))
-
     (is (= org.deeplearning4j.datasets.fetchers.MnistDataFetcher
            (type (mnist-fetcher :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.)
@@ -39,7 +38,8 @@
            (type
             (mnist-fetcher :binarize? true :train? true :shuffle? true
                            :seed 123 :as-code? false))))
-    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher. true true true 123)
+    (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.
+             true true true (clojure.core/long 123))
            (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123)))
     (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher :as-code? false)))))
     (is (= java.lang.Boolean (type (has-more? (iris-fetcher :as-code? false)))))
