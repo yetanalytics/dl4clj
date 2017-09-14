@@ -3,6 +3,7 @@
   (:import [org.deeplearning4j.util ModelSerializer]))
 
 (defn obj-or-code?
+  ;; rename to eval?
   [as-code? code]
   (if as-code?
     code

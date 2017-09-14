@@ -14,6 +14,8 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
   - possibly add more tests to util-tests
 - revist spark for updates
 - add :as-code? arg to all api fns now that they can return code
+- write specs for user facing functions
+- collapse overlapping api namespaces
 
 ## Features
 
@@ -83,10 +85,14 @@ With Maven:
 - All of these functions have an option to return the dl4j object
   - :as-code? = false
 - This is because all builders require code for creating dl4j objects
+
 - API functions return code when args are provided as code
-  - when dl4j objects are passed, the methods are executed
-  - when args are provided as code, you WILL have the option to exectue the method
-    - provide the :as-code argument with the value of false
+  - the library makes no assumptions on when you want execution to happen
+  - that is determined by the user by setting the :as-code? flag to false
+  - this allows for chains of method calls to be used within object builders
+    and constructors to set args required by the builders/constructors
+    - otherwise, you would run into "can't embeed object in code" errors
+- when dl4j objects are passed to API functions, the methods are executed
 
 ### Examples of obj/code duality
 
@@ -649,7 +655,7 @@ Multi Layer models
 
 
 ``` clojure
-
+;; update this to use highest level methods/fns
 (ns my.ns
   (:require [dl4clj.datasets.iterators :as iter]
             [dl4clj.datasets.input-splits :as split]

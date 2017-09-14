@@ -2,7 +2,7 @@
   (:import [org.nd4j.linalg.dataset.api DataSet]
            [org.nd4j.linalg.api.ndarray INDArray]
            [java.util Random])
-  (:require [dl4clj.utils :refer [array-of contains-many?]]
+  (:require [dl4clj.utils :refer [array-of contains-many? obj-or-code?]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -11,29 +11,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-eample-maxs
-  "returns the max from each example (i believe)"
-  [ds]
+  "returns the max from each example"
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.exampleMaxs ~ds)
+         (obj-or-code? as-code? `(.exampleMaxs ~ds))
          :else
          (.exampleMaxs ds)))
 
 (defn get-example-means
-  "returns the means from each example (i believe)"
-  [ds]
+  "returns the means from each example"
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.exampleMeans ~ds)
+         (obj-or-code? as-code? `(.exampleMeans ~ds))
          :else
          (.exampleMeans ds)))
 
 (defn get-example-sums
-  "returns the sums of each example (i believe)"
-  [ds]
+  "returns the sums of each example"
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.exampleSums ~ds)
+         (obj-or-code? as-code? `(.exampleSums ~ds))
          :else
          (.exampleSums ds)))
 
@@ -41,17 +44,18 @@
   "returns a specified example(s) from a dataset
 
   :idx (coll or int), the index(es) you want to get out of the dataset"
-  [& {:keys [ds idx]
+  [& {:keys [ds idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
-         `(.get ~ds (int ~idx))
+         (obj-or-code? as-code? `(.get ~ds (int ~idx)))
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard coll?)
                      (_ :guard seq?))}]
-         `(.get ~ds (int-array ~idx))
+         (obj-or-code? as-code? `(.get ~ds (int-array ~idx)))
          [{:ds _
            :idx (_ :guard number?)}]
          (.get ds idx)
@@ -61,29 +65,32 @@
 
 (defn get-column-names
   "return the names of the columns in a dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.getColumnNames ~ds)
+         (obj-or-code? as-code? `(.getColumnNames ~ds))
          :else
          (.getColumnNames ds)))
 
 (defn get-features
   "returns the features array for the dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.getFeatures ~ds)
+         (obj-or-code? as-code? `(.getFeatures ~ds))
          :else
          (.getFeatures ds)))
 
 (defn get-features-mask-array
   "Input mask array: a mask array for input, where each value is in {0,1} in order
   to specify whether an input is actually present or not."
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.getFeaturesMaskArray ~ds)
+         (obj-or-code? as-code? `(.getFeaturesMaskArray ~ds))
          :else
          (.getFeaturesMaskArray ds)))
 
@@ -95,108 +102,119 @@
   :as-list? (boolean), do you want all of the label names as a list?
 
   if only :ds is supplied, all labels will be returned as an INDArray"
-  [& {:keys [ds idx as-list?]
+  [& {:keys [ds idx as-list? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :as-list? true}]
-         `(.getLabelNamesList ~ds)
+         (obj-or-code? as-code? `(.getLabelNamesList ~ds))
          [{:ds _ :as-list? true}]
          (.getLabelNamesList ds)
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
-         `(.getLabelName ~ds (int ~idx))
+         (obj-or-code? as-code? `(.getLabelName ~ds (int ~idx)))
          [{:ds _ :idx (_ :guard number?)}]
          (.getLabelName ds idx)
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard vector?)
                      (_ :guard seq?))}]
-         `(.getLabelNames ~ds (vec-or-matrix->indarray ~idx))
+         (obj-or-code?
+          as-code?
+          `(.getLabelNames ~ds (vec-or-matrix->indarray ~idx)))
          [{:ds _ :idx (_ :guard vector?)}]
          (.getLabelNames ds (vec-or-matrix->indarray idx))
          [{:ds (_ :guard seq?)}]
-         `(.getLabels ~ds)
+         (obj-or-code? as-code? `(.getLabels ~ds))
          :else
          (.getLabels ds)))
 
 (defn get-labels-mask-array
   "Labels (output) mask array: a mask array for input, where each value is in {0,1}
   in order to specify whether an output is actually present or not."
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.getLabelsMaskArray ~ds)
+         (obj-or-code? as-code? `(.getLabelsMaskArray ~ds))
          :else
          (.getLabelsMaskArray ds)))
 
 (defn get-range
   "returns a dataset containing the range of examples from the orginal dataset"
-  [& {:keys [ds from to]
+  [& {:keys [ds from to as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts as-code?)]
          [{:ds (_ :guard seq?)
            :from (:or (_ :guard number?)
                       (_ :guard seq?))
            :to (:or (_ :guard number?)
                     (_ :guard seq?))}]
-         `(.getRange ~ds (int ~from) (int ~to))
+         (obj-or-code? as-code? `(.getRange ~ds (int ~from) (int ~to)))
          :else
          (.getRange ds from to)))
 
 (defn get-ds-id
   "returns the id of the dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.id ~ds)
+         (obj-or-code? as-code? `(.id ~ds))
          :else
          (.id ds)))
 
 (defn get-label-counts
   "Calculate and return a count of each label, by index."
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.labelCounts ~ds)
+         (obj-or-code? as-code? `(.labelCounts ~ds))
          :else
          (.labelCounts ds)))
 
 (defn num-examples
   "returns the number of examples in the dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.numExamples ~ds)
+         (obj-or-code? as-code? `(.numExamples ~ds))
          :else
          (.numExamples ds)))
 
 (defn num-inputs
   "the number of input values
    - the size of the features INDArray per example"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.numInputs ~ds)
+         (obj-or-code? as-code? `(.numInputs ~ds))
          :else
          (.numInputs ds)))
 
 (defn num-outcomes
   "returns the number of outcomes
    - size of the labels array for each example"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.numOutcomes ~ds)
+         (obj-or-code? as-code? `(.numOutcomes ~ds))
          :else
          (.numOutcomes ds)))
 
 (defn get-outcome
   "returns the size of the outcome of the current example"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.outcome ~ds)
+         (obj-or-code? as-code? `(.outcome ~ds))
          :else
          (.outcome ds)))
 
@@ -208,12 +226,13 @@
   "sets the column names for the dataset and returns the dataset
 
   :names (list), a list of strings"
-  [& {:keys [ds names]
+  [& {:keys [ds names as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :names (_ :guard seq?)}]
-         `(doto ~ds (.setColumnNames ~names))
+         (obj-or-code? as-code? `(doto ~ds (.setColumnNames ~names)))
          :else
          (doto ds (.setColumnNames names))))
 
@@ -221,13 +240,16 @@
   "set the features array for the dataset
 
   :features (vec or INDarray), the data you want to set as the features"
-  [& {:keys [ds features]
+  [& {:keys [ds features as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
-         `(doto ~ds (.setFeatures (vec-or-matrix->indarray ~features)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.setFeatures (vec-or-matrix->indarray ~features))))
          :else
          (doto ds (.setFeatures (vec-or-matrix->indarray features)))))
 
@@ -235,13 +257,16 @@
   "set the features mask array for the supplied dataset
 
   :input-mask (vec or INDarray), the mask to be set"
-  [& {:keys [ds input-mask]
+  [& {:keys [ds input-mask as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :input-mask (:or (_ :guard vector?)
                             (_ :guard seq?))}]
-         `(doto ~ds (.setFeaturesMaskArray (vec-or-matrix->indarray ~input-mask)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.setFeaturesMaskArray (vec-or-matrix->indarray ~input-mask))))
          :else
          (doto ds (.setFeaturesMaskArray (vec-or-matrix->indarray input-mask)))))
 
@@ -249,12 +274,13 @@
   "sets the label names
 
   :label-names (list), a list of label names you want assigned"
-  [& {:keys [ds label-names]
+  [& {:keys [ds label-names as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :label-names (_ :guard seq?)}]
-         `(doto ~ds (.setLabelNames ~label-names))
+         (obj-or-code? as-code? `(doto ~ds (.setLabelNames ~label-names)))
          :else
          (doto ds (.setLabelNames label-names))))
 
@@ -262,13 +288,16 @@
   "sets the labels for a dataset
 
   :labels (vec or INDarray), the values for the labels"
-  [& {:keys [ds labels]
+  [& {:keys [ds labels as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~ds (.setLabels (vec-or-matrix->indarray ~labels)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
          (doto ds (.setLabels (vec-or-matrix->indarray labels)))))
 
@@ -276,39 +305,46 @@
   "sets the labels mask array for the dataset
 
   :mask-array (vec or INDarray), the mask array to set"
-  [& {:keys [ds mask-array]
+  [& {:keys [ds mask-array as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))}]
-         `(doto ~ds (.setLabelsMaskArray (vec-or-matrix->indarray ~mask-array)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.setLabelsMaskArray (vec-or-matrix->indarray ~mask-array))))
          :else
          (doto ds (.setLabelsMaskArray (vec-or-matrix->indarray mask-array)))))
 
 (defn set-new-number-of-labels!
   "sets a new number of labels for the dataset"
-  [& {:keys [ds n-labels]
+  [& {:keys [ds n-labels as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :n-labels (:or (_ :guard number?)
                           (_ :guard seq?))}]
-         `(doto ~ds (.setNewNumberOfLabels (int ~n-labels)))
+         (obj-or-code? as-code? `(doto ~ds (.setNewNumberOfLabels (int ~n-labels))))
          :else
          (doto ds (.setNewNumberOfLabels n-labels))))
 
 (defn set-outcome!
   "sets an outcome for a given example"
-  [& {:keys [ds example-idx label-idx]
+  [& {:keys [ds example-idx label-idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :example-idx (:or (_ :guard number?)
                              (_ :guard seq?))
            :label-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
-         `(doto ~ds (.setOutcome (int ~example-idx) (int ~label-idx)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.setOutcome (int ~example-idx) (int ~label-idx))))
          :else
          (doto ds (.setOutcome example-idx label-idx))))
 
@@ -329,23 +365,28 @@
    :to-add (INDArray or vector), need to test to clarify
 
   returns the supplied dataset"
-  [& {:keys [ds feature example-idx to-add]
+  [& {:keys [ds feature example-idx to-add as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts as-code?)]
          [{:ds (_ :guard seq?)
            :feature (:or (_ :guard vector?)
                          (_ :guard seq?))
            :example-idx (:or (_ :guard number?)
                              (_ :guard seq?))}]
-         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
-                                       (int ~example-idx)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
+                                       (int ~example-idx))))
          [{:ds _ :feature _ :example-idx _}]
          (doto ds (.addFeatureVector (vec-or-matrix->indarray feature)
                                      example-idx))
          [{:ds (_ :guard seq?)
            :to-add (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add))))
          [{:ds _ :to-add _}]
          (doto ds (.addFeatureVector (vec-or-matrix->indarray to-add)))))
 
@@ -357,14 +398,15 @@
   :idx (int), the index at which to add the row
 
   returns the dataset"
-  [& {:keys [ds row idx]
+  [& {:keys [ds row idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :row (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
-         `(doto ~ds (.addRow ~row ~idx))
+         (obj-or-code? as-code? `(doto ~ds (.addRow ~row ~idx)))
          :else
          (doto ds (.addRow row idx))))
 
@@ -373,51 +415,55 @@
   is of the specified number of examples
 
   :n-examples (int), the desired number of examples within each datset"
-  [& {:keys [ds n-examples]
+  [& {:keys [ds n-examples as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :n-examples (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         `(.batchBy ~ds (int ~n-examples))
+         (obj-or-code? as-code? `(.batchBy ~ds (int ~n-examples)))
          :else
          (.batchBy ds n-examples)))
 
 (defn batch-by-n-labels!
   "partitions a dataset in to mini batches where each datset in each list
    has n-labels examples in it"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.batchByNumLabels ~ds)
+         (obj-or-code? as-code? `(.batchByNumLabels ~ds))
          :else
          (.batchByNumLabels ds)))
 
 (defn binarize!
   "Binarizes the dataset such that any number greater than :cutoff is 1 otherwise zero"
-  [& {:keys [ds cutoff]
+  [& {:keys [ds cutoff as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :cutoff (:or (_ :guard number?)
                         (_ :guard seq?))}]
-         `(doto ~ds (.binarize (double ~cutoff)))
+         (obj-or-code? as-code? `(doto ~ds (.binarize (double ~cutoff))))
          [{:ds _ :cutoff _}]
          (doto ds (.binarize cutoff))
          [{:ds (_ :guard seq?)}]
-         `(doto ~ds .binarize)
+         (obj-or-code? as-code? `(doto ~ds .binarize))
          :else
          (doto ds .binarize)))
 
 (defn divide-by!
   "divide the features in a datset by a scalar"
-  [& {:keys [ds scalar]
+  [& {:keys [ds scalar as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :scalar (:or (_ :guard number?)
                         (_ :guard seq?))}]
-         `(doto ~ds (.divideBy (int ~scalar)))
+         (obj-or-code? as-code? `(doto ~ds (.divideBy (int ~scalar))))
          :else
          (doto ds (.divideBy scalar))))
 
@@ -425,13 +471,16 @@
   "Strips the dataset down to the specified labels (by indexs) and remaps them
 
   :label-idxs (coll), a collection of label indexes"
-  [& {:keys [ds label-idxs]
+  [& {:keys [ds label-idxs as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :label-idxs (:or (_ :guard coll?)
                             (_ :guard seq?))}]
-         `(doto ~ds (.filterAndStrip (int-array ~label-idxs)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.filterAndStrip (int-array ~label-idxs))))
          :else
          (doto ds (.filterAndStrip (int-array label-idxs)))))
 
@@ -439,13 +488,14 @@
   "Strips the data set of all but the passed in labels
 
   :label-idxs (coll), a collection of albel indexes"
-  [& {:keys [ds label-idxs]
+  [& {:keys [ds label-idxs as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :label-idxs (:or (_ :guard coll?)
                             (_ :guard seq?))}]
-         `(.filterBy ~ds (int-array ~label-idxs))
+         (obj-or-code? as-code? `(.filterBy ~ds (int-array ~label-idxs)))
          :else
          (.filterBy ds (int-array label-idxs))))
 
@@ -453,36 +503,39 @@
   "multiply the features in a dataset by a scalar
 
   the scalar should be a double"
-  [& {:keys [ds scalar]
+  [& {:keys [ds scalar as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts as-code?)]
          [{:ds (_ :guard seq?)
            :scalar (:or (_ :guard number?)
                         (_ :guard seq?))}]
-         `(doto ~ds (.multiplyBy (double ~scalar)))
+         (obj-or-code? as-code? `(doto ~ds (.multiplyBy (double ~scalar))))
          :else
          (doto ds (.multiplyBy scalar))))
 
 (defn normalize!
   "normalize the dataset to have a mean of 0 and a stdev of 1 per input"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(doto ~ds .normalize)
+         (obj-or-code? as-code? `(doto ~ds .normalize))
          :else
          (doto ds .normalize)))
 
 (defn reshape!
   "reshapes a datset to have the desired number of rows and columns"
-  [& {:keys [ds rows cols]
+  [& {:keys [ds rows cols as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :rows (:or (_ :guard number?)
                       (_ :guard seq?))
            :cols (:or (_ :guard number?)
                       (_ :guard seq?))}]
-         `(.reshape ~ds ~rows ~cols)
+         (obj-or-code? as-code? `(.reshape ~ds ~rows ~cols))
          :else
          (.reshape ds rows cols)))
 
@@ -490,13 +543,14 @@
   "rounts values in the dataset to the supplied nearest value
 
   :round-to (int), the value you want things rounded to"
-  [& {:keys [ds round-to]
+  [& {:keys [ds round-to as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :round-to (:or (_ :guard number?)
                           (_ :guard seq?))}]
-         `(doto ~ds (.roundToTheNearest ~round-to))
+         (obj-or-code? as-code? `(doto ~ds (.roundToTheNearest ~round-to)))
          :else
          (doto ds (.roundToTheNearest round-to))))
 
@@ -504,16 +558,17 @@
   "scales a the input data to be in the range of :max-val and :min-val if supplied.
 
   otherwise divides the input data by the max value in each row"
-  [& {:keys [ds max-val min-val]
+  [& {:keys [ds max-val min-val as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :max-val (:or (_ :guard number?)
                          (_ :guard seq?))
            :min-val (:or (_ :guard number?)
                          (_ :guard seq?))}]
-         `(doto ~ds (.scaleMinAndMax (double ~min-val)
-                                     (double ~max-val)))
+         (obj-or-code? as-code? `(doto ~ds (.scaleMinAndMax (double ~min-val)
+                                                            (double ~max-val))))
          [{:ds _
            :max-val _
            :min-val _}]
@@ -524,68 +579,77 @@
          (doto ds .scale)))
 
 (defn shuffle-ds!
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(doto ~ds .shuffle)
+         (obj-or-code? as-code? `(doto ~ds .shuffle))
          :else
          (doto ds .shuffle)))
 
 (defn sort-and-batch-by-num-labels!
   "sorts a dataset by the labels and then batches by the number of labels"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.sortAndBatchByNumLabels ~ds)
+         (obj-or-code? as-code? `(.sortAndBatchByNumLabels ~ds))
          :else
          (.sortAndBatchByNumLabels ds)))
 
 (defn sort-by-label!
   "sorts a dataset by its labels"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(doto ~ds .sortByLabel)
+         (obj-or-code? as-code? `(doto ~ds .sortByLabel))
          :else
          (doto ds .sortByLabel)))
 
 (defn split-test-and-train!
   "split the dataset into two datasets randomly"
-  [& {:keys [ds percent-train n-holdout seed]
+  [& {:keys [ds percent-train n-holdout seed as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :n-holdout (:or (_ :guard number?)
                            (_ :guard seq?))
            :seed (:or (_ :guard number?)
                       (_ :guard seq?))}]
-         `(.splitTestAndTrain ~ds (int ~n-holdout) (new Random ~seed))
+         (obj-or-code?
+          as-code?
+          `(.splitTestAndTrain ~ds (int ~n-holdout) (new Random ~seed)))
          [{:ds _ :n-holdout _ :seed _}]
          (.splitTestAndTrain ds n-holdout (new Random seed))
          [{:ds (_ :guard seq?)
            :n-holdout (:or (_ :guard number?)
                            (_ :guard seq?))}]
-         `(.splitTestAndTrain ~ds (int ~n-holdout))
+         (obj-or-code? as-code? `(.splitTestAndTrain ~ds (int ~n-holdout)))
          [{:ds _ :n-holdout _}]
          (.splitTestAndTrain ds n-holdout)
          [{:ds (_ :guard seq?)
            :percent-train (:or (_ :guard number?)
                                (_ :guard seq?))}]
-         `(.splitTestAndTrain ~ds (double ~percent-train))
+         (obj-or-code? as-code? `(.splitTestAndTrain ~ds (double ~percent-train)))
          [{:ds _ :percent-train _}]
          (.splitTestAndTrain ds percent-train)))
 
 (defn squish-to-range!
   "Squeezes input data to a max and a min"
-  [& {:keys [ds min-val max-val]
+  [& {:keys [ds min-val max-val as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :min-val (:or (_ :guard number?)
                          (_ :guard seq?))
            :max-val (:or (_ :guard number?)
                          (_ :guard seq?))}]
-         `(doto ~ds (.squishToRange (double ~min-val) (double ~max-val)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.squishToRange (double ~min-val) (double ~max-val))))
          :else
          (doto ds (.squishToRange min-val max-val))))
 
@@ -596,28 +660,31 @@
 (defn as-list
   "Extract each example in the DataSet into its own DataSet object,
   and return all of them as a list"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.asList ~ds)
+         (obj-or-code? as-code? `(.asList ~ds))
          :else
          (.asList ds)))
 
 (defn has-mask-arrays?
   "does this dataset contain any mask arrays?"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.hasMaskArrays ~ds)
+         (obj-or-code? as-code? `(.hasMaskArrays ~ds))
          :else
          (.hasMaskArrays ds)))
 
 (defn new-ds-iter
   "creates an iterator for the supplied dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(.iterator ~ds)
+         (obj-or-code? as-code? `(.iterator ~ds))
          :else
          (.iterator ds)))
 
@@ -627,57 +694,64 @@
   :in (InputStream), a source to load a dataset from
 
   :file-path (str), the path to a file containing the dataset"
-  [& {:keys [file-path in]
+  [& {:keys [file-path in as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
-         `(.load (clojure.java.io/as-file ~file-path))
+         (obj-or-code? as-code? `(.load (clojure.java.io/as-file ~file-path)))
          [{:file-path _}]
          (.load (clojure.java.io/as-file file-path))
          [{:in (_ :guard seq?)}]
-         `(.load ~in)
+         (obj-or-code? as-code? `(.load ~in))
          :else
          (.load in)))
 
 (defn sample-ds
   "Sample with/without replacement and a given/random rng"
-  [& {:keys [ds n-samples with-replacement? seed]
+  [& {:keys [ds n-samples with-replacement? seed as-code?]
+      :or {as-code? true}
       :as opts}]
-  (let [rng (new Random seed)]
-    (match [opts]
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :with-replacement? (:or (_ :guard boolean?)
-                                     (_ :guard seq?))
-             :seed (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?)
-           [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
-           (.sample ds n-samples (new Random seed) with-replacement?)
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :seed (:or (_ :guard number?)
-                        (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) (new Random ~seed))
-           [{:ds _ :n-samples _  :seed _}]
-           (.sample ds n-samples (new Random seed))
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :with-replacement? (:or (_ :guard boolean?)
-                                     (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples) ~with-replacement?)
-           [{:ds _ :n-samples _ :with-replacement? _}]
-           (.sample ds n-samples with-replacement?)
-           [{:ds (_ :guard seq?)
-             :n-samples (:or (_ :guard number?)
-                             (_ :guard seq?))}]
-           `(.sample ~ds (int ~n-samples))
-           :else
-           (.sample ds n-samples))))
+  (match [(dissoc opts :as-code?)]
+         [{:ds (_ :guard seq?)
+           :n-samples (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :with-replacement? (:or (_ :guard boolean?)
+                                   (_ :guard seq?))
+           :seed (:or (_ :guard number?)
+                      (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?))
+         [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
+         (.sample ds n-samples (new Random seed) with-replacement?)
+         [{:ds (_ :guard seq?)
+           :n-samples (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :seed (:or (_ :guard number?)
+                      (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(.sample ~ds (int ~n-samples) (new Random ~seed)))
+         [{:ds _ :n-samples _  :seed _}]
+         (.sample ds n-samples (new Random seed))
+         [{:ds (_ :guard seq?)
+           :n-samples (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :with-replacement? (:or (_ :guard boolean?)
+                                   (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(.sample ~ds (int ~n-samples) ~with-replacement?))
+         [{:ds _ :n-samples _ :with-replacement? _}]
+         (.sample ds n-samples with-replacement?)
+         [{:ds (_ :guard seq?)
+           :n-samples (:or (_ :guard number?)
+                           (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.sample ~ds (int ~n-samples)))
+         :else
+         (.sample ds n-samples)))
 
 (defn save-ds!
   "saves a datset to a given file or output stream
@@ -685,28 +759,32 @@
   :out (OutputStream), an output stream to save the dataset to
 
   :file-path (str), a string to a file you want to save the dataset in"
-  [& {:keys [ds file-path out]
+  [& {:keys [ds file-path out as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:ds (_ :guard seq?)
            :out (_ :guard seq?)}]
-         `(doto ~ds (.save ~out))
+         (obj-or-code? as-code? `(doto ~ds (.save ~out)))
          [{:ds _
            :out _}]
          (doto ds (.save out))
          [{:ds (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
-         `(doto ~ds (.save (clojure.java.io/as-file ~file-path)))
+         (obj-or-code?
+          as-code?
+          `(doto ~ds (.save (clojure.java.io/as-file ~file-path))))
          [{:ds _
            :file-path _}]
          (doto ds (.save (clojure.java.io/as-file file-path)))))
 
 (defn validate-ds!
   "validates a dataset"
-  [ds]
+  [& {:keys [ds as-code?]
+      :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
-         `(doto ~ds .validate)
+         (obj-or-code? as-code? `(doto ~ds .validate))
          :else
          (doto ds .validate)))

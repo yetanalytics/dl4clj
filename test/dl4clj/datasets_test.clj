@@ -16,9 +16,11 @@
             [dl4clj.datasets.api.pre-processors :refer :all]
             [dl4clj.datasets.record-readers :refer :all]
             [dl4clj.datasets.api.record-readers :refer :all])
-  ;; image transforms have not been implemented so importing this default one for testing
-  ;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
   (:import [org.datavec.image.transform ColorConversionTransform]))
+;; image transforms have not been implemented so importing this default one for testing
+;; https://deeplearning4j.org/datavecdoc/org/datavec/image/transform/package-summary.html
+
+;; add in tests for datasets.api.datasets
 
 (deftest dataset-fetchers-test
   (testing "dataset fetchers"
@@ -359,7 +361,7 @@
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
+             (type (get-features :ds (next-example! (reset-iter! iter-w-labels)))))))))
 
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
