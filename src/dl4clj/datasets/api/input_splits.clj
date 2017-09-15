@@ -7,7 +7,7 @@
             PatternPathLabelGenerator]
            [org.datavec.api.writable Writable]
            [org.datavec.api.split InputSplit])
-  (:require [dl4clj.utils :refer [array-of]]
+  (:require [dl4clj.utils :refer [array-of obj-or-code?]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,15 +22,18 @@
    :paths (collection of strings), uri paths to be filtered
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/filters/PathFilter.html"
-  [& {:keys [path-filter paths]
+  [& {:keys [path-filter paths as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:path-filter (_ :guard seq?)
            :paths (:or (_ :guard coll?)
                        (_ :guard seq?))}]
-         `(.filter ~path-filter
+         (obj-or-code?
+          as-code?
+          `(.filter ~path-filter
                    (array-of :data (mapv #(java.net.URI/create %) ~paths)
-                             :java-type java.net.URI))
+                             :java-type java.net.URI)))
          :else
          (let [uris (mapv #(java.net.URI/create %) paths)]
            (.filter path-filter (array-of :data uris
@@ -49,13 +52,14 @@
   :path (string or uri), the file path
 
   see: https://deeplearning4j.org/datavecdoc/org/datavec/api/io/labels/PathLabelGenerator.html"
-  [& {:keys [label-generator path]
+  [& {:keys [label-generator path as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:label-generator (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))}]
-         `(.getLabelForPath ~label-generator ~path)
+         (obj-or-code? as-code? `(.getLabelForPath ~label-generator ~path))
          :else
          (.getLabelForPath label-generator path)))
 
@@ -65,68 +69,74 @@
 
 (defn length
   "Length of the split"
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(.length ~split)
+         (obj-or-code? as-code? `(.length ~split))
          :else
          (.length split)))
 
 (defn locations
   "Locations of the splits"
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(.locations ~split)
+         (obj-or-code? as-code? `(.locations ~split))
          :else
          (.locations split)))
 
 (defn locations-iterator
   "returns the URI of the iterator assocaited with this filesplit"
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(.locationsIterator ~split)
+         (obj-or-code? as-code? `(.locationsIterator ~split))
          :else
          (.locationsIterator split)))
 
 (defn locations-path-iterator
   "returns the file path of an iterator associated with this filesplit"
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(.locationsPathIterator ~split)
+         (obj-or-code? as-code? `(.locationsPathIterator ~split))
          :else
          (.locationsPathIterator split)))
 
 (defn reset-input-split!
   "Reset the InputSplit without reinitializing it from scratch."
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(doto ~split .reset)
+         (obj-or-code? as-code? `(doto ~split .reset))
          :else
          (doto split .reset)))
 
 (defn read-fields!
   "Deserialize the fields of this object from in."
-  [& {:keys [split in]
+  [& {:keys [split in as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:split (_ :guard seq?)
            :in (_ :guard seq?)}]
-         `(doto ~split (.readFields ~in))
+         (obj-or-code? as-code? `(doto ~split (.readFields ~in)))
          :else
          (doto split (.readFields in))))
 
 (defn write!
   "Serialize the fields of this object to out."
-  [& {:keys [split out-put-path]
+  [& {:keys [split out-put-path as-code?]
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:split (_ :guard seq?)
            :out-put-path (_ :guard seq?)}]
-         `(doto ~split (.write ~out-put-path))
+         (obj-or-code? as-code? `(doto ~split (.write ~out-put-path)))
          :else
          (doto split (.write out-put-path))))
 
@@ -146,50 +156,57 @@
    -to modify the locations (file paths) in some way (null == as is)
 
   :weights (coll) to split the locations into multiple InputSplit"
-  [& {:keys [split path-filter weights]
+  [& {:keys [split path-filter weights as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:split (_ :guard seq?)
            :path-filter (_ :guard seq?)
            :weights (:or (_ :guard coll?)
                          (_ :guard seq?))}]
-         `(.sample ~split ~path-filter (double-array ~weights))
+         (obj-or-code?
+          as-code?
+          `(.sample ~split ~path-filter (double-array ~weights)))
          :else
          (.sample split path-filter (double-array weights))))
 
 (defn to-double!
   "convert writable to double"
-  [writeable]
+  [& {:keys [writeable as-code?]
+      :or {as-code? true}}]
   (match [writeable]
          [(_ :guard seq?)]
-         `(.toDouble ~writeable)
+         (obj-or-code? as-code? `(.toDouble ~writeable))
          :else
          (.toDouble writeable)))
 
 (defn to-float!
   "convert writeable to float"
-  [writeable]
+  [& {:keys [writeable as-code?]
+      :or {as-code? true}}]
   (match [writeable]
          [(_ :guard seq?)]
-         `(.toFloat ~writeable)
+         (obj-or-code? as-code? `(.toFloat ~writeable))
          :else
          (.toFloat writeable)))
 
 (defn to-int!
   "convert writeable to int"
-  [writeable]
+  [& {:keys [writeable as-code?]
+      :or {as-code? true}}]
   (match [writeable]
          [(_ :guard seq?)]
-         `(.toInt ~writeable)
+         (obj-or-code? as-code? `(.toInt ~writeable))
          :else
          (.toInt writeable)))
 
 (defn to-long!
   "convert writeable to long"
-  [writeable]
+  [& {:keys [writeable as-code?]
+      :or {as-code? true}}]
   (match [writeable]
          [(_ :guard seq?)]
-         `(.toLong ~writeable)
+         (obj-or-code? as-code? `(.toLong ~writeable))
          :else
          (.toLong writeable)))
 
@@ -201,10 +218,11 @@
   "returns the root directory
 
   used with file-split"
-  [split]
+  [& {:keys [split as-code?]
+      :or {as-code? true}}]
   (match [split]
          [(_ :guard seq?)]
-         `(.getRootDir ~split)
+         (obj-or-code? as-code? `(.getRootDir ~split))
          :else
          (.getRootDir split)))
 
@@ -216,10 +234,11 @@
   "return the input stream
 
   used with input-stream-input-split"
-  [input-stream-input-split]
+  [& {:keys [input-stream-input-split as-code?]
+      :or {as-code? true}}]
   (match [input-stream-input-split]
          [(_ :guard seq?)]
-         `(.getIs ~input-stream-input-split)
+         (obj-or-code? as-code? `(.getIs ~input-stream-input-split))
          :else
          (.getIs input-stream-input-split)))
 
@@ -229,12 +248,13 @@
   :is is a java.io.InputStream
 
   used with input-stream-input-split"
-  [& {:keys [input-stream-input-split is]
+  [& {:keys [input-stream-input-split is as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:input-stream-input-split (_ :guard seq?)
            :is (_ :guard seq?)}]
-         `(doto ~input-stream-input-split (.setIs ~is))
+         (obj-or-code? as-code? `(doto ~input-stream-input-split (.setIs ~is)))
          :else
          (doto input-stream-input-split (.setIs is))))
 
@@ -244,9 +264,10 @@
 
 (defn get-list-string-split-data
   "returns the string data contained within a string split or a list string split"
-  [list-string-split]
+  [& {:keys [list-string-split as-code?]
+      :or {as-code? true}}]
   (match [list-string-split]
          [(_ :guard seq?)]
-         `(.getData ~list-string-split)
+         (obj-or-code? as-code? `(.getData ~list-string-split))
          :else
          (.getData list-string-split)))

@@ -57,7 +57,7 @@
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 2 :n-examples 100 :as-code? false))))
     (is (= '(org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator. 2 100)
-           (new-cifar-data-set-iterator :batch-size 2 :n-examples 100)))
+           (new-cifar-data-set-iterat:batch-size 2 :n-examples 100)))
 
     (is (= org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator
            (type (new-cifar-data-set-iterator :batch-size 2 :img-dims [1 1 1]
