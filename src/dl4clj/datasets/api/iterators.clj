@@ -191,7 +191,7 @@
            :pre-processor (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.setPreProcessor ~pre-processor)))
          :else
-         (doto (if (has-next? iter)
+         (doto (if (has-next? :iter iter)
                  iter
-                 (reset-iter! iter))
+                 (reset-iter! :iter iter))
            (.setPreProcessor pre-processor))))
