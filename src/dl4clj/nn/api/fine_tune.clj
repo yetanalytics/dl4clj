@@ -3,7 +3,7 @@
             FineTuneConfiguration TransferLearningHelper]
            [org.nd4j.linalg.api.ndarray INDArray])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [array-of]]
+            [dl4clj.utils :refer [array-of obj-or-code?]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14,12 +14,13 @@
   "applies a fine tune configuration to a supplied neural network configuration.
 
    Returns the mutated nn-conf"
-  [& {:keys [fine-tune-conf nn-conf]
+  [& {:keys [fine-tune-conf nn-conf as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:fine-tune-conf (_ :guard seq?)
            :nn-conf (_ :guard seq?)}]
-         `(.appliedNeuralNetConfiguration ~fine-tune-conf ~nn-conf)
+         (obj-or-code? as-code? `(.appliedNeuralNetConfiguration ~fine-tune-conf ~nn-conf))
          :else
          (.appliedNeuralNetConfiguration fine-tune-conf nn-conf)))
 
@@ -29,19 +30,20 @@
   the resulting nn-conf has the fine-tune-confs opts applied.
 
   :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
-  [& {:keys [fine-tune-conf build?]
-      :or {build? false}}]
+  [& {:keys [fine-tune-conf build? as-code?]
+      :or {build? true
+           as-code? true}}]
   (let [m-call (match [fine-tune-conf]
                       [(_ :guard seq?)]
                       `(.appliedNeuralNetConfigurationBuilder ~fine-tune-conf)
                       :else
                       (.appliedNeuralNetConfigurationBuilder fine-tune-conf))]
     (cond (and build? (seq? fine-tune-conf))
-          `(.build ~m-call)
+          (obj-or-code? as-code? `(.build ~m-call))
           build?
           (.build m-call)
           :else
-          m-call)))
+          (obj-or-code? as-code? m-call))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fine tune helpers
@@ -60,12 +62,13 @@
    - see: nd4clj.linalg.dataset.data-set (under construction)
 
   warning, this can crash if the dataset is too large"
-  [& {:keys [helper data-set]
+  [& {:keys [helper data-set as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:helper (_ :guard seq?)
            :data-set (_ :guard seq?)}]
-         `(.featurize ~helper ~data-set)
+         (obj-or-code? as-code? `(.featurize ~helper ~data-set))
          :else
          (.featurize helper data-set)))
 
@@ -83,15 +86,16 @@
    - see: dl4clj.datasets.iterator.iterators (double check this through testing)
 
   returns the helper"
-  [& {:keys [helper data-set iter]
-   :as opts}]
-  (match [opts]
+  [& {:keys [helper data-set iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [(dissoc opts :as-code?)]
          [{:helper (_ :guard seq?) :data-set (_ :guard seq?)}]
-         `(doto ~helper (.fitFeaturized ~data-set))
+         (obj-or-code? as-code? `(doto ~helper (.fitFeaturized ~data-set)))
          [{:helper _ :data-set _}]
          (doto helper (.fitFeaturized data-set))
          [{:helper (_ :guard seq?) :iter (_ :guard seq?)}]
-         `(doto ~helper (.fitFeaturized ~iter))
+         (obj-or-code? as-code? `(doto ~helper (.fitFeaturized ~iter)))
          [{:helper _ :iter _}]
          (doto helper (.fitFeaturized (reset-iterator! iter)))
          :else
@@ -106,13 +110,16 @@
 
   :array-of-featurized-input (coll of INDArrays or the code to create them),
    - multiple featurized inputs"
-  [& {:keys [helper featurized-input array-of-featurized-input]
+  [& {:keys [helper featurized-input array-of-featurized-input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:helper (_ :guard seq?)
            :array-of-featurized-input _}]
-         `(.outputFromFeaturized ~helper (array-of :data ~array-of-featurized-input
-                                                   :java-type INDArray))
+         (obj-or-code?
+          as-code?
+          `(.outputFromFeaturized ~helper (array-of :data ~array-of-featurized-input
+                                                   :java-type INDArray)))
          [{:helper _
            :array-of-featurized-input _}]
          (.outputFromFeaturized helper (array-of :data array-of-featurized-input
@@ -120,7 +127,9 @@
          [{:helper (_ :guard seq?)
            :featurized-input (:or (_ :guard vector?)
                                   (_ :guard seq?))}]
-         `(.outputFromFeaturized ~helper (vec-or-matrix->indarray ~featurized-input))
+         (obj-or-code?
+          as-code?
+          `(.outputFromFeaturized ~helper (vec-or-matrix->indarray ~featurized-input)))
          [{:helper _
            :featurized-input _}]
          (.outputFromFeaturized helper (vec-or-matrix->indarray featurized-input))))
@@ -132,9 +141,10 @@
   need to test if this returns the mutated og network with all layers or only the frozen layers
    - if its just the previously frozen layers, will need to merge back into og model
      - og model may have been mutated"
-  [helper]
+  [& {:keys [helper as-code?]
+      :or {as-code? true}}]
   (match [helper]
          [(_ :guard seq?)]
-         `(.unfrozenMLN ~helper)
+         (obj-or-code? as-code? `(.unfrozenMLN ~helper))
          :else
          (.unfrozenMLN helper)))

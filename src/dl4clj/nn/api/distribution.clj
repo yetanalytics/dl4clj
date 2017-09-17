@@ -1,7 +1,8 @@
 (ns dl4clj.nn.api.distribution
   (:import [org.deeplearning4j.nn.conf.distribution BinomialDistribution
             NormalDistribution UniformDistribution GaussianDistribution])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; binomial distribution fns
@@ -9,19 +10,21 @@
 
 (defn get-n-trials
   "returns the number of trials set for this distribution"
-  [binomial-dist]
+  [& {:keys [binomial-dist as-code?]
+      :or {as-code? true}}]
   (match [binomial-dist]
          [(_ :guard seq?)]
-         `(.getNumberOfTrials ~binomial-dist)
+         (obj-or-code? as-code? `(.getNumberOfTrials ~binomial-dist))
          :else
          (.getNumberOfTrials binomial-dist)))
 
 (defn get-prob-of-success
   "returns the probability of success set for this distribution"
-  [binomial-dist]
+  [& {:keys [binomial-dist as-code?]
+      :or {as-code? true}}]
   (match [binomial-dist]
          [(_ :guard seq?)]
-         `(.getProbabilityOfSuccess ~binomial-dist)
+         (obj-or-code? as-code? `(.getProbabilityOfSuccess ~binomial-dist))
          :else
          (.getProbabilityOfSuccess binomial-dist)))
 
@@ -29,13 +32,16 @@
   "sets the probability of sucess for the provided distribution.
 
   returns the distribution after the change"
-  [& {:keys [binomial-dist prob]
+  [& {:keys [binomial-dist prob as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:binomial-dist (_ :guard seq?)
            :prob (:or (_ :guard seq?)
                       (_ :guard number?))}]
-         `(doto ~binomial-dist (.setProbabilityOfSuccess (double ~prob)))
+         (obj-or-code?
+          as-code?
+          `(doto ~binomial-dist (.setProbabilityOfSuccess (double ~prob))))
          :else
          (doto binomial-dist (.setProbabilityOfSuccess prob))))
 
@@ -45,19 +51,21 @@
 
 (defn get-mean
   "return the mean for the normal/gaussian distribution"
-  [dist]
+  [& {:keys [dist as-code?]
+      :or {as-code? true}}]
   (match [dist]
          [(_ :guard seq?)]
-         `(.getMean ~dist)
+         (obj-or-code? as-code? `(.getMean ~dist))
          :else
          (.getMean dist)))
 
 (defn get-std
   "return the standard deviation for the normal/gaussian distribution"
-  [dist]
+  [& {:keys [dist as-code?]
+      :or {as-code? true}}]
   (match [dist]
          [(_ :guard seq?)]
-         `(.getStd ~dist)
+         (obj-or-code? as-code? `(.getStd ~dist))
          :else
          (.getStd dist)))
 
@@ -67,13 +75,14 @@
   :mean (double), the desired mean for the distribution
 
   returns the distribution after the change"
-  [& {:keys [dist mean]
+  [& {:keys [dist mean as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:dist (_ :guard seq?)
            :mean (:or (_ :guard seq?)
                       (_ :guard number?))}]
-         `(doto ~dist (.setMean (double ~mean)))
+         (obj-or-code? as-code? `(doto ~dist (.setMean (double ~mean))))
          :else
          (doto dist (.setMean mean))))
 
@@ -83,13 +92,14 @@
   :std (double), the desired standard deviation for the distribution
 
   returns the distribution after the change"
-  [& {:keys [dist std]
+  [& {:keys [dist std as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:dist (_ :guard seq?)
            :std (:or (_ :guard seq?)
                      (_ :guard number?))}]
-         `(doto ~dist (.setStd (double ~std)))
+         (obj-or-code? as-code? `(doto ~dist (.setStd (double ~std))))
          :else
          (doto dist (.setStd std))))
 
@@ -99,19 +109,21 @@
 
 (defn get-lower
   "returns the lower bound of the supplied uniform distribution"
-  [uniform-dist]
+  [& {:keys [uniform-dist as-code?]
+      :or {as-code? true}}]
   (match [uniform-dist]
          [(_ :guard seq?)]
-         `(.getLower ~uniform-dist)
+         (obj-or-code? as-code? `(.getLower ~uniform-dist))
          :else
          (.getLower uniform-dist)))
 
 (defn get-upper
   "returns the upper bound of the supplied uniform distribution"
-  [uniform-dist]
+  [& {:keys [uniform-dist as-code?]
+      :or {as-code? true}}]
   (match [uniform-dist]
          [(_ :guard seq?)]
-         `(.getUpper ~uniform-dist)
+         (obj-or-code? as-code? `(.getUpper ~uniform-dist))
          :else
          (.getUpper uniform-dist)))
 
@@ -121,13 +133,14 @@
   :lower (double), the lower bound of the distribution
 
   returns the distribution after it has changed"
-  [& {:keys [uniform-dist lower]
+  [& {:keys [uniform-dist lower as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:uniform-dist (_ :guard seq?)
            :lower (:or (_ :guard seq?)
                        (_ :guard number?))}]
-         `(doto ~uniform-dist (.setLower (double ~lower)))
+         (obj-or-code? as-code? `(doto ~uniform-dist (.setLower (double ~lower))))
          :else
          (doto uniform-dist (.setLower lower))))
 
@@ -137,12 +150,13 @@
   :upper (double), the upper bound of the distribution
 
   returns the distribution after it has changed"
-  [& {:keys [uniform-dist upper]
+  [& {:keys [uniform-dist upper as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:uniform-dist (_ :guard seq?)
            :upper (:or (_ :guard seq?)
                        (_ :guard number?))}]
-         `(doto ~uniform-dist (.setUpper (double ~upper)))
+         (obj-or-code? as-code? `(doto ~uniform-dist (.setUpper (double ~upper))))
          :else
          (doto uniform-dist (.setUpper upper))))

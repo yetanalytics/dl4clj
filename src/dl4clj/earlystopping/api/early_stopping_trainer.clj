@@ -5,7 +5,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   (:import [org.deeplearning4j.earlystopping.trainer IEarlyStoppingTrainer]
            [org.deeplearning4j.earlystopping EarlyStoppingResult]
            [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; local
@@ -15,10 +16,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   "Conduct early stopping training
 
   returns an early stopping result"
-  [trainer]
+  [& {:keys [trainer as-code?]
+      :or {as-code? true}}]
   (match [trainer]
          [(_ :guard seq?)]
-         `(.fit ~trainer)
+         (obj-or-code? as-code? `(.fit ~trainer))
          :else
          (.fit trainer)))
 
@@ -30,21 +32,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   :listener (listener), a listener object that implements the
   early-stopping-listener interface
   - see : TBD"
-  [& {:keys [trainer listener]
+  [& {:keys [trainer listener as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:trainer (_ :guard seq?)
            :listener (_ :guard seq?)}]
-         `(doto ~trainer (.setListener ~listener))
+         (obj-or-code? as-code? `(doto ~trainer (.setListener ~listener)))
          :else
          (doto trainer (.setListener listener))))
 
 (defn get-best-model-from-result
   "returns the model within the early stopping result"
-  [early-stopping-result]
+  [& {:keys [early-stopping-result as-code?]
+      :or {as-code? true}}]
   (match [early-stopping-result]
          [(_ :guard seq?)]
-         `(.getBestModel ~early-stopping-result)
+         (obj-or-code? as-code? `(.getBestModel ~early-stopping-result))
          :else
          (.getBestModel early-stopping-result)))
 
@@ -62,18 +66,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
 
   :multi-ds? (boolean), is the dataset within the RDD a multi-data-set?
    defaults to false, so expects rdd to contain a DataSet"
-  [& {:keys [es-trainer rdd multi-ds?]
-      :or {multi-ds? false}
+  [& {:keys [es-trainer rdd multi-ds? as-code?]
+      :or {multi-ds? false
+           as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:es-trainer (_ :guard seq?)
            :rdd (_ :guard seq?)
            :multi-ds? true}]
-         `(doto ~es-trainer (.fitMulti ~rdd))
+         (obj-or-code? as-code? `(doto ~es-trainer (.fitMulti ~rdd)))
          [{:es-trainer (_ :guard seq?)
            :rdd (_ :guard seq?)
            :multi-ds? (:or false nil)}]
-         `(doto ~es-trainer (.fit ~rdd))
+         (obj-or-code? as-code? `(doto ~es-trainer (.fit ~rdd)))
          [{:es-trainer _
            :rdd _
            :multi-ds? true}]
@@ -85,9 +90,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
 
 (defn get-score-spark-es-trainer
   "returns the score of the model trained via spark"
-  [fit-es-trainer]
+  [& {:keys [fit-es-trainer as-code?]
+      :or {as-code? true}}]
   (match [fit-es-trainer]
          [(_ :guard seq?)]
-         `(.getScore ~fit-es-trainer)
+         (obj-or-code? as-code? `(.getScore ~fit-es-trainer))
          :else
          (.getScore fit-es-trainer)))

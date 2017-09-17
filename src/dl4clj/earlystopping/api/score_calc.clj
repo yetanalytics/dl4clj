@@ -3,7 +3,8 @@
 see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/ScoreCalculator.html"}
     dl4clj.earlystopping.api.score-calc
   (:import [org.deeplearning4j.earlystopping.scorecalc ScoreCalculator])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 (defn calculate-score
   "Calculate the score for the given MultiLayerNetwork
@@ -14,11 +15,12 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
   :mln (model), A Model is meant for predicting something from data.
    - a multi-layer-network
    - see: dl4clj.nn.multilayer.multi-layer-network and dl4clj.nn.conf.builders.multi-layer-builders"
-  [& {:keys [score-calculator mln]
+  [& {:keys [score-calculator mln as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:score-calculator (_ :guard seq?)
            :mln (_ :guard seq?)}]
-         `(.calculateScore ~score-calculator ~mln)
+         (obj-or-code? as-code? `(.calculateScore ~score-calculator ~mln))
          :else
          (.calculateScore score-calculator mln)))

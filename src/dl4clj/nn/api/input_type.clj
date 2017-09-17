@@ -1,6 +1,7 @@
 (ns dl4clj.nn.api.input-type
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
   (:require [dl4clj.constants :as enum]
+            [dl4clj.utils :refer [obj-or-code?]]
             [clojure.core.match :refer [match]]))
 
 (defn get-output-type-cnn-layers
@@ -31,9 +32,10 @@
   [& {:keys [input-type kernel-size
              stride padding convolution-mode
              output-depth layer-idx layer-name
-             layer-class]
+             layer-class as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :kernel-size (:or (_ :guard vector?)
@@ -51,13 +53,15 @@
            :layer-name (:or (_ :guard string?)
                             (_ :guard seq?))
            :layer-class _}]
-         `(InputTypeUtil/getOutputTypeCnnLayers
+         (obj-or-code?
+          as-code?
+          `(InputTypeUtil/getOutputTypeCnnLayers
            (enum/input-types ~input-type)
            (int-array ~kernel-size)
            (int-array ~stride)
            (int-array ~padding)
            (enum/value-of {:convolution-mode ~convolution-mode})
-           ~output-depth ~layer-idx ~layer-name ~layer-class)
+           ~output-depth ~layer-idx ~layer-name ~layer-class))
          :else
          (InputTypeUtil/getOutputTypeCnnLayers
           (enum/input-types input-type)
@@ -78,15 +82,18 @@
   :layer-name (str), the name of the layer
 
   if no preprocessor is required, will return nil"
-  [& {:keys [input-type layer-name]
+  [& {:keys [input-type layer-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :layer-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(InputTypeUtil/getPreProcessorForInputTypeCnnLayers
-           (enum/input-types ~input-type) ~layer-name)
+         (obj-or-code?
+          as-code?
+          `(InputTypeUtil/getPreProcessorForInputTypeCnnLayers
+           (enum/input-types ~input-type) ~layer-name))
          :else
          (InputTypeUtil/getPreProcessorForInputTypeCnnLayers
           (enum/input-types input-type) layer-name)))
@@ -102,15 +109,18 @@
   :layer-name (str), the name of the layer
 
   if no preprocessor is required, will return nil"
-  [& {:keys [input-type layer-name]
+  [& {:keys [input-type layer-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :layer-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(InputTypeUtil/getPreprocessorForInputTypeRnnLayers
-           (enum/input-types ~input-type) ~layer-name)
+         (obj-or-code?
+          as-code?
+          `(InputTypeUtil/getPreprocessorForInputTypeRnnLayers
+           (enum/input-types ~input-type) ~layer-name))
          :else
          (InputTypeUtil/getPreprocessorForInputTypeRnnLayers
           (enum/input-types input-type) layer-name)))

@@ -3,7 +3,7 @@
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Model.html"}
   dl4clj.nn.api.model
   (:import [org.deeplearning4j.nn.api Model])
-  (:require [dl4clj.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many? obj-or-code?]]
             [dl4clj.helpers :refer [reset-if-empty?!]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
@@ -14,58 +14,64 @@
 
 (defn batch-size
   "The current inputs batch size"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.batchSize ~model)
+         (obj-or-code? as-code? `(.batchSize ~model))
          :else
          (.batchSize model)))
 
 (defn conf
   "The configuration for the neural network"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.conf ~model)
+         (obj-or-code? as-code? `(.conf ~model))
          :else
          (.conf model)))
 
 (defn get-optimizer
   "Returns this models optimizer"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.getOptimizer ~model)
+         (obj-or-code? as-code? `(.getOptimizer ~model))
          :else
          (.getOptimizer model)))
 
 (defn get-param
   "Get the parameter"
-  [& {:keys [model param]
+  [& {:keys [model param as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :param (:or (_ :guard string?)
                        (_ :guard seq?))}]
-         `(.getParam ~model ~param)
+         (obj-or-code? as-code? `(.getParam ~model ~param))
          :else
          (.getParam model param)))
 
 (defn gradient-and-score
   "Get the gradient and score"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.gradientAndScore ~model)
+         (obj-or-code? as-code? `(.gradientAndScore ~model))
          :else
          (.gradientAndScore model)))
 
 (defn input
   "returns the input/feature matrix for the model"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.input ~model)
+         (obj-or-code? as-code? `(.input ~model))
          :else
          (.input model)))
 
@@ -73,18 +79,19 @@
   "the number of parameters for the model
    - 1 x m vector where the vector is composed of a flattened vector of all
      of the weights for the various neuralNets and output layer"
-  [& {:keys [model backwards?]
+  [& {:keys [model backwards? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :backwards (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.numParams ~model ~backwards?)
+         (obj-or-code? as-code? `(.numParams ~model ~backwards?))
          [{:model _
            :backwards _}]
          (.numParams model backwards?)
          [{:model (_ :guard seq?)}]
-         `(.numParams ~model)
+         (obj-or-code? as-code? `(.numParams ~model))
          :else
          (.numParams model)))
 
@@ -92,36 +99,38 @@
   "Returns a 1 x m vector where the vector is composed of a flattened vector
   of all of the weights for the various neuralNets(w,hbias NOT VBIAS)
   and output layer"
-  [& {:keys [model backward-only?]
+  [& {:keys [model backward-only? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :backward-only (:or (_ :guard boolean?)
                                (_ :guard seq?))}]
 
-         `(.params ~model ~backward-only?)
+         (obj-or-code? as-code? `(.params ~model ~backward-only?))
          [{:model _
            :backward-only _}]
          (.params model backward-only?)
          [{:model (_ :guard seq?)}]
-         `(.params ~model)
+         (obj-or-code? as-code? `(.params ~model))
          :else
          (.params model)))
 
 (defn param-table
   "The param table"
-  [& {:keys [model backprop-params-only?]
+  [& {:keys [model backprop-params-only? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :backprop-params-only? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
-         `(.paramTable ~model ~backprop-params-only?)
+         (obj-or-code? as-code? `(.paramTable ~model ~backprop-params-only?))
          [{:model _
            :backprop-params-only? _}]
          (.paramTable model backprop-params-only?)
          [{:model (_ :guard seq?)}]
-         `(.paramTable ~model)
+         (obj-or-code? as-code? `(.paramTable ~model))
          :else
          (.paramTable model)))
 
@@ -131,40 +140,49 @@
 
 (defn accumulate-score!
   "Sets a rolling tally for the score."
-  [& {:keys [model accum]
+  [& {:keys [model accum as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :accum (:or (_ :guard number?)
                        (_ :guard seq?))}]
-         `(doto ~model
-            (.accumulateScore (double ~accum)))
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+            (.accumulateScore (double ~accum))))
          :else
          (doto model
            (.accumulateScore accum))))
 
 (defn set-conf!
   "Setter for the configuration"
-  [& {:keys [model conf]
+  [& {:keys [model conf as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :conf (_ :guard seq?)}]
-         `(doto ~model
-            (.setConf ~conf))
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+            (.setConf ~conf)))
          :else
          (doto model
            (.setConf conf))))
 
 (defn set-listeners!
   "set the iteration listeners for the computational graph"
-  [& {:keys [model listeners]
+  [& {:keys [model listeners as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :listeners _}]
-         `(doto ~model
-            (.setListeners ~listeners))
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+            (.setListeners ~listeners)))
          :else
          (doto model
            (.setListeners listeners))))
@@ -175,43 +193,52 @@
   :k (str), the key to set
 
   :v (INDArray or vec), the value to be set"
-  [& {:keys [model k v]
+  [& {:keys [model k v as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :k (:or (_ :guard string?)
                    (_ :guard seq?))
            :v (:or (_ :guard vector?)
                    (_ :guard seq?))}]
-         `(doto ~model
-            (.setParam ~k (vec-or-matrix->indarray ~v)))
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+            (.setParam ~k (vec-or-matrix->indarray ~v))))
          :else
          (doto model
            (.setParam k (vec-or-matrix->indarray v)))))
 
 (defn set-params!
   "Set the parameters for this model."
-  [& {:keys [model params]
+  [& {:keys [model params as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :params (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~model
-            (.setParams (vec-or-matrix->indarray ~params)))
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+            (.setParams (vec-or-matrix->indarray ~params))))
          :else
          (doto model
            (.setParams (vec-or-matrix->indarray params)))))
 
 (defn set-param-table!
   "Setter for the param table"
-  [& {:keys [model param-table-map]
+  [& {:keys [model param-table-map as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :param-table-map (:or (_ :guard map?)
                                  (_ :guard seq?))}]
-         `(doto ~model (.setParamTable ~param-table-map))
+         (obj-or-code?
+          as-code?
+          `(doto ~model (.setParamTable ~param-table-map)))
          :else
          (doto model (.setParamTable param-table-map))))
 
@@ -221,21 +248,21 @@
 
 (defn clear-model!
   "Clear input"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(doto ~model
-            .clear)
+         (obj-or-code? as-code? `(doto ~model .clear))
          :else
-         (doto model
-           .clear)))
+         (doto model .clear)))
 
 (defn init-params!
   "Initialize the parameters and return the model"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(doto ~model .initParams)
+         (obj-or-code? as-code? `(doto ~model .initParams))
          :else
          (doto model .initParams)))
 
@@ -246,9 +273,10 @@
   ;; data is used for unsupervised training
   [& {:keys [mln dataset iter data labels
              features features-mask labels-mask
-             examples label-idxs]
+             examples label-idxs as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -258,11 +286,13 @@
                                (_ :guard seq?))
            :labels-mask (:or (_ :guard vector?)
                              (_ :guard seq?))}]
-         `(doto ~mln
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
            (.fit (vec-or-matrix->indarray ~features)
                  (vec-or-matrix->indarray ~labels)
                  (vec-or-matrix->indarray ~features-mask)
-                 (vec-or-matrix->indarray ~labels-mask)))
+                 (vec-or-matrix->indarray ~labels-mask))))
          [{:mln _ :features _ :labels _ :features-mask _ :labels-mask _}]
          (doto mln
            (.fit (vec-or-matrix->indarray features)
@@ -274,9 +304,11 @@
                           (_ :guard seq?))
            :label-idxs (:or (_ :guard vector?)
                             (_ :guard seq?))}]
-         `(doto ~mln
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
            (.fit (vec-or-matrix->indarray ~examples)
-                 (int-array ~label-idxs)))
+                 (int-array ~label-idxs))))
          [{:mln _ :examples _ :label-idxs _}]
          (doto mln
            (.fit (vec-or-matrix->indarray examples)
@@ -286,73 +318,81 @@
                       (_ :guard seq?))
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~mln
-            (.fit (vec-or-matrix->indarray ~data) (vec-or-matrix->indarray ~labels)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.fit (vec-or-matrix->indarray ~data) (vec-or-matrix->indarray ~labels))))
          [{:mln _ :data _ :labels _}]
          (doto mln
            (.fit (vec-or-matrix->indarray data) (vec-or-matrix->indarray labels)))
          [{:mln (_ :guard seq?)
            :data (:or (_ :guard vector?)
                       (_ :guard seq?))}]
-         `(doto ~mln
-            (.fit (vec-or-matrix->indarray ~data)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.fit (vec-or-matrix->indarray ~data))))
          [{:mln _ :data _}]
          (doto mln
            (.fit (vec-or-matrix->indarray data)))
          [{:mln (_ :guard seq?) :iter (_ :guard seq?)}]
-         `(doto ~mln
-            (.fit ~iter))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln (.fit ~iter)))
          [{:mln _ :iter _}]
          (doto mln
            (.fit (reset-if-empty?! iter)))
          [{:mln (_ :guard seq?) :dataset (_ :guard seq?)}]
-         `(doto ~mln (.fit ~dataset))
+         (obj-or-code? as-code? `(doto ~mln (.fit ~dataset)))
          [{:mln _ :dataset _}]
          (doto mln (.fit dataset))
          [{:mln (_ :guard seq?)}]
-         `(doto ~mln .fit)
+         (obj-or-code? as-code? `(doto ~mln .fit))
          :else
          (doto mln .fit)))
 
 (defn calc-gradient
   "Calculate a gradient"
-  [model]
+  [& {:keys [model as-code?]
+      :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
-         `(.gradient ~model)
+         (obj-or-code? as-code? `(.gradient ~model))
          :else
          (.gradient model)))
 
 (defn init!
   "initialize the model"
-  [& {:keys [model params clone-param-array?]
+  [& {:keys [model params clone-param-array? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :params _ ;; need to double check but belive it should be vec-or-matrix->indarray
            :clone-param-array? (:or (_ :guard boolean?)
                                     (_ :guard seq?))}]
-         `(doto ~model (.init ~params ~clone-param-array?))
+         (obj-or-code? as-code? `(doto ~model (.init ~params ~clone-param-array?)))
          [{:model _ :params _ :clone-param-array? _}]
          (doto model (.init params clone-param-array?))
          [{:model (_ :guard seq?)}]
-         `(doto ~model .init)
+         (obj-or-code? as-code? `(doto ~model .init))
          :else
          (doto model .init)))
 
 (defn iterate-once!
   "Run one iteration"
-  [& {:keys [model input]
+  [& {:keys [model input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(doto ~model
-            (.iterate (vec-or-matrix->indarray ~input)))
+         (obj-or-code?
+          as-code?
+          `(doto ~model (.iterate (vec-or-matrix->indarray ~input))))
          :else
-         (doto model
-           (.iterate (vec-or-matrix->indarray input)))))
+         (doto model (.iterate (vec-or-matrix->indarray input)))))
 
 (defn score!
   "only model supplied: Score of the model (relative to the objective function)
@@ -370,22 +410,23 @@
    :training? (boolean), are we in training mode?
 
    :return-model? (boolean), if you want to return the scored model instead of the score"
-  [& {:keys [model dataset training? return-model?]
-      :or {return-model? false}
+  [& {:keys [model dataset training? return-model? as-code?]
+      :or {return-model? false
+           as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))
            :return-model? true}]
-         `(doto ~model (.score ~dataset ~training?))
+         (obj-or-code? as-code? `(doto ~model (.score ~dataset ~training?)))
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))
            :return-model? false}]
-         `(.score ~model ~dataset ~training?)
+         (obj-or-code? as-code? `(.score ~model ~dataset ~training?))
          [{:model _ :dataset _ :training? _ :return-model? true}]
          (doto model (.score dataset training?))
          [{:model _ :dataset _ :training? _ :return-model? false}]
@@ -394,28 +435,28 @@
            :dataset (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.score ~model ~dataset ~training?)
+         (obj-or-code? as-code? `(.score ~model ~dataset ~training?))
          [{:model _ :dataset _ :training? _}]
          (.score model dataset training?)
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)
            :return-model? true}]
-         `(doto ~model (.score ~dataset))
+         (obj-or-code? as-code? `(doto ~model (.score ~dataset)))
          [{:model _ :dataset _ :return-model? true}]
          (doto model (.score dataset))
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)
            :return-model? false}]
-         `(.score ~model ~dataset)
+         (obj-or-code? as-code? `(.score ~model ~dataset))
          [{:model _ :dataset _ :return-model? false}]
          (.score model dataset)
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)}]
-         `(.score ~model ~dataset)
+         (obj-or-code? as-code? `(.score ~model ~dataset))
          [{:model _ :dataset _}]
          (.score model dataset)
          [{:model (_ :guard seq?) :return-model? true}]
-         `(doto ~model .score)
+         (obj-or-code? as-code? `(doto ~model .score))
          [{:model _ :return-model? true}]
          (doto model .score)
          :else
@@ -427,15 +468,18 @@
 
   if gradient is an INDArray or vec and param-type is supplied:
    -Perform one update applying the gradient"
-  [& {:keys [model gradient param-type]
+  [& {:keys [model gradient param-type as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :gradient (:or (_ :guard vector?)
                           (_ :guard seq?))
            :param-type (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.update ~model (vec-or-matrix->indarray ~gradient) ~param-type)
+         (obj-or-code?
+          as-code?
+          `(.update ~model (vec-or-matrix->indarray ~gradient) ~param-type))
          [{:model _
            :gradient _
            :param-type _}]
@@ -443,6 +487,6 @@
          [{:model (_ :guard seq?)
            :gradient (:or (_ :guard vector?)
                           (_ :guard seq?))}]
-         `(.update ~model (vec-or-matrix->indarray ~gradient))
+         (obj-or-code? as-code? `(.update ~model (vec-or-matrix->indarray ~gradient)))
          :else
          (.update model (vec-or-matrix->indarray gradient))))

@@ -1,7 +1,7 @@
 (ns dl4clj.nn.api.multi-layer-network
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer])
-  (:require [dl4clj.utils :refer [contains-many? array-of]]
+  (:require [dl4clj.utils :refer [contains-many? array-of obj-or-code?]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [clojure.core.match :refer [match]]
             [dl4clj.constants :as enum]
@@ -15,16 +15,15 @@
 
   :ds (dataset), a dataset
    -see: nd4clj.linalg.dataset.data-set"
-  [& {:keys [mln ds]
+  [& {:keys [mln ds as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :ds (_ :guard seq?)}]
-         `(doto ~mln
-            (.initialize ~ds))
+         (obj-or-code? as-code? `(doto ~mln (.initialize ~ds)))
          :else
-         (doto mln
-           (.initialize ds))))
+         (doto mln (.initialize ds))))
 
 (defn evaluate-classification
   "if you only supply mln and iter: Evaluate the network (classification performance)
@@ -39,28 +38,29 @@
 
   :top-n (int), N value for top N accuracy evaluation"
   ;; returns an evaluation object?
-  [& {:keys [mln iter labels top-n]
+  [& {:keys [mln iter labels top-n as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :labels-list (:or (_ :guard vector?)
                              (_ :guard seq?))
            :top-n (:or (_ :guard number?)
                        (_ :guard seq?))}]
-         `(.evaluate ~mln ~iter (into '() ~labels) (int ~top-n))
+         (obj-or-code? as-code? `(.evaluate ~mln ~iter (into '() ~labels) (int ~top-n)))
          [{:mln _ :iter _ :labels-list _ :top-n _}]
          (.evaluate mln (reset-iterator! iter) (into '() labels) top-n)
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :labels-list (:or (_ :guard vector?)
                              (_ :guard seq?))}]
-         `(.evaluate ~mln ~iter (into '() ~labels))
+         (obj-or-code? as-code? `(.evaluate ~mln ~iter (into '() ~labels)))
          [{:mln _ :iter _ :labels-list _}]
          (.evaluate mln (reset-iterator! iter) (into '() labels))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
-         `(.evaluate ~mln ~iter)
+         (obj-or-code? as-code? `(.evaluate ~mln ~iter))
          :else
          (.evaluate mln (reset-iterator! iter))))
 
@@ -69,12 +69,13 @@
 
   :iter (ds-iter), a dataset iterator
    - see: dl4clj.datasets.iterators"
-  [& {:keys [mln iter]
+  [& {:keys [mln iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
-         `(.evaluateRegression ~mln ~iter)
+         (obj-or-code? as-code? `(.evaluateRegression ~mln ~iter))
          :else
          (.evaluateRegression mln (reset-iterator! iter))))
 

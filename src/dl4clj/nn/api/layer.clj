@@ -3,7 +3,7 @@
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.html"}
   dl4clj.nn.api.layer
   (:import [org.deeplearning4j.nn.api Layer])
-  (:require [dl4clj.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many? obj-or-code?]]
             [dl4clj.constants :as enum]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
@@ -14,82 +14,90 @@
 
 (defn get-index
   "Get the layer index."
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.getIndex ~layer)
+         (obj-or-code? as-code? `(.getIndex ~layer))
          :else
          (.getIndex layer)))
 
 (defn get-input-mini-batch-size
   "Get current/last input mini-batch size, as set by set-input-mini-batch-size!"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.getInputMiniBatchSize ~layer)
+         (obj-or-code? as-code? `(.getInputMiniBatchSize ~layer))
          :else
          (.getInputMiniBatchSize layer)))
 
 (defn get-listeners
   "Get the iteration listeners for this layer."
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.getListeners ~layer)
+         (obj-or-code? as-code? `(.getListeners ~layer))
          :else
          (.getListeners layer)))
 
 (defn get-mask-array
   "get the mask array"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.getMaskArray ~layer)
+         (obj-or-code? as-code? `(.getMaskArray ~layer))
          :else
          (.getMaskArray layer)))
 
 (defn get-layer-type
   "Returns the layer type"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.type ~layer)
+         (obj-or-code? as-code? `(.type ~layer))
          :else
          (.type layer)))
 
 (defn get-l1-by-param-layer
   "Get the L1 coefficient for the given parameter."
-  [& {:keys [layer param-name]
+  [& {:keys [layer param-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.getL1ByParam ~layer ~param-name)
+         (obj-or-code? as-code? `(.getL1ByParam ~layer ~param-name))
          :else
          (.getL1ByParam layer param-name)))
 
 (defn get-l2-by-param-layer
   "Get the L2 coefficient for the given parameter."
-  [& {:keys [layer param-name]
+  [& {:keys [layer param-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.getL2ByParam ~layer ~param-name)
+         (obj-or-code? as-code? `(.getL2ByParam ~layer ~param-name))
          :else
          (.getL2ByParam layer param-name)))
 
 (defn get-learning-rate-by-param-layer
   "Get the (initial) learning rate coefficient for the given parameter."
-  [& {:keys [layer param-name]
+  [& {:keys [layer param-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.getLearningRateByParam ~layer ~param-name)
+         (obj-or-code? as-code? `(.getLearningRateByParam ~layer ~param-name))
          :else
          (.getLearningRateByParam layer param-name)))
 
@@ -102,15 +110,16 @@
    - {:convolutional {:height 1 :width 1 :depth 1}}
    - {:recurrent {:size 10}}
   - only 2 examples, see dl4clj.nn.conf.constants"
-  [& {:keys [layer layer-idx input-type]
+  [& {:keys [layer layer-idx input-type as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))}]
-         `(.getOutputType ~layer (int ~layer-idx) (enum/input-types ~input-type))
+         (obj-or-code? as-code? `(.getOutputType ~layer (int ~layer-idx) (enum/input-types ~input-type)))
          :else
          (.getOutputType layer layer-idx (enum/input-types input-type))))
 
@@ -121,25 +130,27 @@
    - {:convolutional {:height 1 :width 1 :depth 1}}
    - {:recurrent {:size 10}}
   - only 2 examples, see dl4clj.nn.conf.constants"
-  [& {:keys [layer input-type]
+  [& {:keys [layer input-type as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))}]
-         `(.getPreProcessorForInputType ~layer (enum/input-types ~input-type))
+         (obj-or-code? as-code? `(.getPreProcessorForInputType ~layer (enum/input-types ~input-type)))
          :else
          (.getPreProcessorForInputType layer (enum/input-types input-type))))
 
 (defn get-updater-by-param
   "Get the updater for the given parameter."
-  [& {:keys [layer param-name]
+  [& {:keys [layer param-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.getUpdaterByParam ~layer ~param-name)
+         (obj-or-code? as-code? `(.getUpdaterByParam ~layer ~param-name))
          :else
          (.getUpdaterByParam layer param-name)))
 
@@ -150,28 +161,34 @@
 (defn set-index!
   "Set the layer index and returns the layer.
   :index should be an integer"
-  [& {:keys [layer index]
+  [& {:keys [layer index as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :index (:or (_ :guard number?)
                        (_ :guard seq?))}]
-         `(doto ~layer
-            (.setIndex (int ~index)))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer
+            (.setIndex (int ~index))))
          :else
          (doto layer
            (.setIndex (int index)))))
 
 (defn set-layer-input!
   "set the layer's input and return the layer"
-  [& {:keys [layer input]
+  [& {:keys [layer input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))}]
-         `(doto ~layer
-            (.setInput (vec-or-matrix->indarray ~input)))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer
+             (.setInput (vec-or-matrix->indarray ~input))))
          :else
          (doto layer
            (.setInput (vec-or-matrix->indarray input)))))
@@ -179,14 +196,17 @@
 (defn set-input-mini-batch-size!
   "Set current/last input mini-batch size and return the layer.
   Used for score and gradient calculations."
-  [& {:keys [layer size]
+  [& {:keys [layer size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :size (:or (_ :guard number?)
                       (_ :guard seq?))}]
-         `(doto ~layer
-            (.setInputMiniBatchSize (int ~size)))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer
+            (.setInputMiniBatchSize (int ~size))))
          :else
          (doto layer
            (.setInputMiniBatchSize size))))
@@ -194,13 +214,16 @@
 (defn set-layer-listeners!
   "Set the iteration listeners for the supplied layer and returns the layer.
   listeners is a collection or array of iteration listeners"
-  [& {:keys [layer listeners]
+  [& {:keys [layer listeners as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :listeners _}]
-         `(doto ~layer
-            (.setListeners ~listeners))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer
+            (.setListeners ~listeners)))
          :else
          (doto layer
            (.setListeners listeners))))
@@ -208,14 +231,17 @@
 (defn set-mask-array!
   "Set the mask array for this layer and return the layer
   mask-array is an INDArray"
-  [& {:keys [layer mask-array]
+  [& {:keys [layer mask-array as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))}]
-         `(doto ~layer
-            (.setMaskArray (vec-or-matrix->indarray ~mask-array)))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer
+            (.setMaskArray (vec-or-matrix->indarray ~mask-array))))
          :else
          (doto layer
            (.setMaskArray (vec-or-matrix->indarray mask-array)))))
@@ -231,15 +257,18 @@
   :override? (boolean), do you want to override the current n-in?
 
   returns the layer"
-  [& {:keys [layer input-type override?]
+  [& {:keys [layer input-type override? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :override? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(doto ~layer (.setNIn (enum/input-types ~input-type) ~override?))
+         (obj-or-code?
+          as-code?
+          `(doto ~layer (.setNIn (enum/input-types ~input-type) ~override?)))
          :else
          (doto layer (.setNIn (enum/input-types input-type) override?))))
 
@@ -249,10 +278,11 @@
 
 (defn initializer
   "returns a param initializer for this layer"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.initializer ~layer)
+         (obj-or-code? as-code? `(.initializer ~layer))
          :else
          (.initializer layer)))
 
@@ -270,10 +300,11 @@
   :layer-param-view (INDArray or vec), the params of the layer
 
   :initialize-params? (boolean), do you want to initialize the params?"
-  [& {:keys [layer conf listener layer-idx
+  [& {:keys [layer conf listener layer-idx as-code?
              layer-param-view initialize-params?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :conf (_ :guard seq?)
            :listener _
@@ -283,9 +314,11 @@
                                   (_ :guard seq?))
            :initialize-params? (:or (_ :guard boolean?)
                                     (_ :guard seq?))}]
-         `(.instantiate ~layer ~conf ~listener (int ~layer-idx)
+         (obj-or-code?
+          as-code?
+          `(.instantiate ~layer ~conf ~listener (int ~layer-idx)
                         (vec-or-matrix->indarray ~layer-param-view)
-                        ~initialize-params?)
+                        ~initialize-params?))
          :else
          (.instantiate layer conf listener layer-idx
                        (vec-or-matrix->indarray layer-param-view)
@@ -307,15 +340,16 @@
 
   6) supply input and training-mode
    -both 4 and 5 initialize the layer with the given input and return the activation for this layer given this input"
-  [& {:keys [model training? input training-mode]
+  [& {:keys [model training? input training-mode as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.activate ~model (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code? as-code? `(.activate ~model (vec-or-matrix->indarray ~input) ~training?))
          [{:model _ :input _ :training? _}]
          (.activate model (vec-or-matrix->indarray input) training?)
          [{:model (_ :guard seq?)
@@ -323,31 +357,35 @@
                        (_ :guard seq?))
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
-         `(.activate ~model
+         (obj-or-code?
+          as-code?
+          `(.activate ~model
                      (vec-or-matrix->indarray ~input)
-                     (enum/value-of {:layer-training-mode ~training-mode}))
+                     (enum/value-of {:layer-training-mode ~training-mode})))
          [{:model _ :input _ :training-mode _}]
          (.activate model (vec-or-matrix->indarray input) (enum/value-of {:layer-training-mode training-mode}))
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.activate ~model (vec-or-matrix->indarray ~input))
+         (obj-or-code? as-code? `(.activate ~model (vec-or-matrix->indarray ~input)))
          [{:model _ :input _}]
          (.activate model (vec-or-matrix->indarray input))
          [{:model (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.activate ~model ~training?)
+         (obj-or-code? as-code? `(.activate ~model ~training?))
          [{:model _ :training? _}]
          (.activate model training?)
          [{:model (_ :guard seq?)
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
-         `(.activate ~model (enum/value-of {:layer-training-mode ~training-mode}))
+         (obj-or-code?
+          as-code?
+          `(.activate ~model (enum/value-of {:layer-training-mode ~training-mode})))
          [{:model _ :training-mode _}]
          (.activate model (enum/value-of {:layer-training-mode training-mode}))
          [{:model (_ :guard seq?)}]
-         `(.activate ~model)
+         (obj-or-code? as-code? `(.activate ~model))
          :else
          (.activate model)))
 
@@ -359,27 +397,28 @@
   :training? (boolean), are we in trianing mode or testing?
 
   multiple layers implement this fn"
-  [& {:keys [layer input training?]
+  [& {:keys [layer input training? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.output ~layer (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code? as-code? `(.output ~layer (vec-or-matrix->indarray ~input) ~training?))
          [{:layer _ :input _ :training? _}]
          (.output layer (vec-or-matrix->indarray input) training?)
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.output ~layer (vec-or-matrix->indarray ~input))
+         (obj-or-code? as-code? `(.output ~layer (vec-or-matrix->indarray ~input)))
          [{:layer _ :input _ }]
          (.output layer (vec-or-matrix->indarray input))
          [{:layer (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.output ~layer ~training?)
+         (obj-or-code? as-code? `(.output ~layer ~training?))
          [{:layer _ :training? _}]
          (.output layer training?)))
 
@@ -394,9 +433,10 @@
     - Note: Masks should not be applied in all cases, depends on the network configuration
 
   :batch-size (int) the minibatch size to use"
-  [& {:keys [layer mask-array mask-state batch-size]
+  [& {:keys [layer mask-array mask-state batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))
@@ -404,9 +444,11 @@
                             (_ :guard seq?))
            :batch-size (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         `(.feedForwardMaskArray ~layer (vec-or-matrix->indarray ~mask-array)
+         (obj-or-code?
+          as-code?
+          `(.feedForwardMaskArray ~layer (vec-or-matrix->indarray ~mask-array)
                                  (enum/value-of {:mask-state ~mask-state})
-                                 (int ~batch-size))
+                                 (int ~batch-size)))
          :else
          (.feedForwardMaskArray layer (vec-or-matrix->indarray mask-array)
                                 (enum/value-of {:mask-state mask-state})
@@ -415,46 +457,50 @@
 (defn backprop-gradient
   "Calculate the gradient relative to the error in the next layer
    epsilon is an INDArray or vec"
-  [& {:keys [layer epsilon]
+  [& {:keys [layer epsilon as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :epsilon (:or (_ :guard vector?)
                          (_ :guard seq?))}]
-         `(.backpropGradient ~layer (vec-or-matrix->indarray ~epsilon))
+         (obj-or-code? as-code? `(.backpropGradient ~layer (vec-or-matrix->indarray ~epsilon)))
          :else
          (.backpropGradient layer (vec-or-matrix->indarray epsilon))))
 
 (defn calc-l1
   "Calculate the l1 regularization term. 0.0 if regularization is not used."
-  [& {:keys [layer backprop-only-params?]
+  [& {:keys [layer backprop-only-params? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :backprop-only-params? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
-         `(.calcL1 ~layer ~backprop-only-params?)
+         (obj-or-code? as-code? `(.calcL1 ~layer ~backprop-only-params?))
          :else
          (.calcL1 layer backprop-only-params?)))
 
 (defn calc-l2
   "Calculate the l2 regularization term. 0.0 if regularization is not used."
-  [& {:keys [layer backprop-only-params?]
+  [& {:keys [layer backprop-only-params? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :backprop-only-params? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
-         `(.calcL2 ~layer ~backprop-only-params?)
+         (obj-or-code? as-code? `(.calcL2 ~layer ~backprop-only-params?))
          :else
          (.calcL2 layer backprop-only-params?)))
 
 (defn is-pretrain-layer?
   "Returns true if the layer can be trained in an unsupervised/pretrain manner (VAE, RBMs etc)"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.isPretrainLayer ~layer)
+         (obj-or-code? as-code? `(.isPretrainLayer ~layer))
          :else
          (.isPretrainLayer layer)))
 
@@ -469,15 +515,18 @@
    one of :training or :testing
 
   multiple layers implement this fn"
-  [& {:keys [layer input training? training-mode]
+  [& {:keys [layer input training? training-mode as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.preOutput ~layer (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code?
+          as-code?
+          `(.preOutput ~layer (vec-or-matrix->indarray ~input) ~training?))
          [{:layer _ :input _ :training? _}]
          (.preOutput layer (vec-or-matrix->indarray input) training?)
          [{:layer (_ :guard seq?)
@@ -485,9 +534,11 @@
                        (_ :guard seq?))
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
-         `(.preOutput ~layer
+         (obj-or-code?
+          as-code?
+          `(.preOutput ~layer
                       (vec-or-matrix->indarray ~input)
-                      (enum/value-of {:training-mode ~training-mode}))
+                      (enum/value-of {:training-mode ~training-mode})))
          [{:layer _ :input _ :training-mode _}]
          (.preOutput layer
                      (vec-or-matrix->indarray input)
@@ -495,30 +546,32 @@
          [{:layer (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.preOutput ~layer ~training?)
+         (obj-or-code? as-code? `(.preOutput ~layer ~training?))
          [{:layer _ :training? _}]
          (.preOutput layer training?)
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))}]
-         `(.preOutput ~layer (vec-or-matrix->indarray ~input))
+         (obj-or-code? as-code? `(.preOutput ~layer (vec-or-matrix->indarray ~input)))
          [{:layer _ :input _ }]
          (.preOutput layer (vec-or-matrix->indarray input))))
 
 (defn transpose
   "Return a transposed copy of the weights/bias
   (this means reverse the number of inputs and outputs on the weights)"
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.transpose ~layer)
+         (obj-or-code? as-code? `(.transpose ~layer))
          :else
          (.transpose layer)))
 
 (defn reset-layer-default-config
-  [layer]
+  [& {:keys [layer as-code?]
+      :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
-         `(.resetLayerDefaultConfig ~layer)
+         (obj-or-code? as-code? `(.resetLayerDefaultConfig ~layer))
          :else
          (.resetLayerDefaultConfig layer)))
