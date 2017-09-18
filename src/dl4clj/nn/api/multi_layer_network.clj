@@ -10,7 +10,6 @@
 ;; come back and figure out how to combine with model-api and eval-api
 
 (defn initialize!
-  ;; colapse with init from model
   "Sets the input and labels from this dataset
 
   :ds (dataset), a dataset
@@ -88,14 +87,15 @@
 
   :roc-threshold-steps (int), value needed to call the ROC constructor
    - see: dl4clj.eval.roc.rocs"
-  [& {:keys [mln iter roc-threshold-steps]
+  [& {:keys [mln iter roc-threshold-steps as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :roc-threshold-steps (:or (_ :guard number?)
                                      (_ :guard seq?))}]
-         `(.evaluateROC ~mln ~iter (int ~roc-threshold-steps))
+         (obj-or-code? as-code? `(.evaluateROC ~mln ~iter (int ~roc-threshold-steps)))
          :else
          (.evaluateROC mln (reset-iterator! iter) roc-threshold-steps)))
 
@@ -107,14 +107,15 @@
 
   :roc-threshold-steps (int), value needed to call the ROCMultiClass constructor
    - see: dl4clj.eval.roc.rocs"
-  [& {:keys [mln iter roc-threshold-steps]
+  [& {:keys [mln iter roc-threshold-steps as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :roc-threshold-steps (:or (_ :guard number?)
                                      (_ :guard seq?))}]
-         `(.evaluateROCMultiClass ~mln ~iter (int ~roc-threshold-steps))
+         (obj-or-code? as-code? `(.evaluateROCMultiClass ~mln ~iter (int ~roc-threshold-steps)))
          :else
          (.evaluateROCMultiClass mln (reset-iterator! iter) roc-threshold-steps)))
 
@@ -132,21 +133,22 @@
 
   :iter (ds-iter), dataset iterator
    - see: dl4clj.datasets.iterators"
-  [& {:keys [mln dataset add-regularization-terms? iter]
+  [& {:keys [mln dataset add-regularization-terms? iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :dataset (_ :guard seq?)
            :add-regularization-terms? (:or (_ :guard boolean?)
                                            (_ :guard seq?))}]
-         `(.scoreExamples ~mln ~dataset ~add-regularization-terms?)
+         (obj-or-code? as-code? `(.scoreExamples ~mln ~dataset ~add-regularization-terms?))
          [{:mln _ :dataset _ :add-regularization-terms? _}]
          (.scoreExamples mln dataset add-regularization-terms?)
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :add-regularization-terms? (:or (_ :guard boolean?)
                                            (_ :guard seq?))}]
-         `(.scoreExamples ~mln ~iter ~add-regularization-terms?)
+         (obj-or-code? as-code? `(.scoreExamples ~mln ~iter ~add-regularization-terms?))
          [{:mln _ :iter _ :add-regularization-terms? _}]
          (.scoreExamples mln (reset-iterator! iter) add-regularization-terms?)))
 
@@ -171,9 +173,10 @@
 
   NOTE: this fn only resets the iterator if its empty"
   [& {:keys [iter train? input features-mask labels-mask
-             training-mode mln]
+             training-mode mln as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -183,9 +186,11 @@
                                (_ :guard seq?))
            :labels-mask (:or (_ :guard vector?)
                              (_ :guard seq?))}]
-         `(.output ~mln (vec-or-matrix->indarray ~input) ~train?
-                  (vec-or-matrix->indarray ~features-mask)
-                  (vec-or-matrix->indarray ~labels-mask))
+         (obj-or-code?
+          as-code?
+          `(.output ~mln (vec-or-matrix->indarray ~input) ~train?
+                    (vec-or-matrix->indarray ~features-mask)
+                    (vec-or-matrix->indarray ~labels-mask)))
          [{:mln _ :input _ :train? _ :features-mask _ :labels-mask _}]
          (.output mln (vec-or-matrix->indarray input) train?
                   (vec-or-matrix->indarray features-mask)
@@ -195,8 +200,10 @@
                        (_ :guard seq?))
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
-         `(.output ~mln (vec-or-matrix->indarray ~input)
-                   (enum/value-of {:layer-training-mode ~training-mode}))
+         (obj-or-code?
+          as-code?
+          `(.output ~mln (vec-or-matrix->indarray ~input)
+                   (enum/value-of {:layer-training-mode ~training-mode})))
          [{:mln _ :input _ :training-mode _}]
          (.output mln (vec-or-matrix->indarray input)
                   (enum/value-of {:layer-training-mode training-mode}))
@@ -205,25 +212,25 @@
                        (_ :guard seq?))
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
-         `(.output ~mln (vec-or-matrix->indarray ~input) ~train?)
+         (obj-or-code? as-code? `(.output ~mln (vec-or-matrix->indarray ~input) ~train?))
          [{:mln _ :input _ :train? _}]
          (.output mln (vec-or-matrix->indarray input) train?)
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
-         `(.output ~mln ~iter ~train?)
+         (obj-or-code? as-code? `(.output ~mln ~iter ~train?))
          [{:mln _ :iter _ :train? _}]
          (.output mln (reset-if-empty?! iter) train?)
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.output ~mln (vec-or-matrix->indarray ~input))
+         (obj-or-code? as-code? `(.output ~mln (vec-or-matrix->indarray ~input)))
          [{:mln _ :input _}]
          (.output mln (vec-or-matrix->indarray input))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
-         `(.output ~mln ~iter)
+         (obj-or-code? as-code? `(.output ~mln ~iter))
          [{:mln _ :iter _}]
          (.output mln (reset-if-empty?! iter))))
 
@@ -232,14 +239,17 @@
   "initialize the neuralNets based on the input.
 
   :input (INDArray or vec), the input matrix for training"
-  [& {:keys [mln input]
+  [& {:keys [mln input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(doto ~mln
-            (.initializeLayers (vec-or-matrix->indarray ~input)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.initializeLayers (vec-or-matrix->indarray ~input))))
          :else
          (doto mln
            (.initializeLayers (vec-or-matrix->indarray input)))))
@@ -252,12 +262,13 @@
 
   :iter (ds-iter), dataset iterator
    - see: dl4clj.datasets.iterators"
-  [& {:keys [mln iter]
+  [& {:keys [mln iter as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
-         `(.pretrain ~mln ~iter)
+         (obj-or-code? as-code? `(.pretrain ~mln ~iter))
          :else
          (.pretrain mln (reset-iterator! iter))))
 
@@ -272,14 +283,15 @@
    - see: dl4clj.datasets.iterators
 
   :features (INDArray or vec), training data array"
-  [& {:keys [mln layer-idx iter features]
+  [& {:keys [mln layer-idx iter features as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
            :iter (_ :guard seq?)}]
-         `(.pretrainLayer ~mln (int ~layer-idx) ~iter)
+         (obj-or-code? as-code? `(.pretrainLayer ~mln (int ~layer-idx) ~iter))
          [{:mln _ :layer-idx _ :iter _}]
          (.pretrainLayer mln layer-idx (reset-iterator! iter))
          [{:mln (_ :guard seq?)
@@ -287,7 +299,9 @@
                            (_ :guard seq?))
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
-         `(.pretrainLayer ~mln (int ~layer-idx) (vec-or-matrix->indarray ~features))
+         (obj-or-code?
+          as-code?
+          `(.pretrainLayer ~mln (int ~layer-idx) (vec-or-matrix->indarray ~features)))
          [{:mln _ :layer-idx _ :features _}]
          (.pretrainLayer mln layer-idx (vec-or-matrix->indarray features))))
 
@@ -295,14 +309,13 @@
   "Run SGD based on the given labels
 
   returns the fine tuned model"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln
-            .finetune)
+         (obj-or-code? as-code? `(doto ~mln .finetune))
          :else
-         (doto mln
-           .finetune)))
+         (doto mln .finetune)))
 
 (defn rnn-time-step
   "If this MultiLayerNetwork contains one or more RNN layers:
@@ -314,13 +327,16 @@
    - For single time step: input has shape [miniBatchSize,inputSize] or [miniBatchSize,inputSize,1].
        - miniBatchSize=1 for single example.
    - For multiple time steps: [miniBatchSize,inputSize,inputTimeSeriesLength]"
-  [& {:keys [mln input]
+  [& {:keys [mln input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.rnnTimeStep ~mln (vec-or-matrix->indarray ~input))
+         (obj-or-code?
+          as-code?
+          `(.rnnTimeStep ~mln (vec-or-matrix->indarray ~input)))
          :else
          (.rnnTimeStep mln (vec-or-matrix->indarray input))))
 
@@ -333,24 +349,28 @@
 
   returns a reconstructed matrix relative to the size of the last hidden layer
    - normally a probability distribution summing to one"
-  [& {:keys [mln layer-output layer-idx]
+  [& {:keys [mln layer-output layer-idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layer-output (:or (_ :guard vector?)
                               (_ :guard seq?))
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
-         `(.reconstruct ~mln (vec-or-matrix->indarray ~layer-output) (int ~layer-idx))
+         (obj-or-code?
+          as-code?
+          `(.reconstruct ~mln (vec-or-matrix->indarray ~layer-output) (int ~layer-idx)))
          :else
          (.reconstruct mln (vec-or-matrix->indarray layer-output) layer-idx)))
 
 (defn summary
   "String detailing the architecture of the multi-layer-network. (mln)"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.summary ~mln)
+         (obj-or-code? as-code? `(.summary ~mln))
          :else
          (.summary mln)))
 
@@ -364,9 +384,10 @@
    :to (int), ending layer idx
 
    :input (INDArray or vec), the input to propagate through the layers"
-  [& {:keys [mln from to input]
+  [& {:keys [mln from to input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :from (:or (_ :guard number?)
                       (_ :guard seq?))
@@ -374,9 +395,11 @@
                     (_ :guard seq?))
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.activateSelectedLayers ~mln (int ~from)
+         (obj-or-code?
+          as-code?
+          `(.activateSelectedLayers ~mln (int ~from)
                                    (int ~to)
-                                   (vec-or-matrix->indarray ~input))
+                                   (vec-or-matrix->indarray ~input)))
          :else
          (.activateSelectedLayers mln from to (vec-or-matrix->indarray input))))
 
@@ -389,9 +412,10 @@
   :input (INDArray or vec), the input to propagate through the layers
 
   :training? (boolean), is this training mode?"
-  [& {:keys [mln current-layer-idx input training?]
+  [& {:keys [mln current-layer-idx input training? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :current-layer-idx (:or (_ :guard number?)
                                    (_ :guard seq?))
@@ -399,8 +423,10 @@
                        (_ :guard seq?))
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.activationFromPrevLayer ~mln ~current-layer-idx
-                                    (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code?
+          as-code?
+          `(.activationFromPrevLayer ~mln ~current-layer-idx
+                                    (vec-or-matrix->indarray ~input) ~training?))
          :else
          (.activationFromPrevLayer mln current-layer-idx
                                    (vec-or-matrix->indarray input) training?)))
@@ -409,14 +435,13 @@
   "Remove the mask arrays from all layers.
 
   returns the multi layer network after the mutation"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln
-            .clearLayerMaskArrays)
+         (obj-or-code? as-code? `(doto ~mln .clearLayerMaskArrays))
          :else
-         (doto mln
-           .clearLayerMaskArrays)))
+         (doto mln .clearLayerMaskArrays)))
 
 (defn compute-z
   "if you only supply training?: Compute input linear transformation (z) of the output layer
@@ -426,30 +451,32 @@
   :training? (boolean), training mode?
 
   :input (INDArray or vec), the input to propagate through the network for calcing activations"
-  [& {:keys [mln training? input]
+  [& {:keys [mln training? input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.computeZ ~mln (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code? as-code? `(.computeZ ~mln (vec-or-matrix->indarray ~input) ~training?))
          [{:mln _ :training? _ :input _}]
          (.computeZ mln (vec-or-matrix->indarray input) training?)
          [{:mln (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
-         `(.computeZ ~mln ~training?)
+         (obj-or-code? as-code? `(.computeZ ~mln ~training?))
          :else
          (.computeZ mln training?)))
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.epsilon ~mln)
+         (obj-or-code? as-code? `(.epsilon ~mln))
          :else
          (.epsilon mln)))
 
@@ -470,9 +497,10 @@
   :features-mask (INDArray or vec), mask for the input features
 
   :labels-mask (INDArray or vec), mask for the labels"
-  [& {:keys [mln train? input features-mask labels-mask]
+  [& {:keys [mln train? input features-mask labels-mask as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -480,9 +508,11 @@
                                (_ :guard seq?))
            :labels-mask (:or (_ :guard vector?)
                              (_ :guard seq?))}]
-         `(.feedForward ~mln (vec-or-matrix->indarray ~input)
-                        (vec-or-matrix->indarray ~features-mask)
-                        (vec-or-matrix->indarray ~labels-mask))
+         (obj-or-code?
+          as-code?
+          `(.feedForward ~mln (vec-or-matrix->indarray ~input)
+                         (vec-or-matrix->indarray ~features-mask)
+                         (vec-or-matrix->indarray ~labels-mask)))
          [{:mln _ :input _ :features-mask _ :labels-mask _}]
          (.feedForward mln (vec-or-matrix->indarray input)
                        (vec-or-matrix->indarray features-mask)
@@ -492,23 +522,23 @@
                        (_ :guard seq?))
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
-         `(.feedForward ~mln (vec-or-matrix->indarray ~input) ~train?)
+         (obj-or-code? as-code? `(.feedForward ~mln (vec-or-matrix->indarray ~input) ~train?))
          [{:mln _ :input _ :train? _}]
          (.feedForward mln (vec-or-matrix->indarray input) train?)
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(.feedForward ~mln (vec-or-matrix->indarray ~input))
+         (obj-or-code? as-code? `(.feedForward ~mln (vec-or-matrix->indarray ~input)))
          [{:mln _ :input _}]
          (.feedForward mln (vec-or-matrix->indarray input))
          [{:mln (_ :guard seq?)
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
-         `(.feedForward ~mln ~train?)
+         (obj-or-code? as-code? `(.feedForward ~mln ~train?))
          [{:mln _ :train? _}]
          (.feedForward mln train?)
          [{:mln (_ :guard seq?)}]
-         `(.feedForward ~mln)
+         (obj-or-code? as-code? `(.feedForward ~mln))
          :else
          (.feedForward mln)))
 
@@ -523,56 +553,62 @@
   :input (INDArray or vec), the input to propagate through the specified layer
 
   Note: the returned output list contains the original input at idx 0"
-  [& {:keys [mln layer-idx train? input]
+  [& {:keys [mln layer-idx train? input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (let [i (vec-or-matrix->indarray input)]
-    (match [opts]
-           [{:mln (_ :guard seq?)
-             :layer-idx (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :train? (:or (_ :guard boolean?)
-                          (_ :guard seq?))
-             :input (:or (_ :guard vector?)
-                         (_ :guard seq?))}]
-           `(.feedForwardToLayer ~mln (int ~layer-idx)
-                                 (vec-or-matrix->indarray ~input)
-                                 ~train?)
-           [{:mln _ :layer-idx _ :train? _ :input _}]
-           (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input)
-                                train?)
-           [{:mln (_ :guard seq?)
-             :layer-idx (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :input (:or (_ :guard vector?)
-                         (_ :guard seq?))}]
-           `(.feedForwardToLayer ~mln (int ~layer-idx)
-                                 (vec-or-matrix->indarray ~input))
-           [{:mln _ :layer-idx _ :input _}]
-           (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input))
-           [{:mln (_ :guard seq?)
-             :layer-idx (:or (_ :guard number?)
-                             (_ :guard seq?))
-             :train? (:or (_ :guard boolean?)
-                          (_ :guard seq?))}]
-           `(.feedForwardToLayer ~mln (int ~layer-idx) ~train?)
-           [{:mln _ :layer-idx _ :train? _}]
-           (.feedForwardToLayer mln layer-idx train?))))
+  (match [opts]
+         [{:mln (_ :guard seq?)
+           :layer-idx (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :train? (:or (_ :guard boolean?)
+                        (_ :guard seq?))
+           :input (:or (_ :guard vector?)
+                       (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(.feedForwardToLayer ~mln (int ~layer-idx)
+                               (vec-or-matrix->indarray ~input)
+                               ~train?))
+         [{:mln _ :layer-idx _ :train? _ :input _}]
+         (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input)
+                              train?)
+         [{:mln (_ :guard seq?)
+           :layer-idx (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :input (:or (_ :guard vector?)
+                       (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(.feedForwardToLayer ~mln (int ~layer-idx)
+                               (vec-or-matrix->indarray ~input)))
+         [{:mln _ :layer-idx _ :input _}]
+         (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input))
+         [{:mln (_ :guard seq?)
+           :layer-idx (:or (_ :guard number?)
+                           (_ :guard seq?))
+           :train? (:or (_ :guard boolean?)
+                        (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.feedForwardToLayer ~mln (int ~layer-idx) ~train?))
+         [{:mln _ :layer-idx _ :train? _}]
+         (.feedForwardToLayer mln layer-idx train?)))
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getDefaultConfiguration ~mln)
+         (obj-or-code? as-code? `(.getDefaultConfiguration ~mln))
          :else
          (.getDefaultConfiguration mln)))
 
 (defn get-input
   "return the input to the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getInput ~mln)
+         (obj-or-code? as-code? `(.getInput ~mln))
          :else
          (.getInput mln)))
 
@@ -582,82 +618,90 @@
   :layer-idx (int), the index of the layer you want to get from the mln
 
   :layer-name (str), the name of the layer you want to get from the mln"
-  [& {:keys [mln layer-idx layer-name]
+  [& {:keys [mln layer-idx layer-name as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
-         `(.getLayer ~mln (int ~layer-idx))
+         (obj-or-code? as-code? `(.getLayer ~mln (int ~layer-idx)))
          [{:mln _ :layer-idx _}]
          (.getLayer mln layer-idx)
          [{:mln (_ :guard seq?)
            :layer-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
-         `(.getLayer ~mln ~layer-name)
+         (obj-or-code? as-code? `(.getLayer ~mln ~layer-name))
          [{:mln _ :layer-name _}]
          (.getLayer mln layer-name)))
 
 (defn get-layer-names
   "return a list of the layer names in the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getLayerNames ~mln)
+         (obj-or-code? as-code? `(.getLayerNames ~mln))
          :else
          (.getLayerNames mln)))
 
 (defn get-layers
   "returns an array of the layers within the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getLayers ~mln)
+         (obj-or-code? as-code? `(.getLayers ~mln))
          :else
          (.getLayers mln)))
 
 (defn get-layer-wise-config
   "returns the configuration for the layers in the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getLayerWiseConfigurations ~mln)
+         (obj-or-code? as-code? `(.getLayerWiseConfigurations ~mln))
          :else
          (.getLayerWiseConfigurations mln)))
 
 (defn get-mask
   "return the mask array used in this mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getMask ~mln)
+         (obj-or-code? as-code? `(.getMask ~mln))
          :else
          (.getMask mln)))
 
 (defn get-n-layers
   "get the number of layers in the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getnLayers ~mln)
+         (obj-or-code? as-code? `(.getnLayers ~mln))
          :else
          (.getnLayers mln)))
 
 (defn get-output-layer
   "returns the output layer of the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getOutputLayer ~mln)
+         (obj-or-code? as-code? `(.getOutputLayer ~mln))
          :else
          (.getOutputLayer mln)))
 
 (defn get-updater
   "return the updater used in this mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.getUpdater ~mln)
+         (obj-or-code? as-code? `(.getUpdater ~mln))
          :else
          (.getUpdater mln)))
 
@@ -666,37 +710,41 @@
   sets the appropriate subset in all layers.
 
   - this gets called behind the scene when using fit!"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln .initGradientsView)
+         (obj-or-code? as-code? `(doto ~mln .initGradientsView))
          :else
          (doto mln .initGradientsView)))
 
 (defn get-mln-input
   "returns the input/feature matrix for the model"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.input ~mln)
+         (obj-or-code? as-code? `(.input ~mln))
          :else
          (.input mln)))
 
 (defn is-init-called?
   "was the model initialized"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(.isInitCalled ~mln)
+         (obj-or-code? as-code? `(.isInitCalled ~mln))
          :else
          (.isInitCalled mln)))
 
 (defn print-config
   "Prints the configuration and returns the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln .printConfiguration)
+         (obj-or-code? as-code? `(doto ~mln .printConfiguration))
          :else
          (doto mln .printConfiguration)))
 
@@ -712,9 +760,10 @@
 
   returns the activations for each layer
    - the input is idx 0, followed by the activations"
-  [& {:keys [mln input training? store-last-for-tbptt?]
+  [& {:keys [mln input training? store-last-for-tbptt? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -722,18 +771,21 @@
                            (_ :guard seq?))
            :store-last-for-tbptt? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
-         `(.rnnActivateUsingStoredState ~mln (vec-or-matrix->indarray ~input)
-                                        ~training? ~store-last-for-tbptt?)
+         (obj-or-code?
+          as-code?
+          `(.rnnActivateUsingStoredState ~mln (vec-or-matrix->indarray ~input)
+                                        ~training? ~store-last-for-tbptt?))
          :else
          (.rnnActivateUsingStoredState mln (vec-or-matrix->indarray input)
                                        training? store-last-for-tbptt?)))
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln .rnnClearPreviousState)
+         (obj-or-code? as-code? `(doto ~mln .rnnClearPreviousState))
          :else
          (doto mln .rnnClearPreviousState)))
 
@@ -741,13 +793,14 @@
   "get the state of the rnn layer given its index in the mln
 
   :layer-idx (int), the index of the rnn within the mln"
-  [& {:keys [mln layer-idx]
+  [& {:keys [mln layer-idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
-         `(.rnnGetPreviousState ~mln (int ~layer-idx))
+         (obj-or-code? as-code? `(.rnnGetPreviousState ~mln (int ~layer-idx)))
          :else
          (.rnnGetPreviousState mln layer-idx)))
 
@@ -759,16 +812,19 @@
   :state (map), {str INDArray}, The state to set the specified layer to
 
   returns the mln"
-  [& {:keys [mln layer-idx state]
+  [& {:keys [mln layer-idx state as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
            :state (:or (_ :guard map?)
                        (_ :guard seq?))}]
-         `(doto ~mln
-            (.rnnSetPreviousState (int ~layer-idx) ~state))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.rnnSetPreviousState (int ~layer-idx) ~state)))
          :else
          (doto mln
            (.rnnSetPreviousState layer-idx state))))
@@ -778,14 +834,17 @@
   this is a way of initializing the neural network, returns the mln
 
   :input (INDArray or vec), the input to the mln"
-  [& {:keys [mln input]
+  [& {:keys [mln input as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
-         `(doto ~mln
-            (.setInput (vec-or-matrix->indarray ~input)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.setInput (vec-or-matrix->indarray ~input))))
          :else
          (doto mln
            (.setInput (vec-or-matrix->indarray input)))))
@@ -795,14 +854,17 @@
   returns the mln.
 
   :labels (INDArray or vec), the labels to be set"
-  [& {:keys [mln labels]
+  [& {:keys [mln labels as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~mln
-            (.setLabels (vec-or-matrix->indarray ~labels)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
          (doto mln
            (.setLabels (vec-or-matrix->indarray labels)))))
@@ -813,14 +875,17 @@
   :layers (coll), a collection of layers to add to the mln
 
   returns the mln"
-  [& {:keys [mln layers]
+  [& {:keys [mln layers as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :layers _}]
-         `(doto ~mln
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
            (.setLayers (array-of :data ~layers
-                                 :java-type Layer)))
+                                 :java-type Layer))))
          :else
          (doto mln
            (.setLayers (array-of :data layers
@@ -836,13 +901,16 @@
 
   NOTE: you should not need this fn.  You can set the multi-layer-conf when creating your mln
    - see: new-multi-layer-network at the top of this ns"
-  [& {:keys [mln multi-layer-conf]
+  [& {:keys [mln multi-layer-conf as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :multi-layer-conf (_ :guard seq?)}]
-         `(doto ~mln
-            (.setLayerWiseConfigurations ~multi-layer-conf))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.setLayerWiseConfigurations ~multi-layer-conf)))
          :else
          (doto mln
            (.setLayerWiseConfigurations multi-layer-conf))))
@@ -851,14 +919,17 @@
   "set the mask, returns the mln
 
   :mask (INDArray or vec), the mask to set for the mln"
-  [& {:keys [mln mask]
+  [& {:keys [mln mask as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :mask (:or (_ :guard vector?)
                       (_ :guard seq?))}]
-         `(doto ~mln
-            (.setMask (vec-or-matrix->indarray ~mask)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.setMask (vec-or-matrix->indarray ~mask))))
          :else
          (doto mln
            (.setMask (vec-or-matrix->indarray mask)))))
@@ -871,14 +942,17 @@
   :params (INDArray or vec), a parameter vector equal 1,numParameters
 
   returns the mln"
-  [& {:keys [mln params]
+  [& {:keys [mln params as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :params (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         `(doto ~mln
-            (.setParameters (vec-or-matrix->indarray ~params)))
+         (obj-or-code?
+          as-code?
+          `(doto ~mln
+            (.setParameters (vec-or-matrix->indarray ~params))))
          :else
          (doto mln
            (.setParameters (vec-or-matrix->indarray params)))))
@@ -889,22 +963,24 @@
    - returns mln
 
   you can also use update! in the model interface ns"
-  [& {:keys [mln other-mln]
+  [& {:keys [mln other-mln as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :other-mln (_ :guard seq?)}]
-         `(doto ~mln (.update ~other-mln))
+         (obj-or-code? as-code? `(doto ~mln (.update ~other-mln)))
          :else
          (doto mln (.update other-mln))))
 
 (defn update-rnn-state-with-tbptt-state!
   "updates the rnn state to be that of the tbptt state.
   returns the mln."
-  [mln]
+  [& {:keys [mln as-code?]
+      :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
-         `(doto ~mln .updateRnnStateWithTBPTTState)
+         (obj-or-code? as-code? `(doto ~mln .updateRnnStateWithTBPTTState))
          :else
          (doto mln .updateRnnStateWithTBPTTState)))
 
@@ -919,9 +995,10 @@
   :training? (boolean), are we in training mode?
 
   returns the activation from the previous layer"
-  [& {:keys [mln current-layer-idx input training?]
+  [& {:keys [mln current-layer-idx input training? as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:mln (_ :guard seq?)
            :current-layer-idx (:or (_ :guard number?)
                                    (_ :guard seq?))
@@ -929,7 +1006,9 @@
                        (_ :guard seq?))
            :training (:or (_ :guard boolean?)
                           (_ :guard seq?))}]
-         `(.zFromPrevLayer ~mln (int ~current-layer-idx)
-                           (vec-or-matrix->indarray ~input) ~training?)
+         (obj-or-code?
+          as-code?
+          `(.zFromPrevLayer ~mln (int ~current-layer-idx)
+                           (vec-or-matrix->indarray ~input) ~training?))
          :else
          (.zFromPrevLayer mln current-layer-idx (vec-or-matrix->indarray input) training?)))
