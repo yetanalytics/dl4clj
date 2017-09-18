@@ -1,7 +1,8 @@
 (ns ^{:doc "see http://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/NeuralNetConfiguration.html"}
   dl4clj.nn.api.nn-conf
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
