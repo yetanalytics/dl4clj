@@ -3,8 +3,8 @@
             RecordReaderDataSetIterator
             SequenceRecordReaderDataSetIterator]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator])
-  :require [clojure.core.match :refer [match]]
-  [dl4clj.utils :refer [obj-or-code?]])
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters

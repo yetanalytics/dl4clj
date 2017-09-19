@@ -4,7 +4,7 @@
             [dl4clj.constants :as constants]
             [dl4clj.utils :refer [generic-dispatching-fn builder-fn
                                   replace-map-vals eval-and-build
-                                  obj-or-code? contains-many?]]
+                                  obj-or-code?]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [clojure.core.match :refer [match]])
   (:import
