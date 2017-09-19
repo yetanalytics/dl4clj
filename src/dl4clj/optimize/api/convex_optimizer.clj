@@ -2,7 +2,8 @@
 see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimizer.html"}
     dl4clj.optimize.api.convex-optimizer
   (:import [org.deeplearning4j.optimize.api ConvexOptimizer])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -10,46 +11,51 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 
 (defn get-batch-size
   "returns the batch size for the optimizer"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.batchSize ~optim)
+         (obj-or-code? as-code? `(.batchSize ~optim))
          :else
          (.batchSize optim)))
 
 (defn get-conf
   "get the nn-conf associated with this optimizer"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.getConf ~optim)
+         (obj-or-code? as-code? `(.getConf ~optim))
          :else
          (.getConf optim)))
 
 (defn get-updater
   "returns the updater associated with this optimizer"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.getUpdater ~optim)
+         (obj-or-code? as-code? `(.getUpdater ~optim))
          :else
          (.getUpdater optim)))
 
 (defn get-gradient-and-score
   "the gradient and score for this optimizer"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.gradientAndScore ~optim)
+         (obj-or-code? as-code? `(.gradientAndScore ~optim))
          :else
          (.gradientAndScore optim)))
 
 (defn get-score
   "The score for the optimizer so far"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.score ~optim)
+         (obj-or-code? as-code? `(.score ~optim))
          :else
          (.score optim)))
 
@@ -63,13 +69,14 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   :batch-size (int), the batch size
 
   returns the optimizer"
-  [& {:keys [optim batch-size]
+  [& {:keys [optim batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:optim (_ :guard seq?)
            :batch-size (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         `(doto ~optim (.setBatchSize (int ~batch-size)))
+         (obj-or-code? as-code? `(doto ~optim (.setBatchSize (int ~batch-size))))
          :else
          (doto optim (.setBatchSize batch-size))))
 
@@ -80,13 +87,14 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
    - clojure data structures can be used
 
   returns the optimizer"
-  [& {:keys [optim listeners]
+  [& {:keys [optim listeners as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:optim (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
-         `(doto ~optim (.setListeners ~listeners))
+         (obj-or-code? as-code? `(doto ~optim (.setListeners ~listeners)))
          :else
          (doto optim (.setListeners listeners))))
 
@@ -96,12 +104,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   :updater (updater), an updater to add to the optimizer
 
   returns the optimizer"
-  [& {:keys [optim updater]
+  [& {:keys [optim updater as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:optim (_ :guard seq?)
            :updater (_ :guard seq?)}]
-         `(doto ~optim (.setUpdater ~updater))
+         (obj-or-code? as-code? `(doto ~optim (.setUpdater ~updater)))
          :else
          (doto optim (.setUpdater updater))))
 
@@ -111,9 +120,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 
 (defn optimize
   "calls optimize! returns a boolean"
-  [optim]
+  [& {:keys [optim as-code?]
+      :or {as-code? true}}]
   (match [optim]
          [(_ :guard seq?)]
-         `(.optimize ~optim)
+         (obj-or-code? as-code? `(.optimize ~optim))
          :else
          (.optimize optim)))

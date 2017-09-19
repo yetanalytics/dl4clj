@@ -7,7 +7,8 @@ The interface here operates essentially as a Map<String,Object>. Note however th
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrainingStats.html"}
     dl4clj.spark.api.training-stats
   (:import [org.deeplearning4j.spark.api.stats SparkTrainingStats])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -15,19 +16,21 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
 
 (defn get-key-set-for-stats
   "returns the key set for the training stats instance"
-  [training-stats]
+  [& {:keys [training-stats as-code?]
+      :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
-         `(.getKeySet ~training-stats)
+         (obj-or-code? as-code? `(.getKeySet ~training-stats))
          :else
          (.getKeySet training-stats)))
 
 (defn get-nested-training-stats
   "Return the nested training stats - if any."
-  [training-stats]
+  [& {:keys [training-stats as-code?]
+      :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
-         `(.getNestedTrainingStats ~training-stats)
+         (obj-or-code? as-code? `(.getNestedTrainingStats ~training-stats))
          :else
          (.getNestedTrainingStats training-stats)))
 
@@ -35,25 +38,27 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   "Return a short (display) name for the given key.
 
   :stat-key (str), the identifier for the key you want the short name of"
-  [& {:keys [training-stats stat-key]
+  [& {:keys [training-stats stat-key as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:training-stats (_ :guard seq?)
            :stat-key (:or (_ :guard string?)
                           (_ :guard seq?))}]
-         `(.getShortNameForKey ~training-stats ~stat-key)
+         (obj-or-code? as-code? `(.getShortNameForKey ~training-stats ~stat-key))
          :else
          (.getShortNameForKey training-stats stat-key)))
 
 (defn get-value-for-key
   "Get the statistic value for this key"
-  [& {:keys [training-stats stat-key]
+  [& {:keys [training-stats stat-key as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:training-stats (_ :guard seq?)
            :stat-key (:or (_ :guard string?)
                           (_ :guard seq?))}]
-         `(.getValue ~training-stats ~stat-key)
+         (obj-or-code? as-code? `(.getValue ~training-stats ~stat-key))
          :else
          (.getValue training-stats stat-key)))
 
@@ -67,12 +72,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
    - see: TBD
 
   returns the first instance with the other added in"
-  [& {:keys [training-stats other-training-stats]
+  [& {:keys [training-stats other-training-stats as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:training-stats (_ :guard seq?)
            :other-training-stats (_ :guard seq?)}]
-         `(doto ~training-stats (.addOtherTrainingStats ~other-training-stats))
+         (obj-or-code?
+          as-code?
+          `(doto ~training-stats (.addOtherTrainingStats ~other-training-stats)))
          :else
          (doto training-stats (.addOtherTrainingStats other-training-stats))))
 
@@ -83,13 +91,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
    - need to look into possible options for to-include
 
   returns the training-stats instance"
-  [& {:keys [training-stats stat-key-to-include]
+  [& {:keys [training-stats stat-key-to-include as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:training-stats (_ :guard seq?)
            :stat-key-to-include (:or (_ :guard string?)
                                      (_ :guard seq?))}]
-         `(doto ~training-stats (.defaultIncludeInPlots ~stat-key-to-include))
+         (obj-or-code?
+          as-code?
+          `(doto ~training-stats (.defaultIncludeInPlots ~stat-key-to-include)))
          :else
          (doto training-stats (.defaultIncludeInPlots stat-key-to-include))))
 
@@ -103,22 +114,26 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
    - creation of these has not been implemented yet
 
   returns the training-stats instance"
-  [& {:keys [training-stats path spark-context]
+  [& {:keys [training-stats path spark-context as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:training-stats (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))
            :spark-context (_ :guard seq?)}]
-         `(doto ~training-stats (.exportStatFiles ~path ~spark-context))
+         (obj-or-code?
+          as-code?
+          `(doto ~training-stats (.exportStatFiles ~path ~spark-context)))
          :else
          (doto training-stats (.exportStatFiles path spark-context))))
 
 (defn stats-as-string
   "get the stats as a string"
-  [training-stats]
+  [& {:keys [training-stats as-code?]
+      :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
-         `(.statsAsString ~training-stats)
+         (obj-or-code? as-code? `(.statsAsString ~training-stats))
          :else
          (.statsAsString training-stats)))

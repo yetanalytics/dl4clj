@@ -7,7 +7,8 @@ In principle, a large number of different approches can be used in distributed t
 see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.html"}
     dl4clj.spark.api.training-master
   (:import [org.deeplearning4j.spark.api TrainingMaster])
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [dl4clj.utils :refer [obj-or-code?]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -15,21 +16,23 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
 
 (defn get-training-stats
   "returns the training stats"
-  [master]
+  [& {:keys [master as-code?]
+      :or {as-code? true}}]
   (match [master]
          [(_ :guard seq?)]
-         `(.getTrainingStats ~master)
+         (obj-or-code? as-code? `(.getTrainingStats ~master))
          :else
          (.getTrainingStats master)))
 
 (defn get-worker
   "returns the work instance for this training mater"
-  [& {:keys [master spark-mln]
+  [& {:keys [master spark-mln as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:master (_ :guard seq?)
            :spark-mln (_ :guard seq?)}]
-         `(.getWorkerInstance ~master ~spark-mln)
+         (obj-or-code? as-code? `(.getWorkerInstance ~master ~spark-mln))
          :else
          (.getWorkerInstance master spark-mln)))
 
@@ -42,19 +45,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
    - defaults to true
 
   returns the master"
-  [& {:keys [master collect-stats?]
-      :or {collect-stats? true}
+  [& {:keys [master collect-stats? as-code?]
+      :or {collect-stats? true
+           as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:master (_ :guard seq?)
            :collect-stats? (:or (_ :guard boolean?)
                                 (_ :guard seq?))}]
-         `(doto ~master (.setCollectTrainingStats ~collect-stats?))
+         (obj-or-code? as-code? `(doto ~master (.setCollectTrainingStats ~collect-stats?)))
          [{:master _
            :collect-stats? _}]
          (doto master (.setCollectTrainingStats collect-stats?))
          [{:master (_ :guard seq?)}]
-         `(doto ~master (.setCollectTrainingStats ~collect-stats?))
+         (obj-or-code? as-code? `(doto ~master (.setCollectTrainingStats ~collect-stats?)))
          :else
          (doto master (.setCollectTrainingStats collect-stats?))))
 
@@ -69,14 +73,17 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
    - for now, see: https://deeplearning4j.org/doc/org/deeplearning4j/api/storage/StatsStorageRouter.html
 
   returns master"
-  [& {:keys [master stats-storage-router listeners]
+  [& {:keys [master stats-storage-router listeners as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:master (_ :guard seq?)
            :stats-storage-router (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
-         `(doto ~master (.setListeners ~stats-storage-router ~listeners))
+         (obj-or-code?
+          as-code?
+          `(doto ~master (.setListeners ~stats-storage-router ~listeners)))
          [{:master _
            :stats-storage-router _
            :listeners _}]
@@ -84,7 +91,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
          [{:master (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
-         `(doto ~master (.setListeners ~listeners))
+         (obj-or-code? as-code? `(doto ~master (.setListeners ~listeners)))
          [{:master _
            :listeners _}]
          (doto master (.setListeners listeners))))
@@ -105,12 +112,13 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
    2) org.apache.spark.SparkContext
 
   returns a boolean indicating if the delete was successful"
-  [& {:keys [master spark-context]
+  [& {:keys [master spark-context as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:master (_ :guard seq?)
            :spark-context (_ :guard seq?)}]
-         `(.deleteTempFiles ~master ~spark-context)
+         (obj-or-code? as-code? `(.deleteTempFiles ~master ~spark-context))
          :else
          (.deleteTempFiles master spark-context)))
 
@@ -124,22 +132,24 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
 
   :rdd (javaRDD), the dataset to train on
    - a dataset wrapped in an org.apache.spark.api.java.JavaRDD obj"
-  [& {:keys [spark-mln master rdd]
+  [& {:keys [spark-mln master rdd as-code?]
+      :or {as-code? true}
       :as opts}]
-  (match [opts]
+  (match [(dissoc opts :as-code?)]
          [{:spark-mln (_ :guard seq?)
            :master (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         `(doto ~master (.executeTraining ~spark-mln ~rdd))
+         (obj-or-code? as-code? `(doto ~master (.executeTraining ~spark-mln ~rdd)))
          :else
          (doto master (.executeTraining spark-mln rdd))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn collecting-training-stats?
   "checks to see if spark training stats are being collected"
-  [master]
+  [& {:keys [master as-code?]
+      :or {as-code? true}}]
   (match [master]
          [(_ :guard seq?)]
-         `(.getIsCollectTrainingStats ~master)
+         (obj-or-code? as-code? `(.getIsCollectTrainingStats ~master))
          :else
          (.getIsCollectTrainingStats master)))
