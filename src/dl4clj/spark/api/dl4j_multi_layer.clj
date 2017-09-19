@@ -75,7 +75,7 @@
   [& {:keys [spark-mln rdd average? mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :average? (:or (_ :guard boolean?)
@@ -112,7 +112,7 @@
   [& {:keys [spark-mln rdd labels batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :labels (_ :guard seq?)
@@ -149,7 +149,7 @@
   [& {:keys [spark-mln rdd mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :mini-batch-size (:or (_ :guard number?)
@@ -184,7 +184,7 @@
   [& {:keys [spark-mln rdd threshold-steps mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :threshold-steps (:or (_ :guard number?)
@@ -223,7 +223,7 @@
   [& {:keys [spark-mln rdd threshold-steps mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :threshold-steps (:or (_ :guard number?)
@@ -256,7 +256,7 @@
   [& {:keys [spark-mln pair-rdd batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :pair-rdd (_ :guard seq?)
            :batch-size (:or (_ :guard number?)
@@ -282,6 +282,7 @@
   [& {:keys [spark-mln rdd path-to-data n-epochs]
       :or {n-epochs 10}
       :as opts}]
+  ;; the double ifs here are redundant
   (if (contains? opts :rdd)
     (do (dotimes [n n-epochs]
           (if (contains? opts :rdd)
@@ -299,7 +300,7 @@
   [& {:keys [spark-mln rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
          (obj-or-code? as-code? `(.fitContinuousLabeledPoint ~spark-mln ~rdd))
@@ -313,7 +314,7 @@
   [& {:keys [spark-mln rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
          (obj-or-code? as-code? `(.fitLabeledPoint ~spark-mln ~rdd))
@@ -327,7 +328,7 @@
   [& {:keys [spark-mln rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
          (obj-or-code? as-code? `(.fitPaths ~spark-mln ~rdd))
@@ -345,7 +346,7 @@
   [& {:keys [spark-mln input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
@@ -368,7 +369,7 @@
   [& {:keys [spark-mln rdd include-regularization-terms? batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)
            :include-regularization-terms? (:or (_ :guard boolean?)

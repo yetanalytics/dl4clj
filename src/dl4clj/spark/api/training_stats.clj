@@ -41,7 +41,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats stat-key as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:training-stats (_ :guard seq?)
            :stat-key (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -54,7 +54,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats stat-key as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:training-stats (_ :guard seq?)
            :stat-key (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -75,7 +75,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats other-training-stats as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:training-stats (_ :guard seq?)
            :other-training-stats (_ :guard seq?)}]
          (obj-or-code?
@@ -94,7 +94,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats stat-key-to-include as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:training-stats (_ :guard seq?)
            :stat-key-to-include (:or (_ :guard string?)
                                      (_ :guard seq?))}]
@@ -117,7 +117,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats path spark-context as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:training-stats (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))

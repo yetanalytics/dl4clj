@@ -97,7 +97,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [output-layer full-network-l1 full-network-l2 training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:output-layer (_ :guard seq?)
            :full-network-l1 (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -122,7 +122,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [output-layer full-network-l1 full-network-l2 as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:output-layer (_ :guard seq?)
            :full-network-l1 (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -142,7 +142,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [output-layer labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:output-layer (_ :guard seq?)
            :labels (:or (_ :guard seq?)
                         (_ :guard vector?))}]
@@ -167,7 +167,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [base-pretrain-network features corruption-level as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:base-pretrain-network (_ :guard seq?)
            :features (:or (_ :guard seq?)
                           (_ :guard vector?))
@@ -188,7 +188,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [base-pretrain-network visible as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:base-pretrain-network (_ :guard seq?)
            :visible (:or (_ :guard seq?)
                          (_ :guard vector?))}]
@@ -207,7 +207,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [base-pretrain-network hidden as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:base-pretrain-network (_ :guard seq?)
            :hidden (:or (_ :guard seq?)
                         (_ :guard vector?))}]
@@ -228,7 +228,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [autoencoder layer-output as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:autoencoder (_ :guard seq?)
            :layer-output (:or (_ :guard seq?)
                               (_ :guard vector?))}]
@@ -243,7 +243,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [autoencoder input training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:autoencoder (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))
@@ -266,7 +266,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rbm hidden-input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rbm (_ :guard seq?)
            :hidden-input (:or (_ :guard seq?)
                               (_ :guard vector?))}]
@@ -281,7 +281,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
       :as opts}]
   (assert (contains-many? opts :rbm :visible-input)
           "you must supply a rbm and the visible input")
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rbm (_ :guard seq?)
            :visible-input (:or (_ :guard seq?)
                                (_ :guard vector?))
@@ -308,7 +308,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rbm prop-up-vals as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rbm (_ :guard seq?)
            :prop-up-vals (:or (_ :guard seq?)
                               (_ :guard vector?))}]
@@ -342,7 +342,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [frozen-layer training? training-mode as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:frozen-layer (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
@@ -378,7 +378,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [batch-norm features as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:batch-norm (_ :guard seq?)
            :features (:or (_ :guard seq?)
                           (_ :guard vector?))}]
@@ -399,7 +399,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae param as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :param (:or (_ :guard string?)
                        (_ :guard seq?))}]
@@ -434,7 +434,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae data num-samples as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :data (:or (_ :guard seq?)
                       (_ :guard vector?))
@@ -453,7 +453,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae data num-samples as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :data (:or (_ :guard seq?)
                       (_ :guard vector?))
@@ -477,7 +477,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae latent-space-values as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :latent-space-values (:or (_ :guard seq?)
                                      (_ :guard vector?))}]
@@ -499,7 +499,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae latent-space-values as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :latent-space-values (:or (_ :guard seq?)
                                      (_ :guard vector?))}]
@@ -536,7 +536,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [vae data as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vae (_ :guard seq?)
            :data (:or (_ :guard seq?)
                       (_ :guard vector?))}]
@@ -560,7 +560,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rnn-layer input training? store-last-for-tbptt? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rnn-layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))
@@ -622,7 +622,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rnn-layer state as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rnn-layer (_ :guard seq?)
            :state (_ :guard map?)}]
          (obj-or-code?
@@ -643,7 +643,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rnn-layer state as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rnn-layer (_ :guard seq?)
            :state (_ :guard map?)}]
          (obj-or-code?
@@ -664,7 +664,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rnn-layer input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rnn-layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))}]
@@ -682,7 +682,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   [& {:keys [rnn-layer epsilon tbptt-back-length as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rnn-layer (_ :guard seq?)
            :epsilon (:or (_ :guard seq?)
                          (_ :guard vector?))

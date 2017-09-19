@@ -47,7 +47,7 @@
   [& {:keys [ds idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
@@ -105,7 +105,7 @@
   [& {:keys [ds idx as-list? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :as-list? true}]
          (obj-or-code? as-code? `(.getLabelNamesList ~ds))
@@ -229,7 +229,7 @@
   [& {:keys [ds names as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :names (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~ds (.setColumnNames ~names)))
@@ -243,7 +243,7 @@
   [& {:keys [ds features as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
@@ -260,7 +260,7 @@
   [& {:keys [ds input-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :input-mask (:or (_ :guard vector?)
                             (_ :guard seq?))}]
@@ -277,7 +277,7 @@
   [& {:keys [ds label-names as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :label-names (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~ds (.setLabelNames ~label-names)))
@@ -291,7 +291,7 @@
   [& {:keys [ds labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -308,7 +308,7 @@
   [& {:keys [ds mask-array as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))}]
@@ -323,7 +323,7 @@
   [& {:keys [ds n-labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :n-labels (:or (_ :guard number?)
                           (_ :guard seq?))}]
@@ -336,7 +336,7 @@
   [& {:keys [ds example-idx label-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :example-idx (:or (_ :guard number?)
                              (_ :guard seq?))
@@ -401,7 +401,7 @@
   [& {:keys [ds row idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :row (_ :guard seq?)
            :idx (:or (_ :guard number?)
@@ -418,7 +418,7 @@
   [& {:keys [ds n-examples as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :n-examples (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -442,7 +442,7 @@
   [& {:keys [ds cutoff as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :cutoff (:or (_ :guard number?)
                         (_ :guard seq?))}]
@@ -459,7 +459,7 @@
   [& {:keys [ds scalar as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :scalar (:or (_ :guard number?)
                         (_ :guard seq?))}]
@@ -474,7 +474,7 @@
   [& {:keys [ds label-idxs as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :label-idxs (:or (_ :guard coll?)
                             (_ :guard seq?))}]
@@ -491,7 +491,7 @@
   [& {:keys [ds label-idxs as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :label-idxs (:or (_ :guard coll?)
                             (_ :guard seq?))}]
@@ -529,7 +529,7 @@
   [& {:keys [ds rows cols as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :rows (:or (_ :guard number?)
                       (_ :guard seq?))
@@ -546,7 +546,7 @@
   [& {:keys [ds round-to as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :round-to (:or (_ :guard number?)
                           (_ :guard seq?))}]
@@ -561,7 +561,7 @@
   [& {:keys [ds max-val min-val as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :max-val (:or (_ :guard number?)
                          (_ :guard seq?))
@@ -612,7 +612,7 @@
   [& {:keys [ds percent-train n-holdout seed as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :n-holdout (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -641,7 +641,7 @@
   [& {:keys [ds min-val max-val as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :min-val (:or (_ :guard number?)
                          (_ :guard seq?))
@@ -697,7 +697,7 @@
   [& {:keys [file-path in as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.load (clojure.java.io/as-file ~file-path)))
@@ -713,7 +713,7 @@
   [& {:keys [ds n-samples with-replacement? seed as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -762,7 +762,7 @@
   [& {:keys [ds file-path out as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :out (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~ds (.save ~out)))

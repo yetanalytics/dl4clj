@@ -35,7 +35,7 @@
   [& {:keys [binomial-dist prob as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:binomial-dist (_ :guard seq?)
            :prob (:or (_ :guard seq?)
                       (_ :guard number?))}]
@@ -78,7 +78,7 @@
   [& {:keys [dist mean as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :mean (:or (_ :guard seq?)
                       (_ :guard number?))}]
@@ -95,7 +95,7 @@
   [& {:keys [dist std as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :std (:or (_ :guard seq?)
                      (_ :guard number?))}]
@@ -136,7 +136,7 @@
   [& {:keys [uniform-dist lower as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:uniform-dist (_ :guard seq?)
            :lower (:or (_ :guard seq?)
                        (_ :guard number?))}]
@@ -153,7 +153,7 @@
   [& {:keys [uniform-dist upper as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:uniform-dist (_ :guard seq?)
            :upper (:or (_ :guard seq?)
                        (_ :guard number?))}]

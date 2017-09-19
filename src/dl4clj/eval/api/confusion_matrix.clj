@@ -10,7 +10,7 @@
   [& {:keys [confusion-matrix actual as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:confusion-matrix (_ :guard seq?)
            :actual (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getActualTotal ~confusion-matrix ~actual))
@@ -32,7 +32,7 @@
   [& {:keys [confusion-matrix actual predicted as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:confusion-matrix (_ :guard seq?)
            :actual (_ :guard seq?)
            :predicted (_ :guard seq?)}]
@@ -45,7 +45,7 @@
   [& {:keys [confusion-matrix predicted as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:confusion-matrix (_ :guard seq?)
            :predicted (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getPredictedTotal ~confusion-matrix ~predicted))

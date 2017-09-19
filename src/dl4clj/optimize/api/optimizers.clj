@@ -69,7 +69,7 @@
   [& {:keys [back-track tolerance as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:back-track (_ :guard seq?)
            :tolerance (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -86,7 +86,7 @@
   [& {:keys [back-track max-iterations as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:back-track (_ :guard seq?)
            :max-iterations (:or (_ :guard number?)
                                 (_ :guard seq?))}]
@@ -103,7 +103,7 @@
   [& {:keys [back-track tolerance as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:back-track (_ :guard seq?)
            :tolerance (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -122,7 +122,7 @@
   [& {:keys [back-track step-max as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:back-track (_ :guard seq?)
            :step-max (:or (_ :guard number?)
                           (_ :guard seq?))}]

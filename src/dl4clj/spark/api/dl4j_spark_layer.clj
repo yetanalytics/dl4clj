@@ -27,7 +27,7 @@
   [& {:keys [spark-layer spark-context rdd path label-idx record-reader as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-layer (_ :guard seq?)
            :spark-context (_ :guard seq?)
            :rdd (_ :guard seq?)}]
@@ -60,7 +60,7 @@
   [& {:keys [spark-layer rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-layer (_ :guard seq?)
            :rdd (_ :guard seq?)}]
          (obj-or-code? as-code? `(.fitDataSet ~spark-layer ~rdd))
@@ -80,7 +80,7 @@
   [& {:keys [spark-layer spark-data as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-layer (_ :guard seq?)
            :spark-data (:or (_ :guard vector?)
                             (_ :guard seq?))}]

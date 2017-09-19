@@ -9,6 +9,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingHook.ht
 
 
 ;; come back to this now that 0.9.0 is a thing
+;; update everything else first then start the new investigation
 (defn post-update!
   "A hook method for post update
 

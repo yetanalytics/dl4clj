@@ -11,7 +11,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
   [& {:keys [roc file-path as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
@@ -27,7 +27,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
   [& {:keys [roc class-labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :class-labels (_ :guard seq?)}]
          (obj-or-code?

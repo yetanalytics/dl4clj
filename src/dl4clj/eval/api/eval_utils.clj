@@ -12,7 +12,7 @@
   [& {:keys [labels predicted output-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:labels (:or (_ :guard vector?)
                         (_ :guard seq?))
            :predicted (:or (_ :guard vector?)

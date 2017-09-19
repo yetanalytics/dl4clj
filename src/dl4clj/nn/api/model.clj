@@ -47,7 +47,7 @@
   [& {:keys [model param as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :param (:or (_ :guard string?)
                        (_ :guard seq?))}]
@@ -82,7 +82,7 @@
   [& {:keys [model backwards? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :backwards (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
@@ -102,7 +102,7 @@
   [& {:keys [model backward-only? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :backward-only (:or (_ :guard boolean?)
                                (_ :guard seq?))}]
@@ -121,7 +121,7 @@
   [& {:keys [model backprop-params-only? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :backprop-params-only? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
@@ -143,7 +143,7 @@
   [& {:keys [model accum as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :accum (:or (_ :guard number?)
                        (_ :guard seq?))}]
@@ -160,7 +160,7 @@
   [& {:keys [model conf as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :conf (_ :guard seq?)}]
          (obj-or-code?
@@ -176,7 +176,7 @@
   [& {:keys [model listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :listeners _}]
          (obj-or-code?
@@ -196,7 +196,7 @@
   [& {:keys [model k v as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :k (:or (_ :guard string?)
                    (_ :guard seq?))
@@ -215,7 +215,7 @@
   [& {:keys [model params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :params (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -232,7 +232,7 @@
   [& {:keys [model param-table-map as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :param-table-map (:or (_ :guard map?)
                                  (_ :guard seq?))}]
@@ -276,7 +276,7 @@
              examples label-idxs as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -366,7 +366,7 @@
   [& {:keys [model params clone-param-array? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :params _ ;; need to double check but belive it should be vec-or-matrix->indarray
            :clone-param-array? (:or (_ :guard boolean?)
@@ -384,7 +384,7 @@
   [& {:keys [model input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
@@ -414,7 +414,7 @@
       :or {return-model? false
            as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :dataset (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
@@ -471,7 +471,7 @@
   [& {:keys [model gradient param-type as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :gradient (:or (_ :guard vector?)
                           (_ :guard seq?))

@@ -12,7 +12,7 @@
   [& {:keys [nn-conf var-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -24,7 +24,7 @@
   [& {:keys [nn-conf var-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -36,7 +36,7 @@
   [& {:keys [nn-conf var-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -48,7 +48,7 @@
   [& {:keys [nn-conf copy? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :copy? (:or (_ :guard boolean?)
                        (_ :guard seq?))}]
@@ -70,7 +70,7 @@
   [& {:keys [nn-conf var-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))}]
@@ -85,7 +85,7 @@
   [& {:keys [nn-conf var-name rate as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))
@@ -107,7 +107,7 @@
   [& {:keys [nn-conf var-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:nn-conf (_ :guard seq?)
            :var-name (:or (_ :guard string?)
                           (_ :guard seq?))}]

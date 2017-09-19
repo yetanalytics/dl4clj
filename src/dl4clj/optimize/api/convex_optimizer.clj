@@ -72,7 +72,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   [& {:keys [optim batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:optim (_ :guard seq?)
            :batch-size (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -90,7 +90,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   [& {:keys [optim listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:optim (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
@@ -107,7 +107,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
   [& {:keys [optim updater as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:optim (_ :guard seq?)
            :updater (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~optim (.setUpdater ~updater)))

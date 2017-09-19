@@ -30,7 +30,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [worker mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:worker (_ :guard seq?)
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getFinalResult ~worker ~mln))
@@ -44,7 +44,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [worker mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:worker (_ :guard seq?)
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getFinalResultWithStats ~worker ~mln))
@@ -94,7 +94,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [worker training-hook as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:worker (_ :guard seq?)
            :training-hook (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~worker (.addHook ~training-hook)))
@@ -108,7 +108,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [worker training-hook as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:worker (_ :guard seq?)
            :training-hook (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~worker (.removeHook ~training-hook)))
@@ -128,7 +128,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [data-set mln is-last? worker as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:data-set (_ :guard seq?)
            :mln (_ :guard seq?)
            :is-last? (:or (_ :guard boolean?)
@@ -153,7 +153,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   [& {:keys [data-set mln is-last? worker as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:worker (_ :guard seq?)
            :data-set (_ :guard seq?)
            :mln (_ :guard seq?)

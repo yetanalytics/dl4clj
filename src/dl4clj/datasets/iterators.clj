@@ -63,18 +63,18 @@
              :record-reader _}]
            `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx
                                           ~n-labels ~max-n-batches ~regression?)
-           [{:record-reader _ :batch-size _ :label-idx _
-             :n-possible-labels _ :max-num-batches _}]
-           `(RecordReaderDataSetIterator.
-             ~rr ~batch-size ~label-idx ~n-labels ~max-n-batches)
-           [{:record-reader _ :batch-size _ :label-idx-from _
-             :label-idx-to _ :regression? _}]
-           `(RecordReaderDataSetIterator.
-             ~rr ~batch-size ~l-idx-from ~l-idx-to ~regression?)
            [{:writeable-converter _ :batch-size _ :label-idx _
              :n-possible-labels _  :regression? _ :record-reader _}]
            `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx
                                           ~n-labels ~regression?)
+           [{:record-reader _ :batch-size _ :label-idx-from _
+             :label-idx-to _ :regression? _}]
+           `(RecordReaderDataSetIterator.
+             ~rr ~batch-size ~l-idx-from ~l-idx-to ~regression?)
+           [{:record-reader _ :batch-size _ :label-idx _
+             :n-possible-labels _ :max-num-batches _}]
+           `(RecordReaderDataSetIterator.
+             ~rr ~batch-size ~label-idx ~n-labels ~max-n-batches)
            [{:writeable-converter _ :batch-size _ :label-idx _
              :n-possible-labels _  :record-reader _}]
            `(RecordReaderDataSetIterator. ~rr ~converter ~batch-size ~label-idx ~n-labels)
@@ -106,13 +106,13 @@
              :n-possible-labels _ :regression? _}]
            `(SequenceRecordReaderDataSetIterator.
              ~features-reader ~labels-reader ~m-batch-size ~n-labels ~regression?)
-           [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
-           `(SequenceRecordReaderDataSetIterator.
-             ~features-reader ~labels-reader ~m-batch-size ~n-labels)
            [{:record-reader _ :mini-batch-size _ :n-possible-labels _
              :label-idx _ :regression? _}]
            `(SequenceRecordReaderDataSetIterator.
              ~rr ~m-batch-size ~n-labels ~label-idx ~regression?)
+           [{:labels-reader _ :features-reader _ :mini-batch-size _ :n-possible-labels _}]
+           `(SequenceRecordReaderDataSetIterator.
+             ~features-reader ~labels-reader ~m-batch-size ~n-labels)
            [{:record-reader _ :mini-batch-size _ :n-possible-labels _ :label-idx _}]
            `(SequenceRecordReaderDataSetIterator.
              ~rr ~m-batch-size ~n-labels ~label-idx))))
@@ -239,12 +239,12 @@
     (match [config]
            [{:n-epochs _ :iter _ :que-size _}]
            `(MultipleEpochsIterator. ~n-epochs ~iter ~q-size)
+           [{:iter _ :que-size _ :total-iterations _}]
+           `(MultipleEpochsIterator. ~iter ~q-size ~t-iterations)
            [{:n-epochs _ :iter _}]
            `(MultipleEpochsIterator. ~n-epochs ~iter)
            [{:n-epochs _ :dataset _}]
            `(MultipleEpochsIterator. ~n-epochs ~ds)
-           [{:iter _ :que-size _ :total-iterations _}]
-           `(MultipleEpochsIterator. ~iter ~q-size ~t-iterations)
            [{:iter _ :total-iterations _}]
            `(MultipleEpochsIterator. ~iter ~t-iterations))))
 
@@ -269,14 +269,14 @@
          labels :labels
          ds-iter :iter} config]
     (match [config]
-           [{:iter _ :labels _}]
-           `(ExistingDataSetIterator. ~ds-iter ~labels)
-           [{:iter _}]
-           `(ExistingDataSetIterator. ~ds-iter)
            [{:dataset _ :total-examples _ :n-features _ :n-labels _}]
            `(ExistingDataSetIterator. ~iterable ~n-examples ~n-features ~n-labels)
            [{:dataset _ :labels _}]
            `(ExistingDataSetIterator. ~iterable ~labels)
+           [{:iter _ :labels _}]
+           `(ExistingDataSetIterator. ~ds-iter ~labels)
+           [{:iter _}]
+           `(ExistingDataSetIterator. ~ds-iter)
            [{:dataset _}]
            `(ExistingDataSetIterator. ~iterable))))
 

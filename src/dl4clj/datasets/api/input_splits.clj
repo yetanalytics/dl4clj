@@ -25,7 +25,7 @@
   [& {:keys [path-filter paths as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:path-filter (_ :guard seq?)
            :paths (:or (_ :guard coll?)
                        (_ :guard seq?))}]
@@ -55,7 +55,7 @@
   [& {:keys [label-generator path as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:label-generator (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))}]
@@ -122,7 +122,7 @@
   [& {:keys [split in as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:split (_ :guard seq?)
            :in (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~split (.readFields ~in)))
@@ -133,7 +133,7 @@
   "Serialize the fields of this object to out."
   [& {:keys [split out-put-path as-code?]
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:split (_ :guard seq?)
            :out-put-path (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~split (.write ~out-put-path)))
@@ -159,7 +159,7 @@
   [& {:keys [split path-filter weights as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:split (_ :guard seq?)
            :path-filter (_ :guard seq?)
            :weights (:or (_ :guard coll?)
@@ -251,7 +251,7 @@
   [& {:keys [input-stream-input-split is as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:input-stream-input-split (_ :guard seq?)
            :is (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~input-stream-input-split (.setIs ~is)))

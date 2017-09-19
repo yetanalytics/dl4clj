@@ -18,7 +18,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
   [& {:keys [score-calculator mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:score-calculator (_ :guard seq?)
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.calculateScore ~score-calculator ~mln))

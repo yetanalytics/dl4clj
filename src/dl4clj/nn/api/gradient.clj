@@ -19,7 +19,7 @@
   [& {:keys [grad variable as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:grad (_ :guard seq?)
            :variable (:or (_ :guard seq?)
                           (_ :guard string?))}]
@@ -32,7 +32,7 @@
   [& {:keys [grad variable as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:grad (_ :guard seq?)
            :variable (:or (_ :guard seq?)
                           (_ :guard string?))}]
@@ -45,7 +45,7 @@
   [& {:keys [grad order as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:grad (_ :guard seq?) :order (_ :guard seq?)}]
          (obj-or-code? as-code? `(.gradient ~grad ~order))
          [{:grad _ :order _}]
@@ -70,7 +70,7 @@
   [& {:keys [grad variable new-gradient flattening-order as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:grad (_ :guard seq?)
            :variable (:or (_ :guard seq?)
                           (_ :guard string?))

@@ -3,8 +3,8 @@
             RecordReaderDataSetIterator
             SequenceRecordReaderDataSetIterator]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator])
-  (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+  :require [clojure.core.match :refer [match]]
+  [dl4clj.utils :refer [obj-or-code?]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -65,7 +65,7 @@
   [& {:keys [iter n as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:iter (_ :guard seq?)
            :n (:or (_ :guard number?)
                    (_ :guard seq?))}]
@@ -122,7 +122,7 @@
   [& {:keys [iter meta-data as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:iter (_ :guard seq?)
            :meta-data (_ :guard seq?)}]
          (obj-or-code? as-code? `(.loadFromMetaData ~iter ~meta-data))
@@ -186,7 +186,7 @@
   [& {:keys [iter pre-processor as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:iter (_ :guard seq?)
            :pre-processor (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.setPreProcessor ~pre-processor)))

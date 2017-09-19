@@ -10,7 +10,7 @@
   [& {:keys [pp output mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pp (_ :guard seq?)
            :output (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -27,7 +27,7 @@
   [& {:keys [pp input mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pp (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -43,7 +43,7 @@
   [& {:keys [pp mask-array current-mask-state mini-batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pp (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))
@@ -71,7 +71,7 @@
   [& {:keys [pp input-type as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pp (_ :guard seq?)
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))}]

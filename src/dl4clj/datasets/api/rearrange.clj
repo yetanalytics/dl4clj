@@ -3,7 +3,6 @@
   (:require [clojure.core.match :refer [match]]
             [dl4clj.utils :refer [obj-or-code?]]))
 
-
 ;; untested
 (defn get-new-destination
   "sets a new destination for saving a rearranged dataset
@@ -16,7 +15,7 @@
   [& {:keys [unstructured-formatter file-path train? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:unstructured-formatter (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))
@@ -37,7 +36,7 @@
   [& {:keys [unstructured-formatter file-path as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:unstructured-formatter (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
@@ -86,7 +85,7 @@
   [& {:keys [unstructured-formatter file-path as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:unstructured-formatter (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]

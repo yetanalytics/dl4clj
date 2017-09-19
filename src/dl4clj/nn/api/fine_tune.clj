@@ -17,7 +17,7 @@
   [& {:keys [fine-tune-conf nn-conf as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:fine-tune-conf (_ :guard seq?)
            :nn-conf (_ :guard seq?)}]
          (obj-or-code? as-code? `(.appliedNeuralNetConfiguration ~fine-tune-conf ~nn-conf))
@@ -65,7 +65,7 @@
   [& {:keys [helper data-set as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:helper (_ :guard seq?)
            :data-set (_ :guard seq?)}]
          (obj-or-code? as-code? `(.featurize ~helper ~data-set))
@@ -89,7 +89,7 @@
   [& {:keys [helper data-set iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:helper (_ :guard seq?) :data-set (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~helper (.fitFeaturized ~data-set)))
          [{:helper _ :data-set _}]
@@ -113,7 +113,7 @@
   [& {:keys [helper featurized-input array-of-featurized-input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:helper (_ :guard seq?)
            :array-of-featurized-input _}]
          (obj-or-code?

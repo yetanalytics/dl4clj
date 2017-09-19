@@ -12,7 +12,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
             DataSetExportFunction
             BatchDataSetsFunction]
            [org.deeplearning4j.spark.data.shuffle SplitDataSetExamplesPairFlatMapFunction])
-  (:require [dl4clj.utils :refer [generic-dispatching-fn]]
+  (:require [dl4clj.utils :refer [generic-dispatching-fn obj-or-code?]]
+            [clojure.core.match :refer [match]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
 ;; need to update to default to code
@@ -27,38 +28,38 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   (let [conf (:batch-and-export-ds opts)
         {batch-size :batch-size
          path :export-path} conf]
-    (BatchAndExportDataSetsFunction. batch-size path)))
+    `(BatchAndExportDataSetsFunction. ~batch-size ~path)))
 
 (defmethod ds-fns :batch-and-export-multi-ds [opts]
   (let [conf (:batch-and-export-multi-ds opts)
         {batch-size :batch-size
          path :export-path} conf]
-    (BatchAndExportMultiDataSetsFunction. batch-size path)))
+    `(BatchAndExportMultiDataSetsFunction. ~batch-size ~path)))
 
 (defmethod ds-fns :batch-ds [opts]
   (let [mbs (:batch-size (:batch-ds opts))]
-    (BatchDataSetsFunction. mbs)))
+    `(BatchDataSetsFunction. ~mbs)))
 
 (defmethod ds-fns :export-ds [opts]
   (let [p (:export-path (:export-ds opts))]
-    (DataSetExportFunction. (java.net.URI/create p))))
+    `(DataSetExportFunction. (java.net.URI/create ~p))))
 
 (defmethod ds-fns :export-multi-ds [opts]
   (let [p (:export-path (:export-multi-ds opts))]
-    (MultiDataSetExportFunction. (java.net.URI/create p))))
+    `(MultiDataSetExportFunction. (java.net.URI/create ~p))))
 
 (defmethod ds-fns :split-ds [opts]
-  (SplitDataSetsFunction.))
+  `(SplitDataSetsFunction.))
 
 (defmethod ds-fns :split-ds-rand [opts]
   (let [max-k (:max-key-idx (:split-ds-rand opts))]
-    (SplitDataSetExamplesPairFlatMapFunction. max-k)))
+    `(SplitDataSetExamplesPairFlatMapFunction. ~max-k)))
 
 (defmethod ds-fns :path-to-ds [opts]
-  (PathToDataSetFunction.))
+  `(PathToDataSetFunction.))
 
 (defmethod ds-fns :path-to-multi-ds [opts]
-  (PathToMultiDataSetFunction.))
+  `(PathToMultiDataSetFunction.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns
@@ -78,9 +79,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :batch-size (int), the size of the batches
 
   :export-path (str), the directory you want to export to"
-  [& {:keys [batch-size export-path]
+  [& {:keys [batch-size export-path as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:batch-and-export-ds opts}))
+  (let [code (ds-fns {:batch-and-export-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-batch-and-export-multi-ds-fn
   "Function used with (map-partition-with-idx RDD<MultiDataSet>)
@@ -96,9 +99,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   :batch-size (int), the size of the batches
 
   :export-path (str), the directory you want to export to"
-  [& {:keys [batch-size export-path]
+  [& {:keys [batch-size export-path as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:batch-and-export-multi-ds opts}))
+  (let [code (ds-fns {:batch-and-export-multi-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-batch-ds-fn
   "Function used to batch DataSet objects together.
@@ -109,9 +114,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Usage: (def single-ds-ex (map-partitions (new-batch-ds-fn n)))
 
   :batch-size (int), the size of the batches"
-  [& {:keys [batch-size]
+  [& {:keys [batch-size as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:batch-ds opts}))
+  (let [code (ds-fns {:batch-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-ds-export-fn
   "A function to save DataSet objects to disk/HDFS.
@@ -122,9 +129,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   dataset_ and ending with .bin.
 
   :export-path (str), the place to export to"
-  [& {:keys [export-path]
+  [& {:keys [export-path as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:export-ds opts}))
+  (let [code (ds-fns {:export-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-multi-ds-export-fn
   "A function to save MultiDataSet objects to disk/HDFS.
@@ -135,31 +144,39 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   dataset_ and ending with .bin.
 
   :export-path (str), the place to export to"
-  [& {:keys [export-path]
+  [& {:keys [export-path as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:export-multi-ds opts}))
+  (let [code (ds-fns {:export-multi-ds opts})]
+    (obj-or-code? as-code? code)))
 
 (defn new-path-to-ds-fn
   "Simple function used to load DataSets from a given Path (str) to a DataSet object
     - (serialized with (save-ds DataSet))
     - not yet implemented at time of writing doc string
    - i.e., RDD<String> to RDD<DataSet>"
-  []
-  (ds-fns {:path-to-ds {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (ds-fns {:path-to-ds {}})]
+    (obj-or-code? as-code? code)))
 
 (defn new-path-to-multi-ds-fn
   "Simple function used to load MultiDataSets from a given Path (str) to a MultiDataSet object
     - (serialized with (save-ds MultiDataSet))
     - not yet implemented at time of writing doc string
    - i.e., RDD<String> to RDD<MultiDataSet>"
-  []
-  (ds-fns {:path-to-multi-ds {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (ds-fns {:path-to-multi-ds {}})]
+    (obj-or-code? as-code? code)))
 
 (defn new-split-ds-fn
   "Take an existing DataSet object, and split it into multiple DataSet objects
   with one example in each"
-  []
-  (ds-fns {:split-ds {}}))
+  [& {:keys [as-code?]
+      :or {as-code? true}}]
+  (let [code (ds-fns {:split-ds {}})]
+    (obj-or-code? as-code? code)))
 
 (defn new-split-ds-with-appended-key
   "splits each example in a DataSet object into its own DataSet.
@@ -167,9 +184,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   Also adds a random key (int) in the range 0 to (- max-key-idx 1).
 
   :max-key-idx (int), used for adding random keys to the new datasets"
-  [& {:keys [max-key-idx]
+  [& {:keys [max-key-idx as-code?]
+      :or {as-code? true}
       :as opts}]
-  (ds-fns {:split-ds-rand opts}))
+  (let [code (ds-fns {:split-ds-rand opts})]
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; calling fns
@@ -190,11 +209,30 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :iter (dataset iterator), the iterator which goes through a dataset
    - see: dl4clj.datasets.iterators"
-  [& {:keys [the-fn partition-idx iter]}]
-  (let [ds-iter (reset-iterator! iter)]
-   (if (map? the-fn)
-    (.call (ds-fns the-fn) (int partition-idx) ds-iter)
-    (.call the-fn (int partition-idx) ds-iter))))
+  [& {:keys [the-fn partition-idx iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [(dissoc opts :as-code?)]
+         [{:the-fn (_ :guard map?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) (int ~partition-idx) ~iter))
+         [{:the-fn (_ :guard map?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :iter _}]
+         (.call (eval (ds-fns the-fn)) (int partition-idx) (reset-iterator! iter))
+         [{:the-fn (_ :guard seq?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn (int ~partition-idx) ~iter))
+         [{:the-fn _
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :iter _}]
+         (.call the-fn (int partition-idx) (reset-iterator! iter))))
 
 (defn call-batch-and-export-multi-ds-fn!
   "uses the object created by new-batch-and-export-multi-ds-fn

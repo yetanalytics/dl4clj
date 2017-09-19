@@ -35,7 +35,7 @@
              layer-class as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :kernel-size (:or (_ :guard vector?)
@@ -85,7 +85,7 @@
   [& {:keys [input-type layer-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :layer-name (:or (_ :guard string?)
@@ -112,7 +112,7 @@
   [& {:keys [input-type layer-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:input-type (:or (_ :guard map?)
                             (_ :guard seq?))
            :layer-name (:or (_ :guard string?)

@@ -17,7 +17,7 @@
   [& {:keys [mln ds as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~mln (.initialize ~ds)))
@@ -40,7 +40,7 @@
   [& {:keys [mln iter labels top-n as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :labels-list (:or (_ :guard vector?)
@@ -71,7 +71,7 @@
   [& {:keys [mln iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.evaluateRegression ~mln ~iter))
@@ -90,7 +90,7 @@
   [& {:keys [mln iter roc-threshold-steps as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :roc-threshold-steps (:or (_ :guard number?)
@@ -110,7 +110,7 @@
   [& {:keys [mln iter roc-threshold-steps as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :roc-threshold-steps (:or (_ :guard number?)
@@ -136,7 +136,7 @@
   [& {:keys [mln dataset add-regularization-terms? iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :dataset (_ :guard seq?)
            :add-regularization-terms? (:or (_ :guard boolean?)
@@ -176,7 +176,7 @@
              training-mode mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -242,7 +242,7 @@
   [& {:keys [mln input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
@@ -265,7 +265,7 @@
   [& {:keys [mln iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.pretrain ~mln ~iter))
@@ -286,7 +286,7 @@
   [& {:keys [mln layer-idx iter features as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -330,7 +330,7 @@
   [& {:keys [mln input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
@@ -352,7 +352,7 @@
   [& {:keys [mln layer-output layer-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layer-output (:or (_ :guard vector?)
                               (_ :guard seq?))
@@ -387,7 +387,7 @@
   [& {:keys [mln from to input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :from (:or (_ :guard number?)
                       (_ :guard seq?))
@@ -415,7 +415,7 @@
   [& {:keys [mln current-layer-idx input training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :current-layer-idx (:or (_ :guard number?)
                                    (_ :guard seq?))
@@ -454,7 +454,7 @@
   [& {:keys [mln training? input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))
@@ -500,7 +500,7 @@
   [& {:keys [mln train? input features-mask labels-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -621,7 +621,7 @@
   [& {:keys [mln layer-idx layer-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -763,7 +763,7 @@
   [& {:keys [mln input training? store-last-for-tbptt? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -796,7 +796,7 @@
   [& {:keys [mln layer-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -815,7 +815,7 @@
   [& {:keys [mln layer-idx state as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -837,7 +837,7 @@
   [& {:keys [mln input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
@@ -857,7 +857,7 @@
   [& {:keys [mln labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -878,7 +878,7 @@
   [& {:keys [mln layers as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :layers _}]
          (obj-or-code?
@@ -904,7 +904,7 @@
   [& {:keys [mln multi-layer-conf as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :multi-layer-conf (_ :guard seq?)}]
          (obj-or-code?
@@ -922,7 +922,7 @@
   [& {:keys [mln mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :mask (:or (_ :guard vector?)
                       (_ :guard seq?))}]
@@ -945,7 +945,7 @@
   [& {:keys [mln params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :params (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -966,7 +966,7 @@
   [& {:keys [mln other-mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :other-mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~mln (.update ~other-mln)))
@@ -998,7 +998,7 @@
   [& {:keys [mln current-layer-idx input training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:mln (_ :guard seq?)
            :current-layer-idx (:or (_ :guard number?)
                                    (_ :guard seq?))

@@ -67,7 +67,7 @@
   [& {:keys [layer param-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
@@ -80,7 +80,7 @@
   [& {:keys [layer param-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
@@ -93,7 +93,7 @@
   [& {:keys [layer param-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
@@ -113,7 +113,7 @@
   [& {:keys [layer layer-idx input-type as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -133,7 +133,7 @@
   [& {:keys [layer input-type as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))}]
@@ -146,7 +146,7 @@
   [& {:keys [layer param-name as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :param-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
@@ -164,7 +164,7 @@
   [& {:keys [layer index as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :index (:or (_ :guard number?)
                        (_ :guard seq?))}]
@@ -181,7 +181,7 @@
   [& {:keys [layer input as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))}]
@@ -199,7 +199,7 @@
   [& {:keys [layer size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :size (:or (_ :guard number?)
                       (_ :guard seq?))}]
@@ -217,7 +217,7 @@
   [& {:keys [layer listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :listeners _}]
          (obj-or-code?
@@ -234,7 +234,7 @@
   [& {:keys [layer mask-array as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))}]
@@ -260,7 +260,7 @@
   [& {:keys [layer input-type override? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :input-type (:or (_ :guard map?)
                             (_ :guard seq?))
@@ -304,7 +304,7 @@
              layer-param-view initialize-params?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :conf (_ :guard seq?)
            :listener _
@@ -343,7 +343,7 @@
   [& {:keys [model training? input training-mode as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -400,7 +400,7 @@
   [& {:keys [layer input training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -436,7 +436,7 @@
   [& {:keys [layer mask-array mask-state batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :mask-array (:or (_ :guard vector?)
                             (_ :guard seq?))
@@ -460,7 +460,7 @@
   [& {:keys [layer epsilon as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :epsilon (:or (_ :guard vector?)
                          (_ :guard seq?))}]
@@ -473,7 +473,7 @@
   [& {:keys [layer backprop-only-params? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :backprop-only-params? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
@@ -486,7 +486,7 @@
   [& {:keys [layer backprop-only-params? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :backprop-only-params? (:or (_ :guard boolean?)
                                        (_ :guard seq?))}]
@@ -518,7 +518,7 @@
   [& {:keys [layer input training? training-mode as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))

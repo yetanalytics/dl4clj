@@ -26,23 +26,11 @@
   (match [opts]
          [{:early-stopping-conf (_ :guard seq?)
            :mln (_ :guard seq?)
-           :iter (_ :guard seq?)
-           :as-code? (:or true nil)}]
-         `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter)
-         [{:early-stopping-conf (_ :guard seq?)
-           :mln (_ :guard seq?)
-           :iter (_ :guard seq?)
-           :as-code? false}]
-         (obj-or-code? false `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter))
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter))
          [{:early-stopping-conf _
            :mln _
-           :iter _
-           :as-code? (:or true nil)}]
-         (throw (Exception. "You can not provide objects as arguments and have code returned"))
-         [{:early-stopping-conf _
-           :mln _
-           :iter _
-           :as-code? false}]
+           :iter _}]
          (EarlyStoppingTrainer. early-stopping-conf mln iter)))
 
 (defn new-spark-early-stopping-trainer
@@ -80,68 +68,34 @@
            :early-stopping-conf (_ :guard seq?)
            :mln (_ :guard seq?)
            :training-rdd (_ :guard seq?)
-           :early-stopping-listener (_ :guard seq?)
-           :as-code? (:or true nil)}]
-         `(SparkEarlyStoppingTrainer.
+           :early-stopping-listener (_ :guard seq?)}]
+         (obj-or-code?
+          as-code?
+          `(SparkEarlyStoppingTrainer.
            ~spark-context ~training-master ~early-stopping-conf
-           ~mln ~training-rdd ~early-stopping-listener)
-         [{:spark-context (_ :guard seq?)
-           :training-master (_ :guard seq?)
-           :early-stopping-conf (_ :guard seq?)
-           :mln (_ :guard seq?)
-           :training-rdd (_ :guard seq?)
-           :as-code? (:or true nil)}]
-         `(SparkEarlyStoppingTrainer.
-           ~spark-context ~training-master ~early-stopping-conf
-           ~mln ~training-rdd)
-         [{:spark-context (_ :guard seq?)
-           :training-master (_ :guard seq?)
-           :early-stopping-conf (_ :guard seq?)
-           :mln (_ :guard seq?)
-           :training-rdd (_ :guard seq?)
-           :early-stopping-listener (_ :guard seq?)
-           :as-code? false}]
-         (obj-or-code? false `(SparkEarlyStoppingTrainer.
-                               ~spark-context ~training-master ~early-stopping-conf
-                               ~mln ~training-rdd ~early-stopping-listener))
-         [{:spark-context (_ :guard seq?)
-           :training-master (_ :guard seq?)
-           :early-stopping-conf (_ :guard seq?)
-           :mln (_ :guard seq?)
-           :training-rdd (_ :guard seq?)
-           :as-code? false}]
-         (obj-or-code? false `(SparkEarlyStoppingTrainer.
-                               ~spark-context ~training-master ~early-stopping-conf
-                               ~mln ~training-rdd))
+           ~mln ~training-rdd ~early-stopping-listener))
          [{:spark-context _
            :training-master _
            :early-stopping-conf _
            :mln _
            :training-rdd _
-           :early-stopping-listener _
-           :as-code? (:or true nil)}]
-         (throw (Exception. "You can not provide objects as arguments and have code returned"))
-         [{:spark-context _
-           :training-master _
-           :early-stopping-conf _
-           :mln _
-           :training-rdd _
-           :as-code? (:or true nil)}]
-         (throw (Exception. "You can not provide objects as arguments and have code returned"))
-         [{:spark-context _
-           :training-master _
-           :early-stopping-conf _
-           :mln _
-           :training-rdd _
-           :early-stopping-listener _
-           :as-code? false}]
+           :early-stopping-listener _}]
          (SparkEarlyStoppingTrainer. spark-context training-master early-stopping-conf
                                      mln training-rdd early-stopping-listener)
+         [{:spark-context (_ :guard seq?)
+           :training-master (_ :guard seq?)
+           :early-stopping-conf (_ :guard seq?)
+           :mln (_ :guard seq?)
+           :training-rdd (_ :guard seq?)}]
+         (obj-or-code?
+          as-code?
+          `(SparkEarlyStoppingTrainer.
+           ~spark-context ~training-master ~early-stopping-conf
+           ~mln ~training-rdd))
          [{:spark-context _
            :training-master _
            :early-stopping-conf _
            :mln _
-           :training-rdd _
-           :as-code? false}]
+           :training-rdd _}]
          (SparkEarlyStoppingTrainer. spark-context training-master early-stopping-conf
                                      mln training-rdd)))

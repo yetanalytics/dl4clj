@@ -35,8 +35,7 @@
   [& {:keys [binarize? train? shuffle? seed as-code?]
       :or {as-code? true}
       :as opts}]
-  (let [opts* (dissoc opts :as-code?)
-        code (match [opts*]
+  (let [code (match [opts]
                     [{:binarize? (:or (_ :guard boolean?)
                                       (_ :guard seq?))
                       :train? (:or (_ :guard boolean?)

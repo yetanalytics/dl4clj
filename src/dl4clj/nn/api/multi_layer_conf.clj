@@ -55,7 +55,7 @@
   [& {:keys [multi-layer-conf layer-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:multi-layer-conf (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -69,7 +69,7 @@
   [& {:keys [multi-layer-conf layer-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:multi-layer-conf (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]

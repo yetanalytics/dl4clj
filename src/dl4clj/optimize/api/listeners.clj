@@ -28,7 +28,7 @@
   [& {:keys [listener file delim output-stream as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:listener (_ :guard seq?)
            :file (:or (_ :guard string?)
                       (_ :guard seq?))

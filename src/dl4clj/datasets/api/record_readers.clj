@@ -80,7 +80,7 @@
   [& {:keys [rr listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
@@ -119,7 +119,7 @@
   [& {:keys [rr uri data-in-stream as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :uri (:or (_ :guard string?)
                      (_ :guard seq?))
@@ -141,7 +141,7 @@
   [& {:keys [rr input-split conf as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :input-split (_ :guard seq?)
            :conf (_ :guard seq?)}]
@@ -164,7 +164,7 @@
   [& {:keys [rr record-meta-data as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :record-meta-data (_ :guard seq?)}]
          (obj-or-code? as-code? `(.loadFromMetaData ~rr ~record-meta-data))
@@ -180,7 +180,7 @@
   [& {:keys [rr record-meta-data as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :record-meta-data (_ :guard seq?)}]
          (obj-or-code? as-code? `(.loadSequenceFromMetaData ~rr ~record-meta-data))
@@ -204,7 +204,7 @@
   [& {:keys [rr uri data-in-stream as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:rr (_ :guard seq?)
            :uri (:or (_ :guard string?)
                      (_ :guard seq?))

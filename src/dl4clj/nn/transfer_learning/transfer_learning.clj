@@ -178,7 +178,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
       :as opts}]
   (let [b (if tlb
             tlb
-           `(TransferLearning$Builder.  (if (is-init-called? :mln ~mln)
+           `(TransferLearning$Builder. (if (is-init-called? :mln ~mln)
                                         ~mln
                                         (init! :model ~mln))))
 

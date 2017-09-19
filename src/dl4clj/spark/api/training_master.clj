@@ -29,7 +29,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [master spark-mln as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:master (_ :guard seq?)
            :spark-mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getWorkerInstance ~master ~spark-mln))
@@ -49,7 +49,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
       :or {collect-stats? true
            as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:master (_ :guard seq?)
            :collect-stats? (:or (_ :guard boolean?)
                                 (_ :guard seq?))}]
@@ -76,7 +76,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [master stats-storage-router listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:master (_ :guard seq?)
            :stats-storage-router (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
@@ -115,7 +115,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [master spark-context as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:master (_ :guard seq?)
            :spark-context (_ :guard seq?)}]
          (obj-or-code? as-code? `(.deleteTempFiles ~master ~spark-context))
@@ -135,7 +135,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [spark-mln master rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:spark-mln (_ :guard seq?)
            :master (_ :guard seq?)
            :rdd (_ :guard seq?)}]

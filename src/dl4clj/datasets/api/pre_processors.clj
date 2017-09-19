@@ -27,7 +27,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [pre-processor ds as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pre-processor (_ :guard seq?)
            :ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(do (.preProcess ~pre-processor ~ds)
@@ -44,7 +44,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [iter dataset as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:iter (_ :guard seq?)
            :dataset (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.preProcess ~dataset)))
@@ -72,7 +72,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~normalizer (.fit ~iter)))
@@ -86,7 +86,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer fit-labels? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :fit-labels (:or (_ :guard boolean?)
                             (_ :guard seq?))}]
@@ -115,7 +115,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer features features-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -147,7 +147,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer labels labels-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -181,7 +181,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer features features-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -217,7 +217,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [normalizer labels labels-mask as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:normalizer (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -309,7 +309,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [pp files as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:pp (_ :guard seq?)
            :files (:or (_ :guard coll?)
                        (_ :guard seq?))}]
@@ -374,7 +374,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
   [& {:keys [vgg16-pp features as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:vgg16-99 (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]

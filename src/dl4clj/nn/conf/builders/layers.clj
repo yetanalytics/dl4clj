@@ -4,7 +4,7 @@
             [dl4clj.constants :as constants]
             [dl4clj.utils :refer [generic-dispatching-fn builder-fn
                                   replace-map-vals eval-and-build
-                                  obj-or-code?]]
+                                  obj-or-code? contains-many?]]
             [dl4clj.helpers :refer [distribution-helper value-of-helper]]
             [clojure.core.match :refer [match]])
   (:import
@@ -267,8 +267,6 @@
         s `(int-array ~stride)
         p `(int-array ~padding)]
     (match [conf]
-           ;; do i want to add in guards/printlns for notifying the user they screwed up?
-           ;; curently letting anything through and assuming the user provided the correct type of values
            [{:padding _
              :stride _
              :kernel-size _}]
@@ -486,8 +484,6 @@
 ;; user facing fns based on multimethod for documentation purposes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; write specs to check for correct keys given a layer type
-;; update to have mm produce code, user facing determines if obj is created
 (defn activation-layer-builder
   "creates an activation layer with params supplied in opts map.
 

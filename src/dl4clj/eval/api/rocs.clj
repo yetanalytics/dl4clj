@@ -14,7 +14,7 @@
   [& {:keys [roc class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :class-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -37,7 +37,7 @@
   [& {:keys [roc class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :class-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -62,7 +62,7 @@
   [& {:keys [roc class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :class-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -87,7 +87,7 @@
   [& {:keys [roc class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:roc (_ :guard seq?)
            :class-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]

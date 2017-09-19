@@ -20,7 +20,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
   [& {:keys [classifier dataset examples labels as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:classifier (_ :guard seq?)
            :dataset (_ :guard seq?)}]
          (obj-or-code? as-code? `(.f1Score ~classifier ~dataset))
@@ -90,7 +90,7 @@ examples and their labels")))
   [& {:keys [classifier examples as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:classifier (_ :guard seq?) :examples (:or (_ :guard vector?)
                                                       (_ :guard seq?))}]
          (obj-or-code?
@@ -118,7 +118,7 @@ examples and their labels")))
   [& {:keys [classifier examples dataset as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:classifier (_ :guard seq?) :examples (:or (_ :guard vector?)
                                                       (_ :guard seq?))}]
          (obj-or-code? as-code? `(.predict ~classifier (vec-or-matrix->indarray ~examples)))

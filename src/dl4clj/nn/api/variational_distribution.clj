@@ -20,7 +20,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist data-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :data-size (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -40,7 +40,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist features pre-out-dist-params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -67,7 +67,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist pre-out-dist-params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :pre-out-dist-params (:or (_ :guard vector?)
                                      (_ :guard seq?))}]
@@ -87,7 +87,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist pre-out-dist-params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :pre-out-dist-params (:or (_ :guard vector?)
                                      (_ :guard seq?))}]
@@ -110,7 +110,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist features pre-out-dist-params as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -151,7 +151,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [dist features pre-out-dist-params average? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:dist (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
@@ -179,7 +179,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   [& {:keys [composite-dist features reconstruction as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:composite-dist (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))

@@ -15,6 +15,8 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - revist spark for updates
 - add :as-code? arg to all api fns now that they can return code
 - write specs for user facing functions
+  - this is very important, match isnt strict for maps
+  - how I add layer of insurance that what you provide will work as expected or you get a spec error
 - collapse overlapping api namespaces
 
 ## Features

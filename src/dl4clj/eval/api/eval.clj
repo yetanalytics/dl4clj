@@ -27,7 +27,7 @@
              mln features predicted-idx actual-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -123,7 +123,7 @@
   [& {:keys [labels predicted labels-mask evaler as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -167,7 +167,7 @@
   [& {:keys [evaler suppress-warnings? as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :suppress-warnings? (:or (_ :guard boolean?)
                                     (_ :guard seq?))}]
@@ -199,7 +199,7 @@
   [& {:keys [evaler class-label-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
@@ -226,7 +226,7 @@
   [& {:keys [evaler class-label-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
@@ -257,7 +257,7 @@
   [& {:keys [evaler class-label-idx edge-case as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -300,7 +300,7 @@
   [& {:keys [evaler class-label-idx edge-case as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -344,7 +344,7 @@
   [& {:keys [evaler label-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :label-idx (:or (_ :guard number?)
                            (_ :guard seq?))}]
@@ -379,7 +379,7 @@
   [& {:keys [evaler idx-of-predicted-class as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :idx-of-predicted-class (:or (_ :guard number?)
                                         (_ :guard seq?))}]
@@ -405,7 +405,7 @@
   [& {:keys [evaler actual-class-idx predicted-class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :actual-class-idx (:or (_ :guard number?)
                                   (_ :guard seq?))
@@ -423,7 +423,7 @@
   [& {:keys [evaler actual-class-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :actual-class-idx (:or (_ :guard number?)
                                   (_ :guard seq?))}]
@@ -481,7 +481,7 @@
   [& {:keys [evaler class-label-idx edge-case as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -516,7 +516,7 @@
   [& {:keys [evaler class-label-idx edge-case as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))
@@ -580,7 +580,7 @@
   [& {:keys [regression-evaler column-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:regression-evaler (_ :guard seq?)
            :column-idx (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -593,7 +593,7 @@
   [& {:keys [regression-evaler column-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:regression-evaler (_ :guard seq?)
            :column-idx (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -606,7 +606,7 @@
   [& {:keys [regression-evaler column-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:regression-evaler (_ :guard seq?)
            :column-idx (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -619,7 +619,7 @@
   [& {:keys [regression-evaler column-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:regression-evaler (_ :guard seq?)
            :column-idx (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -632,7 +632,7 @@
   [& {:keys [regression-evaler column-idx as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:regression-evaler (_ :guard seq?)
            :column-idx (:or (_ :guard number?)
                             (_ :guard seq?))}]
@@ -651,7 +651,7 @@
   [& {:keys [evaler other-evaler as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:evaler (_ :guard seq?)
            :other-evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~evaler (.merge ~other-evaler)))

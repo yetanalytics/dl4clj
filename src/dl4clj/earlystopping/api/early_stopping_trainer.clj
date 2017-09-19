@@ -35,7 +35,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   [& {:keys [trainer listener as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:trainer (_ :guard seq?)
            :listener (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~trainer (.setListener ~listener)))
@@ -70,7 +70,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
       :or {multi-ds? false
            as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:es-trainer (_ :guard seq?)
            :rdd (_ :guard seq?)
            :multi-ds? true}]
