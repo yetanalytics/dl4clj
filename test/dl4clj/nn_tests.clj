@@ -268,13 +268,13 @@
 
 (deftest default-gradient-test
   (testing "the creation and manipulation of gradients"
-    (let [grad-with-var (eval
-                         (as-code grad/set-gradient-for!
-                                  :grad (gradient/new-default-gradient)
-                                  :variable "foo"
-                                  :new-gradient (as-code
-                                                 indarray-of-zeros
-                                                 :rows 2 :columns 2)))]
+    (let [grad-with-var (grad/set-gradient-for!
+                         :as-code? false
+                         :grad (gradient/new-default-gradient)
+                         :variable "foo"
+                         :new-gradient (indarray-of-zeros
+                                        :as-code? true
+                                        :rows 2 :columns 2))]
       (is (= org.deeplearning4j.nn.gradient.DefaultGradient
              (type (gradient/new-default-gradient :as-code? false))))
       (is (= org.deeplearning4j.nn.gradient.DefaultGradient
@@ -283,7 +283,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (grad/gradient :grad grad-with-var))))
       (is (= java.util.LinkedHashMap
-             (type (grad/gradient-for-variable grad-with-var))))
+             (type (grad/gradient-for-variable :grad grad-with-var))))
       ;; gradient order was not explictly set
       (is (= nil
              (type (grad/flattening-order-for-variables :grad grad-with-var
@@ -297,6 +297,7 @@
 (deftest setting-vals
   (let [parsed-conf (parse-string
                      (multi-layer-conf/to-json
+                      :multi-layer-conf
                       (nn/builder
                        ;; vals for the first layer
                        :default-activation-fn :relu
@@ -919,15 +920,13 @@
                                                                :activation-fn :soft-max
                                                                :weight-init :xavier}}}
                                     :backprop? true
-                                    :pretrain? false
-                                    :as-code? true)
+                                    :pretrain? false)
 
           mln-conf-obj (eval mln-conf-code)
 
           mln-as-code (multi-layer-network/new-multi-layer-network :conf mln-conf-code)
 
-          mln-from-obj (multi-layer-network/new-multi-layer-network :conf mln-conf-obj
-                                                                    :as-code? false)]
+          mln-from-obj (multi-layer-network/new-multi-layer-network :conf mln-conf-obj)]
       (is (= '(org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
                (.build
                 (doto
@@ -974,6 +973,40 @@
              mln-as-code))
       (is (= (type mln-from-obj) (type (eval mln-as-code)))))))
 
+
+(mln/output
+ :mln
+ (mln/initialize!
+  :mln
+  (multi-layer-network/new-multi-layer-network
+   :conf
+   (nn/builder :seed 123
+               :optimization-algo :stochastic-gradient-descent
+               :iterations 1
+               :default-learning-rate 0.006
+               :default-updater :nesterovs
+               :default-momentum 0.9
+               :regularization? true
+               :default-l2 1e-4
+               :build? true
+               :default-gradient-normalization :renormalize-l2-per-layer
+               :layers {0 (layer/dense-layer-builder
+                           :n-in 784
+                           :n-out 1000
+                           :layer-name "first layer"
+                           :activation-fn :relu
+                           :weight-init :xavier)
+                        1 {:output-layer {:n-in 1000
+                                          :n-out 10
+                                          :layer-name "second layer"
+                                          :activation-fn :soft-max
+                                          :weight-init :xavier}}}
+               :backprop? true
+               :pretrain? false
+               :as-code? false))
+  :ds (new-mnist-ds :as-code? false))
+ :input (get-features :ds (get-example :ds (new-mnist-ds :as-code? false) :idx 0)))
+
 (deftest multi-layer-network-method-test
   (testing "multi layer network methods"
     (let [mln-conf (nn/builder :seed 123
@@ -1000,10 +1033,10 @@
                                :backprop? true
                                :pretrain? false
                                :as-code? false)
-          mln (multi-layer-network/new-multi-layer-network :conf mln-conf :as-code? false)
+          mln (multi-layer-network/new-multi-layer-network :conf mln-conf)
           init-mln (mln/initialize! :mln mln :ds (new-mnist-ds :as-code? false))
           mnist-iter (new-mnist-data-set-iterator :batch-size 128 :train? true :seed 123 :as-code? false)
-          input (get-features (get-example :ds (new-mnist-ds :as-code? false) :idx 0))
+          input (get-features :ds (get-example :ds (new-mnist-ds :as-code? false) :idx 0))
           eval (new-classification-evaler :n-classes 10 :as-code? false)
           init-no-ds (model/init! :model mln)
           evaled (mln/evaluate-classification :mln init-no-ds :iter mnist-iter)
@@ -1031,7 +1064,7 @@
                     :input (mln/activate-from-prev-layer
                             :current-layer-idx 0 :mln mln :input input :training? true)))))
       (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-             (type (mln/clear-layer-mask-arrays! mln))))
+             (type (mln/clear-layer-mask-arrays! :mln mln))))
       (is (= java.util.ArrayList
              (type (mln/compute-z :mln init-mln :training? true :input input))))
       (is (= java.util.ArrayList
@@ -1051,29 +1084,30 @@
              (type (mln/feed-forward :mln init-mln))))
       (is (= java.util.ArrayList (type (mln/feed-forward-to-layer :mln init-mln :layer-idx 0 :train? true))))
       (is (= java.util.ArrayList (type (mln/feed-forward-to-layer :mln init-mln :layer-idx 0 :input input))))
-      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration (type (mln/get-default-config init-mln))))
-      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (mln/get-input init-mln))))
-      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-labels init-mln))))
+      (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
+             (type (mln/get-default-config :mln init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (mln/get-input :mln init-mln))))
+      (is (= org.nd4j.linalg.cpu.nativecpu.NDArray (type (get-labels :this init-mln))))
       (is (= org.deeplearning4j.nn.layers.feedforward.dense.DenseLayer
              (type (mln/get-layer :mln init-mln :layer-idx 0))))
-      (is (= ["first layer" "second layer"] (mln/get-layer-names mln)))
+      (is (= ["first layer" "second layer"] (mln/get-layer-names :mln mln)))
       (is (= (type (array-of :data [] :java-type org.deeplearning4j.nn.api.Layer))
-             (type (mln/get-layers init-mln))))
+             (type (mln/get-layers :mln init-mln))))
       (is (= org.deeplearning4j.nn.conf.MultiLayerConfiguration
-             (type (mln/get-layer-wise-config init-mln))))
+             (type (mln/get-layer-wise-config :mln init-mln))))
       ;; we never set a mask
-      (is (= nil (mln/get-mask init-mln)))
-      (is (= 2 (mln/get-n-layers init-mln)))
-      (is (= org.deeplearning4j.nn.layers.OutputLayer (type (mln/get-output-layer init-mln))))
-      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (mln/get-updater init-mln))))
+      (is (= nil (mln/get-mask :mln init-mln)))
+      (is (= 2 (mln/get-n-layers :mln init-mln)))
+      (is (= org.deeplearning4j.nn.layers.OutputLayer (type (mln/get-output-layer :mln init-mln))))
+      (is (= org.deeplearning4j.nn.updater.MultiLayerUpdater (type (mln/get-updater :mln init-mln))))
       (println "\n example summary of a Multi Layer Network \n")
       (is (= (type mln) (type (mln/initialize-layers! :mln mln :input input))))
-      (is (true? (mln/is-init-called? mln)))
+      (is (true? (mln/is-init-called? :mln mln)))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (mln/output :mln init-mln :input input))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (mln/output :mln init-no-ds :iter mnist-iter))))
-      (is (= (type mln) (type (mln/print-config mln))))
+      (is (= (type mln) (type (mln/print-config :mln mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (mln/reconstruct :mln mln
                                 :layer-output (first (mln/feed-forward-to-layer
@@ -1085,7 +1119,7 @@
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (mln/score-examples :mln init-mln :dataset (new-mnist-ds :as-code? false)
                                    :add-regularization-terms? false))))
-      (is (= java.lang.String (type (mln/summary init-mln))))
+      (is (= java.lang.String (type (mln/summary :mln init-mln))))
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
              (type (mln/z-from-prev-layer :mln init-mln :input input
                                           :current-layer-idx 0 :training? true)))))))
@@ -1106,7 +1140,6 @@
                                    :use-drop-connect? false
                                    :default-weight-init :xavier-uniform
                                    :default-gradient-normalization :none
-                                   :as-code? true
                                    :layers {:dense-layer {:n-in 10
                                                           :n-out 100
                                                           :layer-name "some layer"
@@ -1133,7 +1166,6 @@
                                     :default-gradient-normalization :none
                                     :backprop? true
                                     :pretrain? false
-                                    :as-code? true
                                     :layers {0 {:dense-layer {:n-in 784
                                                               :n-out 1000
                                                               :layer-name "first layer"
@@ -1153,10 +1185,10 @@
                     :conf mln-conf-code)
 
           helper (tl-helper/new-helper :mln mln :frozen-til 0 :as-code? false)
-          featurized (featurize :helper helper :data-set
-                                          (get-example :ds (new-mnist-ds :as-code? false)
+          featurized (featurize :helper helper
+                                :data-set (get-example :ds (new-mnist-ds :as-code? false)
                                                        :idx 0))
-          featurized-input (get-features featurized)
+          featurized-input (get-features :ds featurized)
           tlb-code (tl/builder
                     :as-code? true
                     :mln (multi-layer-network/new-multi-layer-network
@@ -1196,12 +1228,13 @@
                (type ft-conf-obj)))
         (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
                (type (applied-to-nn-conf! :fine-tune-conf ft-conf-obj
-                                                         :nn-conf nn-conf-obj))))
+                                          :nn-conf nn-conf-obj))))
         (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration$Builder
-               (type (nn-conf-from-fine-tune-conf :fine-tune-conf ft-conf-obj))))
+               (type (nn-conf-from-fine-tune-conf :fine-tune-conf ft-conf-obj
+                                                  :build? false))))
         (is (= org.deeplearning4j.nn.conf.NeuralNetConfiguration
                (type (nn-conf-from-fine-tune-conf :fine-tune-conf ft-conf-obj
-                                                                 :build? true)))))
+                                                  :build? true)))))
       (testing "dl4clj.nn.transfer-learning.helper"
         (is (= org.deeplearning4j.nn.transferlearning.TransferLearningHelper
                (type (tl-helper/new-helper :mln mln :as-code? false))))
@@ -1213,7 +1246,7 @@
         (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
                (type (output-from-featurized :helper helper :featurized-input featurized-input))))
         (is (= org.deeplearning4j.nn.multilayer.MultiLayerNetwork
-               (type (unfrozen-mln helper)))))
+               (type (unfrozen-mln :helper helper)))))
 
       (testing "dl4clj.nn.transfer-learning.transfer-learning/builder helper fns"
         (is (= '[0 1001 (dl4clj.constants/value-of {:weight-init :xavier-uniform})]
@@ -1276,6 +1309,7 @@
                         (org.deeplearning4j.nn.transferlearning.TransferLearning$Builder.
                          (if
                              (dl4clj.nn.api.multi-layer-network/is-init-called?
+                              :mln
                               (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
                                (.build
                                 (doto
@@ -1336,7 +1370,6 @@
                            (dl4clj.nn.api.model/init!
                             :model
                             (org.deeplearning4j.nn.multilayer.MultiLayerNetwork.
-
                              (.build
                               (doto
                                   (.list
@@ -1404,7 +1437,6 @@
                       (.nOut 10)
                       (.activation (dl4clj.constants/value-of {:activation-fn :tanh}))
                       (.gradientNormalization
-
                        (dl4clj.constants/value-of {:gradient-normalization :none}))
                       (.nIn 10)
                       (.name "5th layer"))))
@@ -1483,6 +1515,7 @@
                       :as-code? false))))
         (is (= ["first layer" "replacement another layer" "replacement second layer"]
                (mln/get-layer-names
+                :mln
                 (tl/builder :tlb tlb-code
                             :fine-tune-conf ft-conf-code
                             :remove-last-n-layers 2
@@ -1500,6 +1533,7 @@
                             :as-code? false))))
         (is (= ["first layer" "another layer"]
                (mln/get-layer-names
+                :mln
                 (tl/builder
                  :mln mln-code
                  :fine-tune-conf ft-conf-code

@@ -463,6 +463,7 @@
                                       :average? true))]
       (is (= org.deeplearning4j.earlystopping.EarlyStoppingResult
              (type (fit-trainer!
+                    :trainer
                     (new-early-stopping-trainer
                             :early-stopping-conf es-conf
                             :mln mln-code

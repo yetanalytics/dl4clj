@@ -109,8 +109,13 @@
 
 (defn get-labels
   "returns labels for various types of objects in dl4j"
-  [this]
-  (.getLabels this))
+  [& {:keys [this as-code?]
+      :or {as-code? true}}]
+  (match [this]
+         [(_ :guard seq?)]
+         (obj-or-code? as-code? `(.getLabels ~this))
+         :else
+         (.getLabels this)))
 
 (defn generic-dispatching-fn
   [opts]

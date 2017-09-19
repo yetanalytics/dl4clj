@@ -27,7 +27,7 @@
          label-idx :label-idx
          n-labels :n-labels
          converter :writable-converter} conf]
-    (let [r (reset-rr! rr)]
+    (let [r (reset-rr! :rr rr)]
      (cond (contains-many? conf :record-reader :label-idx :n-labels :writable-converter)
           (RecordReaderFunction. r label-idx n-labels converter)
           (contains-many? conf :record-reader :label-idx :n-labels)
@@ -118,7 +118,7 @@ the number of classes (labels), and if the ds is for regression or classificatio
          r? :regression?
          l-idx :label-idx
          n-labels :n-labels} conf]
-    (StringToDataSetExportFunction. (java.net.URI/create dir) (reset-rr! rr) batch-size r? l-idx n-labels)))
+    (StringToDataSetExportFunction. (java.net.URI/create dir) (reset-rr! :rr rr) batch-size r? l-idx n-labels)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns, need to document keyword combos in doc string

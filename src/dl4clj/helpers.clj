@@ -45,15 +45,17 @@
 (defn reset-if-empty?!
   "resets an iterator if we are at the end"
   [iter]
-  (if (false? (has-next? iter))
-    (reset-iter! iter)
+  (if (false? (has-next? :iter iter))
+    (reset-iter! :iter iter)
     iter))
 
 (defn reset-iterator!
   "resets an iterator, won't reset a lazy iter but will return it"
   [iter]
-  (try (reset-iter! iter)
+  (try (reset-iter! :iter iter)
        (catch Exception e iter)))
+
+;; figure out if youre going to keep these around
 
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"

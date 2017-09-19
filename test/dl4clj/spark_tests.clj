@@ -86,11 +86,9 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-;; should not need to eval here
-;; need to add the as-code? flag to all api fns
-(def csv-rr (eval (initialize-rr! :rr (new-csv-record-reader)
-                                  :input-split fs
-                                  :as-code? false)))
+(def csv-rr (initialize-rr! :rr (new-csv-record-reader)
+                            :input-split fs
+                            :as-code? false))
 
 (def poker-training-file-byte-size
   (int (.length (clojure.java.io/as-file "resources/poker-spark-test.csv"))))

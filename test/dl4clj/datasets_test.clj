@@ -332,7 +332,7 @@
       (is (= java.lang.Boolean (type (async-supported? :iter iter))))
       (is (= java.lang.Integer (type (get-batch-size :iter iter))))
       (is (= java.lang.Integer (type (get-current-cursor :iter iter))))
-      (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
+      (is (= java.util.ArrayList (type (get-labels :this iter-w-labels))))
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
              (type (set-pre-processor!
                     :iter iter

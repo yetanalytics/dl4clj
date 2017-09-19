@@ -68,11 +68,14 @@
 
 
 (def es-trained (get-best-model-from-result
-                 (fit-trainer! (new-early-stopping-trainer
-                                :early-stopping-conf es-conf
-                                :mln mln-code
-                                :iter mnist-train
-                                :as-code? false))))
+                 :early-stopping-result
+                 (fit-trainer!
+                  :trainer
+                  (new-early-stopping-trainer
+                   :early-stopping-conf es-conf
+                   :mln mln-code
+                   :iter mnist-train
+                   :as-code? false))))
 ;; don't think that will work for binary-rocs, so i will have to look into dl4j unit tests for rocs
 ;; to find a default dataset to use
 
@@ -139,21 +142,21 @@
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
-    (let [data (next-example! (eval mnist-test))
-          features (get-features data)
+    (let [data (next-example! :iter mnist-test :as-code? false)
+          features (get-features :ds data)
           mln-output (output :mln es-trained :input features)
           evalr (new-classification-evaler :as-code? false)
-          labels (get-labels data)
+          labels (get-labels :this data)
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)]
-      (is (= java.lang.Double (type (get-accuracy evaler-with-data))))
+      (is (= java.lang.Double (type (get-accuracy :evaler evaler-with-data))))
       (is (= java.lang.Integer (type
                                 (class-count :evaler evaler-with-data
                                              :class-label-idx 0))))
-      (is (= java.lang.String (type (confusion-to-string evaler-with-data))))
+      (is (= java.lang.String (type (confusion-to-string :evaler evaler-with-data))))
       (is (= java.lang.Double (type (f1 :evaler evaler-with-data :class-label-idx 0))))
       (is (= java.lang.Double (type (f1 :evaler evaler-with-data))))
-      (is (= java.lang.Double (type (false-alarm-rate evaler-with-data))))
+      (is (= java.lang.Double (type (false-alarm-rate :evaler evaler-with-data))))
       (is (= java.lang.Double (type (false-negative-rate :evaler evaler-with-data))))
       (is (= java.lang.Double (type
                                (false-negative-rate :evaler evaler-with-data
@@ -162,7 +165,7 @@
                                (false-negative-rate :evaler evaler-with-data
                                                     :class-label-idx 0
                                                     :edge-case 0.2))))
-      (is (= java.util.HashMap (type (false-negatives evaler-with-data))))
+      (is (= java.util.HashMap (type (false-negatives :evaler evaler-with-data))))
       (is (= java.lang.Double (type (false-positive-rate :evaler evaler-with-data))))
       (is (= java.lang.Double (type
                                (false-positive-rate :evaler evaler-with-data
@@ -171,13 +174,13 @@
                                (false-positive-rate :evaler evaler-with-data
                                                     :class-label-idx 1
                                                     :edge-case 0.3))))
-      (is (= java.util.HashMap (type (false-positives evaler-with-data))))
+      (is (= java.util.HashMap (type (false-positives :evaler evaler-with-data))))
       (is (= java.lang.String (type
                                (get-class-label :evaler evaler-with-data
                                                 :label-idx 1))))
       (is (= org.deeplearning4j.eval.ConfusionMatrix
-             (type (get-confusion-matrix evaler-with-data))))
-      (is (= java.lang.Integer (type (get-num-row-counter evaler-with-data))))
+             (type (get-confusion-matrix :evaler evaler-with-data))))
+      (is (= java.lang.Integer (type (get-num-row-counter :evaler evaler-with-data))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; the network can't make any predictions bc of the low amount of training?
@@ -197,10 +200,10 @@
                                                                      :actual-class-idx 0))))
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-      (is (= java.lang.Integer (type (get-top-n-correct-count evaler-with-data))))
-      (is (= java.lang.Integer (type (get-top-n-total-count evaler-with-data))))
-      (is (= java.util.HashMap (type (total-negatives evaler-with-data))))
-      (is (= java.util.HashMap (type (total-positives evaler-with-data))))
+      (is (= java.lang.Integer (type (get-top-n-correct-count :evaler evaler-with-data))))
+      (is (= java.lang.Integer (type (get-top-n-total-count :evaler evaler-with-data))))
+      (is (= java.util.HashMap (type (total-negatives :evaler evaler-with-data))))
+      (is (= java.util.HashMap (type (total-positives :evaler evaler-with-data))))
       (is (= java.lang.Double (type (get-precision :evaler evaler-with-data))))
       (is (= java.lang.Double (type
                                (get-precision :evaler evaler-with-data
@@ -219,9 +222,9 @@
                                 :evaler evaler-with-data
                                 :class-label-idx 0
                                 :edge-case 0.1))))
-      (is (= java.lang.Double (type (top-n-accuracy evaler-with-data))))
-      (is (= java.util.HashMap (type (true-negatives evaler-with-data))))
-      (is (= java.util.HashMap (type (true-positives evaler-with-data))))
+      (is (= java.lang.Double (type (top-n-accuracy :evaler evaler-with-data))))
+      (is (= java.util.HashMap (type (true-negatives :evaler evaler-with-data))))
+      (is (= java.util.HashMap (type (true-positives :evaler evaler-with-data))))
       (is (= java.lang.String (type (get-stats :evaler evaler-with-data))))
       (is (= java.lang.String (type
                                (get-stats :evaler evaler-with-data
@@ -239,25 +242,25 @@
 
 (deftest confusion-matrix-test
   (testing "the creation and manipulation of confusion matrices"
-    (let [data (next-example! (eval mnist-test))
-          features (get-features data)
+    (let [data (next-example! :iter mnist-test :as-code? false)
+          features (get-features :ds data)
           evalr (new-classification-evaler :as-code? false)
-          labels (get-labels data)
+          labels (get-labels :this data)
           evaler-with-data (eval-classification! :evaler evalr :features features
                                                  :mln es-trained :labels labels)
-          confusion (get-confusion-matrix evaler-with-data)]
+          confusion (get-confusion-matrix :evaler evaler-with-data)]
       (is (= java.lang.Integer (type
                                 (get-actual-total :confusion-matrix confusion
                                                   :actual 1))))
-      (is (= java.util.ArrayList (type (get-classes confusion))))
+      (is (= java.util.ArrayList (type (get-classes :confusion-matrix confusion))))
       (is (= java.lang.Integer (type
                                 (get-count :confusion-matrix confusion
                                            :actual 1 :predicted 2))))
       (is (= java.lang.Integer (type
                                 (get-predicted-total :confusion-matrix confusion
                                                      :predicted 1))))
-      (is (= java.lang.String (type (to-csv confusion))))
-      (is (= java.lang.String (type (to-html confusion)))))))
+      (is (= java.lang.String (type (to-csv :confusion-matrix confusion))))
+      (is (= java.lang.String (type (to-html :confusion-matrix confusion)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
