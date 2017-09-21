@@ -55,8 +55,6 @@
   (try (reset-iter! :iter iter)
        (catch Exception e iter)))
 
-;; figure out if youre going to keep these around
-
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"
   [iter]
