@@ -26,7 +26,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
 (defn get-final-result
   "Get the final result to be returned to the driver"
-  ;; this method can also take a comp graph
   [& {:keys [worker mln as-code?]
       :or {as-code? true}
       :as opts}]

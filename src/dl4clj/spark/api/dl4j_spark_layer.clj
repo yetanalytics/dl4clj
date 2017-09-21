@@ -25,13 +25,13 @@
    to load the spark context text file from path (option 2)
     - either way, the fit layer is returned"
   [& {:keys [spark-layer spark-context rdd path label-idx record-reader as-code?]
-      :or {as-code? true}
+      :or {as-code? false}
       :as opts}]
   (match [opts]
          [{:spark-layer (_ :guard seq?)
            :spark-context (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.fit ~spark-layer ~spark-context ~rdd))
+         (throw (Exception. "spark layer, spark-context and rdds must be objects"))
          [{:spark-layer _
            :spark-context _
            :rdd _}]
@@ -41,14 +41,14 @@
                       (_ :guard seq?))
            :label-idx (:or (_ :guard number?)
                            (_ :guard seq?))
-           record-reader (_ :guard seq?)}]
+           :record-reader (_ :guard seq?)}]
          (obj-or-code?
           as-code?
           `(.fit ~spark-layer ~path (int ~label-idx) ~record-reader))
          [{:spark-layer _
            :path _
            :label-idx _
-           record-reader _}]
+           :record-reader _}]
          (.fit spark-layer path label-idx (reset-rr! record-reader))))
 
 (defn fit-spark-layer-with-ds!
@@ -57,20 +57,19 @@
   :rdd (JavaRDD<org.nd4j.linalg.dataset.DataSet>), a java RDD which contains a data-set
 
   returns the fit layer"
-  [& {:keys [spark-layer rdd as-code?]
-      :or {as-code? true}
+  [& {:keys [spark-layer rdd]
       :as opts}]
   (match [opts]
          [{:spark-layer (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.fitDataSet ~spark-layer ~rdd))
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (.fitDataSet spark-layer rdd)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; remember to look into creation of the spark matrices/vectors
 ;; should have a conversion fn for clj-vector/matrix -> spark-vector/matrix
-(defn predict
+#_(defn predict
   "predict the label for a given feature matrix or vector
 
   :spark-data (matrix or vector). the data to be fed into the layer

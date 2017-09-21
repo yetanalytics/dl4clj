@@ -118,13 +118,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:training-stats (_ :guard seq?)
-           :path (:or (_ :guard string?)
-                      (_ :guard seq?))
-           :spark-context (_ :guard seq?)}]
-         (obj-or-code?
-          as-code?
-          `(doto ~training-stats (.exportStatFiles ~path ~spark-context)))
+         [{:spark-context (_ :guard seq?)}]
+         (throw (Exception. "your spark context should be an object"))
          :else
          (doto training-stats (.exportStatFiles path spark-context))))
 

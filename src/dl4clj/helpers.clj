@@ -60,8 +60,11 @@
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"
   [iter]
-  (when (has-next? iter)
-    (lazy-seq (cons (next-example! iter) (data-from-iter iter)))))
+  (if (seq? iter)
+    `(lazy-seq (cons (next-example! :iter ~iter)
+                     (data-from-iter (doto ~iter .next))))
+   (when (has-next? :iter iter)
+     (lazy-seq (cons (next-example! :iter iter) (data-from-iter iter))))))
 
 (defn new-lazy-iter
   "creates a barebones iterator for a lazy seq"

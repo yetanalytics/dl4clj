@@ -4,6 +4,7 @@
   (:require [dl4clj.constants :refer [value-of]]))
 
 ;; update to work with code
+;; WIP
 
 (defn convert-ds-to-multi-ds
   "Convert a JavaRDD<DataSet> to a JavaRDD<MultiDataSet>"
@@ -135,7 +136,7 @@
 
   returns the spark-context"
   [& {:keys [path the-obj spark-context]}]
-  (.writeObjectToFile path the-obj spark-context)
+  (SparkUtils/writeObjectToFile path the-obj spark-context)
   spark-context)
 
 (defn write-string-to-file!

@@ -13,7 +13,7 @@
             [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
-;; revist, have default to code
+;; WIP, not sure when these would be needed
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method constructor calling

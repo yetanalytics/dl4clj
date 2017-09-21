@@ -4,6 +4,8 @@
            [org.apache.hadoop.mapreduce.lib.input CombineFileSplit]
            [org.apache.hadoop.fs Path]))
 
+;; WIP
+
 (defn create-portable-data-stream
   "Portable datastreams allow DataStreams to be serialized and
    moved around by not creating them until they need to be read"

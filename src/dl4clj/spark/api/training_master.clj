@@ -115,15 +115,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [master spark-context as-code?]
       :or {as-code? true}
       :as opts}]
+  ;; currently gives no indication of success
   (match [opts]
          [{:master (_ :guard seq?)
            :spark-context (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.deleteTempFiles ~master ~spark-context))
+         (obj-or-code? as-code? `(doto ~master (.deleteTempFiles ~spark-context)))
          :else
-         (.deleteTempFiles master spark-context)))
+         (doto master (.deleteTempFiles spark-context))))
 
 (defn execute-training!
-  ;; this prob isnt core
   "Train the SparkDl4jMultiLayer with the specified data set
 
   :spark-mln (SparkDl4jmultilayer), the spark representation of a mln
@@ -139,7 +139,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
          [{:spark-mln (_ :guard seq?)
            :master (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(doto ~master (.executeTraining ~spark-mln ~rdd)))
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (doto master (.executeTraining spark-mln rdd))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

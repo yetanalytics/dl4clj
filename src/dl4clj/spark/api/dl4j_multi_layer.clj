@@ -58,7 +58,7 @@
          (.getTrainingMaster spark-mln)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; misc
+;; misc, these need to throw when passed a spark-mln and rdd as code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn spark-calc-score
@@ -72,27 +72,17 @@
 
   :mini-batch-size (int), the size of the mini batches within the rdd
    - should only be supplied when :rdd is a JavaRDD and then still optional"
-  [& {:keys [spark-mln rdd average? mini-batch-size as-code?]
-      :or {as-code? true}
+  [& {:keys [spark-mln rdd average? mini-batch-size]
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :average? (:or (_ :guard boolean?)
-                          (_ :guard seq?))
-           :mini-batch-size (:or (_ :guard number?)
-                                 (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.calculateScore ~spark-mln ~rdd ~average? (int ~mini-batch-size)))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :average? _
            :mini-batch-size _}]
          (.calculateScore spark-mln rdd average? mini-batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :average? (:or (_ :guard boolean?)
-                          (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.calculateScore ~spark-mln ~rdd ~average?))
          [{:spark-mln _
            :rdd _
            :average? _}]
@@ -114,27 +104,17 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :labels (_ :guard seq?)
-           :batch-size (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.evaluate ~spark-mln ~rdd ~labels ~batch-size))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :labels _
            :batch-size _}]
          (.evaluate spark-mln rdd labels batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :labels (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.evaluate ~spark-mln ~rdd ~labels))
          [{:spark-mln _
            :rdd _
            :labels _}]
          (.evaluate spark-mln rdd labels)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.evaluate ~spark-mln ~rdd))
          [{:spark-mln _
            :rdd _}]
          (.evaluate spark-mln rdd)))
@@ -151,21 +131,12 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :mini-batch-size (:or (_ :guard number?)
-                                 (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateRegression ~spark-mln ~rdd (int ~mini-batch-size)))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :mini-batch-size _}]
          (.evaluateRegression spark-mln rdd mini-batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateRegression ~spark-mln ~rdd))
          [{:spark-mln _
            :rdd _}]
          (.evaluateRegression spark-mln rdd)))
@@ -186,24 +157,13 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :threshold-steps (:or (_ :guard number?)
-                                 (_ :guard seq?))
-           :mini-batch-size (:or (_ :guard number?)
-                                 (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateROC ~spark-mln ~rdd (int ~threshold-steps) (int ~mini-batch-size)))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :threshold-steps _
            :mini-batch-size _}]
          (.evaluateROC spark-mln rdd threshold-steps mini-batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateROC ~spark-mln ~rdd))
          [{:spark-mln _
            :rdd _}]
          (.evaluateROC spark-mln rdd)))
@@ -225,24 +185,13 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :threshold-steps (:or (_ :guard number?)
-                                 (_ :guard seq?))
-           :mini-batch-size (:or (_ :guard number?)
-                                 (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateROCMultiClass ~spark-mln ~rdd (int ~threshold-steps) (int ~mini-batch-size)))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :threshold-steps _
            :mini-batch-size _}]
          (.evaluateROCMultiClass spark-mln rdd threshold-steps mini-batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (obj-or-code?
-          as-code?
-          `(.evaluateROCMultiClass ~spark-mln ~rdd))
          [{:spark-mln _
            :rdd _}]
          (.evaluateROCMultiClass spark-mln rdd)))
@@ -258,17 +207,12 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :pair-rdd (_ :guard seq?)
-           :batch-size (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.feedForwardWithKey ~spark-mln ~pair-rdd (int ~batch-size)))
+           :pair-rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (.feedForwardWithKey spark-mln pair-rdd batch-size)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; dont forget about this
 (defn fit-spark-mln!
-  ;; move this to core
   "Fit the supplied model to the supplied dataset
 
   :rdd (JavaRDD<org.nd4j.linalg.dataset.DataSet>) the data
@@ -279,17 +223,34 @@
      each serialized using (save-dataset! DataSet OutputStream)
 
   either :rdd or :path-to-data should be supplied, not both"
-  [& {:keys [spark-mln rdd path-to-data n-epochs]
-      :or {n-epochs 10}
+  [& {:keys [spark-mln rdd path-to-data n-epochs as-code?]
+      :or {n-epochs 10
+           as-code? false}
       :as opts}]
-  ;; the double ifs here are redundant
-  (if (contains? opts :rdd)
-    (do (dotimes [n n-epochs]
-          (if (contains? opts :rdd)
-            (.fit spark-mln rdd)
-            (.fit spark-mln path-to-data)))
-        spark-mln)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (match [opts]
+         [{:spark-mln (_ :guard seq?)
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
+         [{:spark-mln _
+           :rdd _}]
+         (do (dotimes [n n-epochs]
+               (.fit spark-mln rdd))
+             spark-mln)
+         [{:spark-mln (_ :guard seq?)
+           :path-to-data (:or (_ :guard string?)
+                              (_ :guard seq?))}]
+         (obj-or-code?
+          as-code?
+          `(do
+            (dotimes [n ~n-epochs]
+              (.fit ~spark-mln ~path-to-data))
+            ~spark-mln))
+         [{:spark-mln _
+           :path-to-data _}]
+         (do
+          (dotimes [n n-epochs]
+            (.fit spark-mln path-to-data))
+          spark-mln)))
 
 (defn fit-continous-labeled-point!
   "Fits a MultiLayerNetwork using Spark MLLib LabeledPoint instances
@@ -297,13 +258,12 @@
   for regression to the internal DL4J data format and train the model on that
 
   :rdd (JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>) the data"
-  [& {:keys [spark-mln rdd as-code?]
-      :or {as-code? true}
+  [& {:keys [spark-mln rdd]
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.fitContinuousLabeledPoint ~spark-mln ~rdd))
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (.fitContinuousLabeledPoint spark-mln rdd)))
 
@@ -311,13 +271,12 @@
   "Fit a MultiLayerNetwork using Spark MLLib LabeledPoint instances.
 
   :rdd JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>"
-  [& {:keys [spark-mln rdd as-code?]
-      :or {as-code? true}
+  [& {:keys [spark-mln rdd]
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.fitLabeledPoint ~spark-mln ~rdd))
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (.fitLabeledPoint spark-mln rdd)))
 
@@ -331,14 +290,14 @@
   (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (obj-or-code? as-code? `(.fitPaths ~spark-mln ~rdd))
+         (throw (Exception. "spark mlns and rdds must be objects"))
          :else
          (.fitPaths spark-mln rdd)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; remember to look into creation of the spark matrices/vectors
 ;; should have a conversion fn for clj-vector/matrix -> spark-vector/matrix
-(defn predict-spark-mln
+#_(defn predict-spark-mln
   "feed data through the network and get its prediction
 
   :input (matrix or vector) the data to be fed through
@@ -371,26 +330,13 @@
       :as opts}]
   (match [opts]
          [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :include-regularization-terms? (:or (_ :guard boolean?)
-                                               (_ :guard seq?))
-           :batch-size (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(.scoreExamples ~spark-mln ~rdd ~include-regularization-terms? (int ~batch-size)))
+           :rdd (_ :guard seq?)}]
+         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :include-regularization-terms? _
            :batch-size _}]
          (.scoreExamples spark-mln rdd include-regularization-terms? batch-size)
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)
-           :include-regularization-terms? (:or (_ :guard boolean?)
-                                               (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(.scoreExamples ~spark-mln ~rdd ~include-regularization-terms?))
          [{:spark-mln _
            :rdd _
            :include-regularization-terms? _}]

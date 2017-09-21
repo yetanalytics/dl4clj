@@ -16,7 +16,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
             [clojure.core.match :refer [match]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
-;; need to update to default to code
+;; WIP, not sure when these would be needed
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method for constructor calling
@@ -212,7 +212,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
   [& {:keys [the-fn partition-idx iter as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts :as-code?)]
+  (match [opts]
          [{:the-fn (_ :guard map?)
            :partition-idx (:or (_ :guard number?)
                                (_ :guard seq?))
@@ -249,11 +249,34 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :multi-ds-iter (multi-dataset iterator), the iterator which goes through a dataset
    - see: dl4clj.datasets.iterators"
-  [& {:keys [the-fn partition-idx multi-ds-iter]}]
-  (let [mds-iter (reset-iterator! multi-ds-iter)]
-   (if (map? the-fn)
-    (.call (ds-fns the-fn) (int partition-idx) mds-iter)
-    (.call the-fn (int partition-idx) mds-iter))))
+  [& {:keys [the-fn partition-idx multi-ds-iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :multi-ds-iter (_ :guard seq?)}]
+         (obj-or-code?
+          as-code?
+          `(.call ~(ds-fns the-fn) (int ~partition-idx) ~multi-ds-iter))
+         [{:the-fn (_ :guard map?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :multi-ds-iter _}]
+         (.call (eval (ds-fns the-fn))
+                (int partition-idx)
+                (reset-iterator! multi-ds-iter))
+         [{:the-fn (_ :guard seq?)
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :multi-ds-iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn (int ~partition-idx) ~multi-ds-iter))
+         [{:the-fn _
+           :partition-idx (:or (_ :guard number?)
+                               (_ :guard seq?))
+           :multi-ds-iter _}]
+         (.call the-fn (int partition-idx) (reset-iterator! multi-ds-iter))))
 
 (defn call-batch-ds-fn!
   "uses the object created by new-batch-ds-fn
@@ -267,11 +290,22 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :iter, (iterator), an iterator which wraps a dataset you want batched
    - see: dl4clj.datasets.iterators"
-  [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-iterator! iter)]
-   (if (map? the-fn)
-    (.call (ds-fns the-fn) ds-iter)
-    (.call the-fn ds-iter))))
+  [& {:keys [the-fn iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~iter))
+         [{:the-fn (_ :guard map?)
+           :iter _}]
+         (.call (eval (ds-fns the-fn)) (reset-iterator! iter))
+         [{:the-fn (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn ~iter))
+         [{:the-fn _
+           :iter _}]
+         (.call the-fn (reset-iterator! iter))))
 
 (defn call-ds-export-fn!
   "uses the object created by new-ds-export-fn to perform its function
@@ -285,13 +319,22 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    - see: dl4clj.datasets.iterators
 
   returns a map of the export-fn and ds-iter"
-  [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-iterator! iter)]
-   (if (map? the-fn)
-    (do (.call (ds-fns the-fn) ds-iter)
-        {:export-fn the-fn :iter ds-iter})
-    (do (.call the-fn ds-iter)
-        {:export-fn the-fn :iter ds-iter}))))
+  [& {:keys [the-fn iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~iter))
+         [{:the-fn (_ :guard map?)
+           :iter _}]
+         (.call (eval (ds-fns the-fn)) (reset-iterator! iter))
+         [{:the-fn (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn ~iter))
+         [{:the-fn _
+           :iter _}]
+         (.call the-fn (reset-iterator! iter))))
 
 (defn call-multi-ds-export-fn!
   "uses the object created by new-multi-ds-export-fn to perform its function
@@ -305,13 +348,22 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
    - see: dl4clj.datasets.iterators
 
   returns a map of the export-fn and ds-iter"
-  [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-iterator! iter)]
-   (if (map? the-fn)
-    (do (.call (ds-fns the-fn) ds-iter)
-        {:export-fn the-fn :iter ds-iter})
-    (do (.call the-fn ds-iter)
-        {:export-fn the-fn :iter ds-iter}))))
+  [& {:keys [the-fn iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~iter))
+         [{:the-fn (_ :guard map?)
+           :iter _}]
+         (.call (eval (ds-fns the-fn)) (reset-iterator! iter))
+         [{:the-fn (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn ~iter))
+         [{:the-fn _
+           :iter _}]
+         (.call the-fn (reset-iterator! iter))))
 
 (defn call-path-to-ds-fn!
   "uses the object created by new-path-to-ds-fn to perform its function
@@ -324,10 +376,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :path (str), the path to the seralized statsets
    - needs to point at the ds file itself not the directory its in"
-  [& {:keys [the-fn path]}]
-  (if (map? the-fn)
-    (.call (ds-fns the-fn) path)
-    (.call the-fn path)))
+  [& {:keys [the-fn path as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :path (:or (_ :guard string?)
+                      (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~path))
+         [{:the-fn (_ :guard seq?)
+           :path (:or (_ :guard string?)
+                      (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.call ~the-fn ~path))
+         :else
+         (.call the-fn path)))
 
 (defn call-path-to-multi-ds-fn!
   "uses the object created by new-path-to-multi-ds-fn to perform its function
@@ -340,10 +402,20 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :path (str), the path to the seralized statsets
    - needs to point at the ds file itself not the directory its in"
-  [& {:keys [the-fn path]}]
-  (if (map? the-fn)
-    (.call (ds-fns the-fn) path)
-    (.call the-fn path)))
+  [& {:keys [the-fn path as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :path (:or (_ :guard string?)
+                      (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~path))
+         [{:the-fn (_ :guard seq?)
+           :path (:or (_ :guard string?)
+                      (_ :guard seq?))}]
+         (obj-or-code? as-code? `(.call ~the-fn ~path))
+         :else
+         (.call the-fn path)))
 
 (defn call-split-ds-fn!
   "uses the object created by new-split-ds-fn to perform its function
@@ -355,11 +427,22 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
 
   :iter (iterator), an iterator which wraps a dataset you want split
    - see: dl4clj.datasets.iterators"
-  [& {:keys [the-fn iter]}]
-  (let [ds-iter (reset-iterator! iter)]
-   (if (map? the-fn)
-    (.call (ds-fns the-fn) ds-iter)
-    (.call the-fn ds-iter))))
+  [& {:keys [the-fn iter as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~iter))
+         [{:the-fn (_ :guard map?)
+           :iter _}]
+         (.call (eval (ds-fns the-fn)) (reset-iterator! iter))
+         [{:the-fn (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn ~iter))
+         [{:the-fn _
+           :iter _}]
+         (.call the-fn (reset-iterator! iter))))
 
 (defn call-split-ds-with-appended-key!
   "uses the object created by new-split-ds-with-appended-key to perform its function
@@ -371,7 +454,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/data/package-summar
     - config map = {:split-ds-rand {:max-key-idx (int)}}
 
   :ds (data-set), the dataset you want to split"
-  [& {:keys [the-fn ds]}]
-  (if (map? the-fn)
-    (.call (ds-fns the-fn) ds)
-    (.call the-fn ds)))
+  [& {:keys [the-fn ds as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:the-fn (_ :guard map?)
+           :ds (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~(ds-fns the-fn) ~ds))
+         [{:the-fn (_ :guard map?)
+           :ds _}]
+         (.call (eval (ds-fns the-fn)) ds)
+         [{:the-fn (_ :guard seq?)
+           :ds (_ :guard seq?)}]
+         (obj-or-code? as-code? `(.call ~the-fn ~ds))
+         [{:the-fn _
+           :ds _}]
+         (.call the-fn ds)))

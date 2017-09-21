@@ -4,9 +4,9 @@
   (:require [clojure.core.match :refer [match]]
             [dl4clj.utils :refer [obj-or-code?]]))
 
+;; WIP
+
 (defn new-balanced-partitioner
-  ;; dont think this is a user facing fn
-  ;; will be removed in core branch unless tests show otherwise
   "This is a custom partitioner which attempts to keep contiguous elements
   (i.e., those elements originally in the same partition) together much more frequently.
   Furthermore, it is less prone to producing larger or smaller than
