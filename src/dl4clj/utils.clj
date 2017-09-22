@@ -23,6 +23,14 @@
         a `(list ~@args)]
     `(into ~a ~the-fn)))
 
+(defn gensym*
+  "an implementation of gensym with control over the symbol name and number
+
+  see: https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L582"
+  [& {:keys [sym n]
+      :or {n 0}}]
+  (. clojure.lang.Symbol (intern (str sym (str n)))))
+
 ;; look into refactor using list*
 
 (defn multi-arg-helper

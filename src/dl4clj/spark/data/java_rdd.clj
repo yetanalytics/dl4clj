@@ -110,7 +110,6 @@
   :num-slices (int), need to get more familiar with spark lingo to give an accurate desc
    - optional"
   [& {:keys [spark-context data num-slices as-code?]
-      :or {as-code? true}
       :as opts}]
   (match [opts]
          [{:spark-context (_ :guard seq?)}]
@@ -168,8 +167,7 @@
 (defn java-rdd-from-iter
   "given a spark context and an iterator, creates a javaRDD from the
   data in the iterator"
-  [& {:keys [spark-context iter num-slices as-code?]
-      :or {as-code? false}
+  [& {:keys [spark-context iter num-slices]
       :as opts}]
   (match [opts]
          [{:spark-context (_ :guard seq?)}]
@@ -179,14 +177,20 @@
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter iter)
-                      :num-slices num-slices
-                      :as-code? as-code?)
+                      :data (data-from-iter :iter iter :as-code? false)
+                      :num-slices num-slices)
          [{:spark-context _
            :iter _
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter (reset-iterator! iter))
-                      :num-slices num-slices
-                      :as-code? as-code?)))
+                      :data (data-from-iter :iter (reset-iterator! iter))
+                      :num-slices num-slices)
+         [{:spark-context _
+           :iter (_ :guard seq?)}]
+         (parallelize :spark-context spark-context
+                      :data (data-from-iter :iter iter :as-code? false))
+         [{:spark-context _
+           :iter _}]
+         (parallelize :spark-context spark-context
+                      :data (data-from-iter :iter (reset-iterator! iter)))))

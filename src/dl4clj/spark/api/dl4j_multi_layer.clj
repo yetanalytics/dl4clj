@@ -1,7 +1,7 @@
 (ns dl4clj.spark.api.dl4j-multi-layer
   (:import [org.deeplearning4j.spark.impl.multilayer SparkDl4jMultiLayer])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? gensym*]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -239,18 +239,17 @@
          [{:spark-mln (_ :guard seq?)
            :path-to-data (:or (_ :guard string?)
                               (_ :guard seq?))}]
-         (obj-or-code?
-          as-code?
-          `(do
-            (dotimes [n ~n-epochs]
-              (.fit ~spark-mln ~path-to-data))
-            ~spark-mln))
+         (let [n (gensym* :sym "number-of-epochs")]
+           (obj-or-code?
+            as-code?
+            `(do (dotimes [~n ~n-epochs]
+                   (.fit ~spark-mln ~path-to-data))
+                 ~spark-mln)))
          [{:spark-mln _
            :path-to-data _}]
-         (do
-          (dotimes [n n-epochs]
-            (.fit spark-mln path-to-data))
-          spark-mln)))
+         (do (dotimes [n n-epochs]
+               (.fit spark-mln path-to-data))
+             spark-mln)))
 
 (defn fit-continous-labeled-point!
   "Fits a MultiLayerNetwork using Spark MLLib LabeledPoint instances

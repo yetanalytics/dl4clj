@@ -7,6 +7,7 @@
             [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.nn.conf.step-fns :as step-functions]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
+            [dl4clj.utils :refer [obj-or-code?]]
             [clojure.core.match :refer [match]]))
 
 (defn pre-processor-helper
@@ -57,12 +58,15 @@
 
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"
-  [iter]
+  [& {:keys [iter as-code?]
+      :or {as-code? true}}]
   (if (seq? iter)
-    `(lazy-seq (cons (next-example! :iter ~iter)
-                     (data-from-iter (doto ~iter .next))))
+    (obj-or-code?
+     as-code?
+     `(lazy-seq (cons (next-example! :iter ~iter)
+                      (data-from-iter :iter (doto ~iter .next)))))
    (when (has-next? :iter iter)
-     (lazy-seq (cons (next-example! :iter iter) (data-from-iter iter))))))
+     (lazy-seq (cons (next-example! :iter iter) (data-from-iter :iter iter))))))
 
 (defn new-lazy-iter
   "creates a barebones iterator for a lazy seq"
