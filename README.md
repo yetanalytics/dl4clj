@@ -1358,5 +1358,6 @@ Copyright © 2016 Engagor
 
 Distributed under the BSD Clause-2 License as distributed in the file LICENSE at the root of this repository.
 
+![](https://thumbs.gfycat.com/IncompleteAncientJanenschia-size_restricted.gif)
 
 *Drops the mic*
