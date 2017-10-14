@@ -18,8 +18,8 @@
   "returns the default step fn for a type of optimizer
 
   expects the class of the convex optimizer"
-  [& {:keys [convex-optimizer-class as-code?]
-      :or {as-code? true}}]
+  [convex-optimizer-class & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [convex-optimizer-class]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(BaseOptimizer/getDefaultStepFunctionForOptimizer ~convex-optimizer-class))
@@ -28,8 +28,8 @@
 
 (defn get-iteration-count
   "get the number of iterations the model has been through"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(BaseOptimizer/getIterationCount ~model))
@@ -42,8 +42,8 @@
 
 (defn get-max-iterations
   "returns the max number of iterations for the optimizer"
-  [& {:keys [back-track as-code?]
-      :or {as-code? true}}]
+  [back-track & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [back-track]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMaxIterations ~back-track))
@@ -52,8 +52,8 @@
 
 (defn get-step-max
   "returns the max value of the step fn"
-  [& {:keys [back-track as-code?]
-      :or {as-code? true}}]
+  [back-track & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [back-track]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getStepMax ~back-track))

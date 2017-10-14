@@ -7,8 +7,6 @@
             [dl4clj.constants :as enum]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
-;; come back and figure out how to combine with model-api and eval-api
-
 (defn initialize!
   "Sets the input and labels from this dataset
 
@@ -36,7 +34,6 @@
   :labels (coll), a collection of strings (the labels)
 
   :top-n (int), N value for top N accuracy evaluation"
-  ;; returns an evaluation object?
   [& {:keys [mln iter labels top-n as-code?]
       :or {as-code? true}
       :as opts}]
@@ -60,6 +57,8 @@
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter))
+         [{:mln _ :iter (_ :guard seq?)}]
+         (.evaluate mln (eval iter))
          :else
          (.evaluate mln (reset-iterator! iter))))
 
@@ -309,8 +308,8 @@
   "Run SGD based on the given labels
 
   returns the fine tuned model"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .finetune))
@@ -366,8 +365,8 @@
 
 (defn summary
   "String detailing the architecture of the multi-layer-network. (mln)"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.summary ~mln))
@@ -435,8 +434,8 @@
   "Remove the mask arrays from all layers.
 
   returns the multi layer network after the mutation"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .clearLayerMaskArrays))
@@ -472,8 +471,8 @@
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.epsilon ~mln))
@@ -594,8 +593,8 @@
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getDefaultConfiguration ~mln))
@@ -604,8 +603,8 @@
 
 (defn get-input
   "return the input to the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getInput ~mln))
@@ -637,8 +636,8 @@
 
 (defn get-layer-names
   "return a list of the layer names in the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLayerNames ~mln))
@@ -647,8 +646,8 @@
 
 (defn get-layers
   "returns an array of the layers within the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLayers ~mln))
@@ -657,8 +656,8 @@
 
 (defn get-layer-wise-config
   "returns the configuration for the layers in the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLayerWiseConfigurations ~mln))
@@ -667,8 +666,8 @@
 
 (defn get-mask
   "return the mask array used in this mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMask ~mln))
@@ -677,8 +676,8 @@
 
 (defn get-n-layers
   "get the number of layers in the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getnLayers ~mln))
@@ -687,8 +686,8 @@
 
 (defn get-output-layer
   "returns the output layer of the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getOutputLayer ~mln))
@@ -697,8 +696,8 @@
 
 (defn get-updater
   "return the updater used in this mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getUpdater ~mln))
@@ -710,8 +709,8 @@
   sets the appropriate subset in all layers.
 
   - this gets called behind the scene when using fit!"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .initGradientsView))
@@ -720,8 +719,8 @@
 
 (defn get-mln-input
   "returns the input/feature matrix for the model"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.input ~mln))
@@ -730,8 +729,8 @@
 
 (defn is-init-called?
   "was the model initialized"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.isInitCalled ~mln))
@@ -740,8 +739,8 @@
 
 (defn print-config
   "Prints the configuration and returns the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .printConfiguration))
@@ -781,8 +780,8 @@
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .rnnClearPreviousState))
@@ -976,8 +975,8 @@
 (defn update-rnn-state-with-tbptt-state!
   "updates the rnn state to be that of the tbptt state.
   returns the mln."
-  [& {:keys [mln as-code?]
-      :or {as-code? true}}]
+  [mln & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~mln .updateRnnStateWithTBPTTState))

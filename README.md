@@ -7,17 +7,18 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - finish README
   - add in examples using Transfer Learning
   - refine other aspects of the readme
-- finish tests (update to test/show api fns can accept objs or code?)
+- finish tests
   - eval is missing regression tests, roc tests
   - nn-test is missing regression tests
   - spark needs to be updated
   - possibly add more tests to util-tests
 - revist spark for updates
-- add :as-code? arg to all api fns now that they can return code
 - write specs for user facing functions
   - this is very important, match isnt strict for maps
-  - how I add layer of insurance that what you provide will work as expected or you get a spec error
+  - provides 100% certianty of the input -> output flow
+  - check the args as they come in, dispatch once I know its safe, test the pure output
 - collapse overlapping api namespaces
+- set up core use case flows
 
 ## Features
 
@@ -32,10 +33,9 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 ### Features being worked on for current release
 
 - Clustering (testing in progress)
-- Spark training/hosting (not tested, needs refactor)
+- Spark (currently being refactored)
 - Front End (maybe current release, maybe future release. Not sure yet)
 - Version of dl4j is 0.0.8 in this project.  Current dl4j version is 0.0.9
-- API fns passed code can return the result of the method call instead of just code
 - Parallelism
 
 ### Features being worked on for future releases
@@ -84,76 +84,59 @@ With Maven:
 
 ### Things you need to know
 - All functions for creating dl4j objects return code by default
-- All of these functions have an option to return the dl4j object
-  - :as-code? = false
-- This is because all builders require code for creating dl4j objects
+  - All of these functions have an option to return the dl4j object
+    - :as-code? = false
+  - This is because all builders require the code representation of dl4j objects
+    - this requirement is very unlikely to change
 
 - API functions return code when args are provided as code
   - the library makes no assumptions on when you want execution to happen
-  - that is determined by the user by setting the :as-code? flag to false
-  - this allows for chains of method calls to be used within object builders
-    and constructors to set args required by the builders/constructors
-    - otherwise, you would run into "can't embeed object in code" errors
-- when dl4j objects are passed to API functions, the methods are executed
+    - that is determined by the user by setting the :as-code? flag to false
+  - this allows for fns to be passed as args to builders and constructors
 
-### Examples of obj/code duality
+- when dl4j objects are passed to API functions, the return value of the method is returned
+
+### Example of obj/code duality
 
 ``` clojure
 (ns my.ns
-  (:require [dl4clj.nn.conf.builders.nn :as nn]
-            [dl4clj.nn.multilayer.multi-layer-network :refer [new-multi-layer-network]]
-            [dl4clj.nn.api.model :refer [init!]]
-            [dl4clj.nn.api.multi-layer-network :refer [summary]]))
+  (:require [dl4clj.nn.conf.builders.layers :as l]))
 
-;; as code
-(def nn-conf-code
-  (nn/builder
-   :optimization-algo :stochastic-gradient-descent
-   :seed 123 :iterations 1 :regularization? true
-   :default-activation-fn :relu :default-l2 7.5e-6
-   :default-weight-init :xavier :default-learning-rate 0.0015
-   :default-updater :nesterovs :default-momentum 0.98
-   :layers {0 {:dense-layer
-               {:layer-name "example first layer"
-                :n-in 784 :n-out 500}}
-            1 {:dense-layer
-               {:layer-name "example second layer"
-                :n-in 500 :n-out 100}}
-            2 {:output-layer
-               {:n-in 100 :n-out 10
-                :loss-fn :negativeloglikelihood
-                :activation-fn :softmax
-                :layer-name "example output layer"}}}
-   :backprop? true
-   :pretrain? false))
+;; as code (the default)
 
-;; update this once :as-code? is added to all api fns
-(def code-for-string-summary (summary (init! :model (new-multi-layer-network :conf nn-conf-code))))
+(l/dense-layer-builder
+ :activation-fn :relu
+ :learning-rate 0.006
+ :weight-init :xavier
+ :layer-name "example layer"
+ :n-in 10
+ :n-out 1)
 
-;; as a dl4j object
-(def nn-conf
-  (nn/builder
-   :optimization-algo :stochastic-gradient-descent
-   :seed 123 :iterations 1 :regularization? true
-   :default-activation-fn :relu :default-l2 7.5e-6
-   :default-weight-init :xavier :default-learning-rate 0.0015
-   :default-updater :nesterovs :default-momentum 0.98
-   :layers {0 {:dense-layer
-               {:layer-name "example first layer"
-                :n-in 784 :n-out 500}}
-            1 {:dense-layer
-               {:layer-name "example second layer"
-                :n-in 500 :n-out 100}}
-            2 {:output-layer
-               {:n-in 100 :n-out 10
-                :loss-fn :negativeloglikelihood
-                :activation-fn :softmax
-                :layer-name "example output layer"}}}
-   :backprop? true
-   :pretrain? false
-   :as-code? false))
+;; =>
 
-(def string-summary (summary (init! :model (new-multi-layer-network :conf nn-conf-obj))))
+(doto
+ (org.deeplearning4j.nn.conf.layers.DenseLayer$Builder.)
+ (.nOut 1)
+ (.activation (dl4clj.constants/value-of {:activation-fn :relu}))
+ (.weightInit (dl4clj.constants/value-of {:weight-init :xavier}))
+ (.nIn 10)
+ (.name "example layer")
+ (.learningRate 0.006))
+
+;; as an object
+
+(l/dense-layer-builder
+ :activation-fn :relu
+ :learning-rate 0.006
+ :weight-init :xavier
+ :layer-name "example layer"
+ :n-in 10
+ :n-out 1
+ :as-code? false)
+
+;; =>
+
+#object[org.deeplearning4j.nn.conf.layers.DenseLayer 0x69d7d160 "DenseLayer(super=FeedForwardLayer(super=Layer(layerName=example layer, activationFn=relu, weightInit=XAVIER, biasInit=NaN, dist=null, learningRate=0.006, biasLearningRate=NaN, learningRateSchedule=null, momentum=NaN, momentumSchedule=null, l1=NaN, l2=NaN, l1Bias=NaN, l2Bias=NaN, dropOut=NaN, updater=null, rho=NaN, epsilon=NaN, rmsDecay=NaN, adamMeanDecay=NaN, adamVarDecay=NaN, gradientNormalization=null, gradientNormalizationThreshold=NaN), nIn=10, nOut=1))"]
 
 ```
 
@@ -182,11 +165,6 @@ Loading data from a file (here its a csv)
 
 (def file-split (s/new-filesplit :path poker-path))
 
-;; if we look at file split, we see its just code
-;; file-split =>
-;; (org.datavec.api.split.FileSplit.
-;;  (clojure.java.io/as-file "resources/poker-hand-training.csv"))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record readers, (read the records created by the file split)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,43 +172,11 @@ Loading data from a file (here its a csv)
 (def csv-rr (initialize-rr! :rr (rr/new-csv-record-reader :skip-n-lines 0 :delimiter ",")
                                  :input-split file-split))
 
-;; when we look at csv-rr, we see its also just code
-;; csv-rr =>
-;;(clojure.core/doto
-;; (org.datavec.api.records.reader.impl.csv.CSVRecordReader. 0 ",")
-;; (.initialize
-;;  (org.datavec.api.split.FileSplit.
-;;   (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
-
-;; when we evaluate the code, we get the dl4j object
-;; (eval csv-rr)
-;; => #object[org.datavec.api.records.reader.impl.csv.CSVRecordReader 0x4681a3c
-;; org.datavec.api.records.reader.impl.csv.CSVRecordReader@4681a3c]
-
-;; we can also get the object by specifying :as-code? false
-
-(def csv-rr-obj (initialize-rr! :rr (rr/new-csv-record-reader
-                                     :skip-n-lines 0 :delimiter ",")
-                                :input-split file-split
-                                :as-code? false))
-;; csv-rr-obj => #object[org.datavec.api.records.reader.impl.csv.CSVRecordReader
-;; 0xf1b821a org.datavec.api.records.reader.impl.csv.CSVRecordReader@f1b821a]
-
-;; in general:
-;; code representations are used when passed as an arg to fns creating other dl4j objects
-;; the java objects would be used when passed as args to api fns
-
-
 ;; lets look at some data
-(println (next-record! csv-rr-obj))
+(println (next-record! :rr csv-rr :as-code? false))
 ;; => #object[java.util.ArrayList 0x2473e02d [1, 10, 1, 11, 1, 13, 1, 12, 1, 1, 9]]
 ;; this is our first line from the csv
 
-;; next-record! moves the record readers interal cursor
-;; you can manually reset the cursor with reset-rr!
-
-(reset-rr! csv-rr-obj)
-;; will return the reset record reader
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record readers dataset iterators (turn our writables into a dataset)
@@ -241,16 +187,6 @@ Loading data from a file (here its a csv)
                  :batch-size 1
                  :label-idx 10
                  :n-possible-labels 10))
-
-;; again this is just code that contains the code from our previous steps
-;; rr-ds-iter =>
-;; (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-;;  (clojure.core/doto
-;;   (org.datavec.api.records.reader.impl.csv.CSVRecordReader. 0 ",")
-;;   (.initialize
-;;   (org.datavec.api.split.FileSplit.
-;;    (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
-;; 1 10 10)
 
 ;; we use our record reader created above
 ;; we want to see one example per dataset obj returned (:batch-size = 1)
@@ -264,37 +200,18 @@ Loading data from a file (here its a csv)
                        :label-idx -1
                        :n-possible-labels 10))
 
-;; to look at data, we need the java object
-(def rr-ds-iter-obj
-  (ds-iter/new-record-reader-dataset-iterator
-   :record-reader csv-rr
-   :batch-size 1
-   :label-idx 10
-   :n-possible-labels 10
-   :as-code? false))
-
-(def other-rr-ds-iter-obj
-  (ds-iter/new-record-reader-dataset-iterator
-   :record-reader csv-rr
-   :batch-size 1
-   :label-idx -1
-   :n-possible-labels 10
-   :as-code? false))
-
-(str (next-example! rr-ds-iter-obj))
+(str (next-example! :iter rr-ds-iter :as-code? false))
 ;; =>
 ;;===========INPUT===================
 ;;[1.00, 10.00, 1.00, 11.00, 1.00, 13.00, 1.00, 12.00, 1.00, 1.00]
 ;;=================OUTPUT==================
 ;;[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
 
-;; manual reset also works on record-reader-dataset-iterators
-(reset-iter! rr-ds-iter-obj)
 
 ;; and to show that :label-idx = -1 gives us the same output
 
-(= (next-example! (reset-iter! rr-ds-iter-obj))
-   (next-example! (reset-iter! other-rr-ds-iter-obj))) ;; => true
+(= (next-example! :iter rr-ds-iter :as-code? false)
+   (next-example! :iter other-rr-ds-iter :as-code? false)) ;; => true
 
 ```
 
@@ -317,6 +234,9 @@ Loading data from a file (here its a csv)
 ;; INDArray creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+********************************************************************************
+;; update to use keyword args and have as-code? vec-or-matrix->indarray
+********************************************************************************
 ;; can create from a vector
 
 (vec->indarray [1 2 3 4])
@@ -336,26 +256,6 @@ Loading data from a file (here its a csv)
 ;;[[1.00, 2.00, 3.00, 4.00],
 ;; [2.00, 4.00, 6.00, 8.00],
 ;; [10.00, 12.00, 0.00, 0.00]]]
-
-;; these fns are built into all functions which take INDArrays as args
-;; all you will have to do is pass a vector or a matrix
-
-;; this is what is going on
-
-(vec-or-matrix->indarray [1 2 3 4])
-;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x74880372 [1.00, 2.00, 3.00, 4.00]]
-
-(vec-or-matrix->indarray [[1 2 3 4] [5 6 7 8]])
-;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x2b3a89d5
-;; [[1.00, 2.00, 3.00, 4.00],
-;;  [5.00, 6.00, 7.00, 8.00]]]
-
-;; but you still have the option of passing existing NDArrays
-
-(def example-array (vec-or-matrix->indarray [1 2 3 4]))
-
-(vec-or-matrix->indarray example-array)
-;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x607b03b0 [1.00, 2.00, 3.00, 4.00]]
 
 ;; can create an indarray of all zeros with specified shape
 ;; defaults to :rows = 1 :columns = 1
@@ -385,14 +285,29 @@ Loading data from a file (here its a csv)
 ;; all values are greater than 0 but less than 1
 ;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x2f20293b [[0.85, 0.86, 0.13], [0.94, 0.04, 0.36]]]
 
+
+
+;; vec-or-matrix->indarray is built into all functions which require INDArrays
+;; so that you can use clojure data structures
+;; but you still have the option of passing existing INDArrays
+
+(def example-array (vec-or-matrix->indarray [1 2 3 4]))
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x5c44c71f [1.00, 2.00, 3.00, 4.00]]
+
+(vec-or-matrix->indarray example-array)
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x607b03b0 [1.00, 2.00, 3.00, 4.00]]
+
+(vec-or-matrix->indarray (indarray-of-rand :rows 2))
+;; => #object[org.nd4j.linalg.cpu.nativecpu.NDArray 0x49143b08 [0.76, 0.92]]
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ds-with-single-example (new-ds :input [1 2 3 4]
-                                    :output [0.0 1.0 0.0]
-                                    :as-code? false))
-(as-list ds-with-single-example)
+                                    :output [0.0 1.0 0.0]))
+
+(as-list :ds ds-with-single-example :as-code? false)
 ;; =>
 ;; #object[java.util.ArrayList 0x5d703d12
 ;;[===========INPUT===================
@@ -402,10 +317,9 @@ Loading data from a file (here its a csv)
 
 (def ds-with-multiple-examples (new-ds
                                 :input [[1 2 3 4] [2 4 6 8]]
-                                :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]
-                                :as-code? false))
+                                :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
 
-(as-list ds-with-multiple-examples)
+(as-list :ds ds-with-multiple-examples :as-code? false)
 ;; =>
 ;;#object[java.util.ArrayList 0x29c7a9e2
 ;;[===========INPUT===================
@@ -427,12 +341,18 @@ Loading data from a file (here its a csv)
 (new-existing-dataset-iterator :dataset ds-with-multiple-examples-code :labels ["foo" "baz" "foobaz"])
 
 ;; iterator object
-(def training-rr-ds-iter (new-existing-dataset-iterator :dataset ds-with-multiple-examples-code :labels ["foo" "baz" "foobaz"]
-                               :as-code? false))
+(def training-rr-ds-iter
+  (new-existing-dataset-iterator
+   :dataset ds-with-multiple-examples-code
+   :labels ["foo" "baz" "foobaz"]
+   :as-code? false))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set normalization
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+******************************************************************************
+;; update with normalize-iter! from core
+******************************************************************************
 
 (def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor :as-code? false)
                            :iter training-rr-ds-iter))
@@ -444,70 +364,6 @@ Loading data from a file (here its a csv)
 ;; this applies the transformation to all dataset objects in the iterator
 
 ```
-
-#### Layers
-
-Creating Layers for neural network configurations
-
-``` clojure
-(ns my.ns
-  (:require [dl4clj.nn.conf.builders.layers :as l]
-            [dl4clj.nn.conf.distributions :as dist]))
-
-;; returning code
-
-(l/activation-layer-builder :activation-fn :relu :updater :adam :adam-mean-decay 0.2
- :adam-var-decay 0.1 :learning-rate 0.006 :weight-init :distribution
- :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
- :layer-name "example layer" :n-in 10 :n-out 1)
-
-;; =>
-
-'(doto
-  (org.deeplearning4j.nn.conf.layers.ActivationLayer$Builder.)
-  (.nOut 1)
-  (.activation (dl4clj.constants/value-of {:activation-fn :relu}))
-  (.dist
-   (dl4clj.nn.conf.distributions/distribution
-    {:normal {:mean 0, :std 1.0}}))
-  (.weightInit (dl4clj.constants/value-of {:weight-init :distribution}))
-  (.adamVarDecay 0.1)
-  (.nIn 10)
-  (.updater (dl4clj.constants/value-of {:updater :adam}))
-  (.name "example layer")
-  (.learningRate 0.006)
-  (.adamMeanDecay 0.2))
-
-;; returning a java object
-
-(l/activation-layer-builder :activation-fn :relu :updater :adam :adam-mean-decay 0.2
- :adam-var-decay 0.1 :learning-rate 0.006 :weight-init :distribution
- :dist {:normal {:mean 0 :std 1.0}} ;; or (dist/new-normal-distribution :mean 0 :std 1)
- :layer-name "example layer" :n-in 10 :n-out 1 :as-code? false)
-
-;; =>
-
-#object[org.deeplearning4j.nn.conf.layers.ActivationLayer 0x34720508
-"ActivationLayer(super=FeedForwardLayer(super=Layer(layerName=example layer, activationFn=relu, weightInit=DISTRIBUTION, biasInit=NaN, dist=NormalDistribution{mean=0.0, std=1.0}, learningRate=0.006, biasLearningRate=NaN, learningRateSchedule=null, momentum=NaN, momentumSchedule=null, l1=NaN, l2=NaN, l1Bias=NaN, l2Bias=NaN, dropOut=NaN, updater=ADAM, rho=NaN, epsilon=NaN, rmsDecay=NaN, adamMeanDecay=0.2, adamVarDecay=0.1, gradientNormalization=null, gradientNormalizationThreshold=NaN), nIn=10, nOut=1))"]
-
-
-```
-
-Creating Layers for testing input/output relationships
-
-``` clojure
-;; UPDATE ME
-;; should be examples of dl4clj.nn.layer-creation and then the associated api fns and helper fns
-
-```
-ADD EXAMPLES!
-
-There are a lot of utilities for working with Convolutional and Recurrent layers
-- see: dl4clj.nn.conf.layers.input-type-util
-
-And working with any type of layer
-- see: dl4clj.nn.conf.layers.shared-fns
-  - need to revisit this ns. make sure all the language is clear
 
 #### Model configuration
 
@@ -528,7 +384,6 @@ Creating a neural network configuration with singe and multiple layers
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; single layer nn configuration
-;; build? should be set to true
 ;; here we are setting network configuration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -540,7 +395,6 @@ Creating a neural network configuration with singe and multiple layers
             :lr-score-based-decay-rate 0.002
             :regularization? false
             :step-fn :default-step-fn
-            :build? true
             :layers {:dense-layer {:activation-fn :relu
                                    :updater :adam
                                    :adam-mean-decay 0.2
@@ -623,9 +477,11 @@ Creating a neural network configuration with singe and multiple layers
  :use-drop-connect? false
  :lr-score-based-decay-rate 0.002
  :regularization? false
+
  ;; layer defaults
  :default-activation-fn :sigmoid
  :default-weight-init :uniform
+
  ;; the layers
  :layers {0 (l/activation-layer-builder
              :activation-fn :relu
@@ -704,6 +560,7 @@ Multi Layer models
    :as-code? false))
 
 (def multi-layer-network
+*********************** replace with core model-from-conf
   (init! :model (mln/new-multi-layer-network :conf nn-conf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -843,7 +700,7 @@ Multi Layer models
 ;; can get the stats that are printed via fns in the evaluation namespace
 ;; after running eval-model-whole-ds
 
-(get-accuracy evaler-with-stats) ;; => 0.9808
+(get-accuracy :evaler evaler-with-stats) ;; => 0.9808
 
 
 ```
@@ -852,6 +709,7 @@ Multi Layer models
 
 Early Stopping (controlling training)
 - it is recommened you start here when designing models
+UPDATE THIS WITH CORE FNS
 
 ``` clojure
 (ns my.ns
@@ -896,7 +754,7 @@ Early Stopping (controlling training)
    :pretrain? false))
 
 ;; as-code? is true because we need our mln to build our early training trainer
-(def mln (mln/new-multi-layer-network :conf nn-conf :as-code? true))
+(def mln (mln/new-multi-layer-network :conf nn-conf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the training/testing data
@@ -950,7 +808,7 @@ Early Stopping (controlling training)
 ;; set up your score calculator
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def score-calcer (new-ds-loss-calculator :iter train-iter
+(def score-calcer (new-ds-loss-calculator :iter test-iter
                                           :average? true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1034,6 +892,7 @@ How it is done in dl4clj
 - same [workflow](https://deeplearning4j.org/spark#Overview)
   - NOTE: need to verify the spark hosting of trained models
   - NOTE: see if there needs to be updates with the lazy-seq stuffs or iterator reseting
+  - NOTE: update to use more effecient fns
 
 ``` clojure
 (ns my.ns
@@ -1132,60 +991,7 @@ How it is done in dl4clj
 
 (clojure.pprint/pprint (get-stats :evaler eval-obj))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; It is also possible to train single layer models via spark
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def single-layer-model
-  (nn/builder
-   :optimization-algo :stochastic-gradient-descent
-   :default-learning-rate 0.006
-   :build? true
-   :as-code? false
-   :layers (l/dense-layer-builder :n-in 10 :n-out 2 :activation-fn :relu)))
-
-(def spark-layer (new-spark-dl4j-layer :spark-context your-spark-context
-                                       :nn-conf single-layer-model))
-
-(def fitted-spark-layer (fit-spark-layer-with-ds! :rdd our-rdd
-                                                  :spark-layer spark-layer))
-
-;; need to figure out creating these org.apache.spark.mllib.linalg.Matrix or org.apache.spark.mllib.linalg.Vector
-;; needed to call predict
-
-;; also need to figure out JavaRDD<org.nd4j.linalg.dataset.DataSet> -> JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>
-;; this is for single fn call training (fit-spark-layer!...)
 ```
-
-## NOTES
--- MOVE THIS SECTION TO BEFORE EXAMPLES
--- UPDATE DESCRIPTION OF FNS FOUND IN THIS LIBRARY
-
-There are 3 types of arg structures for fns found in this libarary
-- single arg, just pass the arg to the function
-
-- single keyword arg, used when a function can accept either a single arg or no args
-
-- multiple keyword args, used when a function expects many args
-  - the function may expect all args to be supplied
-  - the function may expect cominations of args
-     - different combinations will produce different results
-
- - see function defns to determine how the function behaves
-   - doc strings describe the arg types and in some places the result of various combinations of args
-     - I plan on adding the result of various cominations along with the arg descriptions
-   - there are cases when the function can accept all args or a subset of them
-
-- specs are going to replace the assertions made within the function definitions
-  - eventually all fns will be spec'd
-
-The namespaces contain dl4j user facing functions and functions that are called behind the scene
-- this decision was to allow for future development upon completion of the wrapping
-- this also allows for experimenting and fine grane control over the deeplearning building process
-- look at the dl4j source for a better understanding of the wrapped code
-  - links to the java-docs are in some name spaces and not other
-    - eventually all name spaces will have refrences to the dl4j java docs
-
 ## Terminology
 
 Coming soon
@@ -1198,19 +1004,6 @@ Implement ComputationGraphs and the classes which use them
 - <https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/ComputationGraphConfiguration.html>
 - <https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/package-frame.html>
 - <https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/graph/rnn/package-frame.html>
-
-Storage
-- <https://deeplearning4j.org/doc/org/deeplearning4j/api/storage/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/api/storage/impl/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/api/storage/listener/RoutingIterationListener.html>
-
-AWS
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/dataset/DataSetLoader.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/ec2/Ec2BoxCreator.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/ec2/provision/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/s3/BaseS3.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/s3/reader/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/aws/s3/uploader/S3Uploader.html>
 
 NLP
 - <https://deeplearning4j.org/doc/org/deeplearning4j/bagofwords/vectorizer/package-summary.html>
@@ -1264,38 +1057,6 @@ NLP
 - <https://deeplearning4j.org/doc/org/deeplearning4j/text/tokenization/tokenizerfactory/package-summary.html>
 - <https://deeplearning4j.org/doc/org/deeplearning4j/text/uima/UimaResource.html>
 
-Kuromoji (https://github.com/atilika/kuromoji)
-self-contained and very easy to use Japanese morphological analyzer designed for search
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/buffer/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/compile/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/dict/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/io/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/ipadic/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/ipadic/compile/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/trie/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/util/package-summary.html>
-- <https://deeplearning4j.org/doc/com/atilika/kuromoji/viterbi/package-summary.html>
-
-Keras
-- <https://deeplearning4j.org/doc/org/deeplearning4j/keras/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/nn/modelimport/keras/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/nn/modelimport/keras/layers/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/nn/modelimport/keras/preprocessors/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/nn/modelimport/keras/trainedmodels/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/nn/modelimport/keras/trainedmodels/Utils/package-summary.html>
-
-Berkeley
-- <https://deeplearning4j.org/doc/org/deeplearning4j/berkeley/package-summary.html>
-
-RecordMetaData
-- <https://deeplearning4j.org/doc/org/deeplearning4j/eval/meta/Prediction.html>
-
-MNIST (not sure if necessary)
-- <https://deeplearning4j.org/doc/org/deeplearning4j/datasets/mnist/package-summary.html>
-- <https://deeplearning4j.org/doc/org/deeplearning4j/datasets/mnist/draw/package-summary.html>
-
-
 Parallelism
 - <https://deeplearning4j.org/doc/org/deeplearning4j/parallelism/package-summary.html>
 - <https://deeplearning4j.org/doc/org/deeplearning4j/parallelism/factory/package-summary.html>
@@ -1305,9 +1066,6 @@ Parallelism
 
 TSNE
 - <https://deeplearning4j.org/doc/org/deeplearning4j/plot/package-summary.html>
-
-Utils
-- <https://deeplearning4j.org/doc/org/deeplearning4j/util/package-summary.html>
 
 UI
 - <https://deeplearning4j.org/doc/org/deeplearning4j/ui/activation/PathUpdate.html>

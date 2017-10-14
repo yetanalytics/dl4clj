@@ -5,7 +5,7 @@
 
 (defn fetcher-cursor
   "Direct access to a number represenative of iterating through a dataset"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]
@@ -15,7 +15,7 @@
 
 (defn has-more?
   "returns true if there are more receords left to go through in a dataset"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]
@@ -25,7 +25,7 @@
 
 (defn input-column-length
   "The length of a feature vector for an individual example"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]
@@ -35,7 +35,7 @@
 
 (defn reset-fetcher!
   "Returns the fetcher back to the beginning of the dataset, returns the fetcher"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]
@@ -45,7 +45,7 @@
 
 (defn n-examples-in-ds
   "The total number of examples"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]
@@ -55,7 +55,7 @@
 
 (defn n-outcomes-in-ds
   "The number of labels for a dataset"
-  [& {:keys [fetcher as-code?]
+  [fetcher & {:keys [as-code?]
       :or {as-code? true}}]
   (match [fetcher]
          [(_ :guard seq?)]

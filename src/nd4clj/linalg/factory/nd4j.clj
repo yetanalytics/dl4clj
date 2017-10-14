@@ -11,6 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; move this fns over to an appropriate dl4clj directory
+;; also update to code/obj duality
 
 (defn vec->indarray
   [data]

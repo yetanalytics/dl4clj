@@ -4,7 +4,7 @@
             [dl4clj.constants :refer :all]
             [clojure.core.match :refer [match]]))
 
-;; add tests for helper fns from .helpers
+;; add tests for helper fns from helpers
 
 (deftest util-tests
   (testing "the fns in utils"

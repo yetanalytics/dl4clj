@@ -650,3 +650,177 @@
 
 (println (vec-or-matrix->indarray example-array))
 )
+
+
+
+
+
+
+
+
+;; spark testing
+;; update this to tuse the mnist example
+;; see if you can get same score as regular training
+
+#_(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.builders.nn :as nn-conf]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
+            [dl4clj.spark.masters.param-avg :as master]
+            [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]]
+            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
+            [clojure.core.match :refer [match]]
+            [dl4clj.helpers :refer [data-from-iter]]
+            [dl4clj.nn.training :refer [train-with-spark]]
+            [dl4clj.spark.api.dl4j-multi-layer :refer [fit-spark-mln! eval-classification-spark-mln
+                                                       get-spark-context get-score]]))
+
+#_(def mln-conf
+  (nn-conf/builder
+   :optimization-algo :stochastic-gradient-descent
+   :default-learning-rate 0.006
+   :layers {0 (l/dense-layer-builder :n-in 4 :n-out 2 :activation-fn :relu)
+            1 {:output-layer
+               {:loss-fn :negativeloglikelihood
+                :n-in 2 :n-out 3
+                :activation-fn :soft-max
+                :weight-init :xavier}}}
+   :backprop? true
+   :backprop-type :standard))
+
+#_(def training-master
+  (master/new-parameter-averaging-training-master
+   :build? true :rdd-n-examples 10 :n-workers 3 :averaging-freq 10
+   :batch-size-per-worker 2 :export-dir "resources/spark/master/"
+   :rdd-training-approach :direct :repartition-data :always
+   :repartition-strategy :balanced :seed 1234 :save-updater? true
+   :storage-level :none :as-code? true))
+
+#_(def your-spark-context
+  (new-java-spark-context :app-name "example app" :as-code? true))
+
+#_(def iris-iter (new-iris-data-set-iterator :batch-size 2 :n-examples 10))
+
+#_(def fit-spark-mln (train-with-spark :spark-context your-spark-context
+                                     :mln-conf mln-conf
+                                     :training-master training-master
+                                     :iter iris-iter
+                                     :n-epochs 4
+                                     :as-code? false))
+
+
+#_(get-score :spark-mln fit-spark-mln)
+
+
+;; This buffer is for Clojure experiments and evaluation.
+;; Press C-j to evaluate the last expression.
+;; both ways work, havnt figured out the difference in n-epochs from
+;; what spark is doing
+
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.builders.nn :as nn-conf]
+            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+            [dl4clj.datasets.iterators :refer [new-mnist-data-set-iterator]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
+            [dl4clj.spark.masters.param-avg :as master]
+            [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]]
+            [dl4clj.spark.dl4j-multi-layer :as spark-mln]
+            [clojure.core.match :refer [match]]
+            [dl4clj.helpers :refer [data-from-iter]]
+            [dl4clj.nn.training :refer [train-with-spark]]
+            [dl4clj.spark.api.dl4j-multi-layer :refer [fit-spark-mln! eval-classification-spark-mln
+                                                       get-spark-context get-score]]))
+
+
+(def your-spark-context
+  (new-java-spark-context :app-name "example app" :as-code? true))
+
+(def mln-conf
+  (nn-conf/builder
+   :optimization-algo :stochastic-gradient-descent
+   :iterations 1
+   :default-activation-fn :leaky-relu
+   :default-weight-init :xavier
+   :default-learning-rate 0.02
+   :default-updater :nesterovs
+   :default-momentum 0.9
+   :regularization? true
+   :default-l2 1e-4
+   :layers {0 (l/dense-layer-builder :n-in 784 :n-out 500)
+            1 (l/dense-layer-builder :n-in 500 :n-out 100)
+            2 {:output-layer
+               {:loss-fn :negativeloglikelihood
+                :n-in 100  :n-out 10
+                :activation-fn :soft-max
+                :weight-init :xavier}}}
+   :backprop? true
+   :pretrain? false))
+
+(def training-master
+  (master/new-parameter-averaging-training-master
+   :worker-prefetch-n-batches 2
+   :rdd-n-examples 16
+   :averaging-freq 5
+   :batch-size-per-worker 16
+   :export-dir "resources/spark/master/readme/"
+   :as-code? true))
+
+(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 16 :train? true :seed 12345))
+
+(def test-mnist-iter (new-mnist-data-set-iterator :batch-size 16 :train? false :seed 12345
+                                                  :as-code? false))
+
+(def fit-spark-mln (train-with-spark :spark-context your-spark-context
+                                     :mln-conf mln-conf
+                                     :training-master training-master
+                                     :iter train-mnist-iter
+                                     :n-epochs 2
+                                     :as-code? false))
+;; should be 54 epochs, only got to 51
+;; got similar evaluation stats
+;; lets go again and see what we get
+;; this time 49
+
+;; switching back to loop to see what it gives
+;; got 52
+;; got 54
+
+;; all results are similar
+(defn eval-class-spark
+  [& {:keys [spark-mln iter as-code?]
+      :or {as-code? true}}]
+  (let [sc (get-spark-context :spark-mln spark-mln)
+        rdd (java-rdd-from-iter :spark-context sc :iter iter)]
+    (eval-classification-spark-mln :spark-mln spark-mln :rdd rdd)))
+
+(println (get-stats :evaler (eval-class-spark :spark-mln fit-spark-mln :iter test-mnist-iter)))
+
+
+
+(defn test-loop
+  [n-epochs]
+  (loop [i 0
+         result {}]
+    (cond (not= i n-epochs)
+          (do
+            (println "current at epoch:" i)
+            (recur (inc i)
+                   "foo"))
+          (= i n-epochs)
+          (do
+            (println "training done")
+            result))
+    ))
+(test-loop 2)
+
+(defn test-dotimes
+  [n-epochs]
+ (do
+  (dotimes [n n-epochs]
+    (println (+ 1 n)))
+  (println "done")))
+
+(test-dotimes 2)

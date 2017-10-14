@@ -21,8 +21,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-loss-fn
-  [& {:keys [output-layer as-code?]
-      :or {as-code? true}}]
+  [output-layer & {:keys [as-code?]
+                   :or {as-code? true}}]
   (match [output-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLossFn ~output-layer))
@@ -34,8 +34,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-alpha
-  [& {:keys [center-loss-output-layer as-code?]
-      :or {as-code? true}}]
+  [center-loss-output-layer & {:keys [as-code?]
+                               :or {as-code? true}}]
   (match [center-loss-output-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getAlpha ~center-loss-output-layer))
@@ -43,8 +43,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
          (.getAlpha center-loss-output-layer)))
 
 (defn get-gradient-check
-  [& {:keys [center-loss-output-layer as-code?]
-      :or {as-code? true}}]
+  [center-loss-output-layer & {:keys [as-code?]
+                               :or {as-code? true}}]
   (match [center-loss-output-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getGradientCheck ~center-loss-output-layer))
@@ -52,8 +52,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
          (.getGradientCheck center-loss-output-layer)))
 
 (defn get-lambda
-  [& {:keys [center-loss-output-layer as-code?]
-      :or {as-code? true}}]
+  [center-loss-output-layer & {:keys [as-code?]
+                               :or {as-code? true}}]
   (match [center-loss-output-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLambda ~center-loss-output-layer))
@@ -65,8 +65,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-eps
-  [& {:keys [subsampling-layer as-code?]
-      :or {as-code? true}}]
+  [subsampling-layer & {:keys [as-code?]
+                        :or {as-code? true}}]
   (match [subsampling-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getEps ~subsampling-layer))
@@ -74,8 +74,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
          (.getEps subsampling-layer)))
 
 (defn get-pnorm
-  [& {:keys [subsampling-layer as-code?]
-      :or {as-code? true}}]
+  [subsampling-layer & {:keys [as-code?]
+                        :or {as-code? true}}]
   (match [subsampling-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getPnorm ~subsampling-layer))
@@ -361,8 +361,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
            (.logTestMode (enum/value-of {:layer-training-mode training-mode})))))
 
 (defn get-inside-layer
-  [& {:keys [frozen-layer as-code?]
-      :or {as-code? true}}]
+  [frozen-layer & {:keys [as-code?]
+                   :or {as-code? true}}]
   (match [frozen-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getInsideLayer ~frozen-layer))
@@ -512,8 +512,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 (defn has-loss-fn?
   "Does the reconstruction distribution have a loss function (such as mean squared error)
   or is it a standard probabilistic reconstruction distribution?"
-  [& {:keys [vae as-code?]
-      :or {as-code? true}}]
+  [vae & {:keys [as-code?]
+          :or {as-code? true}}]
   (match [vae]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.hasLossFunction ~vae))
@@ -581,8 +581,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
   tBpttStateMap for rnn-activate-using-stored-state
 
   returns the rnn-layer"
-  [& {:keys [rnn-layer as-code?]
-      :or {as-code? true}}]
+  [rnn-layer & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [rnn-layer]
          [(_ :guard seq?)]
          (obj-or-code?
@@ -596,8 +596,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 (defn rnn-layer-get-prev-state
   "Returns a shallow copy of the RNN stateMap (that contains the stored history
   for use in fns such as rnn-time-step"
-  [& {:keys [rnn-layer as-code?]
-      :or {as-code? true}}]
+  [rnn-layer & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [rnn-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.rnnGetPreviousState ~rnn-layer))
@@ -606,8 +606,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
 
 (defn rnn-get-tbptt-state
   "Get the RNN truncated backpropagations through time (TBPTT) state for the recurrent layer."
-  [& {:keys [rnn-layer as-code?]
-      :or {as-code? true}}]
+  [rnn-layer & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [rnn-layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.rnnGetTBPTTState ~rnn-layer))

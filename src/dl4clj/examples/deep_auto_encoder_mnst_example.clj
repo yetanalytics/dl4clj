@@ -13,6 +13,8 @@
             [dl4clj.nn.conf.builders.builders :as l]
             [dl4clj.examples.example-utils :as u]
             [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]))
+
+;; not tuned but might be worth working on if time
 (comment
   (def num-rows 28)
   (def num-cols 28)

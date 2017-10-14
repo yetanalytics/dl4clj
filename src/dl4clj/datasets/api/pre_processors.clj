@@ -20,6 +20,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
+;; TODO: make pre-processor/normalizer language consistent
+
 (defn pre-process-dataset!
   "Pre process a dataset
 
@@ -57,8 +59,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
 (defn get-normalizer-type
   "Get the enum type of this normalizer"
-  [& {:keys [normalizer as-code?]
-      :or {as-code? true}}]
+  [normalizer & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [normalizer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getType ~normalizer))
@@ -96,8 +98,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 
 (defn normalize-labels?
   "Whether normalization for the labels is also enabled."
-  [& {:keys [normalizer as-code?]
-      :or {as-code? true}}]
+  [normalizer & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [normalizer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.isFitLabel ~normalizer))
@@ -247,8 +249,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-labels-max
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLabelMax ~min-max-pp))
@@ -256,8 +258,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getLabelMax min-max-pp)))
 
 (defn get-labels-min
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLabelMin ~min-max-pp))
@@ -265,8 +267,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getLabelMin min-max-pp)))
 
 (defn get-max
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMax ~min-max-pp))
@@ -274,8 +276,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getMax min-max-pp)))
 
 (defn get-min
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMin ~min-max-pp))
@@ -283,8 +285,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getMin min-max-pp)))
 
 (defn get-target-max
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTargetMax ~min-max-pp))
@@ -292,8 +294,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getTargetMax min-max-pp)))
 
 (defn get-target-min
-  [& {:keys [min-max-pp as-code?]
-      :or {as-code? true}}]
+  [min-max-pp & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [min-max-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTargetMin ~min-max-pp))
@@ -326,8 +328,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-label-std
-  [& {:keys [standardize-pp as-code?]
-      :or {as-code? true}}]
+  [standardize-pp & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [standardize-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLabelStd ~standardize-pp))
@@ -335,8 +337,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getLabelStd standardize-pp)))
 
 (defn get-mean
-  [& {:keys [standardize-pp as-code?]
-      :or {as-code? true}}]
+  [standardize-pp & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [standardize-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMean ~standardize-pp))
@@ -344,8 +346,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getMean standardize-pp)))
 
 (defn get-std
-  [& {:keys [standardize-pp as-code?]
-      :or {as-code? true}}]
+  [standardize-pp & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [standardize-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getStd ~standardize-pp))
@@ -353,8 +355,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (.getStd standardize-pp)))
 
 (defn get-label-mean
-  [& {:keys [standardize-pp as-code?]
-      :or {as-code? true}}]
+  [standardize-pp & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [standardize-pp]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLabelMean ~standardize-pp))

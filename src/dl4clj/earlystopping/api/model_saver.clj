@@ -14,8 +14,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
    an early stopping config
    - see: dl4clj.earlystopping.model-saver and dl4clj.earlystopping.early-stopping-config
    - this fn should be called on the saver object after the early-stopping-trainer has been fit"
-  [& {:keys [saver as-code?]
-      :or {as-code? true}}]
+  [saver & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [saver]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getBestModel ~saver))
@@ -29,8 +29,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/EarlyStoppi
    or a config map for calling model-saver-type
    - see: dl4clj.earlystopping.model-saver
    - this fn should be called on the saver object after the early-stopping-trainer has been fit"
-  [& {:keys [saver as-code?]
-      :or {as-code? true}}]
+  [saver & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [saver]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLatestModel ~saver))

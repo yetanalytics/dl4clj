@@ -1,6 +1,6 @@
 (ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
     dl4clj.nn.multilayer.multi-layer-network
-  (:require [dl4clj.utils :refer [contains-many?]]
+  (:require [dl4clj.utils :refer [contains-many? gensym* obj-or-code?]]
             [dl4clj.constants :as enum]
             [dl4clj.nn.api.model :refer [fit! init!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
@@ -27,7 +27,6 @@
          :else
          (MultiLayerNetwork. conf)))
 
-;; move to core
 (defn train-mln-with-ds-iter!
   "train the supplied multi layer network on the supplied dataset
 
@@ -35,44 +34,34 @@
    - see: dl4clj.datasets.iterators
 
   :n-epochs (int), the number of passes through the dataset"
-  [& {:keys [mln iter n-epochs]}]
-  (dotimes [n n-epochs]
-    (while (has-next? iter)
-      ;; fit handles the iter resetting
-      (fit! :mln mln :iter iter)))
-  mln)
-
-(defn train-mln-with-lazy-seq!
-  "train the supplied multi layer network on the dataset contained within
-   the supplied lazy seq
-
-   :lazy-seq-data (lazy-seq), a lazy-seq of dataset objects
-    - created by data-from-iter in: dl4clj.helpers"
-
-  ;; test this
-  [& {:keys [lazy-seq-data mln n-epochs]}]
-  (dotimes [n n-epochs]
-    (loop [_ mln
-           accum! lazy-seq-data]
-      ;; this could never complete
-      ;; rest always returns a seq
-      (if (not (empty? accum!))
-        (let [data (first accum!)]
-          (recur (fit! :mln mln :data data)
-                 (rest accum!)))
-        mln)))
-
-  #_(dotimes [n n-epochs]
-    ;; look into avoiding creation of lazy iter and just recursively going through
-    ;; lazy seq
-
-    ;; dont know of a more effecient way of doing this
-    ;; you cant reset a lazy-seq-iter so i just make a new one
-    ;; prob why training takes non-neglegible amount of time
-
-
-
-    #_(let [iter (new-lazy-iter lazy-seq-data)]
-      (while (has-next? iter)
-        (let [nxt (next-example! iter)]
-          (fit! :mln mln :data nxt))))))
+  [& {:keys [mln iter n-epochs as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (let [n* (gensym* :sym "n-epochs")
+        mln* (gensym* :sym "mln")]
+    (match [opts]
+           [{:mln (_ :guard seq?)
+             :iter (_ :guard seq?)
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           ;; figure out whats going wrong here
+           (obj-or-code?
+            as-code?
+            `(let [~mln* ~mln]
+               (dotimes [~n* ~n-epochs]
+                 (fit! :mln ~mln* :iter ~iter))
+               ~mln*))
+           [{:mln _
+             :iter (_ :guard seq?)
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           (throw (Exception. "you must provide both the mln and iter as objects or code"))
+           [{:mln (_ :guard seq?)
+             :iter _
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           (throw (Exception. "you must provide both the mln and iter as objects or code"))
+           :else
+           (do (dotimes [n n-epochs]
+                 (fit! :mln mln :iter iter))
+               mln))))

@@ -44,45 +44,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Classifier.html"}
          (assert false "you must supply a classifier and either a dataset or
 examples and their labels")))
 
-;; redundant, covered by fit! in model
-#_(defn fit-classifier!
-  "If dataset-iterator is supplied, trains the classifier based on the dataset-iterator
-  if dataset or examples and labels are supplied, fits the classifier.
-
-  :dataset = a dataset
-
-  :iter (iterator), an iterator for going through a collection of dataset objects
-
-  :examples = INDArray or vector of input data to be classified
-
-  :labels = INDArray or vector of labels for the examples
-
-  Returns the classifier after it has been fit"
-  [& {:keys [classifier dataset iter examples labels]
-      :as opts}]
-  (match [opts]
-         [{:classifier (_ :guard seq?) :dataset (_ :guard seq?)}]
-         `(doto ~classifier (.fit ~dataset))
-         [{:classifier _ :dataset _}]
-         (doto classifier (.fit dataset))
-         [{:classifier (_ :guard seq?) :iter (_ :guard seq?)}]
-         `(doto ~classifier (.fit ~iter))
-         [{:classifier _ :iter _}]
-         (doto classifier (.fit (reset-iterator! iter)))
-         [{:classifier (_ :guard seq?)
-           :examples (:or (_ :guard vector?)
-                          (_ :guard seq?))
-           :labels (:or (_ :guard vector?)
-                        (_ :guard seq?))}]
-         `(doto ~classifier (.fit (vec-or-matrix->indarray ~examples)
-                                  (vec-or-matrix->indarray ~labels)))
-         [{:classifier _ :examples _ :labels _}]
-         (doto classifier (.fit (vec-or-matrix->indarray examples)
-                                (vec-or-matrix->indarray labels)))
-         :else
-         (assert false "you must supply a classifier and either a dataset,
- iterator obj, or examples and their labels")))
-
 (defn label-probabilities
   "Returns the probabilities for each label for each example row wise
 
@@ -101,8 +62,8 @@ examples and their labels")))
 
 (defn num-labels
   "Returns the number of possible labels"
-  [& {:keys [classifier as-code?]
-      :or {as-code? true}}]
+  [classifier & {:keys [as-code?]
+                 :or {as-code? true}}]
   (match [classifier]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.numLabels ~classifier))

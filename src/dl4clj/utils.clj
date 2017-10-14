@@ -9,11 +9,27 @@
     code
     (eval code)))
 
+(defn shuffle*
+  "deterministic shuffle is supplied a seed.  Otherwise random shuffle"
+  [& {:keys [^java.util.Collection coll seed]
+      :or {seed 123}
+      :as opts}]
+  (match [opts]
+         [{:coll (_ :guard coll?)
+           :seed (_ :guard number?)}]
+         (let [al (java.util.ArrayList. coll)
+               rng (java.util.Random. seed)]
+           (do (java.util.Collections/shuffle al rng)
+               (clojure.lang.RT/vector (.toArray al))))
+         :else
+         (shuffle coll)))
+
 (defmacro as-code
   ;; add doc string
   ;; all api fns now respond according to objs and data
   ;; doc string should indicate this is a replacement for
   ;; back tick so the user doesn't have to bother with macro syntax
+  ;; this can get removed
   [a-fn & args]
   (let [v `(var ~a-fn)
         m `(meta ~v)
@@ -117,8 +133,8 @@
 
 (defn get-labels
   "returns labels for various types of objects in dl4j"
-  [& {:keys [this as-code?]
-      :or {as-code? true}}]
+  [this & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [this]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLabels ~this))

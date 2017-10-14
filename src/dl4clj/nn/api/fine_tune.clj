@@ -30,9 +30,9 @@
   the resulting nn-conf has the fine-tune-confs opts applied.
 
   :build? (boolean), determines if a nn-conf builder or nn-conf is returned"
-  [& {:keys [fine-tune-conf build? as-code?]
-      :or {build? true
-           as-code? true}}]
+  [fine-tune-conf & {:keys [build? as-code?]
+                     :or {build? true
+                          as-code? true}}]
   (let [m-call (match [fine-tune-conf]
                       [(_ :guard seq?)]
                       `(.appliedNeuralNetConfigurationBuilder ~fine-tune-conf)
@@ -141,8 +141,8 @@
   need to test if this returns the mutated og network with all layers or only the frozen layers
    - if its just the previously frozen layers, will need to merge back into og model
      - og model may have been mutated"
-  [& {:keys [helper as-code?]
-      :or {as-code? true}}]
+  [helper & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [helper]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.unfrozenMLN ~helper))

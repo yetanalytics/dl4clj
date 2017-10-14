@@ -39,7 +39,7 @@
       (.balancedRandomSplit total-obj-count n-objs-per-split pair-rdd seed)
       (.balancedRandomSplit total-obj-count n-objs-per-split pair-rdd))))
 
-(defn check-kryo-config
+#_(defn check-kryo-config
   "Check the spark configuration for incorrect Kryo configuration,
   logging a warning message if necessary
 

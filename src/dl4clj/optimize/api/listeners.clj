@@ -6,8 +6,8 @@
 
 (defn invoked?
   "Was the listener invoked?"
-  [& {:keys [listener as-code?]
-      :or {as-code? true}}]
+  [listener & {:keys [as-code?]
+               :or {as-code? true}}]
   (match [listener]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.invoked ~listener))
@@ -72,8 +72,8 @@
   will need to look more into this but I have a feeling
 
   this is not a user facing method"
-  [& {:keys [listener as-code?]
-      :or {as-code? true}}]
+  [listener & {:keys [as-code?]
+               :or {as-code? true}}]
   (match [listener]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getScoreVsIter ~listener))

@@ -12,7 +12,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/impl/Mo
 
 ;; this guy is called internally by MovingWindowBaseDataSetIterator
 
-(defn new-moving-window-data-set-fetcher
+#_(defn new-moving-window-data-set-fetcher
   "Moving window data fetcher. Handles rotation of matrices in all directions
   to generate more examples.
 

@@ -63,6 +63,7 @@
    :tbptt-back-length                        '.tBPTTBackwardLength
    :tbptt-fwd-length                         '.tBPTTForwardLength})
 
+
 (defn layer-builder-helper
   "creates the code for creating layers.  Works when there is a single layer or multiple.
 
@@ -323,6 +324,7 @@
              ;; do we want the code or the evaluated and built code?
              as-code? build?]
       :or {nn-builder `(NeuralNetConfiguration$Builder.)
+           ;; backprop? true
            as-code? true
            build? true}
       :as opts}]

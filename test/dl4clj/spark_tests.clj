@@ -40,7 +40,7 @@
             ;; string split
             [dl4clj.datasets.input-splits :refer [new-string-split]]
 
-            [dl4clj.datasets.api.input-splits :refer [get-list-string-split-data]]
+            [dl4clj.datasets.api.input-splits :refer [get-list-string-input-split-data]]
 
             [dl4clj.spark.data.dataset-provider :refer [spark-context-to-dataset-rdd]])
   (:import [org.nd4j.linalg.dataset.api.iterator TestMultiDataSetIterator]
@@ -50,6 +50,7 @@
            [org.deeplearning4j.nn.conf NeuralNetConfiguration$Builder]))
 
 ;; remove things that arn't going to be apart of core
+;; this ns needs a major refactor
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper fns and defs used in testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -97,7 +98,7 @@
 ;; data-fns creation and calling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest data-fns-test
+#_(deftest data-fns-test
   (testing "the creation of ds-fns"
     (is (= org.deeplearning4j.spark.data.BatchAndExportDataSetsFunction
            (type (new-batch-and-export-ds-fn :batch-size 2 :export-path "resources/tmp/"))))
@@ -118,7 +119,7 @@
     (is (= org.deeplearning4j.spark.data.shuffle.SplitDataSetExamplesPairFlatMapFunction
            (type (new-split-ds-with-appended-key :max-key-idx 4))))))
 
-(deftest calling-data-fns-test
+#_(deftest calling-data-fns-test
   (testing "using the call-ds-fns! fn with a ds iter"
     (is (= java.util.ArrayList$Itr
            (type (call-batch-and-export-ds-fn!
@@ -200,7 +201,7 @@
 ;; datavec-fns creation and calling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest create-datavec-spark-fns
+#_(deftest create-datavec-spark-fns
   (testing "the creation of datavec fns for spark"
     (is (= org.deeplearning4j.spark.datavec.RecordReaderFunction
            (type (new-record-reader-fn :record-reader csv-rr
@@ -227,7 +228,7 @@
                                              :label-idx 10
                                              :n-labels 10))))))
 
-(deftest calling-datavec-spark-fns
+#_(deftest calling-datavec-spark-fns
   (testing "the calling of the datavec spark fns"
     (is (= org.nd4j.linalg.dataset.DataSet
            (type (call-record-reader-fn!

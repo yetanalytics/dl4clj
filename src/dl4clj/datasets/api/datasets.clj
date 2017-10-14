@@ -12,7 +12,7 @@
 
 (defn get-eample-maxs
   "returns the max from each example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -22,7 +22,7 @@
 
 (defn get-example-means
   "returns the means from each example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -32,7 +32,7 @@
 
 (defn get-example-sums
   "returns the sums of each example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -65,7 +65,7 @@
 
 (defn get-column-names
   "return the names of the columns in a dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -75,7 +75,7 @@
 
 (defn get-features
   "returns the features array for the dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -86,7 +86,7 @@
 (defn get-features-mask-array
   "Input mask array: a mask array for input, where each value is in {0,1} in order
   to specify whether an input is actually present or not."
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -133,7 +133,7 @@
 (defn get-labels-mask-array
   "Labels (output) mask array: a mask array for input, where each value is in {0,1}
   in order to specify whether an output is actually present or not."
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -158,7 +158,7 @@
 
 (defn get-ds-id
   "returns the id of the dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -168,7 +168,7 @@
 
 (defn get-label-counts
   "Calculate and return a count of each label, by index."
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -178,7 +178,7 @@
 
 (defn num-examples
   "returns the number of examples in the dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -189,7 +189,7 @@
 (defn num-inputs
   "the number of input values
    - the size of the features INDArray per example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -200,7 +200,7 @@
 (defn num-outcomes
   "returns the number of outcomes
    - size of the labels array for each example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -210,7 +210,7 @@
 
 (defn get-outcome
   "returns the size of the outcome of the current example"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -429,8 +429,8 @@
 (defn batch-by-n-labels!
   "partitions a dataset in to mini batches where each datset in each list
    has n-labels examples in it"
-  [& {:keys [ds as-code?]
-      :or {as-code? true}}]
+  [ds & {:keys [as-code?]
+         :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.batchByNumLabels ~ds))
@@ -516,7 +516,7 @@
 
 (defn normalize!
   "normalize the dataset to have a mean of 0 and a stdev of 1 per input"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -579,7 +579,7 @@
          (doto ds .scale)))
 
 (defn shuffle-ds!
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -589,7 +589,7 @@
 
 (defn sort-and-batch-by-num-labels!
   "sorts a dataset by the labels and then batches by the number of labels"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -599,7 +599,7 @@
 
 (defn sort-by-label!
   "sorts a dataset by its labels"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -660,7 +660,7 @@
 (defn as-list
   "Extract each example in the DataSet into its own DataSet object,
   and return all of them as a list"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -670,7 +670,7 @@
 
 (defn has-mask-arrays?
   "does this dataset contain any mask arrays?"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -680,7 +680,7 @@
 
 (defn new-ds-iter
   "creates an iterator for the supplied dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]
@@ -781,7 +781,7 @@
 
 (defn validate-ds!
   "validates a dataset"
-  [& {:keys [ds as-code?]
+  [ds & {:keys [as-code?]
       :or {as-code? true}}]
   (match [ds]
          [(_ :guard seq?)]

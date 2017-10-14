@@ -32,7 +32,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/FineT
 
   :seed (int or long), consistent randomization
 
-  :eval-and-build? (boolean), do you want to evaluate and build the conf?
+  :as-code? (boolean), do you want to evaluate and build the conf?
    - defaults to false"
   [& {:keys [activation-fn n-iterations regularization? seed as-code?]
       :or {as-code? true}

@@ -16,8 +16,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
   "Conduct early stopping training
 
   returns an early stopping result"
-  [& {:keys [trainer as-code?]
-      :or {as-code? true}}]
+  [trainer & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [trainer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.fit ~trainer))
@@ -44,8 +44,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
 
 (defn get-best-model-from-result
   "returns the model within the early stopping result"
-  [& {:keys [early-stopping-result as-code?]
-      :or {as-code? true}}]
+  [early-stopping-result & {:keys [as-code?]
+                            :or {as-code? true}}]
   (match [early-stopping-result]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getBestModel ~early-stopping-result))
@@ -90,8 +90,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
 
 (defn get-score-spark-es-trainer
   "returns the score of the model trained via spark"
-  [& {:keys [fit-es-trainer as-code?]
-      :or {as-code? true}}]
+  [fit-es-trainer & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [fit-es-trainer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getScore ~fit-es-trainer))

@@ -16,8 +16,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
 
 (defn get-training-stats
   "returns the training stats"
-  [& {:keys [master as-code?]
-      :or {as-code? true}}]
+  [master & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [master]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTrainingStats ~master))
@@ -146,8 +146,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
 
 (defn collecting-training-stats?
   "checks to see if spark training stats are being collected"
-  [& {:keys [master as-code?]
-      :or {as-code? true}}]
+  [master & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [master]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getIsCollectTrainingStats ~master))

@@ -15,7 +15,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
             [dl4clj.utils :refer [builder-fn eval-and-build replace-map-vals generic-dispatching-fn]]
             [dl4clj.helpers :refer [value-of-helper distribution-helper pre-processor-helper]]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; helper fns
+;; helper fns move to helpers ns?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn replace-layer-helper
@@ -70,6 +70,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
            (assert false "missing args, you need atleast a distribution or a weight-init"))))
 
 (defn input-pre-processor-helper
+  ;; this might already exist in helpers ns
   "addds a preprocessor for a given layer
 
   this fn is called by multi-layer-network-mutater-builder
@@ -178,7 +179,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
       :as opts}]
   (let [b (if tlb
             tlb
-           `(TransferLearning$Builder. (if (is-init-called? :mln ~mln)
+           `(TransferLearning$Builder. (if (is-init-called? ~mln)
                                         ~mln
                                         (init! :model ~mln))))
 

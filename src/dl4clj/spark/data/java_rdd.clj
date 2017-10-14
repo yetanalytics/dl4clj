@@ -177,20 +177,20 @@
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter :iter iter :as-code? false)
+                      :data (data-from-iter iter :as-code? false)
                       :num-slices num-slices)
          [{:spark-context _
            :iter _
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter :iter (reset-iterator! iter))
+                      :data (data-from-iter (reset-iterator! iter))
                       :num-slices num-slices)
          [{:spark-context _
            :iter (_ :guard seq?)}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter :iter iter :as-code? false))
+                      :data (data-from-iter iter :as-code? false))
          [{:spark-context _
            :iter _}]
          (parallelize :spark-context spark-context
-                      :data (data-from-iter :iter (reset-iterator! iter)))))
+                      :data (data-from-iter (reset-iterator! iter)))))

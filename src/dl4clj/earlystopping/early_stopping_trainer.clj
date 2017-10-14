@@ -28,12 +28,43 @@
            :mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter))
+         [{:early-stopping-conf (_ :guard seq?)
+           :mln _
+           :iter (_ :guard seq?)}]
+         (EarlyStoppingTrainer. (eval early-stopping-conf)
+                                mln
+                                (eval iter))
+         [{:early-stopping-conf (_ :guard seq?)
+           :mln (_ :guard seq?)
+           :iter _}]
+         (EarlyStoppingTrainer. (eval early-stopping-conf)
+                                (eval mln)
+                                iter)
+         [{:early-stopping-conf _
+           :mln (_ :guard seq?)
+           :iter (_ :guard seq?)}]
+         (EarlyStoppingTrainer. early-stopping-conf
+                                (eval mln)
+                                (eval iter))
+         [{:early-stopping-conf _
+           :mln _
+           :iter (_ :guard seq?)}]
+         (EarlyStoppingTrainer. early-stopping-conf mln (eval iter))
+         [{:early-stopping-conf (_ :guard seq?)
+           :mln _
+           :iter _}]
+         (EarlyStoppingTrainer. (eval early-stopping-conf) mln iter)
+         [{:early-stopping-conf _
+           :mln (_ :guard seq?)
+           :iter _}]
+         (EarlyStoppingTrainer. early-stopping-conf (eval mln) iter)
          [{:early-stopping-conf _
            :mln _
            :iter _}]
          (EarlyStoppingTrainer. early-stopping-conf mln iter)))
 
 (defn new-spark-early-stopping-trainer
+  ;; TODO this needs to be addapted to work with the no multiple spark context issues
   "object for conducting early stopping training via Spark with
    multi-layer networks
 
@@ -62,6 +93,7 @@
              mln training-rdd early-stopping-listener as-code?]
       :or {as-code? true}
       :as opts}]
+  ;; update this like above
   (match [opts]
          [{:spark-context (_ :guard seq?)
            :training-master (_ :guard seq?)

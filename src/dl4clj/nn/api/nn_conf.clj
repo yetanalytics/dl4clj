@@ -116,8 +116,8 @@
          (doto nn-conf (.addVariable var-name))))
 
 (defn clear-variables!
-  [& {:keys [nn-conf as-code?]
-      :or {as-code? true}}]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [nn-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~nn-conf .clearVariables))
@@ -125,27 +125,27 @@
          (doto nn-conf .clearVariables)))
 
 (defn from-json
-  [& {:keys [json as-code?]
-      :or {as-code? true}}]
-  (match [json]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
+  (match [nn-conf]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(NeuralNetConfiguration/fromJson ~json))
+         (obj-or-code? as-code? `(NeuralNetConfiguration/fromJson ~nn-conf))
          :else
-         (NeuralNetConfiguration/fromJson json)))
+         (NeuralNetConfiguration/fromJson nn-conf)))
 
 (defn from-yaml
-  [& {:keys [json as-code?]
-      :or {as-code? true}}]
-  (match [json]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
+  (match [nn-conf]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(NeuralNetConfiguration/fromYaml ~json))
+         (obj-or-code? as-code? `(NeuralNetConfiguration/fromYaml ~nn-conf))
          :else
-         (NeuralNetConfiguration/fromYaml json)))
+         (NeuralNetConfiguration/fromYaml nn-conf)))
 
 (defn mapper
   "Object mapper for serialization of configurations"
-  [& {:keys [nn-conf as-code?]
-      :or {as-code? true}}]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [nn-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.mapper ~nn-conf))
@@ -154,15 +154,15 @@
 
 (defn mapper-yaml
   "Object mapper for serialization of configurations"
-  [& {:keys [nn-conf as-code?]
-      :or {as-code? true}}]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [nn-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.mapperYaml ~nn-conf))
          :else
          (.mapperYaml nn-conf)))
 
-(defn reinit-mapper-with-subtypes
+#_(defn reinit-mapper-with-subtypes
   "Reinitialize and return the Jackson/json ObjectMapper with additional named types.
 
   typez (coll), a collection of json named types"
@@ -175,8 +175,8 @@
          (.reinitMapperWithSubtypes typez)))
 
 (defn to-json
-  [& {:keys [nn-conf as-code?]
-      :or {as-code? true}}]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [nn-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toJson ~nn-conf))
@@ -184,8 +184,8 @@
          (.toJson nn-conf)))
 
 (defn build-nn
-  [& {:keys [nn-conf as-code?]
-      :or {as-code? true}}]
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
   (match [nn-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.build ~nn-conf))

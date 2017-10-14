@@ -31,12 +31,12 @@
   [opts]
   (let [single-layer-nn-conf (:nn-conf opts)]
     (if (seq? single-layer-nn-conf)
-      (-> (to-json :multi-layer-conf (eval single-layer-nn-conf))
+      (-> (to-json (eval single-layer-nn-conf))
           (decode-strict true)
           :layer
           generic-dispatching-fn
           camel-to-dashed)
-      (-> (to-json :multi-layer-conf single-layer-nn-conf)
+      (-> (to-json single-layer-nn-conf)
           (decode-strict true)
           :layer
           generic-dispatching-fn

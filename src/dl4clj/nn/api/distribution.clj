@@ -10,8 +10,8 @@
 
 (defn get-n-trials
   "returns the number of trials set for this distribution"
-  [& {:keys [binomial-dist as-code?]
-      :or {as-code? true}}]
+  [binomial-dist & {:keys [as-code?]
+                    :or {as-code? true}}]
   (match [binomial-dist]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNumberOfTrials ~binomial-dist))
@@ -20,8 +20,8 @@
 
 (defn get-prob-of-success
   "returns the probability of success set for this distribution"
-  [& {:keys [binomial-dist as-code?]
-      :or {as-code? true}}]
+  [binomial-dist & {:keys [as-code?]
+                    :or {as-code? true}}]
   (match [binomial-dist]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getProbabilityOfSuccess ~binomial-dist))
@@ -51,23 +51,23 @@
 
 (defn get-mean
   "return the mean for the normal/gaussian distribution"
-  [& {:keys [dist as-code?]
-      :or {as-code? true}}]
-  (match [dist]
+  [normal-dist & {:keys [as-code?]
+                  :or {as-code? true}}]
+  (match [normal-dist]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.getMean ~dist))
+         (obj-or-code? as-code? `(.getMean ~normal-dist))
          :else
-         (.getMean dist)))
+         (.getMean normal-dist)))
 
 (defn get-std
   "return the standard deviation for the normal/gaussian distribution"
-  [& {:keys [dist as-code?]
-      :or {as-code? true}}]
-  (match [dist]
+  [normal-dist & {:keys [as-code?]
+                  :or {as-code? true}}]
+  (match [normal-dist]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.getStd ~dist))
+         (obj-or-code? as-code? `(.getStd ~normal-dist))
          :else
-         (.getStd dist)))
+         (.getStd normal-dist)))
 
 (defn set-mean!
   "sets the mean for the normal/gaussian distribution supplied.
@@ -75,16 +75,16 @@
   :mean (double), the desired mean for the distribution
 
   returns the distribution after the change"
-  [& {:keys [dist mean as-code?]
+  [& {:keys [normal-dist mean as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:dist (_ :guard seq?)
+         [{:normal-dist (_ :guard seq?)
            :mean (:or (_ :guard seq?)
                       (_ :guard number?))}]
-         (obj-or-code? as-code? `(doto ~dist (.setMean (double ~mean))))
+         (obj-or-code? as-code? `(doto ~normal-dist (.setMean (double ~mean))))
          :else
-         (doto dist (.setMean mean))))
+         (doto normal-dist (.setMean mean))))
 
 (defn set-std
   "sets the standard deviation for the normal/gaussian distribution supplied.
@@ -92,16 +92,16 @@
   :std (double), the desired standard deviation for the distribution
 
   returns the distribution after the change"
-  [& {:keys [dist std as-code?]
+  [& {:keys [normal-dist std as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:dist (_ :guard seq?)
+         [{:normal-dist (_ :guard seq?)
            :std (:or (_ :guard seq?)
                      (_ :guard number?))}]
-         (obj-or-code? as-code? `(doto ~dist (.setStd (double ~std))))
+         (obj-or-code? as-code? `(doto ~normal-dist (.setStd (double ~std))))
          :else
-         (doto dist (.setStd std))))
+         (doto normal-dist (.setStd std))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; uniform distribution fns
@@ -109,8 +109,8 @@
 
 (defn get-lower
   "returns the lower bound of the supplied uniform distribution"
-  [& {:keys [uniform-dist as-code?]
-      :or {as-code? true}}]
+  [uniform-dist & {:keys [as-code?]
+                   :or {as-code? true}}]
   (match [uniform-dist]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getLower ~uniform-dist))
@@ -119,8 +119,8 @@
 
 (defn get-upper
   "returns the upper bound of the supplied uniform distribution"
-  [& {:keys [uniform-dist as-code?]
-      :or {as-code? true}}]
+  [uniform-dist & {:keys [as-code?]
+                   :or {as-code? true}}]
   (match [uniform-dist]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getUpper ~uniform-dist))

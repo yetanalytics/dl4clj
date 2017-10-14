@@ -7,7 +7,7 @@
             [dl4clj.nn.conf.distributions :as distribution]
             [dl4clj.nn.conf.step-fns :as step-functions]
             [dl4clj.nn.conf.input-pre-processor :as pre-process]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? generic-dispatching-fn builder-fn]]
             [clojure.core.match :refer [match]]))
 
 (defn pre-processor-helper
@@ -46,27 +46,27 @@
 (defn reset-if-empty?!
   "resets an iterator if we are at the end"
   [iter]
-  (if (false? (has-next? :iter iter))
-    (reset-iter! :iter iter)
+  (if (false? (has-next? iter))
+    (reset-iter! iter)
     iter))
 
 (defn reset-iterator!
   "resets an iterator, won't reset a lazy iter but will return it"
   [iter]
-  (try (reset-iter! :iter iter)
+  (try (reset-iter! iter)
        (catch Exception e iter)))
 
 (defn data-from-iter
   "returns all the data from an iterator as a lazy seq"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (if (seq? iter)
     (obj-or-code?
      as-code?
-     `(lazy-seq (cons (next-example! :iter ~iter)
-                      (data-from-iter :iter (doto ~iter .next)))))
-   (when (has-next? :iter iter)
-     (lazy-seq (cons (next-example! :iter iter) (data-from-iter :iter iter))))))
+     `(lazy-seq (cons (next-example! ~iter)
+                      (data-from-iter (doto ~iter .next)))))
+    (when (has-next? iter)
+      (lazy-seq (cons (next-example! iter) (data-from-iter iter))))))
 
 (defn new-lazy-iter
   "creates a barebones iterator for a lazy seq"

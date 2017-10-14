@@ -14,8 +14,8 @@
 
 (defn batch-size
   "The current inputs batch size"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.batchSize ~model))
@@ -24,8 +24,8 @@
 
 (defn conf
   "The configuration for the neural network"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.conf ~model))
@@ -34,8 +34,8 @@
 
 (defn get-optimizer
   "Returns this models optimizer"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getOptimizer ~model))
@@ -57,8 +57,8 @@
 
 (defn gradient-and-score
   "Get the gradient and score"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.gradientAndScore ~model))
@@ -67,8 +67,8 @@
 
 (defn input
   "returns the input/feature matrix for the model"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.input ~model))
@@ -178,14 +178,24 @@
       :as opts}]
   (match [opts]
          [{:model (_ :guard seq?)
-           :listeners _}]
+           :listeners (_ :guard vector?)}]
          (obj-or-code?
           as-code?
           `(doto ~model
-            (.setListeners ~listeners)))
+             (.setListeners ~listeners)))
+         [{:model (_ :guard seq?)
+           :listeners (_ :guard seq?)}]
+         (obj-or-code?
+          as-code?
+          `(doto ~model
+             (.setListeners [~listeners])))
+         [{:model _
+           :listeners (_ :guard vector?)}]
+         (doto model
+           (.setListeners listeners))
          :else
          (doto model
-           (.setListeners listeners))))
+           (.setListeners [listeners]))))
 
 (defn set-param!
   "Set the parameter with a new ndarray
@@ -248,8 +258,8 @@
 
 (defn clear-model!
   "Clear input"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~model .clear))
@@ -258,8 +268,8 @@
 
 (defn init-params!
   "Initialize the parameters and return the model"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~model .initParams))
@@ -353,8 +363,8 @@
 
 (defn calc-gradient
   "Calculate a gradient"
-  [& {:keys [model as-code?]
-      :or {as-code? true}}]
+  [model & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [model]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.gradient ~model))

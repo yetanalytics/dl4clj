@@ -186,8 +186,8 @@
 
 (defn get-accuracy
   "Accuracy: (TP + TN) / (P + N)"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.accuracy ~evaler))
@@ -209,8 +209,8 @@
 
 (defn confusion-to-string
   "Get a String representation of the confusion matrix"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.confusionToString ~evaler))
@@ -241,8 +241,8 @@
 
 (defn false-alarm-rate
   "False Alarm Rate (FAR) reflects rate of misclassified to classified records"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.falseAlarmRate ~evaler))
@@ -284,8 +284,8 @@
 
 (defn false-negatives
   "False negatives: correctly rejected"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.falseNegatives ~evaler))
@@ -331,8 +331,8 @@
 
 (defn false-positives
   "False positive: wrong guess"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.falsePositives ~evaler))
@@ -356,8 +356,8 @@
 
 (defn get-confusion-matrix
   "Returns the confusion matrix variable"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getConfusionMatrix ~evaler))
@@ -365,8 +365,8 @@
          (.getConfusionMatrix evaler)))
 
 (defn get-num-row-counter
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNumRowCounter ~evaler))
@@ -391,8 +391,8 @@
 
 (defn get-prediction-errors
   "Get a list of prediction errors, on a per-record basis"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getPredictionErrors ~evaler))
@@ -435,8 +435,8 @@
 
 (defn get-top-n-correct-count
   "Return the number of correct predictions according to top N value."
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTopNCorrectCount ~evaler))
@@ -445,8 +445,8 @@
 
 (defn get-top-n-total-count
   "Return the total number of top N evaluations."
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTopNTotalCount ~evaler))
@@ -455,8 +455,8 @@
 
 (defn total-negatives
   "Total negatives true negatives + false negatives"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.negative ~evaler))
@@ -465,8 +465,8 @@
 
 (defn total-positives
   "Returns all of the positive guesses: true positive + false negative"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.positive ~evaler))
@@ -543,8 +543,8 @@
 
 (defn top-n-accuracy
   "Top N accuracy of the predictions so far."
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.topNAccuracy ~evaler))
@@ -553,8 +553,8 @@
 
 (defn true-negatives
   "True negatives: correctly rejected"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.trueNegatives ~evaler))
@@ -563,8 +563,8 @@
 
 (defn true-positives
   "True positives: correctly rejected"
-  [& {:keys [evaler as-code?]
-      :or {as-code? true}}]
+  [evaler & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [evaler]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.truePositives ~evaler))

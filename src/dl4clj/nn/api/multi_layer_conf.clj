@@ -5,8 +5,8 @@
             [dl4clj.utils :refer [obj-or-code?]]))
 
 (defn to-json
-  [& {:keys [multi-layer-conf as-code?]
-      :or {as-code? true}}]
+  [multi-layer-conf & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [multi-layer-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toJson ~multi-layer-conf))
@@ -14,8 +14,8 @@
          (.toJson multi-layer-conf)))
 
 (defn to-yaml
-  [& {:keys [multi-layer-conf as-code?]
-      :or {as-code? true}}]
+  [multi-layer-conf & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [multi-layer-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toYaml ~multi-layer-conf))
@@ -23,8 +23,8 @@
          (.toYaml multi-layer-conf)))
 
 (defn to-str
-  [& {:keys [multi-layer-conf as-code?]
-      :or {as-code? true}}]
+  [multi-layer-conf & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [multi-layer-conf]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toString ~multi-layer-conf))
@@ -32,8 +32,8 @@
          (.toString multi-layer-conf)))
 
 (defn from-json
-  [& {:keys [json as-code?]
-      :or {as-code? true}}]
+  [json & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [json]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(MultiLayerConfiguration/fromJson ~json))
@@ -41,13 +41,13 @@
          (MultiLayerConfiguration/fromJson json)))
 
 (defn from-yaml
-  [& {:keys [json as-code?]
-      :or {as-code? true}}]
-  (match [json]
+  [yaml & {:keys [as-code?]
+           :or {as-code? true}}]
+  (match [yaml]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(MultiLayerConfiguration/fromYaml ~json))
+         (obj-or-code? as-code? `(MultiLayerConfiguration/fromYaml ~yaml))
          :else
-         (MultiLayerConfiguration/fromYaml json)))
+         (MultiLayerConfiguration/fromYaml yaml)))
 
 (defn get-conf
   ":layer-idx (int), the index of the layer, within the multi-layer-conf, you

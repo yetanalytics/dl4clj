@@ -6,8 +6,8 @@
 
 (defn clear!
   "Clear residual parameters (useful for returning a gradient and then clearing old objects)"
-  [& {:keys [grad as-code?]
-      :or {as-code? true}}]
+  [grad & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [grad]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~grad .clear))
@@ -57,8 +57,8 @@
 
 (defn gradient-for-variable
   "Gradient look up table"
-  [& {:keys [grad as-code?]
-      :or {as-code? true}}]
+  [grad & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [grad]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.gradientForVariable ~grad))

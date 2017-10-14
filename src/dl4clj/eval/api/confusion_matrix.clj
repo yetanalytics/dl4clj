@@ -19,8 +19,8 @@
 
 (defn get-classes
   "Gives the applyTransformToDestination of all classes in the confusion matrix."
-  [& {:keys [confusion-matrix as-code?]
-      :or {as-code? true}}]
+  [confusion-matrix & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [confusion-matrix]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getClasses ~confusion-matrix))
@@ -54,8 +54,8 @@
 
 (defn to-csv
   "Outputs the ConfusionMatrix as comma-separated values for easy import into spreadsheets"
-  [& {:keys [confusion-matrix as-code?]
-      :or {as-code? true}}]
+  [confusion-matrix & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [confusion-matrix]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toCSV ~confusion-matrix))
@@ -64,8 +64,8 @@
 
 (defn to-html
   "Outputs Confusion Matrix in an HTML table."
-  [& {:keys [confusion-matrix as-code?]
-      :or {as-code? true}}]
+  [confusion-matrix & {:keys [as-code?]
+                       :or {as-code? true}}]
   (match [confusion-matrix]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.toHTML ~confusion-matrix))

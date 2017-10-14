@@ -33,8 +33,8 @@
 
 (defn reshape-time-series-to-2d
   "reshapes a time series to be two dimensional"
-  [& {:keys [labels as-code?]
-      :or {as-code? true}}]
+  [labels & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [labels]
          [(:or (_ :guard vector?)
                (_ :guard seq?))]

@@ -106,8 +106,8 @@
 
 (defn calculate-average-area-under-curve
   "Calculate the average (one-vs-all) AUC for all classes"
-  [& {:keys [roc-mc as-code?]
-      :or {as-code? true}}]
+  [roc-mc & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [roc-mc]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.calculateAverageAUC ~roc-mc))

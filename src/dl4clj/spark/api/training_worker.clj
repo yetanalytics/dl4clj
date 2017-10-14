@@ -16,8 +16,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
 (defn get-data-config
   "returns the worker config that contains info such as minibatch size"
-  [& {:keys [worker as-code?]
-      :or {as-code? true}}]
+  [worker & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [worker]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getDataConfiguration ~worker))
@@ -52,7 +52,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
 (defn get-final-result-no-data
   "Get the final result to be returned to the driver, if no data was available for this executor"
-  [& {:keys [worker as-code?]
+  [worker & {:keys [as-code?]
       :or {as-code? true}}]
   (match [worker]
          [(_ :guard seq?)]
@@ -64,8 +64,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
   "Get the final result to be returned to the driver, if no data was available for this executor
 
    should be used when spark training stats are being collected"
-  [& {:keys [worker as-code?]
-      :or {as-code? true}}]
+  [worker & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [worker]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getFinalResultNoDataWithStats ~worker))
@@ -74,8 +74,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
 
 (defn get-initial-model
   "Get the initial model when training a MultiLayerNetwork/SparkDl4jMultiLayer"
-  [& {:keys [worker as-code?]
-      :or {as-code? true}}]
+  [worker & {:keys [as-code?]
+             :or {as-code? true}}]
   (match [worker]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getInitialModel ~worker))

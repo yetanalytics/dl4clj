@@ -43,13 +43,13 @@
     (is (= '(org.deeplearning4j.datasets.fetchers.MnistDataFetcher.
              true true true (clojure.core/long 123))
            (mnist-fetcher :binarize? true :train? true :shuffle? true :seed 123)))
-    (is (= java.lang.Integer (type (fetcher-cursor :fetcher (iris-fetcher :as-code? false)))))
-    (is (= java.lang.Boolean (type (has-more? :fetcher (iris-fetcher :as-code? false)))))
-    (is (= java.lang.Integer (type (input-column-length :fetcher (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (fetcher-cursor (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Boolean (type (has-more? (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (input-column-length (iris-fetcher :as-code? false)))))
     (is (= org.deeplearning4j.datasets.fetchers.IrisDataFetcher
-           (type (reset-fetcher! :fetcher (iris-fetcher :as-code? false)))))
-    (is (= java.lang.Integer (type (n-examples-in-ds :fetcher (iris-fetcher :as-code? false)))))
-    (is (= java.lang.Integer (type (n-outcomes-in-ds :fetcher (iris-fetcher :as-code? false)))))))
+           (type (reset-fetcher! (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (n-examples-in-ds (iris-fetcher :as-code? false)))))
+    (is (= java.lang.Integer (type (n-outcomes-in-ds (iris-fetcher :as-code? false)))))))
 
 (deftest ds-iteration-creation-test
   (testing "the creation of dataset iterators"
@@ -301,7 +301,7 @@
            (type (new-singleton-multi-dataset-iterator
                   :as-code? false
                   :multi-dataset
-                  (next-example! :iter
+                  (next-example!
                    (new-multi-data-set-iterator-adapter
                     :iter
                     (new-mnist-data-set-iterator :batch 5 :n-examples 100)))))))
@@ -310,7 +310,7 @@
                      (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator. 5 100))))
            (new-singleton-multi-dataset-iterator
             :multi-dataset
-            (next-example! :iter
+            (next-example!
               (new-multi-data-set-iterator-adapter
                 :iter
                 (new-mnist-data-set-iterator :batch 5 :n-examples 100))))))))
@@ -329,33 +329,34 @@
                          :as-code? false)
           cifar-iter (new-cifar-data-set-iterator :batch-size 2 :n-examples 100
                                                   :as-code? false)]
-      (is (= java.lang.Boolean (type (async-supported? :iter iter))))
-      (is (= java.lang.Integer (type (get-batch-size :iter iter))))
-      (is (= java.lang.Integer (type (get-current-cursor :iter iter))))
-      (is (= java.util.ArrayList (type (get-labels :this iter-w-labels))))
+      (is (= java.lang.Boolean (type (async-supported? iter))))
+      (is (= java.lang.Integer (type (get-batch-size iter))))
+      (is (= java.lang.Integer (type (get-current-cursor iter))))
+      ;; come back and up date this after you change get labels
+      (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
              (type (set-pre-processor!
                     :iter iter
                     :pre-processor (new-min-max-normalization-ds-preprocessor
                                     :min-val 0 :max-val 1 :as-code? false)))))
       (is (= org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler
-             (type (get-pre-processor :iter iter))))
-      (is (= java.lang.Integer (type (get-input-columns :iter iter))))
+             (type (get-pre-processor iter))))
+      (is (= java.lang.Integer (type (get-input-columns iter))))
       (is (= org.nd4j.linalg.dataset.DataSet
              (type (next-n-examples! :iter iter-w-labels :n 2))))
-      (is (= java.lang.Integer (type (get-num-examples :iter iter))))
-      (is (= (type iter-w-labels) (type (reset-iter! :iter iter-w-labels))))
-      (is (= java.lang.Boolean (type (reset-supported? :iter iter-w-labels))))
-      (is (= java.lang.Integer (type (get-total-examples :iter iter))))
-      (is (= java.lang.Integer (type (get-total-outcomes :iter iter))))
-      (is (= java.lang.Boolean (type (has-next? :iter iter))))
-      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! :iter iter-w-labels))))
+      (is (= java.lang.Integer (type (get-num-examples iter))))
+      (is (= (type iter-w-labels) (type (reset-iter! iter-w-labels))))
+      (is (= java.lang.Boolean (type (reset-supported? iter-w-labels))))
+      (is (= java.lang.Integer (type (get-total-examples iter))))
+      (is (= java.lang.Integer (type (get-total-outcomes iter))))
+      (is (= java.lang.Boolean (type (has-next? iter))))
+      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! iter-w-labels))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-features :ds (next-example! :iter (reset-iter! :iter iter-w-labels)))))))))
+             (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
 
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
@@ -484,7 +485,8 @@
            (new-filesplit :path "resources/"
                           :allow-format ".csv"
                           :seed 123)))
-    (is (= java.io.File (type (get-root-dir :split (new-filesplit :path "resources/" :as-code? false)))))
+    (is (= java.io.File
+           (type (get-root-dir (new-filesplit :path "resources/" :as-code? false)))))
 
     ;; collection input split
     (is (= org.datavec.api.split.CollectionInputSplit
@@ -510,9 +512,9 @@
                     :as-code? false))))
 
       (is (= java.io.BufferedInputStream
-             (type (get-is :input-stream-input-split (new-input-stream-input-split
-                                                      :in-stream data
-                                                      :as-code? false)))))
+             (type (get-is (new-input-stream-input-split
+                            :in-stream data
+                            :as-code? false)))))
       (= org.datavec.api.split.InputStreamInputSplit
          (type (set-is! :input-stream-input-split (new-input-stream-input-split
                                                    :in-stream data
@@ -527,7 +529,7 @@
              (clojure.core/reverse (clojure.core/into () ["foo" "baz"])))
            (new-list-string-split :data  ["foo" "baz"])))
     (is (= (list "foo" "baz")
-           (get-list-string-split-data :list-string-split
+           (get-list-string-input-split-data
             (new-list-string-split :data ["foo" "baz"]
                                    :as-code? false))))
 
@@ -548,7 +550,7 @@
            (type (new-string-split :data "foo baz bar" :as-code? false))))
     (is (= '(org.datavec.api.split.StringSplit. "foo baz bar")
            (new-string-split :data "foo baz bar")))
-    (is (= "foo baz bar" (get-list-string-split-data :list-string-split
+    (is (= "foo baz bar" (get-list-string-input-split-data
                           (new-string-split :data "foo baz bar" :as-code? false))))
 
     ;; transform split
@@ -574,7 +576,7 @@
                   :coll ['(new java.net.URI "foo")
                          '(new java.net.URI "baz")]
                   :as-code? false))
-           (type (first (sample :split (new-collection-input-split
+           (type (first (sample :input-split (new-collection-input-split
                                         :coll ['(new java.net.URI "foo")
                                                '(new java.net.URI "baz")]
                                         :as-code? false)
@@ -589,12 +591,12 @@
                   :coll ['(new java.net.URI "foo")
                          '(new java.net.URI "baz")]
                   :as-code? false))
-           (type (first (sample :split (new-collection-input-split
+           (type (first (sample :input-split (new-collection-input-split
                                         :coll ['(new java.net.URI "foo")
                                                '(new java.net.URI "baz")]
                                         :as-code? false)
                                 :weights [50 50])))))
-    (is (= 2 (count (sample :split (new-collection-input-split
+    (is (= 2 (count (sample :input-split (new-collection-input-split
                                     :coll ['(new java.net.URI "foo")
                                            '(new java.net.URI "baz")]
                                     :as-code? false)
@@ -603,13 +605,13 @@
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
     (let [f-split (new-filesplit :path "resources/poker/" :as-code? false)]
-      (is (= java.lang.Long (type (length :split f-split))))
-      (is (= java.net.URI (type (first (locations :split f-split)))))
+      (is (= java.lang.Long (type (length f-split))))
+      (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
-             (type (locations-iterator :split f-split))))
+             (type (locations-iterator f-split))))
       (is (= java.util.Collections$1
-             (type (locations-path-iterator :split f-split))))
-      (is (= (type f-split) (type (reset-input-split! :split f-split)))))))
+             (type (locations-path-iterator f-split))))
+      (is (= (type f-split) (type (reset-input-split! f-split)))))))
 
 (deftest record-readers-test
   (testing "the creation of record readers"
@@ -700,9 +702,9 @@
                     (new-filesplit
                      :path "resources/poker-hand-testing.csv"))]
       ;; these tests do not cover the entire ns but the most imporant fns
-      (is (= java.lang.Boolean (type (has-next-record? :rr init-rr))))
-      (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! :rr init-rr))))
-      (is (= java.util.ArrayList (type (next-record! :rr (reset-rr! :rr init-rr))))))))
+      (is (= java.lang.Boolean (type (has-next-record? init-rr))))
+      (is (= org.datavec.api.records.impl.Record (type (next-record-with-meta! init-rr))))
+      (is (= java.util.ArrayList (type (next-record! (reset-rr! init-rr))))))))
 
 (deftest pre-processors-test
   (testing "testing the creation of pre-processors"

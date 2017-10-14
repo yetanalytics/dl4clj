@@ -48,8 +48,8 @@
 
 (defn get-num-examples-total
   "returns the total number of examples in the dataset"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNumExamplesTotal ~unstructured-formatter))
@@ -58,8 +58,8 @@
 
 (defn get-num-examples-to-train-on
   "returns the number of examples in the training split of the dataset"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNumExamplesToTrainOn ~unstructured-formatter))
@@ -68,8 +68,8 @@
 
 (defn get-num-test-examples
   "returns the number of examples in the testing split of the dataset"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNumTestExamples ~unstructured-formatter))
@@ -95,8 +95,8 @@
 
 (defn get-test
   "returns the file containing the test split of the dataset"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTest ~unstructured-formatter))
@@ -105,8 +105,8 @@
 
 (defn get-train
   "returns the file containing the training split of the dataset"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTrain ~unstructured-formatter))
@@ -115,8 +115,8 @@
 
 (defn rearrange!
   "rearranges the dataset and returns the formatter"
-  [& {:keys [unstructured-formatter as-code?]
-      :or {as-code? true}}]
+  [unstructured-formatter & {:keys [as-code?]
+                             :or {as-code? true}}]
   (match [unstructured-formatter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~unstructured-formatter .rearrange))

@@ -16,8 +16,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
 
 (defn get-key-set-for-stats
   "returns the key set for the training stats instance"
-  [& {:keys [training-stats as-code?]
-      :or {as-code? true}}]
+  [training-stats & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getKeySet ~training-stats))
@@ -26,8 +26,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
 
 (defn get-nested-training-stats
   "Return the nested training stats - if any."
-  [& {:keys [training-stats as-code?]
-      :or {as-code? true}}]
+  [training-stats & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNestedTrainingStats ~training-stats))
@@ -125,8 +125,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
 
 (defn stats-as-string
   "get the stats as a string"
-  [& {:keys [training-stats as-code?]
-      :or {as-code? true}}]
+  [training-stats & {:keys [as-code?]
+                     :or {as-code? true}}]
   (match [training-stats]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.statsAsString ~training-stats))

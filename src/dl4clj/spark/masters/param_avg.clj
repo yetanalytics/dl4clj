@@ -68,6 +68,7 @@
            as-code? false}
       :as opts}]
   (let [rdd-n-e (int rdd-n-examples)
+        ;; ^ spec will catch when this is no present
         b (if (contains-many? opts :rdd-n-examples :n-workers)
             `(ParameterAveragingTrainingMaster$Builder. ~rdd-n-e ~(int n-workers))
             `(ParameterAveragingTrainingMaster$Builder. ~rdd-n-e))

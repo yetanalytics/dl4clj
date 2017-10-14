@@ -128,8 +128,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   "Does this reconstruction distribution has a standard neural network loss function
   (such as mean squared error, which is deterministic)
   or is it a standard VAE with a probabilistic reconstruction distribution?"
-  [& {:keys [dist as-code?]
-      :or {as-code? true}}]
+  [dist & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [dist]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.hasLossFunction ~dist))

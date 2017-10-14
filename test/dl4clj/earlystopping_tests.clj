@@ -81,8 +81,8 @@
 
 (def fs (new-filesplit :path "resources/poker-hand-training.csv"))
 
-(def rr (as-code initialize-rr! :rr (new-csv-record-reader)
-                 :input-split fs))
+(def rr (initialize-rr! :rr (new-csv-record-reader)
+                        :input-split fs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; testing return type of termination conditions
@@ -170,12 +170,11 @@
              :as-code? false))))
     (is (= '(org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
              (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-              (dl4clj.datasets.api.record-readers/initialize-rr!
-               :rr
-               (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-               :input-split
-               (org.datavec.api.split.FileSplit.
-                (clojure.java.io/as-file "resources/poker-hand-training.csv")))
+              (clojure.core/doto
+                  (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                (.initialize
+                 (org.datavec.api.split.FileSplit.
+                  (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
               5)
              true)
            (new-ds-loss-calculator
@@ -254,7 +253,7 @@
              (type
               (new-early-stopping-config :epoch-termination-conditions epoch-term
                                          :iteration-termination-conditions iteration-term
-                                         :n-epochs 5
+                                         :eval-every-n-epochs 5
                                          :model-saver model-saver
                                          :save-last-model? false
                                          :score-calculator score-c
@@ -266,12 +265,12 @@
                  (.scoreCalculator
                   (org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
                    (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-                    (dl4clj.datasets.api.record-readers/initialize-rr!
-                     :rr
-                     (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                     :input-split
-                     (org.datavec.api.split.FileSplit.
-                      (clojure.java.io/as-file "resources/poker-hand-training.csv")))
+                    (clojure.core/doto
+                        (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                      (.initialize
+                       (org.datavec.api.split.FileSplit.
+                        (clojure.java.io/as-file
+                         "resources/poker-hand-training.csv"))))
                     5)
                    true))
                  (.saveLastModel false)
@@ -287,8 +286,7 @@
                    :data
                    (org.deeplearning4j.earlystopping.termination.InvalidScoreIterationTerminationCondition.)
                    :java-type
-                   org.deeplearning4j.earlystopping.termination.IterationTerminationCondition
-                   ))
+                   org.deeplearning4j.earlystopping.termination.IterationTerminationCondition))
                  (.epochTerminationConditions
                   (dl4clj.utils/array-of
                    :data
@@ -298,7 +296,7 @@
                    org.deeplearning4j.earlystopping.termination.EpochTerminationCondition))))
              (new-early-stopping-config :epoch-termination-conditions epoch-term
                                         :iteration-termination-conditions iteration-term
-                                        :n-epochs 5
+                                        :eval-every-n-epochs 5
                                         :model-saver model-saver
                                         :save-last-model? false
                                         :score-calculator score-c))))))
@@ -319,7 +317,7 @@
               (new-max-epochs-termination-condition :max-n 5)
               :iteration-termination-conditions
               (new-invalid-score-iteration-termination-condition)
-              :n-epochs 5
+              :eval-every-n-epochs 5
               :model-saver (new-in-memory-saver)
               :save-last-model? false
               :score-calculator
@@ -342,12 +340,11 @@
                 (.scoreCalculator
                  (org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator.
                   (org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator.
-                   (dl4clj.datasets.api.record-readers/initialize-rr!
-                    :rr
-                    (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
-                    :input-split
-                    (org.datavec.api.split.FileSplit.
-                     (clojure.java.io/as-file "resources/poker-hand-training.csv")))
+                   (clojure.core/doto
+                       (org.datavec.api.records.reader.impl.csv.CSVRecordReader.)
+                     (.initialize
+                      (org.datavec.api.split.FileSplit.
+                       (clojure.java.io/as-file "resources/poker-hand-training.csv"))))
                    5)
                   true))
                 (.saveLastModel false)
@@ -422,7 +419,7 @@
              (new-max-epochs-termination-condition :max-n 5)
              :iteration-termination-conditions
              (new-invalid-score-iteration-termination-condition)
-             :n-epochs 5
+             :eval-every-n-epochs 5
              :model-saver (new-in-memory-saver)
              :save-last-model? false
              :score-calculator
@@ -455,7 +452,7 @@
                    :iteration-termination-conditions (new-max-time-iteration-termination-condition
                                                       :max-time-val 1
                                                       :max-time-unit :seconds)
-                   :n-epochs 1
+                   :eval-every-n-epochs 1
                    :model-saver (new-in-memory-saver)
                    :save-last-model? false
                    :score-calculator (new-ds-loss-calculator
@@ -463,7 +460,6 @@
                                       :average? true))]
       (is (= org.deeplearning4j.earlystopping.EarlyStoppingResult
              (type (fit-trainer!
-                    :trainer
                     (new-early-stopping-trainer
                             :early-stopping-conf es-conf
                             :mln mln-code

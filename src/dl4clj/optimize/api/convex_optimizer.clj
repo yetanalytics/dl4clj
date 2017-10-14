@@ -11,119 +11,119 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
 
 (defn get-batch-size
   "returns the batch size for the optimizer"
-  [& {:keys [optim as-code?]
-      :or {as-code? true}}]
-  (match [optim]
+  [optimizer & {:keys [as-code?]
+                :or {as-code? true}}]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.batchSize ~optim))
+         (obj-or-code? as-code? `(.batchSize ~optimizer))
          :else
-         (.batchSize optim)))
+         (.batchSize optimizer)))
 
 (defn get-conf
   "get the nn-conf associated with this optimizer"
-  [& {:keys [optim as-code?]
-      :or {as-code? true}}]
-  (match [optim]
+  [optimizer & {:keys [as-code?]
+                :or {as-code? true}}]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.getConf ~optim))
+         (obj-or-code? as-code? `(.getConf ~optimizer))
          :else
-         (.getConf optim)))
+         (.getConf optimizer)))
 
 (defn get-updater
   "returns the updater associated with this optimizer"
-  [& {:keys [optim as-code?]
-      :or {as-code? true}}]
-  (match [optim]
+  [optimizer & {:keys [as-code?]
+                :or {as-code? true}}]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.getUpdater ~optim))
+         (obj-or-code? as-code? `(.getUpdater ~optimizer))
          :else
-         (.getUpdater optim)))
+         (.getUpdater optimizer)))
 
 (defn get-gradient-and-score
   "the gradient and score for this optimizer"
-  [& {:keys [optim as-code?]
-      :or {as-code? true}}]
-  (match [optim]
+  [optimizer & {:keys [as-code?]
+                :or {as-code? true}}]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.gradientAndScore ~optim))
+         (obj-or-code? as-code? `(.gradientAndScore ~optimizer))
          :else
-         (.gradientAndScore optim)))
+         (.gradientAndScore optimizer)))
 
 (defn get-score
   "The score for the optimizer so far"
-  [& {:keys [optim as-code?]
-      :or {as-code? true}}]
-  (match [optim]
+  [optimizer & {:keys [as-code?]
+                :or {as-code? true}}]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.score ~optim))
+         (obj-or-code? as-code? `(.score ~optimizer))
          :else
-         (.score optim)))
+         (.score optimizer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; setters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-batch-size!
-  "set the batch size for the optimizer
+  "set the batch size for the optimizerizer
 
   :batch-size (int), the batch size
 
-  returns the optimizer"
-  [& {:keys [optim batch-size as-code?]
+  returns the optimizerizer"
+  [& {:keys [optimizer batch-size as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:optim (_ :guard seq?)
+         [{:optimizer (_ :guard seq?)
            :batch-size (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         (obj-or-code? as-code? `(doto ~optim (.setBatchSize (int ~batch-size))))
+         (obj-or-code? as-code? `(doto ~optimizer (.setBatchSize (int ~batch-size))))
          :else
-         (doto optim (.setBatchSize batch-size))))
+         (doto optimizer (.setBatchSize batch-size))))
 
 (defn set-listeners!
-  "sets the listeners for the supplied optimizer
+  "sets the listeners for the supplied optimizerizer
 
   :listeners (collection), a collection of listeners
    - clojure data structures can be used
 
-  returns the optimizer"
-  [& {:keys [optim listeners as-code?]
+  returns the optimizerizer"
+  [& {:keys [optimizer listeners as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:optim (_ :guard seq?)
+         [{:optimizer (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
-         (obj-or-code? as-code? `(doto ~optim (.setListeners ~listeners)))
+         (obj-or-code? as-code? `(doto ~optimizer (.setListeners ~listeners)))
          :else
-         (doto optim (.setListeners listeners))))
+         (doto optimizer (.setListeners listeners))))
 
 (defn set-updater!
-  "sets the updater for the optimizer
+  "sets the updater for the optimizerizer
 
-  :updater (updater), an updater to add to the optimizer
+  :updater (updater), an updater to add to the optimizerizer
 
-  returns the optimizer"
-  [& {:keys [optim updater as-code?]
+  returns the optimizerizer"
+  [& {:keys [optimizer updater as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:optim (_ :guard seq?)
+         [{:optimizer (_ :guard seq?)
            :updater (_ :guard seq?)}]
-         (obj-or-code? as-code? `(doto ~optim (.setUpdater ~updater)))
+         (obj-or-code? as-code? `(doto ~optimizer (.setUpdater ~updater)))
          :else
-         (doto optim (.setUpdater updater))))
+         (doto optimizer (.setUpdater updater))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn optimize
-  "calls optimize! returns a boolean"
-  [& {:keys [optim as-code?]
+(defn optimizerize
+  "calls optimizerize! returns a boolean"
+  [& {:keys [optimizer as-code?]
       :or {as-code? true}}]
-  (match [optim]
+  (match [optimizer]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.optimize ~optim))
+         (obj-or-code? as-code? `(.optimizerize ~optimizer))
          :else
-         (.optimize optim)))
+         (.optimizerize optimizer)))

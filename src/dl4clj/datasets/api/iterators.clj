@@ -12,8 +12,8 @@
 
 (defn current-batch
   "return index of the current batch"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.batch ~iter))
@@ -22,7 +22,7 @@
 
 (defn get-batch-size
   "return the batch size"
-  [& {:keys [iter as-code?]
+  [iter & {:keys [as-code?]
       :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
@@ -32,8 +32,8 @@
 
 (defn get-current-cursor
   "The current cursor if applicable"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.cursor ~iter))
@@ -42,8 +42,8 @@
 
 (defn get-pre-processor
   "Returns preprocessors, if defined"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getPreProcessor ~iter))
@@ -52,8 +52,8 @@
 
 (defn get-input-columns
   "Input columns for the dataset"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.inputColumns ~iter))
@@ -76,8 +76,8 @@
 
 (defn next-example!
   "returns the next example in an iterator"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.next ~iter))
@@ -86,8 +86,8 @@
 
 (defn get-num-examples
   "Total number of examples in the dataset"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.numExamples ~iter))
@@ -96,8 +96,8 @@
 
 (defn get-total-examples
   "Total examples in the iterator"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.totalExamples ~iter))
@@ -106,8 +106,8 @@
 
 (defn get-total-outcomes
   "The number of labels for the dataset"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.totalOutcomes ~iter))
@@ -130,8 +130,8 @@
          (.loadFromMetaData iter meta-data)))
 
 (defn remove-data!
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~iter .remove))
@@ -142,8 +142,8 @@
   "Does this DataSetIterator support asynchronous prefetching of multiple DataSet objects?
   Most DataSetIterators do, but in some cases it may not make sense to wrap
   this iterator in an iterator that does asynchronous prefetching."
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.asyncSupported ~iter))
@@ -153,8 +153,8 @@
 (defn reset-supported?
   "Is resetting supported by this DataSetIterator?
   Many DataSetIterators do support resetting, but some don't"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.resetSupported ~iter))
@@ -163,8 +163,8 @@
 
 (defn reset-iter!
   "Resets the iterator back to the beginning"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(doto ~iter .reset))
@@ -173,8 +173,8 @@
 
 (defn has-next?
   "checks to see if there is anymore data in the iterator"
-  [& {:keys [iter as-code?]
-      :or {as-code? true}}]
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
   (match [iter]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.hasNext ~iter))
@@ -191,7 +191,7 @@
            :pre-processor (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.setPreProcessor ~pre-processor)))
          :else
-         (doto (if (has-next? :iter iter)
+         (doto (if (has-next? iter)
                  iter
-                 (reset-iter! :iter iter))
+                (reset-iter! iter))
            (.setPreProcessor pre-processor))))

@@ -31,6 +31,7 @@
   [& {:keys [mln frozen-til as-code?]
       :or {as-code? true}
       :as opts}]
+  ;; update this to use match
   (let [code (if frozen-til
                `(TransferLearningHelper. ~mln ~frozen-til)
                `(TransferLearningHelper. ~mln))]

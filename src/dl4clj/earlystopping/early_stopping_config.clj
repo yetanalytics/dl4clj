@@ -50,7 +50,7 @@ Users need to specify the following:
            as-code? true}
       :as opts}]
   (let [method-map {:epoch-termination-conditions     '.epochTerminationConditions
-                    :n-epochs                         '.evaluateEveryNEpochs
+                    :eval-every-n-epochs              '.evaluateEveryNEpochs
                     :iteration-termination-conditions '.iterationTerminationConditions
                     :model-saver                      '.modelSaver
                     :save-last-model?                 '.saveLastModel

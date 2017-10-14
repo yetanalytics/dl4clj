@@ -9,8 +9,8 @@
 
 (defn get-network
   "returns the mln from the Spark-mln"
-  [& {:keys [spark-mln as-code?]
-      :or {as-code? true}}]
+  [spark-mln & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [spark-mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getNetwork ~spark-mln))
@@ -19,8 +19,8 @@
 
 (defn get-score
   "Gets the last (average) minibatch score from calling fit."
-  [& {:keys [spark-mln as-code?]
-      :or {as-code? true}}]
+  [spark-mln & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [spark-mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getScore ~spark-mln))
@@ -29,8 +29,8 @@
 
 (defn get-spark-context
   "returns the spark context from the spark-mln"
-  [& {:keys [spark-mln as-code?]
-      :or {as-code? true}}]
+  [spark-mln & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [spark-mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getSparkContext ~spark-mln))
@@ -39,8 +39,8 @@
 
 (defn get-spark-training-stats
   "Get the training statistics, after collection of stats has been enabled"
-  [& {:keys [spark-mln as-code?]
-      :or {as-code? true}}]
+  [spark-mln & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [spark-mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getSparkTrainingStats ~spark-mln))
@@ -49,8 +49,8 @@
 
 (defn get-training-master
   "return the training master used to configure the spark-mln"
-  [& {:keys [spark-mln as-code?]
-      :or {as-code? true}}]
+  [spark-mln & {:keys [as-code?]
+                :or {as-code? true}}]
   (match [spark-mln]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getTrainingMaster ~spark-mln))
@@ -230,11 +230,11 @@
   (match [opts]
          [{:spark-mln (_ :guard seq?)
            :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
+         (throw (Exception. "use train-with-spark in dl4clj.nn.training"))
          [{:spark-mln _
            :rdd _}]
          (do (dotimes [n n-epochs]
-               (.fit spark-mln rdd))
+               (doto spark-mln (.fit rdd)))
              spark-mln)
          [{:spark-mln (_ :guard seq?)
            :path-to-data (:or (_ :guard string?)
@@ -243,12 +243,12 @@
            (obj-or-code?
             as-code?
             `(do (dotimes [~n ~n-epochs]
-                   (.fit ~spark-mln ~path-to-data))
+                   (doto ~spark-mln (.fit ~path-to-data)))
                  ~spark-mln)))
          [{:spark-mln _
            :path-to-data _}]
          (do (dotimes [n n-epochs]
-               (.fit spark-mln path-to-data))
+               (doto spark-mln (.fit path-to-data)))
              spark-mln)))
 
 (defn fit-continous-labeled-point!

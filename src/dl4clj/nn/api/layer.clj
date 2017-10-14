@@ -14,8 +14,8 @@
 
 (defn get-index
   "Get the layer index."
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getIndex ~layer))
@@ -24,8 +24,8 @@
 
 (defn get-input-mini-batch-size
   "Get current/last input mini-batch size, as set by set-input-mini-batch-size!"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getInputMiniBatchSize ~layer))
@@ -34,8 +34,8 @@
 
 (defn get-listeners
   "Get the iteration listeners for this layer."
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getListeners ~layer))
@@ -44,8 +44,8 @@
 
 (defn get-mask-array
   "get the mask array"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.getMaskArray ~layer))
@@ -54,8 +54,8 @@
 
 (defn get-layer-type
   "Returns the layer type"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.type ~layer))
@@ -278,8 +278,8 @@
 
 (defn initializer
   "returns a param initializer for this layer"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.initializer ~layer))
@@ -496,8 +496,8 @@
 
 (defn is-pretrain-layer?
   "Returns true if the layer can be trained in an unsupervised/pretrain manner (VAE, RBMs etc)"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.isPretrainLayer ~layer))
@@ -559,8 +559,8 @@
 (defn transpose
   "Return a transposed copy of the weights/bias
   (this means reverse the number of inputs and outputs on the weights)"
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.transpose ~layer))
@@ -568,8 +568,8 @@
          (.transpose layer)))
 
 (defn reset-layer-default-config
-  [& {:keys [layer as-code?]
-      :or {as-code? true}}]
+  [layer & {:keys [as-code?]
+            :or {as-code? true}}]
   (match [layer]
          [(_ :guard seq?)]
          (obj-or-code? as-code? `(.resetLayerDefaultConfig ~layer))
