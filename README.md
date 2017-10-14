@@ -92,6 +92,10 @@ With Maven:
 - API functions return code when args are provided as code
   - the library makes no assumptions on when you want execution to happen
     - that is determined by the user by setting the :as-code? flag to false
+    ***** in this current branch that is not 100% true.
+    ***** I have adapted a few fns to deal with accepting code and objects
+    ***** This is prob going to be a feature applied anywhere I can get away with it
+    ***** this requires more thought on my part
   - this allows for fns to be passed as args to builders and constructors
 
 - when dl4j objects are passed to API functions, the return value of the method is returned
