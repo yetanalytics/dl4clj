@@ -58,6 +58,8 @@ If you have any questions,
 
 ## Artifacts
 
+NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
+
 dl4clj artifacts are released to Clojars.
 - this is an ALPHA version so you can play around with it in your own work
   - this is not perfect but will get the job done in many cases
@@ -73,20 +75,24 @@ If using Maven add the following repository definition to your pom.xml:
 
 ## Latest release
 
+NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
+
 With Leiningen:
 
 ```
-[yetanalytics/dl4clj "0.1.0-alpha"]
+[yetanalytics/dl4clj "0.1.0-SNAPSHOT"]
 
 ```
 
 With Maven:
 
+NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
+
 ```
 <dependency>
   <groupId>yetanalytics</groupId>
   <artifactId>dl4clj</artifactId>
-  <version>0.1.0-alpha</version>
+  <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 

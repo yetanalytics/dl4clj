@@ -7,7 +7,7 @@
 ;; the terms of this license.
 ;; You must not remove this notice, or any other, from this software.
 
-(defproject dl4clj "0.1.0-alpha"
+(defproject dl4clj "0.1.0-SNAPSHOT"
   :description "ports of some DL4J features to Clojure"
   :url "https://github.com/yetanalytics/dl4clj"
   :license {:name "BSD C2"
@@ -19,6 +19,5 @@
                  [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"]
                  [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"]
                  [org.apache.spark/spark-core_2.11 "2.1.0"]
-                 #_[org.deeplearning4j/dl4j-streaming_2.11 "0.8.0_spark_2"]
                  [org.clojure/core.match "0.3.0-alpha5"]
                  [cheshire "5.7.1"]])

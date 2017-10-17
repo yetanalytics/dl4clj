@@ -13,6 +13,7 @@ pom.xml.asc
 /src/dl4clj/examples/rnn/graves_lstm_char_modelling_example-saved.clj
 /src/dl4clj/examples/rnn/graves_lstm_char_modelling_example.out
 /dev-resources/uci/
+/dev/
 /target
 /classes
 /checkouts
@@ -27,4 +28,6 @@ pom.xml.asc
 .hg/
 /resources/tmp/
 /resources/tests/spark/
-/resources/test/spark/saving/
+/resources/paravec/
+/resources/conj/
+
