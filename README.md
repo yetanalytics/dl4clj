@@ -80,7 +80,7 @@ NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
 With Leiningen:
 
 ```
-[yetanalytics/dl4clj "0.1.0-SNAPSHOT"]
+[com.yetanalytics/dl4clj "0.1.0-SNAPSHOT"]
 
 ```
 
@@ -90,7 +90,7 @@ NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
 
 ```
 <dependency>
-  <groupId>yetanalytics</groupId>
+  <groupId>ycom.yetanalytics</groupId>
   <artifactId>dl4clj</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
