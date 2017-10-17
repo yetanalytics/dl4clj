@@ -38,7 +38,7 @@ If you have any questions,
 - Evaluation
 - Data import
 
-### Features being worked on for 1.0.0
+### Features being worked on for 0.1.0
 
 - Clustering (testing in progress)
 - Spark (currently being refactored)
