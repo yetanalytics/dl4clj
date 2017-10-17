@@ -75,22 +75,18 @@ If using Maven add the following repository definition to your pom.xml:
 
 ## Latest release
 
-NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
-
 With Leiningen:
 
 ```
-[com.yetanalytics/dl4clj "0.1.0-alpha"]
+[felungs/dl4clj "0.1.0-alpha"]
 
 ```
 
 With Maven:
 
-NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
-
 ```
 <dependency>
-  <groupId>com.yetanalytics</groupId>
+  <groupId>felungs</groupId>
   <artifactId>dl4clj</artifactId>
   <version>0.1.0-alpha</version>
 </dependency>
