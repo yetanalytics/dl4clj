@@ -7,17 +7,18 @@
 ;; the terms of this license.
 ;; You must not remove this notice, or any other, from this software.
 
-(defproject dl4clj "0.0.1"
-  :description "ports of some DL4J examples to Clojure"
-  :url "https://github.com/engagor/dl4clj"
+(defproject dl4clj "0.1.0-alpha"
+  :description "ports of some DL4J features to Clojure"
+  :url "https://github.com/yetanalytics/dl4clj"
   :license {:name "BSD C2"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.deeplearning4j/deeplearning4j-core "0.4-rc3.10"]
-                 [org.deeplearning4j/deeplearning4j-ui "0.4-rc3.10"]
-                 [org.deeplearning4j/deeplearning4j-nlp "0.4-rc3.10"]
-                 [org.apache.commons/commons-io "1.3.2"]
-                 [org.nd4j/nd4j-native "0.4-rc3.10"]
-                 [org.nd4j/canova-api "0.0.0.14"]
-                 [org.clojure/data.json "0.2.6"]])
-  
+  :dependencies [[org.clojure/clojure "1.9.0-beta2"]
+                 [org.deeplearning4j/deeplearning4j-core "0.8.0"]
+                 [org.nd4j/nd4j-native-platform "0.8.0"]
+                 [org.datavec/datavec-api "0.8.0"]
+                 [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"]
+                 [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"]
+                 [org.apache.spark/spark-core_2.11 "2.1.0"]
+                 #_[org.deeplearning4j/dl4j-streaming_2.11 "0.8.0_spark_2"]
+                 [org.clojure/core.match "0.3.0-alpha5"]
+                 [cheshire "5.7.1"]])

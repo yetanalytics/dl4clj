@@ -8,9 +8,9 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 "}
   dl4clj.examples.rnn.graves-lstm-char-modelling-example
   (:require [dl4clj.examples.rnn.tools :refer [sample-characters-from-network]]
-            [dl4clj.examples.example-utils :refer (shakespeare)]
-            [dl4clj.examples.rnn.character-iterator :refer (get-shakespeare-iterator)]
-            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes reset)]
+            [dl4clj.examples.example-utils :refer [shakespeare]]
+            [dl4clj.examples.rnn.character-iterator :refer [get-shakespeare-iterator]]
+            [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer [input-columns total-outcomes reset]]
             [dl4clj.nn.conf.layers.graves-lstm]
             [dl4clj.nn.conf.layers.rnn-output-layer]
             [dl4clj.nn.conf.distribution.uniform-distribution]
@@ -21,7 +21,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
             [dl4clj.nn.api.classifier :as classifier]
             [dl4clj.nn.api.layer])
   (:import [java.util Random]))
-
+(comment
 
 (def mini-batch-size 32)
 (def example-length 100)
@@ -38,6 +38,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 (def iter (get-shakespeare-iterator mini-batch-size example-length examples-per-epoch))
 
 ;; Set up network configuration:
+;; broken
 (def conf (neural-net-configuration
            {:optimization-algo :stochastic-gradient-descent
             :iterations 1
@@ -84,7 +85,7 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 ;; Do training, and then generate and print samples from network
 (dotimes [i num-epochs]
   (classifier/fit net iter)
-  
+
   (println "--------------------")
   (println "Completed epoch " i )
   (println "Sampling characters from network given initialization \"\"")
@@ -98,5 +99,4 @@ For general instructions using deeplearning4j's implementation of recurrent neur
 
   ;; Reset iterator for another epoch
   (reset iter))
-
-
+)

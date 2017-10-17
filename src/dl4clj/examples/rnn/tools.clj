@@ -1,4 +1,4 @@
-(ns ^{:doc ""}
+#_(ns ^{:doc ""}
   dl4clj.examples.rnn.tools
   (:require [nd4clj.linalg.dataset.api.iterator.data-set-iterator :refer (input-columns total-outcomes)]
             [nd4clj.linalg.factory.nd4j :refer (zeros)]
@@ -6,12 +6,12 @@
             [dl4clj.nn.multilayer.multi-layer-network :refer (rnn-clear-previous-state rnn-time-step)])
   (:import [java.util Random]))
 
-(defn- sample-from-distribution 
+#_(defn- sample-from-distribution
   "Sample from a probability distribution over discrete classes given as a vector of probabilities
   summing to 1.0."
-  ([distribution] 
+  ([distribution]
    (sample-from-distribution distribution (Random.)))
-  ([distribution ^Random rng] 
+  ([distribution ^Random rng]
    (let [d (.nextDouble rng)]
      (loop [i 0
             sum (nth distribution 0)]
@@ -19,7 +19,7 @@
              (< i (count distribution)) (recur (inc i) (+ sum (nth distribution (inc i))))
              :else (throw (IllegalArgumentException. (str "Distribution is invalid? d= " d ", sum=" sum))))))))
 
-(defn sample-characters-from-network [initialization  net iter rng characters-to-sample num-samples]
+#_(defn sample-characters-from-network [initialization  net iter rng characters-to-sample num-samples]
   ;; Set up initialization. If no initialization: use a random character
   (let [;; set up initialization. If no initialization: use a random character.
         initialization (or initialization (str (rand-nth (seq (:valid-characters iter)))))
@@ -54,4 +54,3 @@
             (recur (rnn-time-step net next-input)
                    (inc i)))))
     (map #(.toString ^StringBuilder %) sb))))
-

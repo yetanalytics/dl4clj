@@ -5,9 +5,73 @@
            [org.nd4j.linalg.api.ndarray INDArray]
            [org.nd4j.linalg.api.rng.distribution Distribution]
            [org.nd4j.linalg.api.rng Random]))
-;; (remove-ns 'nd4clj.linalg.factory.nd4j)
 
-(defn zeros 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; INDArray creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; move this fns over to an appropriate dl4clj directory
+;; also update to code/obj duality
+
+(defn vec->indarray
+  [data]
+  (Nd4j/create (double-array data)))
+
+(defn matrix->indarray
+  [matrix]
+  (as-> (for [each matrix]
+          (double-array each))
+      data
+    (into [] data)
+    (into-array data)
+    (Nd4j/create data)))
+
+(defn vec-or-matrix->indarray
+  [data]
+  ;; is our data already an object?
+  (if (vector? data)
+    ;; no, is it a vector or a matrix?
+    (if (vector? (first data))
+      (matrix->indarray data)
+      (vec->indarray data))
+    data))
+
+(defn indarray-of-zeros
+  [& {:keys [rows columns as-code?]
+      :or {rows 1
+           columns 1
+           as-code? false}}]
+  (let [code `(Nd4j/zeros (int ~rows) (int ~columns))]
+    (if as-code?
+      code
+      (eval code))))
+
+(defn indarray-of-ones
+  [& {:keys [rows columns as-code?]
+      :or {rows 1
+           columns 1
+           as-code? false}}]
+  (let [code `(Nd4j/ones (int ~rows) (int ~columns))]
+    (if as-code?
+      code
+      (eval code))))
+
+(defn indarray-of-rand
+  [& {:keys [rows columns as-code?]
+      :or {rows 1
+           columns 1
+           as-code? false}}]
+  (let [code (Nd4j/rand (int rows) (int columns))]
+    (if as-code?
+      code
+      (eval code))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Legacy INDArray creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn zeros
   ([shape]
    (Nd4j/zeros (int-array shape)))
   ([rows columns]
@@ -21,6 +85,7 @@
 
 (defn eye [n]
   (Nd4j/eye (int n)))
+
 
 (defmulti create-from-data (fn [data & more] (mapv type more)))
 (defmethod create-from-data []
@@ -47,7 +112,7 @@
 (defmethod create-from-data [clojure.lang.IPersistentCollection Number java.lang.Character]
   [data shape offset ordering]
   (Nd4j/create (double-array data) (int-array shape) (int offset) ^java.lang.Character ordering))
-(defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number]  
+(defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number]
   [data rows columns stride offset]
   (Nd4j/create (double-array data) (int rows) (int columns) (int-array stride) (int offset)))
 (defmethod create-from-data [clojure.lang.IPersistentCollection Number Number clojure.lang.IPersistentCollection Number java.lang.Character]
@@ -138,7 +203,7 @@
 (defmethod randn [Number Number Random] [rows columns rng]
   (Nd4j/randn (int rows) (int columns) ^Random rng))
 
-(defn max 
+(defn max
   ([^INDArray a]
    (Nd4j/max a))
   ([^INDArray a dimension]
@@ -149,7 +214,7 @@
   (Nd4j/create (double-array data)))
 
 (defn column-vector [data]
-  (.transpose 
+  (.transpose
    (Nd4j/create (double-array data))))
 
 ;; (defn create [data shape]
@@ -160,5 +225,3 @@
 
 (defn set-enforce-numerical-stability! [^Boolean value]
   (set! (Nd4j/ENFORCE_NUMERICAL_STABILITY) value))
-
-

@@ -10,7 +10,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
             [nd4clj.linalg.api.ndarray.indarray :refer (put-scalar get-scalar shape)]
             [nd4clj.linalg.dataset.api.data-set :refer (get-features get-labels)]
             [nd4clj.linalg.dataset.data-set :refer (data-set)])
-  (:import [java.util NoSuchElementException]           
+  (:import [java.util NoSuchElementException]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator]))
 
 (defrecord LRCharDataSetIterator [valid-characters char-to-idx-map ^"[C" input-chars segment-length n-segments mini-batch-size char-pointer max-char-pointer]
@@ -38,7 +38,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
       (data-set input labels)))
   (numExamples [this] n-segments)
   (reset [this] (reset! char-pointer 0))
-  (totalExamples [this] n-segments) 
+  (totalExamples [this] n-segments)
   (totalOutcomes [this] (count valid-characters)))
 
 (defn lr-character-iterator
@@ -57,17 +57,17 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
          char-pointer (atom 0)
          max-char-pointer (dec (count input-chars))
          max-segments (Math/floorDiv (long max-char-pointer) (long segment-length))]
-     (when (and n-segments (> n-segments max-segments)) 
+     (when (and n-segments (> n-segments max-segments))
        (throw (IllegalArgumentException. (str "n-segments exceeds number of available segments " max-segments))))
      (when (and n-segments (not (zero? (mod n-segments mini-batch-size))))
        (throw (IllegalArgumentException. (str "n-segments must be a multiple of mini-batch-size"))))
      (println "data has" (count string) "characters," (count valid-characters) "unique.")
-     (LRCharDataSetIterator. valid-characters 
-                             (index-map valid-characters) 
-                             input-chars 
-                             segment-length 
+     (LRCharDataSetIterator. valid-characters
+                             (index-map valid-characters)
+                             input-chars
+                             segment-length
                              (or n-segments max-segments)
-                             mini-batch-size 
+                             mini-batch-size
                              (atom 0)
                              max-char-pointer))))
 
@@ -76,7 +76,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
   ;;; some (inneficient) code for inspecting the examples in an lr-character-iterator
 
   (require '[nd4j.linalg.dataset.api.iterator.data-set-iterator :refer :all])
-
+  ;; works without the above require working
   (defn- char-indices [example features-array]
     (for [pos (range (first (shape features-array)))]
       (for [fi (range (second (shape features-array)))]
@@ -90,9 +90,9 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     (for [example (range (nd4clj.linalg.dataset.api.data-set/num-examples batch))]
       (let [features-array (get-features batch)
             labels-array (get-labels batch)]
-        {:input (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
+        {:input (apply str (map #(idx-to-char (binary-feature->char-idx %))
                                 (char-indices example features-array)))
-         :output (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
+         :output (apply str (map #(idx-to-char (binary-feature->char-idx %))
                                  (char-indices example labels-array)))})))
 
   (defn example-seq
@@ -102,12 +102,12 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     (let [idx-to-char (zipmap (map (:char-to-idx-map iter)
                                    (:valid-characters iter))
                               (:valid-characters iter))]
-      (mapcat #(batch-examples % idx-to-char) 
+      (mapcat #(batch-examples % idx-to-char)
               (iterator-seq iter))))
 
 
   (def lr-shakespeare-iterator (lr-character-iterator (shakespeare) {}))
-  
+
   (:n-segments lr-shakespeare-iterator)
   ;; => 55898
 

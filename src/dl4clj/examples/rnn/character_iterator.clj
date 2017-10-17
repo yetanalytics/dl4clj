@@ -65,17 +65,17 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
           (put-scalar labels [i (char-to-idx-map (aget ^"[C" file-characters (+ start-idx example-length))) (dec example-length)] 1.0)))
       (swap! examples-so-far #(+ % num))
       (data-set input labels)))
-  (totalExamples [this] num-examples-to-fetch) 
+  (totalExamples [this] num-examples-to-fetch)
   (inputColumns [_] num-characters)
   (totalOutcomes [this] num-characters)
-  (reset [this] (reset! examples-so-far 0))                
-  (batch [_] mini-batch-size)        
-  (cursor [_] @examples-so-far) 
+  (reset [this] (reset! examples-so-far 0))
+  (batch [_] mini-batch-size)
+  (cursor [_] @examples-so-far)
   (numExamples [this] num-examples-to-fetch))
 
-(defn character-iterator 
+(defn character-iterator
   "Returns a Datasetiterator iterating over input/output text segments as character ndarrays."
-  ([string mini-batch-size example-size num-examples-to-fetch] 
+  ([string mini-batch-size example-size num-examples-to-fetch]
    (character-iterator string mini-batch-size example-size num-examples-to-fetch +default-character-set+ (Random.) true))
   ([string mini-batch-size example-length num-examples-to-fetch valid-characters rng always-start-at-newline?]
    (let [char-to-idx-map (index-map valid-characters)
@@ -86,7 +86,7 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
 
 (defn get-shakespeare-iterator [mini-batch-size example-length examples-per-epoch]
   (character-iterator (shakespeare) mini-batch-size example-length examples-per-epoch +minimal-character-set+ (Random. 12345) true))
-  
+
 (comment
 
 
@@ -105,9 +105,9 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     (for [example (range (nd4clj.linalg.dataset.api.data-set/num-examples batch))]
       (let [features-array (get-features batch)
             labels-array (get-labels batch)]
-        {:input (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
+        {:input (apply str (map #(idx-to-char (binary-feature->char-idx %))
                                 (char-indices example features-array)))
-         :output (apply str (map #(idx-to-char (binary-feature->char-idx %)) 
+         :output (apply str (map #(idx-to-char (binary-feature->char-idx %))
                                  (char-indices example labels-array)))})))
 
   (defn example-seq
@@ -117,11 +117,11 @@ A DataSetIterator for use in the graves-lstm-char-modelling-example
     (let [idx-to-char (zipmap (map (:char-to-idx-map iter)
                                    (:valid-characters iter))
                               (:valid-characters iter))]
-      (mapcat #(batch-examples % idx-to-char) 
+      (mapcat #(batch-examples % idx-to-char)
               (iterator-seq iter))))
 
   (def iter (get-shakespeare-iterator 32 100 (* 50 32)))
 
   (def iter nil)
-  
+
 )

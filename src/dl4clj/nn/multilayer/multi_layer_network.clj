@@ -1,41 +1,67 @@
-(ns ^{:doc "See http://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"} 
-  dl4clj.nn.multilayer.multi-layer-network
-  (:require [dl4clj.nn.conf.multi-layer-configuration :as ml-cfg]
-            [dl4clj.nn.conf.neural-net-configuration :as nn-cfg])
-  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
-           [org.deeplearning4j.nn.conf MultiLayerConfiguration MultiLayerConfiguration$Builder]))
+(ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
+    dl4clj.nn.multilayer.multi-layer-network
+  (:require [dl4clj.utils :refer [contains-many? gensym* obj-or-code?]]
+            [dl4clj.constants :as enum]
+            [dl4clj.nn.api.model :refer [fit! init!]]
+            [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
+            [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
+            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
+            [clojure.core.match :refer [match]])
+  (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]))
 
-(defn multi-layer-network [opts]
-  (if (instance? MultiLayerConfiguration opts)
-    (MultiLayerNetwork. opts)
-    (MultiLayerNetwork. (.build ^MultiLayerConfiguration$Builder (ml-cfg/builder (update-in opts [:confs] #(map nn-cfg/neural-net-configuration %)))))))
+(defn new-multi-layer-network
+  "constructor for a multi-layer-network given a config and optionaly
+  some params (INDArray or vec).  The network is initialized "
+  [& {:keys [conf params]
+      :or {as-code? true}
+      :as opts}]
+  (match [opts]
+         [{:conf (_ :guard seq?)
+           :params (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
+         `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
+         [{:conf _ :params _}]
+         (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
+         [{:conf (_ :guard seq?)}]
+         `(MultiLayerNetwork. ~conf)
+         :else
+         (MultiLayerNetwork. conf)))
 
-(defn init [^MultiLayerNetwork mln]
-  (.init mln)
-  mln)
+(defn train-mln-with-ds-iter!
+  "train the supplied multi layer network on the supplied dataset
 
-(defn rnn-clear-previous-state 
-  "Clear the previous state of the RNN layers (if any)."
-  [^MultiLayerNetwork rnn]
-  (.rnnClearPreviousState rnn)
-  rnn)
+  :iter (iterator), an iterator wrapping a dataset
+   - see: dl4clj.datasets.iterators
 
-(defn rnn-time-step 
-  "If this MultiLayerNetwork contains one or more RNN layers: conduct forward pass (prediction) but using previous stored state for any RNN layers. The activations for the final step are also stored in the RNN layers for use next time rnnTimeStep() is called.
-This method can be used to generate output one or more steps at a time instead of always having to do forward pass from t=0. Example uses are for streaming data, and for generating samples from network output one step at a time (where samples are then fed back into the network as input)
-If no previous state is present in RNN layers (i.e., initially or after calling rnnClearPreviousState()), the default initialization (usually 0) is used.
-Supports mini-batch (i.e., multiple predictions/forward pass in parallel) as well as for single examples.
-Parameters:
-input - Input to network. May be for one or multiple time steps. For single time step: input has shape [miniBatchSize,inputSize] or [miniBatchSize,inputSize,1]. miniBatchSize=1 for single example.
-For multiple time steps: [miniBatchSize,inputSize,inputTimeSeriesLength]
-Returns:
-Output activations. If output is RNN layer (such as RnnOutputLayer): if input has shape [miniBatchSize,inputSize] i.e., is 2d, output has shape [miniBatchSize,outputSize] (i.e., also 2d).
-Otherwise output is 3d [miniBatchSize,outputSize,inputTimeSeriesLength] when using RnnOutputLayer."
-  [^MultiLayerNetwork rnn input]
-  (.rnnTimeStep rnn input))
-
-(defn get-layers [^MultiLayerNetwork mln]
-  (into [] (.getLayers mln)))
-
-(defn get-layer [^MultiLayerNetwork mln i]
-  (.getLayer mln i))
+  :n-epochs (int), the number of passes through the dataset"
+  [& {:keys [mln iter n-epochs as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (let [n* (gensym* :sym "n-epochs")
+        mln* (gensym* :sym "mln")]
+    (match [opts]
+           [{:mln (_ :guard seq?)
+             :iter (_ :guard seq?)
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           ;; figure out whats going wrong here
+           (obj-or-code?
+            as-code?
+            `(let [~mln* ~mln]
+               (dotimes [~n* ~n-epochs]
+                 (fit! :mln ~mln* :iter ~iter))
+               ~mln*))
+           [{:mln _
+             :iter (_ :guard seq?)
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           (throw (Exception. "you must provide both the mln and iter as objects or code"))
+           [{:mln (_ :guard seq?)
+             :iter _
+             :n-epochs (:or (_ :guard number?)
+                            (_ :guard seq?))}]
+           (throw (Exception. "you must provide both the mln and iter as objects or code"))
+           :else
+           (do (dotimes [n n-epochs]
+                 (fit! :mln mln :iter iter))
+               mln))))

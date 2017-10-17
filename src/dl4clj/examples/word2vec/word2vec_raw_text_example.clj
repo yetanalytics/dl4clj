@@ -18,7 +18,7 @@
 ;;; This example code follows the word2vec code snippets at http://deeplearning4j.org/word2vec.html#just
 
 ;;; Loading data
-
+(comment
 (def iter (line-sentence-iterator (clojure.java.io/resource "raw_sentences.txt")))
 (set-pre-processor iter (sentence-pre-processor clojure.string/lower-case))
 
@@ -26,9 +26,9 @@
 
 (def tokenizer (default-tokenizer-factory))
 (def ending-pp (ending-pre-processor))
-(def custom-pp (token-pre-process (fn [^String token] 
-                                    (let [base (clojure.string/replace 
-                                                (pre-process ending-pp 
+(def custom-pp (token-pre-process (fn [^String token]
+                                    (let [base (clojure.string/replace
+                                                (pre-process ending-pp
                                                              (clojure.string/lower-case token))
                                                 "\\d" "d")]
                                       (when (or (.endsWith base "ly") (.endsWith base "ing"))
@@ -65,10 +65,10 @@
 ;; => ["year" "week" "night" "game" "season" "ago" "while" "time" "children" "people"]
 (words-nearest v ["king" "woman"] ["queen"] 10)
 ;; => [] ("king" is not in the model)
-  
+
 
 ;;; Visualizing the Model
-
+;; broken
 (def tsne (barnes-hut-tsne {:max-iter 1000
                             :stop-lying-iteration 50
                             :learning-rate 500
@@ -77,7 +77,7 @@
                             :momentum 0.5
                             :normalize true
                             :use-pca false}))
-;; broken: 
+;; broken:
 ;; (plot-vocab (lookup-table v) tsne)
 
 ;;; Saving, Reloading & Using the Model
@@ -85,3 +85,4 @@
 (write-word-vectors v "/tmp/words.txt")
 (def word-vectors (load-txt-vectors "/tmp/words.txt"))
 (get-word-vector word-vectors "queen")
+)

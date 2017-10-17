@@ -4,6 +4,10 @@
   (:import [org.nd4j.linalg.ops.transforms Transforms]
            [org.nd4j.linalg.api.ndarray INDArray]))
 
+;; TODO
+;; double check to make sure these work
+;; move this over to an appropriate dl4clj directory
+
 (defn cosine-sim
   "Cosine similarity"
   [^INDArray d1 ^INDArray d2]

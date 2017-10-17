@@ -3,12 +3,16 @@
   (:refer-clojure :exclude [min max])
   (:import [org.nd4j.linalg.api.ndarray INDArray]))
 
+;;TODO
+;; Double check these fns, I did't write them
+;; refactor ns
+
 ;;; Matrix manipulation
 ;;; -------------------
 
-(defn put-scalar 
+(defn put-scalar
   "Insert the item at the specified indices"
-  [^INDArray a indices value]  
+  [^INDArray a indices value]
   (.putScalar a (int-array indices) value))
 
 (defn put-row
@@ -45,7 +49,7 @@
 ;;; matrix values
 ;;; -------------
 
-(defn get-scalar 
+(defn get-scalar
   "Get the vector along a particular dimension"
   [^INDArray a indices]
   (.getScalar a (int-array indices)))
@@ -98,7 +102,7 @@
 ;;; Matrix duplication
 ;;; ------------------
 
-(defn dup 
+(defn dup
   "Return a copy of an INDarray"
   [^INDArray a]
   (.dup a))
@@ -146,9 +150,9 @@
   [^INDArray A B]
   (.subi A B))
 
-(comment 
-  
+(comment
+
   (def a (nd4clj.linalg.factory.nd4j/create [1 2 3 4] [2 2]))
   (data a)
-  
+
   )
