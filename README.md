@@ -90,7 +90,7 @@ NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
 
 ```
 <dependency>
-  <groupId>ycom.yetanalytics</groupId>
+  <groupId>com.yetanalytics</groupId>
   <artifactId>dl4clj</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
