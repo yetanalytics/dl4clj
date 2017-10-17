@@ -98,10 +98,13 @@ With Maven:
   - This because all builders require the code representation of dl4j objects
     - this requirement is very unlikely to change
 
-***** vec-or-matrix->indarray returns the dl4j obj
-***** this is accounted for in all fns which use it
-***** have not decided if im going to change this
-***** there is no :as-code? option for that fn
+- ***** vec-or-matrix->indarray returns the dl4j obj
+
+- ***** this is accounted for in all fns which use it
+
+- ***** have not decided if im going to change this
+
+- ***** there is no :as-code? option for that fn
 
 - API functions return code when all args are provided as code
 - API functions return the value of calling the wrapped method when
@@ -1365,6 +1368,6 @@ Copyright © 2016 Engagor
 
 Distributed under the BSD Clause-2 License as distributed in the file LICENSE at the root of this repository.
 
-+![](https://thumbs.gfycat.com/IncompleteAncientJanenschia-size_restricted.gif)
+![](https://thumbs.gfycat.com/IncompleteAncientJanenschia-size_restricted.gif)
 
 *Drops the mic*
