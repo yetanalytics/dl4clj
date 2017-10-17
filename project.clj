@@ -12,7 +12,6 @@
   :url "https://github.com/yetanalytics/dl4clj"
   :license {:name "BSD C2"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
-  :deploy-repositories [["releases" :clojars]]
   :dependencies [[org.clojure/clojure "1.9.0-beta2"]
                  [org.deeplearning4j/deeplearning4j-core "0.8.0"]
                  [org.nd4j/nd4j-native-platform "0.8.0"]

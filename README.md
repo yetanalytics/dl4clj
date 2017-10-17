@@ -77,8 +77,11 @@ If using Maven add the following repository definition to your pom.xml:
 
 With Leiningen:
 
+STILL NOT DEPLOYED, NEED TO IRON SOME THINGS OUT ON MY END
+WILL BE SOON I PROMISE!
+
 ```
-[felungs/dl4clj "0.1.0-alpha"]
+[com.yetanalytics/dl4clj "0.1.0-alpha"]
 
 ```
 
@@ -86,7 +89,7 @@ With Maven:
 
 ```
 <dependency>
-  <groupId>felungs</groupId>
+  <groupId>com.yetanalytics</groupId>
   <artifactId>dl4clj</artifactId>
   <version>0.1.0-alpha</version>
 </dependency>
