@@ -65,7 +65,7 @@
              storage-level storage-level-streams training-hooks
              worker-prefetch-n-batches as-code?]
       :or {build? true
-           as-code? false}
+           as-code? true}
       :as opts}]
   (let [rdd-n-e (int rdd-n-examples)
         ;; ^ spec will catch when this is no present

@@ -1,7 +1,8 @@
 (ns dl4clj.spark.api.dl4j-multi-layer
   (:import [org.deeplearning4j.spark.impl.multilayer SparkDl4jMultiLayer])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code? gensym*]]))
+            [dl4clj.utils :refer [obj-or-code? gensym*]]
+            [dl4clj.spark.data.java-rdd :as rdd]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -71,7 +72,10 @@
    over the entire dataset
 
   :mini-batch-size (int), the size of the mini batches within the rdd
-   - should only be supplied when :rdd is a JavaRDD and then still optional"
+   - should only be supplied when :rdd is a JavaRDD and then still optional
+
+  :iter ..."
+  ;;TODO: update to work with iters
   [& {:keys [spark-mln rdd average? mini-batch-size]
       :as opts}]
   (match [opts]
@@ -86,7 +90,8 @@
          [{:spark-mln _
            :rdd _
            :average? _}]
-         (.calculateScore spark-mln rdd average?)))
+         (.calculateScore spark-mln rdd average?)
+         ))
 
 (defn eval-classification-spark-mln
   "Evaluate the network in a distributed manner on the provided data

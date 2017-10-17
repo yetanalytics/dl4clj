@@ -2,23 +2,31 @@
 
 Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 
+# Contact info
+If you have any questions,
+- my email is will@yetanalytics.com
+- I'm will_hoyt in the clojurians slack
+- twitter is @FeLungz (don't check very often)
+
 ## TODO
 - update examples dir
 - finish README
   - add in examples using Transfer Learning
-  - refine other aspects of the readme
 - finish tests
   - eval is missing regression tests, roc tests
   - nn-test is missing regression tests
-  - spark needs to be updated
-  - possibly add more tests to util-tests
+  - spark tests need to be redone
+  - need dl4clj.core tests
 - revist spark for updates
 - write specs for user facing functions
   - this is very important, match isnt strict for maps
   - provides 100% certianty of the input -> output flow
   - check the args as they come in, dispatch once I know its safe, test the pure output
 - collapse overlapping api namespaces
-- set up core use case flows
+- add to core use case flows
+- determine how much saftey to build into api fns and core fns
+  - dealing with args coming in as code and objs.
+- fix logging
 
 ## Features
 
@@ -30,13 +38,15 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - Evaluation
 - Data import
 
-### Features being worked on for current release
+### Features being worked on for 1.0.0
 
 - Clustering (testing in progress)
 - Spark (currently being refactored)
 - Front End (maybe current release, maybe future release. Not sure yet)
 - Version of dl4j is 0.0.8 in this project.  Current dl4j version is 0.0.9
 - Parallelism
+- Kafka support
+- Other items mentioned in TODO
 
 ### Features being worked on for future releases
 
@@ -44,13 +54,12 @@ Port of [deeplearning4j](https://github.com/deeplearning4j/) to clojure
 - Computational Graphs
 - Reinforement Learning
 - Arbiter
-- Ability to extend dl4j using methods and objects called behind the scenes
-- Kafka support
 
 ## Artifacts
 
-dl4clj artifacts are released to Clojars. (original authors work)
-- this iteration of the library is not currently on Clojars
+dl4clj artifacts are released to Clojars.
+- this is an ALPHA version so you can play around with it in your own work
+  - this is not perfect but will get the job done in many cases
 
 If using Maven add the following repository definition to your pom.xml:
 
@@ -66,7 +75,7 @@ If using Maven add the following repository definition to your pom.xml:
 With Leiningen:
 
 ```
-[engagor/clj-vw "0.0.1"]
+[yetanalytics/dl4clj "0.1.0-alpha"]
 
 ```
 
@@ -74,9 +83,9 @@ With Maven:
 
 ```
 <dependency>
-  <groupId>engagor</groupId>
+  <groupId>yetanalytics</groupId>
   <artifactId>dl4clj</artifactId>
-  <version>0.0.1</version>
+  <version>0.1.0-alpha</version>
 </dependency>
 ```
 
@@ -86,19 +95,25 @@ With Maven:
 - All functions for creating dl4j objects return code by default
   - All of these functions have an option to return the dl4j object
     - :as-code? = false
-  - This is because all builders require the code representation of dl4j objects
+  - This because all builders require the code representation of dl4j objects
     - this requirement is very unlikely to change
 
-- API functions return code when args are provided as code
-  - the library makes no assumptions on when you want execution to happen
-    - that is determined by the user by setting the :as-code? flag to false
-    ***** in this current branch that is not 100% true.
-    ***** I have adapted a few fns to deal with accepting code and objects
-    ***** This is prob going to be a feature applied anywhere I can get away with it
-    ***** this requires more thought on my part
-  - this allows for fns to be passed as args to builders and constructors
+***** vec-or-matrix->indarray returns the dl4j obj
+***** this is accounted for in all fns which use it
+***** have not decided if im going to change this
+***** there is no :as-code? option for that fn
 
-- when dl4j objects are passed to API functions, the return value of the method is returned
+- API functions return code when all args are provided as code
+- API functions return the value of calling the wrapped method when
+  all args (which can be dl4j objects) are provided as dl4j objects
+
+- There are currently a few API fns which can handle being passed a mixture
+  of objs and code as args.  These fns are rare!
+  - there will be more of them in future releases
+
+- The tests are there to help clarify behavior, if you are unsure of how
+  to use a fn, search the tests
+  - for questions about spark, refer to the spark section bellow
 
 ### Example of obj/code duality
 
@@ -232,15 +247,15 @@ Loading data from a file (here its a csv)
             [dl4clj.datasets.iterators :refer [new-existing-dataset-iterator]]
             [dl4clj.datasets.api.iterators :refer :all]
             [dl4clj.datasets.pre-processors :as ds-pp]
-            [dl4clj.datasets.api.pre-processors :refer :all]))
+            [dl4clj.datasets.api.pre-processors :refer :all]
+            [dl4clj.core :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INDArray creation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-********************************************************************************
-;; update to use keyword args and have as-code? vec-or-matrix->indarray
-********************************************************************************
+;;TODO: consider defaulting to code
+
 ;; can create from a vector
 
 (vec->indarray [1 2 3 4])
@@ -338,34 +353,33 @@ Loading data from a file (here its a csv)
 ;; we can create a dataset iterator from the code which creates datasets
 ;; and set the labels for our outputs (optional)
 
-(def ds-with-multiple-examples-code (new-ds
-                                     :input [[1 2 3 4] [2 4 6 8]]
-                                     :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
-;; iterator code
-(new-existing-dataset-iterator :dataset ds-with-multiple-examples-code :labels ["foo" "baz" "foobaz"])
+(def ds-with-multiple-examples
+  (new-ds
+   :input [[1 2 3 4] [2 4 6 8]]
+   :output [[0.0 1.0 0.0] [0.0 0.0 1.0]]))
 
-;; iterator object
+;; iterator
 (def training-rr-ds-iter
   (new-existing-dataset-iterator
-   :dataset ds-with-multiple-examples-code
-   :labels ["foo" "baz" "foobaz"]
-   :as-code? false))
+   :dataset ds-with-multiple-examples
+   :labels ["foo" "baz" "foobaz"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data-set normalization
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-******************************************************************************
-;; update with normalize-iter! from core
-******************************************************************************
 
-(def normalizer (fit-iter! :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor :as-code? false)
-                           :iter training-rr-ds-iter))
 ;; this gathers statistics on the dataset and normalizes the data
+;; and applies the transformation to all dataset objects in the iterator
+(def train-iter-normalized
+  (c/normalize-iter! :iter training-rr-ds-iter
+                     :normalizer (ds-pp/new-standardize-normalization-ds-preprocessor)
+                     :as-code? false))
 
-(def train-iter-normalized (set-pre-processor! :iter training-rr-ds-iter
-                                               :pre-processor normalizer))
+;; above returns the normalized iterator
+;; to get fit normalizer
 
-;; this applies the transformation to all dataset objects in the iterator
+(def the-normalizer
+  (get-pre-processor train-iter-normalized))
 
 ```
 
@@ -412,6 +426,8 @@ Creating a neural network configuration with singe and multiple layers
 ;; there are several options within a nn-conf map which can be configuration maps
 ;; or calls to fns
 ;; It doesn't matter which option you choose and you don't have to stay consistent
+;; the list of params which can be passed as config maps or fn calls will
+;; be enumerated at a later date
 
 (nn/builder :optimization-algo :stochastic-gradient-descent
             :seed 123
@@ -454,6 +470,7 @@ Creating a neural network configuration with singe and multiple layers
  :regularization? false
  :default-activation-fn :sigmoid
  :default-weight-init :uniform
+
  ;; we need to specify the layer order
  :layers {0 (l/activation-layer-builder
              :activation-fn :relu
@@ -517,7 +534,6 @@ Multi Layer models
 
 
 ``` clojure
-;; update this to use highest level methods/fns
 (ns my.ns
   (:require [dl4clj.datasets.iterators :as iter]
             [dl4clj.datasets.input-splits :as split]
@@ -526,10 +542,10 @@ Multi Layer models
             [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.nn.multilayer.multi-layer-network :as mln]
             [dl4clj.nn.api.model :refer [init! set-listeners!]]
-            [dl4clj.nn.api.classifier :refer [fit-classifier!]]
+            [dl4clj.nn.api.multi-layer-network :refer [evaluate-classification]]
             [dl4clj.datasets.api.record-readers :refer [initialize-rr!]]
-            [dl4clj.eval.evaluation :refer [new-classification-evaler]]
-            [dl4clj.eval.api.eval :refer [eval-model-whole-ds get-accuracy]]))
+            [dl4clj.eval.api.eval :refer [get-stats get-accuracy]]
+            [dl4clj.core :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf -> multi-layer-network
@@ -540,10 +556,12 @@ Multi Layer models
    ;; network args
    :optimization-algo :stochastic-gradient-descent
    :seed 123 :iterations 1 :regularization? true
+
    ;; setting layer defaults
    :default-activation-fn :relu :default-l2 7.5e-6
    :default-weight-init :xavier :default-learning-rate 0.0015
    :default-updater :nesterovs :default-momentum 0.98
+
    ;; setting layer configuration
    :layers {0 {:dense-layer
                {:layer-name "example first layer"
@@ -557,15 +575,12 @@ Multi Layer models
                 :loss-fn :negativeloglikelihood
                 :activation-fn :softmax
                 :layer-name "example output layer"}}}
+
    ;; multi layer args
    :backprop? true
-   :pretrain? false
-   ;; we want the dl4j object
-   :as-code? false))
+   :pretrain? false))
 
-(def multi-layer-network
-*********************** replace with core model-from-conf
-  (init! :model (mln/new-multi-layer-network :conf nn-conf)))
+(def multi-layer-network (c/model-from-conf nn-conf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; local cpu training with dl4j pre-built iterators
@@ -573,11 +588,17 @@ Multi Layer models
 
 ;; lets use the pre-built Mnist data set iterator
 
-(def train-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? true
-                                                   :seed 123 :as-code? false))
+(def train-mnist-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? true
+   :seed 123))
 
-(def test-mnist-iter (new-mnist-data-set-iterator :batch-size 64 :train? false
-                                                  :seed 123 :as-code? false))
+(def test-mnist-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? false
+   :seed 123))
 
 ;; and lets set a listener so we can know how training is going
 
@@ -585,13 +606,17 @@ Multi Layer models
 
 ;; and attach it to our model
 
+;; TODO: listeners are broken, look into log4j warnning
 (def mln-with-listener (set-listeners! :model multi-layer-network
                                        :listeners [score-listener]))
 
 (def trained-mln (mln/train-mln-with-ds-iter! :mln mln-with-listener
                                               :iter train-mnist-iter
-                                              :n-epochs 15))
+                                              :n-epochs 15
+                                              :as-code? false))
 
+;; training happens because :as-code? = false
+;; if it was true, we would still just have a data structure
 ;; we now have a trained model that has seen the training dataset 15 times
 ;; time to evaluate our model
 
@@ -599,24 +624,15 @@ Multi Layer models
 ;;Create an evaluation object
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def example-evaler-obj (new-classification-evaler :n-classes 10 :as-code? false))
+(def eval-obj (evaluate-classification :mln trained-mln
+                                       :iter test-mnist-iter))
 
 ;; always remember that these objects are stateful, dont use the same eval-obj
 ;; to eval two different networks
-
-
 ;; we trained the model on a training dataset.  We evaluate on a test set
 
-;; for dl4j iterators
-********************************************************************************
-;;;; UPDATE THIS, EVAL_MODEL_WHOLE_DS was not necessary
-;;;; just use dl4clj.nn.api.multi-layer-network/evaluate-classification
-(def evaler-with-stats (eval-model-whole-ds :mln trained-mln :evaler example-evaler-obj
-                                            :iter test-mnist-iter))
-********************************************************************************
-
+(println (get-stats :evaler eval-obj))
 ;; this will print the stats to standard out for each feature/label pair
-;; this is only for our evaler-wtih-stats object.
 
 ;;Examples labeled as 0 classified by model as 0: 968 times
 ;;Examples labeled as 0 classified by model as 1: 1 times
@@ -713,7 +729,110 @@ Multi Layer models
 
 Early Stopping (controlling training)
 - it is recommened you start here when designing models
-UPDATE THIS WITH CORE FNS
+
+- using dl4clj.core
+
+``` clojure
+
+(ns my.ns
+  (:require [dl4clj.earlystopping.termination-conditions :refer :all]
+            [dl4clj.earlystopping.model-saver :refer [new-in-memory-saver]]
+            [dl4clj.nn.api.multi-layer-network :refer [evaluate-classification]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
+            [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.datasets.iterators :as iter]
+            [dl4clj.core :as c]))
+
+(def nn-conf
+  (nn/builder
+   ;; network args
+   :optimization-algo :stochastic-gradient-descent
+   :seed 123
+   :iterations 1
+   :regularization? true
+
+   ;; setting layer defaults
+   :default-activation-fn :relu
+   :default-l2 7.5e-6
+   :default-weight-init :xavier
+   :default-learning-rate 0.0015
+   :default-updater :nesterovs
+   :default-momentum 0.98
+
+   ;; setting layer configuration
+   :layers {0 {:dense-layer
+               {:layer-name "example first layer"
+                :n-in 784 :n-out 500}}
+            1 {:dense-layer
+               {:layer-name "example second layer"
+                :n-in 500 :n-out 100}}
+            2 {:output-layer
+               {:n-in 100 :n-out 10
+                ;; layer specific params
+                :loss-fn :negativeloglikelihood
+                :activation-fn :softmax
+                :layer-name "example output layer"}}}
+
+   ;; multi layer args
+   :backprop? true
+   :pretrain? false))
+
+(def train-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? true
+   :seed 123))
+
+(def test-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? false
+   :seed 123))
+
+(def invalid-score-condition (new-invalid-score-iteration-termination-condition))
+
+(def max-score-condition (new-max-score-iteration-termination-condition
+                          :max-score 20.0))
+
+(def max-time-condition (new-max-time-iteration-termination-condition
+                         :max-time-val 10
+                         :max-time-unit :minutes))
+
+(def score-doesnt-improve-condition (new-score-improvement-epoch-termination-condition
+                                     :max-n-epoch-no-improve 5))
+
+(def target-score-condition (new-best-score-epoch-termination-condition
+                             :best-expected-score 0.009))
+
+(def max-number-epochs-condition (new-max-epochs-termination-condition :max-n 20))
+
+(def in-mem-saver (new-in-memory-saver))
+
+(def trained-mln
+;; defaults to returning the model
+  (c/train-with-early-stopping
+   :nn-conf nn-conf
+   :training-iter train-mnist-iter
+   :testing-iter test-mnist-iter
+   :eval-every-n-epochs 1
+   :iteration-termination-conditions [invalid-score-condition
+                                      max-score-condition
+                                      max-time-condition]
+   :epoch-termination-conditions [score-doesnt-improve-condition
+                                  target-score-condition
+                                  max-number-epochs-condition]
+   :save-last-model? true
+   :model-saver in-mem-saver
+   :as-code? false))
+
+(def model-evaler
+  (evaluate-classification :mln trained-mln :iter test-mnist-iter))
+
+(println (get-stats :evaler model-evaler))
+
+```
+
+- explicit, step by step way of doing this
 
 ``` clojure
 (ns my.ns
@@ -725,7 +844,9 @@ UPDATE THIS WITH CORE FNS
             [dl4clj.earlystopping.api.early-stopping-trainer :refer [fit-trainer!]]
             [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.nn.multilayer.multi-layer-network :as mln]
-            [dl4clj.utils :refer [load-model!]]))
+            [dl4clj.utils :refer [load-model!]]
+            [dl4clj.datasets.iterators :as iter]
+            [dl4clj.core :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start with our network config
@@ -757,18 +878,23 @@ UPDATE THIS WITH CORE FNS
    :backprop? true
    :pretrain? false))
 
-;; as-code? is true because we need our mln to build our early training trainer
-(def mln (mln/new-multi-layer-network :conf nn-conf))
+(def mln (c/model-from-conf nn-conf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the training/testing data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def train-iter (new-mnist-data-set-iterator :batch-size 64 :train? true
-                                             :seed 123))
+(def train-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? true
+   :seed 123))
 
-(def test-iter (new-mnist-data-set-iterator :batch-size 64 :train? false
-                                            :seed 123))
+(def test-iter
+  (iter/new-mnist-data-set-iterator
+   :batch-size 64
+   :train? false
+   :seed 123))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we are going to need termination conditions
@@ -831,7 +957,7 @@ UPDATE THIS WITH CORE FNS
    :iteration-termination-conditions [invalid-score-condition
                                       max-score-condition
                                       max-time-condition]
-   :n-epochs 5
+   :eval-every-n-epochs 5
    :model-saver local-file-saver
    :save-last-model? true
    :score-calculator score-calcer))
@@ -848,7 +974,7 @@ UPDATE THIS WITH CORE FNS
 ;; fit and use our early stopping trainer
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def es-trainer-fitted (fit-trainer! es-trainer))
+(def es-trainer-fitted (fit-trainer! es-trainer :as-code? false))
 
 ;; when the trainer terminates, you will see something like this
 ;;[nREPL-worker-24] BaseEarlyStoppingTrainer INFO  Completed training epoch 14
@@ -877,14 +1003,7 @@ Transfer Learning (freezing layers)
 
 ``` clojure
 
-****************************************************************************
-;; need to write up examples
-;; need to go through nn dir and add in automatic iterator resets
-;; also all the other dirs
-****************************************************************************
-
-
-
+;; TODO: need to write up examples
 
 ```
 
@@ -893,25 +1012,130 @@ Transfer Learning (freezing layers)
 dl4j [Spark](https://deeplearning4j.org/spark) usage
 
 How it is done in dl4clj
-- same [workflow](https://deeplearning4j.org/spark#Overview)
-  - NOTE: need to verify the spark hosting of trained models
-  - NOTE: see if there needs to be updates with the lazy-seq stuffs or iterator reseting
-  - NOTE: update to use more effecient fns
+
+- Uses dl4clj.core
+  - This example uses a fn which takes care of most steps for you
+    - allows you to pass args as code bc the fn accounts for
+      the multiple spark contexts issue encountered when everything
+      is just a data structure
+
+``` clojure
+
+(ns my.ns
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.builders.nn :as nn]
+            [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator]]
+            [dl4clj.eval.api.eval :refer [get-stats]]
+            [dl4clj.spark.masters.param-avg :as master]
+            [dl4clj.spark.data.java-rdd :refer [new-java-spark-context
+                                                java-rdd-from-iter]]
+            [dl4clj.spark.api.dl4j-multi-layer :refer [eval-classification-spark-mln
+                                                       get-spark-context]]
+            [dl4clj.core :as c]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 1, create your model config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def mln-conf
+  (nn/builder
+   :optimization-algo :stochastic-gradient-descent
+   :default-learning-rate 0.006
+   :layers {0 (l/dense-layer-builder :n-in 4 :n-out 2 :activation-fn :relu)
+            1 {:output-layer
+               {:loss-fn :negativeloglikelihood
+                :n-in 2 :n-out 3
+                :activation-fn :soft-max
+                :weight-init :xavier}}}
+   :backprop? true
+   :backprop-type :standard))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 2, training master
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def training-master
+  (master/new-parameter-averaging-training-master
+   :build? true
+   :rdd-n-examples 10
+   :n-workers 4
+   :averaging-freq 10
+   :batch-size-per-worker 2
+   :export-dir "resources/spark/master/"
+   :rdd-training-approach :direct
+   :repartition-data :always
+   :repartition-strategy :balanced
+   :seed 1234
+   :save-updater? true
+   :storage-level :none))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 3, spark context
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def your-spark-context
+  (new-java-spark-context :app-name "example app"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 4, training data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def iris-iter
+  (new-iris-data-set-iterator
+   :batch-size 1
+   :n-examples 5))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 5, spark mln
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def fitted-spark-mln
+  (c/train-with-spark :spark-context your-spark-context
+                      :mln-conf mln-conf
+                      :training-master training-master
+                      :iter iris-iter
+                      :n-epochs 1
+                      :as-code? false))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 5, use spark context from spark-mln to create rdd
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; TODO: eliminate this step
+
+(def our-rdd
+  (let [sc (get-spark-context fitted-spark-mln :as-code? false)]
+    (java-rdd-from-iter :spark-context sc
+                        :iter iris-iter)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Step 6, evaluation model and print stats (poor performance of model expected)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def eval-obj
+  (eval-classification-spark-mln
+   :spark-mln fitted-spark-mln
+   :rdd our-rdd))
+
+(println (get-stats :evaler eval-obj))
+
+
+```
+
+- this example demonstrates the dl4j [workflow](https://deeplearning4j.org/spark#Overview)
+  - NOTE: unlike the previous example, this one requires dl4j objects to be used
+    - this is becaues spark only wants you to have one spark context at a time
 
 ``` clojure
 (ns my.ns
-  (:require [dl4clj.nn.conf.builders.builders :as l]
-            [dl4clj.nn.conf.builders.nn-conf-builder :as nn-conf]
-            [dl4clj.nn.conf.builders.multi-layer-builders :as mlb]
-            [dl4clj.nn.multilayer.multi-layer-network :as mln]
+  (:require [dl4clj.nn.conf.builders.layers :as l]
+            [dl4clj.nn.conf.builders.nn :as nn]
             [dl4clj.datasets.iterators :refer [new-iris-data-set-iterator]]
             [dl4clj.eval.api.eval :refer [get-stats]]
             [dl4clj.spark.masters.param-avg :as master]
             [dl4clj.spark.data.java-rdd :refer [new-java-spark-context java-rdd-from-iter]]
             [dl4clj.spark.dl4j-multi-layer :as spark-mln]
-            [dl4clj.spark.api.dl4j-multi-layer :refer [fit-spark-mln!]]
-            [dl4clj.spark.dl4j-layer :refer [new-spark-dl4j-layer]]
-            [dl4clj.spark.api.dl4j-spark-layer :refer [fit-spark-layer-with-ds!]]))
+            [dl4clj.spark.api.dl4j-multi-layer :refer [fit-spark-mln!
+                                                       eval-classification-spark-mln]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 1, create your model
@@ -939,10 +1163,18 @@ How it is done in dl4clj
 
 (def training-master
   (master/new-parameter-averaging-training-master
-   :build? true :rdd-n-examples 10 :n-workers 4 :averaging-freq 10
-   :batch-size-per-worker 2 :export-dir "resources/spark/master/"
-   :rdd-training-approach :direct :repartition-data :always
-   :repartition-strategy :balanced :seed 1234 :save-updater? true
+   :build? true
+   :rdd-n-examples 10
+   :n-workers 4
+   :averaging-freq 10
+   :batch-size-per-worker 2
+   :export-dir "resources/spark/master/"
+   :rdd-training-approach :direct
+   :repartition-data :always
+   :repartition-strategy :balanced
+   :seed 1234
+   :as-code? false
+   :save-updater? true
    :storage-level :none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -950,7 +1182,7 @@ How it is done in dl4clj
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def your-spark-context
-  (new-java-spark-context :app-name "example app"))
+  (new-java-spark-context :app-name "example app" :as-code? false))
 
 ;; new-java-spark-context will turn an existing spark-configuration into a java spark context
 ;; or create a new java spark context with master set to "local[*]" and the app name
@@ -961,7 +1193,8 @@ How it is done in dl4clj
   (spark-mln/new-spark-multi-layer-network
    :spark-context your-spark-context
    :mln mln-conf
-   :training-master training-master))
+   :training-master training-master
+   :as-code? false))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 4, load your data
@@ -972,28 +1205,40 @@ How it is done in dl4clj
 ;; see: nd4clj.linalg.dataset.api.data-set and nd4clj.linalg.dataset.data-set
 ;; we are going to use a pre-built one
 
-(def iris-iter (new-iris-data-set-iterator :batch-size 1 :n-examples 5 :as-code? false))
+(def iris-iter
+  (new-iris-data-set-iterator
+   :batch-size 1
+   :n-examples 5
+   :as-code? false))
 
 ;; now lets convert the data into a javaRDD
 
-(def our-rdd (java-rdd-from-iter :spark-context your-spark-context :iter iris-iter))
+(def our-rdd
+  (java-rdd-from-iter :spark-context your-spark-context
+                      :iter iris-iter))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Step 5, fit and evaluate the model
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def fitted-spark-mln (fit-spark-mln! :spark-mln spark-mln :rdd our-rdd :n-epochs 5))
+(def fitted-spark-mln
+  (fit-spark-mln!
+   :spark-mln spark-mln
+   :rdd our-rdd
+   :n-epochs 1))
 ;; this fn also has the option to supply :path-to-data instead of :rdd
 ;; that path should point to a directory containing a number of dataset objects
 
-(def eval-obj (eval-classification-spark-mln :spark-mln fitted-spark-mln
-                                             :rdd our-rdd))
+(def eval-obj
+  (eval-classification-spark-mln
+   :spark-mln fitted-spark-mln
+   :rdd our-rdd))
 ;; we would want to have different testing and training rdd's but here we are using
 ;; the data we trained on
 
 ;; lets get the stats for how our model performed
 
-(clojure.pprint/pprint (get-stats :evaler eval-obj))
+(println (get-stats :evaler eval-obj))
 
 ```
 ## Terminology
@@ -1120,5 +1365,6 @@ Copyright © 2016 Engagor
 
 Distributed under the BSD Clause-2 License as distributed in the file LICENSE at the root of this repository.
 
++![](https://thumbs.gfycat.com/IncompleteAncientJanenschia-size_restricted.gif)
 
 *Drops the mic*

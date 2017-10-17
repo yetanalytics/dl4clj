@@ -15,7 +15,7 @@
   :mln (model or conf), this can be a multi-layer-config or a multi-layer-network
    - see: dl4clj.nn.multilayer.multi-layer-network and dl4clj.nn.conf.builders.multi-layer-builders"
   [& {:keys [spark-context mln training-master as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (match [opts]
          [{:spark-context (_ :guard seq?)

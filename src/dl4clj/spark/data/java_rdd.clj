@@ -13,7 +13,7 @@
    - master is will be set to local
    - app name will be set to :app-name or 'default app name'"
   [& {:keys [spark-conf app-name as-code?]
-      :or {as-code? false}
+      :or {as-code? true}
       :as opts}]
   (let [code (if (contains? opts :spark-conf)
                `(JavaSparkContext. ~spark-conf)

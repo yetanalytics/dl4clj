@@ -64,14 +64,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; model training
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; add in as code?
+
 (defn model-from-conf
   "creates a multi layer network out of a configuration and initializes
    the model.  If provided code, will return code. If provided dl4j objects,
    will return the object"
-  [& {:keys [nn-conf]}]
-  ;; this is going to change
-  (m-api/init! :model (mln/new-multi-layer-network :conf nn-conf)))
+  [nn-conf & {:keys [as-code?]
+              :or {as-code? true}}]
+  (if (seq? nn-conf)
+    (u/obj-or-code?
+     as-code?
+     `(m-api/init! :model (mln/new-multi-layer-network :conf ~nn-conf)))
+    (m-api/init! :model (mln/new-multi-layer-network :conf nn-conf))))
 
 ;; add regular training fn
 
@@ -96,7 +100,7 @@
            :eval-every-n-epochs (:or (_ :guard int?)
                                      (_ :guard seq?))
            :nn-conf (_ :guard seq?)}]
-         (let [mln (model-from-conf :nn-conf nn-conf)
+         (let [mln (model-from-conf nn-conf)
                ;; ^ might not need to initialize the model but I prob do
                score-calc (scorer/new-ds-loss-calculator :iter testing-iter
                                                          :average? average?)
@@ -124,6 +128,7 @@
          (throw (Exception. "you must supply args as code"))))
 
 (defn train-with-spark
+  ;; needs more guards and a doc string
   [& {:keys [spark-context mln-conf training-master
              iter n-epochs rdd n-slices as-code?]
       :or {as-code? true
@@ -148,9 +153,9 @@
                             :mln ~mln-conf
                             :training-master ~training-master
                             :as-code? false)
-                   ~sc (spark-mln-api/get-spark-context :spark-mln ~evaled)
+                   ~sc (spark-mln-api/get-spark-context ~evaled)
                    ~rdd (.parallelize ~sc (h/data-from-iter
-                                           :iter ~iter :as-code? false)
+                                           ~iter :as-code? false)
                                       (int ~n-slices))]
                (do (dotimes [~n ~n-epochs]
                      (doto ~evaled (.fit ~rdd)))
@@ -173,8 +178,8 @@
                           :mln ~mln-conf
                           :training-master ~training-master
                           :as-code? false)
-                  ~sc (spark-mln-api/get-spark-context :spark-mln ~evaled)
-                  ~rdd (.parallelize ~sc (h/data-from-iter :iter ~iter
+                  ~sc (spark-mln-api/get-spark-context ~evaled)
+                  ~rdd (.parallelize ~sc (h/data-from-iter ~iter
                                                            :as-code? false))]
               (do (dotimes [~n ~n-epochs]
                     (doto ~evaled (.fit ~rdd)))

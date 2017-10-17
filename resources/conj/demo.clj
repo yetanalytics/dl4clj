@@ -10,8 +10,6 @@
          '[dl4clj.core :as c]
          '[clojure.pprint :as pp])
 
-;; formatted for +2 zoom
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;general data import
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,9 +135,6 @@
 (println (get-accuracy evaler))
 
 (println (str (get-stats :evaler evaler)))
-
-;; TODO:
-;; figure out how to send data through and get a result back
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; simple lstm example (time series classification)
@@ -284,6 +279,3 @@
                            :iter normalized-test-iter))
 
 (println (str (get-stats :evaler lstm-evaler)))
-
-;; need to transform the labels from 0-5 into what that actually represents
-;; somthing about the labels, there should be an example on youtube

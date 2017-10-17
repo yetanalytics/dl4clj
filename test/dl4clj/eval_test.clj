@@ -25,7 +25,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def mln-code (new-multi-layer-network
-               :as-code? true
                :conf (builder
                       :seed 123
                       :optimization-algo :stochastic-gradient-descent
@@ -137,6 +136,7 @@
     ;; ROC evaluation
     (is (= org.deeplearning4j.eval.ROC (type (new-binary-roc :threshold-steps 2 :as-code? false))))
     (is (= org.deeplearning4j.eval.ROCMultiClass (type (new-multiclass-roc :threshold-steps 2 :as-code? false))))))
+
 
 (deftest eval-classification-with-data
   (testing "the use of classification evalers"
