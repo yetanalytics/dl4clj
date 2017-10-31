@@ -26,8 +26,6 @@ If you have any questions,
 - add to core use case flows
 - determine how much saftey to build into api fns and core fns
   - dealing with args coming in as code and objs.
-- fix logging
-- clean up deps issues, its a mess
 
 ## Features
 
