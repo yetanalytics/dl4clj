@@ -13,11 +13,36 @@
   :license {:name "BSD C2"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/clojure "1.9.0-beta2"]
-                 [org.deeplearning4j/deeplearning4j-core "0.8.0"]
-                 [org.nd4j/nd4j-native-platform "0.8.0"]
-                 [org.datavec/datavec-api "0.8.0"]
-                 [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"]
-                 [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"]
-                 [org.apache.spark/spark-core_2.11 "2.1.0"]
+                 [org.deeplearning4j/deeplearning4j-core "0.8.0"
+                  :exclusions
+                  [com.google.guava/guava
+                   org.apache.commons/commons-compress]]
+                 [org.nd4j/nd4j-native-platform "0.8.0"
+                  :exclusions [com.google.guava/guava]]
+                 [org.datavec/datavec-api "0.8.0"
+                  :exclusions
+                  [com.google.guava/guava]]
+                 [org.datavec/datavec-spark_2.11 "0.8.0_spark_2"
+                  :exclusions
+                  [org.apache.commons/commons-lang3
+                   com.google.guava/guava
+                   commons-net
+                   org.scala-lang/scala-reflect
+                   org.slf4j/slf4j-api
+                   org.scala-lang/scala-library
+                   org.apache.commons/commons-compress]]
+                 [org.deeplearning4j/dl4j-spark_2.11 "0.8.0_spark_2"
+                  :exclusions
+                  [org.slf4j/slf4j-api
+                   commons-net
+                   org.scala-lang/scala-library
+                   org.scala-lang/scala-reflect
+                   org.apache.commons/commons-lang3
+                   com.google.guava/guava]]
+                 [org.apache.spark/spark-core_2.11 "2.1.0"
+                  :exclusions
+                  [commons-net
+                   org.apache.commons/commons-lang3
+                   org.slf4j/slf4j-api]]
                  [org.clojure/core.match "0.3.0-alpha5"]
                  [cheshire "5.7.1"]])
