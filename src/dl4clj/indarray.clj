@@ -3,22 +3,29 @@
   (:require [clojure.core.match :refer [match]]
             [dl4clj.utils :refer [obj-or-code?]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; helpers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn vec->indarray
   [data]
   (Nd4j/create (double-array data)))
 
 (defn matrix->indarray
   [matrix]
-  (as-> (for [each matrix]
-          (double-array each))
-      data
-    (into [] data)
-    (into-array data)
-    (Nd4j/create data)))
+  (->> (for [each matrix]
+         (double-array each))
+       (into [])
+       into-array
+       Nd4j/create))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; array code generaiton
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn vec-or-matrix->indarray
   [data & {:keys [as-code?]
-           :or {as-code? true}}]
+           :or {as-code? false}}]
   (match [data]
          [(_ :guard vector?)]
          (let [code (if (vector? (first data))
@@ -32,7 +39,7 @@
   [& {:keys [rows columns as-code?]
       :or {rows 1
            columns 1
-           as-code? true}}]
+           as-code? false}}]
   (let [code `(Nd4j/zeros (int ~rows) (int ~columns))]
     (obj-or-code? as-code? code)))
 
@@ -40,7 +47,7 @@
   [& {:keys [rows columns as-code?]
       :or {rows 1
            columns 1
-           as-code? true}}]
+           as-code? false}}]
   (let [code `(Nd4j/ones (int ~rows) (int ~columns))]
     (obj-or-code? as-code? code)))
 
