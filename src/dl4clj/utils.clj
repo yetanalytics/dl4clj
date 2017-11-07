@@ -25,11 +25,7 @@
          (shuffle coll)))
 
 (defmacro as-code
-  ;; add doc string
-  ;; all api fns now respond according to objs and data
-  ;; doc string should indicate this is a replacement for
-  ;; back tick so the user doesn't have to bother with macro syntax
-  ;; this can get removed
+  ;; needs doc string
   [a-fn & args]
   (let [v `(var ~a-fn)
         m `(meta ~v)
@@ -38,6 +34,59 @@
         the-fn `(list (symbol (str ~ns-n "/" ~fn-n)))
         a `(list ~@args)]
     `(into ~a ~the-fn)))
+
+(defn constructor-call?
+  [code]
+  (let [arg-pieces `(~@code)
+        maybe-constructor (-> arg-pieces
+                              first
+                              str)]
+    (clojure.string/ends-with? maybe-constructor ".")))
+
+
+(defn eval-if-code-helper
+  [pred-and-arg arg]
+  (try (if (eval pred-and-arg)
+         (eval arg)
+         arg)
+       (catch Exception e arg)))
+
+(defn eval-if-code
+  [& args]
+  (loop [argz args
+         accum []]
+    (if (empty? argz)
+      accum
+      (let [cur (first argz)
+            [arg pred] cur
+            seq-arg?  (seq? arg)
+            constructor-c? (if seq-arg?
+                             (constructor-call? arg)
+                             false)
+            determine-pred (cond (and seq-arg? constructor-c?)
+                                 `(~@arg)
+                                 seq-arg?
+                                 `(as-code ~@arg)
+                                 :else
+                                 arg)
+            the-arg (if constructor-c?
+                      `(quote ~determine-pred)
+                      determine-pred)]
+        (recur
+         (rest argz)
+         (conj accum (match [pred]
+                      [(_ :guard vector?)]
+                      (let [pred-and-arg (loop [each pred
+                                                ds `(or)]
+                                           (if (empty? each)
+                                             (reverse ds)
+                                             (let [cur-pred (first each)
+                                                   pred-arg `(~cur-pred ~the-arg)]
+                                               (recur (rest each) (conj ds pred-arg)))))]
+                        (eval-if-code-helper pred-and-arg arg))
+                      :else
+                      (let [pred-and-arg `(~pred ~the-arg)]
+                        (eval-if-code-helper pred-and-arg arg)))))))))
 
 (defn gensym*
   "an implementation of gensym with control over the symbol name and number
