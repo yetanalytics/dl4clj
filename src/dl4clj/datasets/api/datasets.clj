@@ -2,9 +2,9 @@
   (:import [org.nd4j.linalg.dataset.api DataSet]
            [org.nd4j.linalg.api.ndarray INDArray]
            [java.util Random])
-  (:require [dl4clj.utils :refer [array-of contains-many? obj-or-code?]]
+  (:require [dl4clj.utils :refer [array-of contains-many? obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+            [dl4clj.indarray :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -107,26 +107,29 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :as-list? true}]
-         (obj-or-code? as-code? `(.getLabelNamesList ~ds))
-         [{:ds _ :as-list? true}]
-         (.getLabelNamesList ds)
-         [{:ds (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLabelName ~ds (int ~idx)))
-         [{:ds _ :idx (_ :guard number?)}]
-         (.getLabelName ds idx)
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard vector?)
                      (_ :guard seq?))}]
          (obj-or-code?
           as-code?
           `(.getLabelNames ~ds (vec-or-matrix->indarray ~idx)))
+         [{:ds _ :idx (_ :guard number?)}]
+         (.getLabelName ds idx)
          [{:ds _ :idx (_ :guard vector?)}]
          (.getLabelNames ds (vec-or-matrix->indarray idx))
+         ;; if it comes in as an existing INDArray
+         [{:ds _ :idx _}]
+         (.getLabelNames ds idx)
+         [{:ds (_ :guard seq?)
+           :as-list? true}]
+         (obj-or-code? as-code? `(.getLabelNamesList ~ds))
          [{:ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getLabels ~ds))
+         [{:ds _ :as-list? true}]
+         (.getLabelNamesList ds)
          :else
          (.getLabels ds)))
 
@@ -146,7 +149,7 @@
   [& {:keys [ds from to as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :from (:or (_ :guard number?)
                       (_ :guard seq?))
@@ -154,7 +157,9 @@
                     (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getRange ~ds (int ~from) (int ~to)))
          :else
-         (.getRange ds from to)))
+         (let [all-objs (eval-if-code [ds seq?] [from seq?] [to seq?])
+               [ds-obj from-n to-n] all-objs]
+           (.getRange ds-obj from-n to-n))))
 
 (defn get-ds-id
   "returns the id of the dataset"
@@ -231,9 +236,10 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :names (_ :guard seq?)}]
+           :names (_ :guard list?)}]
          (obj-or-code? as-code? `(doto ~ds (.setColumnNames ~names)))
          :else
+         ;; consider guarding against vectors
          (doto ds (.setColumnNames names))))
 
 (defn set-features!
@@ -251,7 +257,9 @@
           as-code?
           `(doto ~ds (.setFeatures (vec-or-matrix->indarray ~features))))
          :else
-         (doto ds (.setFeatures (vec-or-matrix->indarray features)))))
+         (let [all-objs (eval-if-code [ds seq?] [features seq?])
+               [obj-ds obj-features] all-objs]
+           (doto obj-ds (.setFeatures (vec-or-matrix->indarray obj-features))))))
 
 (defn set-features-mask-array!
   "set the features mask array for the supplied dataset
@@ -268,7 +276,9 @@
           as-code?
           `(doto ~ds (.setFeaturesMaskArray (vec-or-matrix->indarray ~input-mask))))
          :else
-         (doto ds (.setFeaturesMaskArray (vec-or-matrix->indarray input-mask)))))
+         (let [all-objs (eval-if-code [ds seq?] [input-mask seq?])
+               [obj-ds obj-i-mask] all-objs]
+           (doto obj-ds (.setFeaturesMaskArray (vec-or-matrix->indarray obj-i-mask))))))
 
 (defn set-label-names!
   "sets the label names
@@ -279,9 +289,10 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :label-names (_ :guard seq?)}]
+           :label-names (_ :guard list?)}]
          (obj-or-code? as-code? `(doto ~ds (.setLabelNames ~label-names)))
          :else
+         ;; consider guarding against vectors for label-names
          (doto ds (.setLabelNames label-names))))
 
 (defn set-labels!
@@ -299,7 +310,9 @@
           as-code?
           `(doto ~ds (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
-         (doto ds (.setLabels (vec-or-matrix->indarray labels)))))
+         (let [all-objs (eval-if-code [ds seq?] [labels seq?])
+               [ds-obj labels-obj] all-objs]
+          (doto ds-obj (.setLabels (vec-or-matrix->indarray labels-obj))))))
 
 (defn set-labels-mask-array!
   "sets the labels mask array for the dataset
@@ -316,7 +329,9 @@
           as-code?
           `(doto ~ds (.setLabelsMaskArray (vec-or-matrix->indarray ~mask-array))))
          :else
-         (doto ds (.setLabelsMaskArray (vec-or-matrix->indarray mask-array)))))
+         (let [all-objs (eval-if-code [ds seq?] [mask-array seq?])
+               [ds-obj m-array-obj] all-objs]
+           (doto ds-obj (.setLabelsMaskArray (vec-or-matrix->indarray m-array-obj))))))
 
 (defn set-new-number-of-labels!
   "sets a new number of labels for the dataset"
@@ -329,7 +344,9 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.setNewNumberOfLabels (int ~n-labels))))
          :else
-         (doto ds (.setNewNumberOfLabels n-labels))))
+         (let [all-objs (eval-if-code [ds seq?] [n-labels seq?])
+               [ds-obj num-labels] all-objs]
+           (doto ds-obj (.setNewNumberOfLabels (int num-labels))))))
 
 (defn set-outcome!
   "sets an outcome for a given example"
@@ -346,11 +363,15 @@
           as-code?
           `(doto ~ds (.setOutcome (int ~example-idx) (int ~label-idx))))
          :else
-         (doto ds (.setOutcome example-idx label-idx))))
+         (let [all-objs (eval-if-code [ds seq?] [example-idx seq?] [label-idx seq?])
+               [ds-obj example-idx-n label-idx-n] all-objs]
+           (doto ds-obj (.setOutcome example-idx-n label-idx-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; manipulation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; left off implementing eval-if-code here
 
 (defn add-feature-vector!
   "adds a feature vector to a dataset, if :to-add is supplied, the fn adds a
@@ -379,8 +400,10 @@
           `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
                                        (int ~example-idx))))
          [{:ds _ :feature _ :example-idx _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray feature)
-                                     example-idx))
+         (let [all-objs (eval-if-code [ds seq?] [feature [vector? seq?]])
+               [ds-obj feature-obj] all-objs]
+           (doto ds-obj (.addFeatureVector (vec-or-matrix->indarray feature-obj)
+                                           example-idx)))
          [{:ds (_ :guard seq?)
            :to-add (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -388,7 +411,9 @@
           as-code?
           `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add))))
          [{:ds _ :to-add _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray to-add)))))
+         (let [all-objs (eval-if-code [ds seq?] [to-add [vector? seq?]])
+               [ds-obj to-add-obj] all-objs]
+           (doto ds-obj (.addFeatureVector (vec-or-matrix->indarray to-add-obj))))))
 
 (defn add-row!
   "adds a dataset object to an existing datset object as a new row
@@ -408,7 +433,9 @@
                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.addRow ~row ~idx)))
          :else
-         (doto ds (.addRow row idx))))
+         (let [all-objs (eval-if-code [ds seq?] [row seq?] [idx seq?])
+               [ds-obj row-obj idx-n] all-objs]
+           (doto ds-obj (.addRow row-obj idx-n)))))
 
 (defn batch-by!
   "Partitions a dataset in to mini batches where each dataset in each list
