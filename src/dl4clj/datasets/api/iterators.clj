@@ -4,7 +4,7 @@
             SequenceRecordReaderDataSetIterator]
            [org.nd4j.linalg.dataset.api.iterator DataSetIterator])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -72,7 +72,9 @@
          (obj-or-code? as-code? `(.next ~iter ~n))
          [{:iter _
            :n _}]
-         (.next iter n)))
+         (let [[iter-obj some-n] (eval-if-code [iter seq?]
+                                               [n seq?])]
+           (.next iter-obj some-n))))
 
 (defn next-example!
   "returns the next example in an iterator"
@@ -127,7 +129,9 @@
            :meta-data (_ :guard seq?)}]
          (obj-or-code? as-code? `(.loadFromMetaData ~iter ~meta-data))
          :else
-         (.loadFromMetaData iter meta-data)))
+         (let [[iter-obj md-obj] (eval-if-code [iter seq?]
+                                               [meta-data seq?])]
+           (.loadFromMetaData iter-obj md-obj))))
 
 (defn remove-data!
   [iter & {:keys [as-code?]
@@ -191,7 +195,8 @@
            :pre-processor (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.setPreProcessor ~pre-processor)))
          :else
-         (doto (if (has-next? iter)
-                 iter
-                (reset-iter! iter))
-           (.setPreProcessor pre-processor))))
+         (let [[iter-obj pp-obj] (eval-if-code [iter seq?] [pre-processor seq?])]
+           (doto (if (has-next? iter-obj)
+                   iter-obj
+                   (reset-iter! iter-obj))
+             (.setPreProcessor pp-obj)))))
