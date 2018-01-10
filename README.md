@@ -26,8 +26,7 @@ If you have any questions,
 - add to core use case flows
 - determine how much saftey to build into api fns and core fns
   - dealing with args coming in as code and objs.
-- fix logging
-- clean up deps issues, its a mess
+
 
 ## Features
 
@@ -102,15 +101,9 @@ With Maven:
   - All of these functions have an option to return the dl4j object
     - :as-code? = false
   - This because all builders require the code representation of dl4j objects
-    - this requirement is very unlikely to change
-
-- ***** vec-or-matrix->indarray returns the dl4j obj
-
-- ***** this is accounted for in all fns which use it
-
-- ***** have not decided if im going to change this
-
-- ***** there is no :as-code? option for that fn
+    - this requirement is not going to change
+  - INDarray creation fns default to objects, this is for convenience
+    - :as-code? is still respected
 
 - API functions return code when all args are provided as code
 - API functions return the value of calling the wrapped method when
