@@ -73,7 +73,7 @@
          [{:iter _
            :n _}]
          (let [[iter-obj some-n] (eval-if-code [iter seq?]
-                                               [n seq?])]
+                                               [n seq? number?])]
            (.next iter-obj some-n))))
 
 (defn next-example!

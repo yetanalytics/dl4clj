@@ -243,8 +243,8 @@
          [{:rr _
            :uri _
            :data-in-stream _}]
-         (let [all-objs (eval-if-code [rr seq?] [uri seq?] [data-in-stream seq?])
-               [rr-obj evaled-uri-seq dis-obj] all-objs]
+         (let [[rr-obj evaled-uri-seq dis-obj]
+               (eval-if-code [rr seq?] [uri seq? string?] [data-in-stream seq?])]
            (.sequenceRecord rr-obj (java.net.URI. evaled-uri-seq) dis-obj))
          [{:rr (_ :guard seq?)}]
          (obj-or-code? as-code? `(.sequenceRecord ~rr))

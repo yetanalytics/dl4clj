@@ -166,7 +166,8 @@
                     (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getRange ~ds (int ~from) (int ~to)))
          :else
-         (let [[ds-obj from-n to-n] (eval-if-code [ds seq?] [from seq?] [to seq?])]
+         (let [[ds-obj from-n to-n] (eval-if-code [ds seq?] [from seq? number?]
+                                                  [to seq? number?])]
            (.getRange ds-obj from-n to-n))))
 
 (defn get-ds-id
@@ -265,7 +266,8 @@
           as-code?
           `(doto ~ds (.setFeatures (vec-or-matrix->indarray ~features))))
          :else
-         (let [[obj-ds features-vec] (eval-if-code [ds seq?] [features seq?])]
+         (let [[obj-ds features-vec] (eval-if-code [ds seq?]
+                                                   [features seq?])]
            (doto obj-ds (.setFeatures (vec-or-matrix->indarray features-vec))))))
 
 (defn set-features-mask-array!
@@ -316,7 +318,7 @@
           as-code?
           `(doto ~ds (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
-         (let [[ds-obj labels-vec] (eval-if-code [ds seq?] [labels seq?])]
+         (let [[ds-obj labels-vec] (eval-if-code [ds seq?] [labels seq? vector?])]
           (doto ds-obj (.setLabels (vec-or-matrix->indarray labels-vec))))))
 
 (defn set-labels-mask-array!
@@ -348,7 +350,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.setNewNumberOfLabels (int ~n-labels))))
          :else
-         (let [[ds-obj num-labels] (eval-if-code [ds seq?] [n-labels seq?])]
+         (let [[ds-obj num-labels] (eval-if-code [ds seq?]
+                                                 [n-labels seq? number?])]
            (doto ds-obj (.setNewNumberOfLabels (int num-labels))))))
 
 (defn set-outcome!
@@ -366,9 +369,9 @@
           as-code?
           `(doto ~ds (.setOutcome (int ~example-idx) (int ~label-idx))))
          :else
-         (let [[ds-obj example-idx-n label-idx-n] (eval-if-code [ds seq?]
-                                                                [example-idx seq?]
-                                                                [label-idx seq?])]
+         (let [[ds-obj example-idx-n label-idx-n]
+               (eval-if-code [ds seq?] [example-idx seq? number?]
+                             [label-idx seq? number?])]
            (doto ds-obj (.setOutcome example-idx-n label-idx-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -404,9 +407,10 @@
           `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
                                        (int ~example-idx))))
          [{:ds _ :feature _ :example-idx _}]
-         (let [[ds-obj feature-vec] (eval-if-code [ds seq?] [feature seq?])]
+         (let [[ds-obj feature-vec idx-n]
+               (eval-if-code [ds seq?] [feature seq?] [example-idx seq? number?])]
            (doto ds-obj (.addFeatureVector (vec-or-matrix->indarray feature-vec)
-                                           example-idx)))
+                                           idx-n)))
          [{:ds (_ :guard seq?)
            :to-add (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -435,7 +439,8 @@
                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.addRow ~row ~idx)))
          :else
-         (let [[ds-obj row-obj idx-n] (eval-if-code [ds seq?] [row seq?] [idx seq?])]
+         (let [[ds-obj row-obj idx-n] (eval-if-code [ds seq?] [row seq?]
+                                                    [idx seq? number?])]
            (doto ds-obj (.addRow row-obj idx-n)))))
 
 (defn batch-by!
@@ -452,7 +457,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.batchBy ~ds (int ~n-examples)))
          :else
-         (.batchBy ds (int n-examples))))
+         (let [[n-e] (eval-if-code [n-examples seq? number?])]
+           (.batchBy ds (int n-e)))))
 
 (defn batch-by-n-labels!
   "partitions a dataset in to mini batches where each datset in each list
@@ -476,7 +482,7 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.binarize (double ~cutoff))))
          [{:ds _ :cutoff _}]
-         (let [[cutoff-n] (eval-if-code [cutoff seq?])]
+         (let [[cutoff-n] (eval-if-code [cutoff seq? number?])]
            (doto ds (.binarize cutoff-n)))
          [{:ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~ds .binarize))
@@ -494,7 +500,7 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.divideBy (int ~scalar))))
          :else
-         (let [[scalar-n] (eval-if-code [scalar seq?])]
+         (let [[scalar-n] (eval-if-code [scalar seq? number?])]
            (doto ds (.divideBy scalar-n)))))
 
 (defn filt-and-strip-labels!
@@ -527,7 +533,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.filterBy ~ds (int-array ~label-idxs)))
          :else
-         (let [[idx-coll] (eval-if-code [label-idxs seq?])]
+         (let [[idx-coll] (eval-if-code [label-idxs seq? coll?])]
            (.filterBy ds (int-array idx-coll)))))
 
 (defn multiply-by!
@@ -543,7 +549,7 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.multiplyBy (double ~scalar))))
          :else
-         (let [[scalar-n] (eval-if-code [scalar seq?])]
+         (let [[scalar-n] (eval-if-code [scalar seq? number?])]
            (doto ds (.multiplyBy scalar-n)))))
 
 (defn normalize!
@@ -569,7 +575,8 @@
                       (_ :guard seq?))}]
          (obj-or-code? as-code? `(.reshape ~ds ~rows ~cols))
          :else
-         (let [[row-n col-n] (eval-if-code [rows seq?] [cols seq?])]
+         (let [[row-n col-n] (eval-if-code [rows seq? number?]
+                                           [cols seq? number?])]
            (.reshape ds row-n col-n))))
 
 (defn round-to-the-nearest!
@@ -585,7 +592,7 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.roundToTheNearest ~round-to)))
          :else
-         (let [[round-to-n] (eval-if-code [round-to seq?])]
+         (let [[round-to-n] (eval-if-code [round-to seq? number?])]
            (doto ds (.roundToTheNearest round-to-n)))))
 
 (defn scale-ds!
@@ -606,7 +613,8 @@
          [{:ds _
            :max-val _
            :min-val _}]
-         (let [[max-n min-n] (eval-if-code [max-val seq?] [min-val seq?])]
+         (let [[max-n min-n] (eval-if-code [max-val seq? number?]
+                                           [min-val seq? number?])]
            (doto ds (.scaleMinAndMax min-n max-n)))
          [{:ds (_ :guard seq?)}]
          `(doto ~ds .scale)
@@ -657,22 +665,22 @@
           as-code?
           `(.splitTestAndTrain ~ds (int ~n-holdout) (new Random ~seed)))
          [{:ds _ :n-holdout _ :seed _}]
-         (let [[holdout-n seed-n] (eval-if-code [n-holdout seq?]
-                                                [seed seq?])]
+         (let [[holdout-n seed-n] (eval-if-code [n-holdout seq? number?]
+                                                [seed seq? number?])]
            (.splitTestAndTrain ds holdout-n (new Random seed-n)))
          [{:ds (_ :guard seq?)
            :n-holdout (:or (_ :guard number?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.splitTestAndTrain ~ds (int ~n-holdout)))
          [{:ds _ :n-holdout _}]
-         (let [[holdout-n] (eval-if-code [n-holdout seq?])]
+         (let [[holdout-n] (eval-if-code [n-holdout seq? number?])]
            (.splitTestAndTrain ds holdout-n))
          [{:ds (_ :guard seq?)
            :percent-train (:or (_ :guard number?)
                                (_ :guard seq?))}]
          (obj-or-code? as-code? `(.splitTestAndTrain ~ds (double ~percent-train)))
          [{:ds _ :percent-train _}]
-         (let [[percent-train-n] (eval-if-code [percent-train seq?])]
+         (let [[percent-train-n] (eval-if-code [percent-train seq? number?])]
            (.splitTestAndTrain ds percent-train-n))))
 
 (defn squish-to-range!
@@ -690,8 +698,8 @@
           as-code?
           `(doto ~ds (.squishToRange (double ~min-val) (double ~max-val))))
          :else
-         (let [[min-n max-n] (eval-if-code [min-val seq?]
-                                           [max-val seq?])]
+         (let [[min-n max-n] (eval-if-code [min-val seq? number?]
+                                           [max-val seq? number?])]
            (doto ds (.squishToRange min-n max-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -766,9 +774,10 @@
           as-code?
           `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?))
          [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
-         (let [[samples-n replacement-b seed-n] (eval-if-code [n-samples seq?]
-                                                              [with-replacement? seq?]
-                                                              [seed seq?])]
+         (let [[samples-n replacement-b seed-n]
+               (eval-if-code [n-samples seq? number?]
+                             [with-replacement? seq? boolean?]
+                             [seed seq? number?])]
            (.sample ds samples-n (new Random seed-n) replacement-b))
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
@@ -779,8 +788,8 @@
           as-code?
           `(.sample ~ds (int ~n-samples) (new Random ~seed)))
          [{:ds _ :n-samples _  :seed _}]
-         (let [[samples-n seed-n] (eval-if-code [n-samples seq?]
-                                                [seed seq?])]
+         (let [[samples-n seed-n] (eval-if-code [n-samples seq? number?]
+                                                [seed seq? number?])]
            (.sample ds samples-n (new Random seed-n)))
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
@@ -791,8 +800,8 @@
           as-code?
           `(.sample ~ds (int ~n-samples) ~with-replacement?))
          [{:ds _ :n-samples _ :with-replacement? _}]
-         (let [[samples-n replacement-b] (eval-if-code [n-samples seq?]
-                                                       [with-replacement? seq?])]
+         (let [[samples-n replacement-b] (eval-if-code [n-samples seq? number?]
+                                                       [with-replacement? seq? boolean?])]
 
               (.sample ds samples-n replacement-b))
          [{:ds (_ :guard seq?)
@@ -800,7 +809,7 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.sample ~ds (int ~n-samples)))
          :else
-         (let [[samples-n] (eval-if-code [n-samples seq?])]
+         (let [[samples-n] (eval-if-code [n-samples seq? number?])]
            (.sample ds samples-n))))
 
 (defn save-ds!
@@ -828,7 +837,7 @@
           `(doto ~ds (.save (clojure.java.io/as-file ~file-path))))
          [{:ds _
            :file-path _}]
-         (let [[f-path] (eval-if-code [file-path seq?])]
+         (let [[f-path] (eval-if-code [file-path seq? string?])]
            (doto ds (.save (clojure.java.io/as-file f-path))))))
 
 (defn validate-ds!

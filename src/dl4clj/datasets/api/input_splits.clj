@@ -172,7 +172,7 @@
          :else
          (let [[is-obj pf-obj weight-coll] (eval-if-code [input-split seq?]
                                                          [path-filter seq?]
-                                                         [weights seq?])]
+                                                         [weights seq? coll?])]
            (.sample is-obj pf-obj (double-array weight-coll)))))
 
 (defn to-double!

@@ -97,7 +97,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~normalizer (.fitLabel ~fit-labels?)))
          :else
-         (let [[norm-obj fit-labels-b] (eval-if-code [normalizer seq?] [fit-labels? seq?])]
+         (let [[norm-obj fit-labels-b] (eval-if-code [normalizer seq?]
+                                                     [fit-labels? seq? boolean?])]
            (doto norm-obj (.fitLabel fit-labels-b)))))
 
 (defn normalize-labels?
