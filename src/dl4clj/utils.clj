@@ -52,6 +52,9 @@
        (catch Exception e arg)))
 
 (defn eval-if-code
+  ;; maybe add a way of specifying the return type
+  ;; for validation that the eval of seqs returns the correct type
+  ;; this isn't somthing that can be covered by spec
   [& args]
   (loop [argz args
          accum []]

@@ -3,7 +3,7 @@
     dl4clj.eval.api.confusion-matrix
   (:import [org.deeplearning4j.eval ConfusionMatrix])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 (defn get-actual-total
   "Computes the total number of times the class actually appeared in the data."
@@ -15,7 +15,9 @@
            :actual (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getActualTotal ~confusion-matrix ~actual))
          :else
-         (.getActualTotal confusion-matrix actual)))
+         (let [[m-obj a-obj] (eval-if-code [confusion-matrix seq?]
+                                           [actual seq?])]
+           (.getActualTotal m-obj a-obj))))
 
 (defn get-classes
   "Gives the applyTransformToDestination of all classes in the confusion matrix."
@@ -38,7 +40,10 @@
            :predicted (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getCount ~confusion-matrix ~actual ~predicted))
          :else
-         (.getCount confusion-matrix actual predicted)))
+         (let [[m-obj a-obj p-obj] (eval-if-code [confusion-matrix seq?]
+                                                 [actual seq?]
+                                                 [predicted seq?])]
+           (.getCount m-obj a-obj p-obj))))
 
 (defn get-predicted-total
   "Computes the total number of times the class was predicted by the classifier."
@@ -50,7 +55,9 @@
            :predicted (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getPredictedTotal ~confusion-matrix ~predicted))
          :else
-         (.getPredictedTotal confusion-matrix predicted)))
+         (let [[m-obj p-obj] (eval-if-code [confusion-matrix seq?]
+                                           [predicted seq?])]
+           (.getPredictedTotal m-obj p-obj))))
 
 (defn to-csv
   "Outputs the ConfusionMatrix as comma-separated values for easy import into spreadsheets"

@@ -3,7 +3,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
     dl4clj.eval.api.eval-tools
   (:import [org.deeplearning4j.evaluation EvaluationTools])
   (:require [clojure.java.io :as io]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 (defn export-roc-charts-to-html-file
@@ -19,7 +19,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
           as-code?
           `(EvaluationTools/exportRocChartsToHtmlFile ~roc (io/as-file ~file-path)))
          :else
-         (EvaluationTools/exportRocChartsToHtmlFile roc (io/as-file file-path))))
+         (let [[path-str] (eval-if-code [file-path seq?])]
+           (EvaluationTools/exportRocChartsToHtmlFile roc (io/as-file path-str)))))
 
 (defn roc-chart-to-html
   "Given a ROC or ROCMultiClass instance, render the ROC chart

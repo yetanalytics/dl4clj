@@ -3,7 +3,7 @@
     dl4clj.eval.api.eval-utils
   (:import [org.deeplearning4j.eval EvaluationUtils])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 (defn extract-non-masked-time-steps
@@ -26,10 +26,13 @@
           (vec-or-matrix->indarray ~predicted)
           (vec-or-matrix->indarray ~output-mask)))
          :else
-         (EvaluationUtils/extractNonMaskedTimeSteps
-          (vec-or-matrix->indarray labels)
-          (vec-or-matrix->indarray predicted)
-          (vec-or-matrix->indarray output-mask))))
+         (let [[l-vec p-vec m-vec] (eval-if-code [labels seq?]
+                                                 [predicted seq?]
+                                                 [output-mask seq?])]
+          (EvaluationUtils/extractNonMaskedTimeSteps
+           (vec-or-matrix->indarray l-vec)
+           (vec-or-matrix->indarray p-vec)
+           (vec-or-matrix->indarray m-vec)))))
 
 (defn reshape-time-series-to-2d
   "reshapes a time series to be two dimensional"
@@ -42,4 +45,5 @@
           as-code?
           `(EvaluationUtils/reshapeTimeSeriesTo2d (vec-or-matrix->indarray ~labels)))
          :else
-         (EvaluationUtils/reshapeTimeSeriesTo2d (vec-or-matrix->indarray labels))))
+         (let [[l-vec] (eval-if-code [labels seq?])]
+           (EvaluationUtils/reshapeTimeSeriesTo2d (vec-or-matrix->indarray l-vec)))))
