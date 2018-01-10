@@ -21,7 +21,7 @@
          (obj-or-code? as-code? `(.calculateAUC ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (let [[idx-n] (eval-if-code [class-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
            (.calculateAUC roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.calculateAUC ~roc))
@@ -45,7 +45,7 @@
          (obj-or-code? as-code? `(.getPrecisionRecallCurve ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (let [[idx-n] (eval-if-code [class-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
            (.getPrecisionRecallCurve roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getPrecisionRecallCurve ~roc))
@@ -71,7 +71,7 @@
          (obj-or-code? as-code? `(.getResults ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (let [[idx-n] (eval-if-code [class-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
            (.getResults roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getResults ~roc))
@@ -97,7 +97,7 @@
          (obj-or-code? as-code? `(.getResultsAsArray ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (let [[idx-n] (eval-if-code [class-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
            (.getResultsAsArray roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getResultsAsArray ~roc))

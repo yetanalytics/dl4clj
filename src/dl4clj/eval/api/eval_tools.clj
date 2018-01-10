@@ -19,7 +19,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/evaluation/EvaluationTool
           as-code?
           `(EvaluationTools/exportRocChartsToHtmlFile ~roc (io/as-file ~file-path)))
          :else
-         (let [[path-str] (eval-if-code [file-path seq?])]
+         (let [[path-str] (eval-if-code [file-path seq? string?])]
            (EvaluationTools/exportRocChartsToHtmlFile roc (io/as-file path-str)))))
 
 (defn roc-chart-to-html

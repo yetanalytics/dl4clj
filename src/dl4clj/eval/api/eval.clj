@@ -131,7 +131,7 @@
            :actual-idx _}]
          (let [[e-obj p-idx a-idx] (eval-if-code [evaler seq?]
                                                  [predicted-idx seq?]
-                                                 [actual-idx seq?])]
+                                                 [actual-idx seq? number?])]
            (doto e-obj (.eval p-idx a-idx)))))
 
 (defn eval-time-series!
@@ -199,7 +199,7 @@
          (obj-or-code? as-code? `(.stats ~evaler ~suppress-warnings?))
          [{:evaler _
            :suppress-warnings? _}]
-         (let [[w-b] (eval-if-code [suppress-warnings? seq?])]
+         (let [[w-b] (eval-if-code [suppress-warnings? seq? boolean?])]
            (.stats evaler w-b))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.stats ~evaler))
@@ -231,7 +231,7 @@
                                  (_ :guard seq?))}]
          (obj-or-code? as-code? `(.classCount ~evaler (int ~class-label-idx)))
          :else
-         (let [[idx-n] (eval-if-code [class-label-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
            (.classCount evaler (int idx-n)))))
 
 (defn confusion-to-string
@@ -260,7 +260,7 @@
          (obj-or-code? as-code? `(.f1 ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _ }]
-         (let [[idx-n] (eval-if-code [class-label-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
            (.f1 evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.f1 ~evaler))
@@ -297,8 +297,8 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq?]
-                                                 [edge-case seq?])]
+         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
            (.falseNegativeRate evaler (int idx-n) (double edge-case-n)))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
@@ -306,7 +306,7 @@
          (obj-or-code? as-code? `(.falseNegativeRate ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (let [[idx-n] (eval-if-code [class-label-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
            (.falseNegativeRate evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.falseNegativeRate ~evaler))
@@ -343,8 +343,8 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq?]
-                                                 [edge-case seq?])]
+         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
            (.falsePositiveRate evaler (int idx-n) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
@@ -354,7 +354,7 @@
           `(.falsePositiveRate ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (let [[idx-n] (eval-if-code [class-label-idx seq?])]
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
            (.falsePositiveRate evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code?
@@ -386,7 +386,7 @@
           as-code?
           `(.getClassLabel ~evaler (int ~label-idx)))
          :else
-         (let [[l-idx] (eval-if-code [label-idx seq?])]
+         (let [[l-idx] (eval-if-code [label-idx seq? number?])]
            (.getClassLabel evaler (int l-idx)))))
 
 (defn get-confusion-matrix
@@ -422,7 +422,7 @@
           as-code?
           `(.getPredictionByPredictedClass ~evaler (int ~idx-of-predicted-class)))
          :else
-         (let [[idx-n] (eval-if-code [idx-of-predicted-class seq?])]
+         (let [[idx-n] (eval-if-code [idx-of-predicted-class seq? number?])]
            (.getPredictionByPredictedClass evaler (int idx-n)))))
 
 (defn get-prediction-errors
@@ -451,8 +451,8 @@
           as-code?
           `(.getPredictions ~evaler (int ~actual-class-idx) (int ~predicted-class-idx)))
          :else
-         (let [[a-idx p-idx] (eval-if-code [actual-class-idx seq?]
-                                           [predicted-class-idx seq?])]
+         (let [[a-idx p-idx] (eval-if-code [actual-class-idx seq? number?]
+                                           [predicted-class-idx seq? number?])]
            (.getPredictions evaler a-idx p-idx))))
 
 (defn get-predictions-by-actual-class
@@ -469,7 +469,7 @@
           as-code?
           `(.getPredictionsByActualClass ~evaler (int ~actual-class-idx)))
          :else
-         (let [[a-idx] (eval-if-code [actual-class-idx seq?])]
+         (let [[a-idx] (eval-if-code [actual-class-idx seq? number?])]
            (.getPredictionsByActualClass evaler a-idx))))
 
 (defn get-top-n-correct-count
@@ -532,8 +532,8 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq?]
-                                                 [edge-case seq?])]
+         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
            (.precision evaler (int l-idx) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
@@ -570,8 +570,8 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq?]
-                                                 [edge-case seq?])]
+         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
            (.recall evaler (int l-idx) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
@@ -579,7 +579,7 @@
          (obj-or-code? as-code? `(.recall ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (let [[l-idx] (eval-if-code [class-label-idx seq?])]
+         (let [[l-idx] (eval-if-code [class-label-idx seq? number?])]
            (.recall evaler (int l-idx)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.recall ~evaler))
@@ -631,7 +631,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.meanSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (let [[idx-n] (eval-if-code [column-idx seq?])]
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
            (.meanSquaredError regression-evaler idx-n))))
 
 (defn get-mean-absolute-error
@@ -645,7 +645,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.meanAbsoluteError ~regression-evaler (int ~column-idx)))
          :else
-         (let [[idx-n] (eval-if-code [column-idx seq?])]
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
            (.meanAbsoluteError regression-evaler idx-n))))
 
 (defn get-root-mean-squared-error
@@ -659,7 +659,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.rootMeanSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (let [[idx-n] (eval-if-code [column-idx seq?])]
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
            (.rootMeanSquaredError regression-evaler idx-n))))
 
 (defn get-correlation-r2
@@ -673,7 +673,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.correlationR2 ~regression-evaler (int ~column-idx)))
          :else
-         (let [[idx-n] (eval-if-code [column-idx seq?])]
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
            (.correlationR2 regression-evaler idx-n))))
 
 (defn get-relative-squared-error
@@ -687,7 +687,7 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.relativeSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (let [[idx-n] (eval-if-code [column-idx seq?])]
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
            (.relativeSquaredError regression-evaler idx-n))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
