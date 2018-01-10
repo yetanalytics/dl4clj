@@ -3,7 +3,7 @@
             FineTuneConfiguration TransferLearningHelper]
            [org.nd4j.linalg.api.ndarray INDArray])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [array-of obj-or-code?]]
+            [dl4clj.utils :refer [array-of obj-or-code? eval-if-code]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,7 +22,9 @@
            :nn-conf (_ :guard seq?)}]
          (obj-or-code? as-code? `(.appliedNeuralNetConfiguration ~fine-tune-conf ~nn-conf))
          :else
-         (.appliedNeuralNetConfiguration fine-tune-conf nn-conf)))
+         (let [[ft-obj nn-obj] (eval-if-code [fine-tune-conf seq?]
+                                             [nn-conf seq?])]
+           (.appliedNeuralNetConfiguration ft-obj nn-obj))))
 
 (defn nn-conf-from-fine-tune-conf
   "creates a neural network configuration builder from a fine tune configuration.
@@ -70,7 +72,8 @@
            :data-set (_ :guard seq?)}]
          (obj-or-code? as-code? `(.featurize ~helper ~data-set))
          :else
-         (.featurize helper data-set)))
+         (let [[h ds] (eval-if-code [helper seq?] [data-set seq?])]
+           (.featurize h ds))))
 
 (defn fit-featurized!
   "Fit from a featurized dataset
@@ -93,11 +96,13 @@
          [{:helper (_ :guard seq?) :data-set (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~helper (.fitFeaturized ~data-set)))
          [{:helper _ :data-set _}]
-         (doto helper (.fitFeaturized data-set))
+         (let [[h ds] (eval-if-code [helper seq?] [data-set seq?])]
+           (doto helper (.fitFeaturized data-set)))
          [{:helper (_ :guard seq?) :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~helper (.fitFeaturized ~iter)))
          [{:helper _ :iter _}]
-         (doto helper (.fitFeaturized (reset-iterator! iter)))
+         (let [[h i] (eval-if-code [helper seq?] [iter seq?])]
+           (doto h (.fitFeaturized (reset-iterator! i))))
          :else
          (assert false "you must supply either a data-set or a dat-set iterator")))
 
@@ -132,7 +137,8 @@
           `(.outputFromFeaturized ~helper (vec-or-matrix->indarray ~featurized-input)))
          [{:helper _
            :featurized-input _}]
-         (.outputFromFeaturized helper (vec-or-matrix->indarray featurized-input))))
+         (let [[h f-i] (eval-if-code [helper seq?] [featurized-input seq?])]
+           (.outputFromFeaturized h (vec-or-matrix->indarray f-i)))))
 
 (defn unfrozen-mln
   "Returns the unfrozen layers of the MultiLayerNetwork as a multilayernetwork
