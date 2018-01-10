@@ -24,6 +24,7 @@
          (obj-or-code?
           as-code?
           `(.getNewDestination ~unstructured-formatter ~file-path ~train?))
+         ;; TODO: should I use eval-if-code? I think so because file-path can be a seq
          :else
          (.getNewDestination unstructured-formatter file-path train?)))
 
@@ -43,6 +44,7 @@
          (obj-or-code?
           as-code?
           `(.getNameLabel ~unstructured-formatter ~file-path))
+         ;; TODO: should I use eval-if-code? I think so because file-path can be a seq
          :else
          (.getNameLabel unstructured-formatter file-path)))
 
@@ -90,6 +92,7 @@
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getPathLabel ~unstructured-formatter ~file-path))
+         ;; TODO: should I use eval-if-code? I think so because file-path can be a seq
          :else
          (.getPathLabel unstructured-formatter file-path)))
 
