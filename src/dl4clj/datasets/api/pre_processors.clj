@@ -16,7 +16,7 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
-            [dl4clj.utils :refer [array-of obj-or-code?]]
+            [dl4clj.utils :refer [array-of obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
@@ -35,8 +35,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (obj-or-code? as-code? `(do (.preProcess ~pre-processor ~ds)
                                      ~ds))
          :else
-         (do (.preProcess pre-processor ds)
-             ds)))
+         (let [[pp-obj ds-obj] (eval-if-code [pre-processor seq?] [ds seq?])]
+           (do (.preProcess pp-obj ds-obj)
+               ds-obj))))
 
 (defn pre-process-iter-combined-pp!
   "Pre process a dataset sequentially using a combined pre-processor
@@ -51,7 +52,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
            :dataset (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.preProcess ~dataset)))
          :else
-         (doto (reset-iterator! iter) (.preProcess dataset))))
+         (let [[iter-obj ds-obj] (eval-if-code [iter seq?] [dataset seq?])]
+           (doto (reset-iterator! iter-obj) (.preProcess ds-obj)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generic normalizer (pre-processor) fns
@@ -79,7 +81,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~normalizer (.fit ~iter)))
          :else
-         (doto normalizer (.fit iter))))
+         (let [[norm-obj iter-obj] (eval-if-code [normalizer seq?] [iter seq?])]
+           (doto norm-obj (.fit iter-obj)))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.
@@ -94,7 +97,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~normalizer (.fitLabel ~fit-labels?)))
          :else
-         (doto normalizer (.fitLabel fit-labels?))))
+         (let [[norm-obj fit-labels-b] (eval-if-code [normalizer seq?] [fit-labels? seq?])]
+           (doto norm-obj (.fitLabel fit-labels-b)))))
 
 (defn normalize-labels?
   "Whether normalization for the labels is also enabled."
@@ -128,15 +132,19 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          [{:normalizer _
            :features _
            :features-mask _}]
-         (.revertFeatures normalizer (vec-or-matrix->indarray features)
-                          (vec-or-matrix->indarray features-mask))
+         (let [[norm-obj features-vec mask-vec] (eval-if-code [normalizer seq?]
+                                                              [features seq?]
+                                                              [features-mask seq?])]
+           (.revertFeatures norm-obj (vec-or-matrix->indarray features-vec)
+                            (vec-or-matrix->indarray mask-vec)))
          [{:normalizer (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.revertFeatures ~normalizer (vec-or-matrix->indarray ~features)))
          [{:normalizer _
            :features _}]
-         (.revertFeatures normalizer (vec-or-matrix->indarray features))))
+         (let [[norm-obj feature-vec] (eval-if-code [normalizer seq?] [features seq?])]
+           (.revertFeatures norm-obj (vec-or-matrix->indarray feature-vec)))))
 
 (defn revert-labels!
   "Undo the normalization applied by the normalizer on the labels array
@@ -162,15 +170,19 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          [{:normalizer _
            :labels _
            :labels-mask _}]
-         (.revertLabels normalizer (vec-or-matrix->indarray labels)
-                        (vec-or-matrix->indarray labels-mask))
+         (let [[norm-obj labels-vec mask-vec] (eval-if-code [normalizer seq?]
+                                                            [labels seq?]
+                                                            [labels-mask seq?])]
+           (.revertLabels norm-obj (vec-or-matrix->indarray labels-vec)
+                          (vec-or-matrix->indarray mask-vec)))
          [{:normalizer (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.revertLabels ~normalizer (vec-or-matrix->indarray ~labels)))
          [{:normalizer _
            :labels _}]
-         (.revertLabels normalizer (vec-or-matrix->indarray labels))))
+         (let [[norm-obj labels-vec] (eval-if-code [normalizer seq?] [labels seq?])]
+           (.revertLabels norm-obj (vec-or-matrix->indarray labels-vec)))))
 
 (defn transform-features!
   "applies the transform specified by the normalizer to the features
@@ -196,8 +208,11 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          [{:normalizer _
            :features _
            :features-mask _}]
-         (.transform normalizer (vec-or-matrix->indarray features)
-                     (vec-or-matrix->indarray features-mask))
+         (let [[norm-obj features-vec mask-vec] (eval-if-code [normalizer seq?]
+                                                              [features seq?]
+                                                              [features-mask seq?])]
+           (.transform norm-obj (vec-or-matrix->indarray features-vec)
+                       (vec-or-matrix->indarray mask-vec)))
          [{:normalizer (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
@@ -206,7 +221,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
           `(.transform ~normalizer (vec-or-matrix->indarray ~features)))
          [{:normalizer _
            :features _}]
-         (.transform normalizer (vec-or-matrix->indarray features))))
+         (let [[norm-obj features-vec] (eval-if-code [normalizer seq?]
+                                                     [features seq?])]
+          (.transform normalizer (vec-or-matrix->indarray features)))))
 
 (defn transform-labels!
   "applies the transform specified by the normalizer to the labels
@@ -232,8 +249,11 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          [{:normalizer _
            :labels _
            :labels-mask _}]
-         (.transformLabel normalizer (vec-or-matrix->indarray labels)
-                          (vec-or-matrix->indarray labels-mask))
+         (let [[norm-obj labels-vec mask-vec] (eval-if-code [normalizer seq?]
+                                                            [labels seq?]
+                                                            [labels-mask seq?])]
+           (.transformLabel norm-obj (vec-or-matrix->indarray labels-vec)
+                            (vec-or-matrix->indarray mask-vec)))
          [{:normalizer (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -242,7 +262,8 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
           `(.transformLabel ~normalizer (vec-or-matrix->indarray ~labels)))
          [{:normalizer _
            :labels _}]
-         (.transformLabel normalizer (vec-or-matrix->indarray labels))))
+         (let [[norm-obj labels-vec] (eval-if-code [normalizer seq?] [labels seq?])]
+           (.transformLabel norm-obj (vec-or-matrix->indarray labels-vec)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; min-max-normalization specific fns
@@ -382,4 +403,5 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.preProcess ~vgg16-pp (vec-or-matrix->indarray ~features)))
          :else
-         (.preProcess vgg16-pp (vec-or-matrix->indarray features))))
+         (let [[pp-obj features-vec] (eval-if-code [vgg16-pp seq?] [features seq?])]
+           (.preProcess pp-obj (vec-or-matrix->indarray features-vec)))))
