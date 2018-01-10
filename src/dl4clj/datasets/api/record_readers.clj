@@ -3,7 +3,7 @@
            [org.datavec.api.conf Configurable]
            [java.io Closeable])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -80,6 +80,7 @@
   [& {:keys [rr listeners as-code?]
       :or {as-code? true}
       :as opts}]
+  ;; TODO: come back and update with eval-if-code
   (match [opts]
          [{:rr (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
@@ -168,59 +169,22 @@
            :input-split (_ :guard seq?)
            :conf (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~rr (.initialize ~conf ~input-split)))
-         ;; this level of guarding may be unncessary
-         ;; should I be this concerned about the user shooting themself in the foot?
-         [{:rr (_ :guard seq?)
-           :input-split _
-           :conf (_ :guard seq?)}]
-         ;; input-split is an object
-         (doto (eval rr) (.initialize (eval conf) input-split))
-         [{:rr (_ :guard seq?)
-           :input-split (_ :guard seq?)
-           :conf _}]
-         ;; conf is an object
-         (doto (eval rr) (.initialize conf (eval input-split)))
-         [{:rr _
-           :input-split (_ :guard seq?)
-           :conf (_ :guard seq?)}]
-         ;; record reader is an object
-         (doto rr (.initialize (eval conf) (eval input-split)))
-         [{:rr (_ :guard seq?)
-           :input-split _
-           :conf _}]
-         ;; only rr isnt an obj
-         (doto (eval rr) (.initialize conf input-split))
-         [{:rr _
-           :input-split (_ :guard seq?)
-           :conf _}]
-         ;; only is isn't an obj
-         (doto rr (.initialize conf (eval input-split)))
-         [{:rr _
-           :input-split _
-           :conf (_ :guard seq?)}]
-         ;; only conf isnt an obj
-         (doto rr (.initialize (eval conf) input-split))
          [{:rr _
            :input-split _
            :conf _}]
-         ;; all are objs
-         (doto rr (.initialize conf input-split))
+         ;; not eveything is code
+         (let [all-objs (eval-if-code [rr seq?] [conf seq?] [input-split seq?])
+               [rr-obj conf-obj is-obj] all-objs]
+           (doto rr-obj (.initialize conf-obj is-obj)))
          [{:rr (_ :guard seq?)
            :input-split (_ :guard seq?)}]
-         ;; neither are objs
+         ;; all code
          (obj-or-code? as-code? `(doto ~rr (.initialize ~input-split)))
-         [{:rr (_ :guard seq?)
-           :input-split _}]
-         ;; is is an obj but rr is not
-         (doto (eval rr) (.initialize input-split))
-         [{:rr _
-           :input-split (_ :guard seq?)}]
-         ;; rr is an obj but is is not
-         (doto rr (.initialize (eval input-split)))
-         ;; both are objs
          [{:rr _
            :input-split _}]
-         (doto rr (.initialize input-split))))
+         (let [all-objs (eval-if-code [rr seq?] [input-split seq?])
+               [rr-obj is-obj] all-objs]
+           (doto rr-obj (.initialize is-obj)))))
 
 (defn load-from-meta-data-rr
   "loads a single or multiple record(s) from a given RecordMetaData instance (or list of)
@@ -276,20 +240,12 @@
                      (_ :guard seq?))
            :data-in-stream (_ :guard seq?)}]
          (obj-or-code? as-code? `(.sequenceRecord ~rr (java.net.URI. ~uri) ~data-in-stream))
-         [{:rr (_ :guard seq?)
-           :uri (:or (_ :guard string?)
-                     (_ :guard seq?))
-           :data-in-stream _}]
-         (.sequenceRecord (eval rr) (java.net.URI. uri) data-in-stream)
-         [{:rr _
-           :uri (:or (_ :guard string?)
-                     (_ :guard seq?))
-           :data-in-stream (_ :guard seq?)}]
-         (.sequenceRecord rr (java.net.URI. uri) (eval data-in-stream))
          [{:rr _
            :uri _
            :data-in-stream _}]
-         (.sequenceRecord rr (java.net.URI. uri) data-in-stream)
+         (let [all-objs (eval-if-code [rr seq?] [uri seq?] [data-in-stream seq?])
+               [rr-obj evaled-uri-seq dis-obj] all-objs]
+           (.sequenceRecord rr-obj (java.net.URI. evaled-uri-seq) dis-obj))
          [{:rr (_ :guard seq?)}]
          (obj-or-code? as-code? `(.sequenceRecord ~rr))
          :else
