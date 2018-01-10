@@ -6,7 +6,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
            [org.deeplearning4j.earlystopping EarlyStoppingResult]
            [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; local
@@ -40,7 +40,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
            :listener (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~trainer (.setListener ~listener)))
          :else
-         (doto trainer (.setListener listener))))
+         (let [[trainer-obj listener-obj] (eval-if-code [trainer seq?]
+                                                        [listener seq?])]
+           (doto trainer-obj (.setListener listener-obj)))))
 
 (defn get-best-model-from-result
   "returns the model within the early stopping result"
@@ -82,11 +84,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/trainer/IEa
          [{:es-trainer _
            :rdd _
            :multi-ds? true}]
-         (doto es-trainer (.fitMulti rdd))
+         (let [[es-trainer-obj rdd-obj] (eval-if-code [es-trainer seq?]
+                                                      [rdd seq?])]
+           (doto es-trainer-obj (.fitMulti rdd-obj)))
          [{:es-trainer _
            :rdd _
            :multi-ds? (:or false nil)}]
-         (doto es-trainer (.fit rdd))))
+         (let [[es-trainer-obj rdd-obj] (eval-if-code [es-trainer seq?]
+                                                      [rdd seq?])]
+           (doto es-trainer-obj (.fit rdd-obj)))))
 
 (defn get-score-spark-es-trainer
   "returns the score of the model trained via spark"
