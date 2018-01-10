@@ -45,23 +45,25 @@
 
 
 (defn eval-if-code-helper
-  [pred-and-arg arg]
-  (try (if (eval pred-and-arg)
-         (eval arg)
-         arg)
-       (catch Exception e arg)))
+  [pred-and-arg arg return-pred]
+  (let [return (try (if (eval pred-and-arg)
+                      (eval arg)
+                      arg)
+                    (catch Exception e arg))]
+    (if return-pred
+      (if (return-pred return)
+        return
+        (throw (Exception. (str "Return value of: " arg " is: " return " and does not match the return condition: " return-pred))))
+      return)))
 
 (defn eval-if-code
-  ;; maybe add a way of specifying the return type
-  ;; for validation that the eval of seqs returns the correct type
-  ;; this isn't somthing that can be covered by spec
   [& args]
   (loop [argz args
          accum []]
     (if (empty? argz)
       accum
       (let [cur (first argz)
-            [arg pred] cur
+            [arg pred return-pred] cur
             seq-arg?  (seq? arg)
             constructor-c? (if seq-arg?
                              (constructor-call? arg)
@@ -86,10 +88,10 @@
                                              (let [cur-pred (first each)
                                                    pred-arg `(~cur-pred ~the-arg)]
                                                (recur (rest each) (conj ds pred-arg)))))]
-                        (eval-if-code-helper pred-and-arg arg))
+                        (eval-if-code-helper pred-and-arg arg return-pred))
                       :else
                       (let [pred-and-arg `(~pred ~the-arg)]
-                        (eval-if-code-helper pred-and-arg arg)))))))))
+                        (eval-if-code-helper pred-and-arg arg return-pred)))))))))
 
 (defn gensym*
   "an implementation of gensym with control over the symbol name and number
