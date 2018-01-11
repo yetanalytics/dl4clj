@@ -89,6 +89,9 @@ n/a
 
 ## Usage
 
+- The bellow examples are based on master and not the dev branch
+- there will be things that break here due to dl4j version bump
+
 ### Things you need to know
 - All functions for creating dl4j objects return code by default
   - All of these functions have an option to return the dl4j object
