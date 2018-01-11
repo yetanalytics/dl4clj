@@ -39,27 +39,13 @@
                                              :iter ~i)]
                (iter-api/set-pre-processor! :pre-processor ~norm
                                             :iter ~i))))
-         [{:iter (_ :guard seq?)
-           :normalizer _}]
-         (let [iter* (eval iter)
-               norm (norm-api/fit-iter! :normalizer normalizer
-                                        :iter iter*)]
-           (iter-api/set-pre-processor! :pre-processor norm
-                                        :iter iter*))
-         [{:iter _
-           :normalizer (_ :guard seq?)}]
-         (let [norm* (eval normalizer)
-               norm (norm-api/fit-iter! :normalizer norm*
-                                        :iter iter)]
-           (iter-api/set-pre-processor! :pre-processor norm
-                                        :iter iter))
-
          [{:iter _
            :normalizer _}]
-         (let [norm (norm-api/fit-iter! :normalizer normalizer
-                                        :iter iter)]
+         (let [[i n] (u/eval-if-code [iter seq?] [normalizer seq?])
+               norm (norm-api/fit-iter! :normalizer n
+                                        :iter i)]
            (iter-api/set-pre-processor! :pre-processor norm
-                                        :iter iter))))
+                                        :iter i))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; model training
@@ -125,7 +111,36 @@
                             trained)]
            (u/obj-or-code? as-code? best-model))
          :else
-         (throw (Exception. "you must supply args as code"))))
+         (let [[conf train-i test-i eval-every m-saver iter-term-cond
+                epoch-term-cond s-l-model? a? t? return-best?]
+               (u/eval-if-code [nn-conf seq?]
+                               [training-iter seq?]
+                               [testing-iter seq?]
+                               [eval-every-n-epochs seq? number?]
+                               [model-saver seq?]
+                               [iteration-termination-conditions seq? coll?]
+                               [epoch-termination-conditions seq? coll?]
+                               [save-last-model? seq? boolean?]
+                               [average? seq? boolean?]
+                               [return-best-model? seq? boolean?])
+               mln (model-from-conf nn-conf)
+               score-calc (scorer/new-ds-loss-calculator :iter test-i :average? a?)
+               es-config (es-conf/new-early-stopping-config
+                          :epoch-termination-conditions epoch-term-cond
+                          :iteration-termination-conditions iter-term-cond
+                          :eval-every-n-epochs eval-every
+                          :model-saver m-saver
+                          :save-last-model? s-l-model?
+                          :score-calculator score-calc)
+               trainer (es-trainer/new-early-stopping-trainer
+                        :early-stopping-conf es-config
+                        :mln mln :iter train-i)
+               trained (if train?
+                         (trainer-api/fit-trainer! trainer)
+                         trainer)]
+           (if (and return-best? t?)
+             (trainer-api/get-best-model-from-result trained)
+             trained))))
 
 (defn train-with-spark
   ;; needs more guards and a doc string
@@ -190,39 +205,55 @@
            :iter _
            :n-slices _}]
          ;; specified number of slices for .parallelize
-         (let [spark-mln (spark-mln/new-spark-multi-layer-network
-                          :spark-context spark-context
-                          :mln-conf mln-conf
-                          :training-master training-master)
-               rdd (rdd/java-rdd-from-iter :spark-context spark-context
-                                           :iter iter
-                                           :num-slices n-slices)]
+         (let [[sc conf master i n-s n-e] (u/eval-if-code [spark-context seq?]
+                                                          [mln-conf seq?]
+                                                          [training-master seq?]
+                                                          [iter seq?]
+                                                          [n-slices seq? number?]
+                                                          [n-epochs seq? number?])
+               spark-mln (spark-mln/new-spark-multi-layer-network
+                          :spark-context sc
+                          :mln-conf conf
+                          :training-master master)
+               rdd (rdd/java-rdd-from-iter :spark-context sc
+                                           :iter i
+                                           :num-slices n-s)]
            (spark-mln-api/fit-spark-mln! :spark-mln spark-mln
                                          :rdd rdd
-                                         :n-epochs n-epochs))
+                                         :n-epochs n-e))
          [{:spark-context _
            :mln-conf _
            :training-master _
            :iter _}]
          ;; didnt specified number of slices for .parallelize
-         (let [spark-mln (spark-mln/new-spark-multi-layer-network
-                          :spark-context spark-context
-                          :mln-conf mln-conf
-                          :training-master training-master)
-               rdd (rdd/java-rdd-from-iter :spark-context spark-context
-                                           :iter iter)]
+         (let [[sc conf master i n-e] (u/eval-if-code [spark-context seq?]
+                                                      [mln-conf seq?]
+                                                      [training-master seq?]
+                                                      [iter seq?]
+                                                      [n-epochs seq? number?])
+               spark-mln (spark-mln/new-spark-multi-layer-network
+                          :spark-context sc
+                          :mln-conf conf
+                          :training-master master)
+               rdd (rdd/java-rdd-from-iter :spark-context sc
+                                           :iter i)]
            (spark-mln-api/fit-spark-mln! :spark-mln spark-mln
                                          :rdd rdd
-                                         :n-epochs n-epochs))
+                                         :n-epochs n-e))
          [{:spark-context _
            :mln-conf _
            :training-master _
            :rdd _}]
          ;; provided an rdd instead of an iterator
-         (let [spark-mln (spark-mln/new-spark-multi-layer-network
-                          :spark-context spark-context
-                          :mln-conf mln-conf
-                          :training-master training-master)]
+         (let [[sc conf master r n-e] (u/eval-if-code [spark-context seq?]
+                                                        [mln-conf seq?]
+                                                        [training-master seq?]
+                                                        [rdd seq?]
+                                                        [n-epochs seq? number?])
+               spark-mln (spark-mln/new-spark-multi-layer-network
+                          :spark-context sc
+                          :mln-conf conf
+                          :training-master master)]
            (spark-mln-api/fit-spark-mln! :spark-mln spark-mln
-                                         :rdd rdd
-                                         :n-epochs n-epochs))))
+                                         :rdd r
+                                         :n-epochs n-e))))
