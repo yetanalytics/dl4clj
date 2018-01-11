@@ -319,7 +319,7 @@
   (testing "the api fns for ds iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100 :as-code? false)
           iter-w-labels (new-lfw-data-set-iterator
-                         :img-dims [1 1 1] :batch-size 2
+                         :img-dims [1 1 1] :batch-size 1
                          :n-examples 100 :train? true
                          :n-labels 5
                          :use-subset? true :rng 123
@@ -332,7 +332,6 @@
       (is (= java.lang.Boolean (type (async-supported? iter))))
       (is (= java.lang.Integer (type (get-batch-size iter))))
       (is (= java.lang.Integer (type (get-current-cursor iter))))
-      ;; come back and up date this after you change get labels
       (is (= java.util.ArrayList (type (get-labels iter-w-labels))))
       (is (= org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator
              (type (set-pre-processor!
@@ -343,20 +342,20 @@
              (type (get-pre-processor iter))))
       (is (= java.lang.Integer (type (get-input-columns iter))))
       (is (= org.nd4j.linalg.dataset.DataSet
-             (type (next-n-examples! :iter iter-w-labels :n 2))))
+             (type (next-n-examples! :iter cifar-iter :n 2))))
       (is (= java.lang.Integer (type (get-num-examples iter))))
       (is (= (type iter-w-labels) (type (reset-iter! iter-w-labels))))
       (is (= java.lang.Boolean (type (reset-supported? iter-w-labels))))
       (is (= java.lang.Integer (type (get-total-examples iter))))
       (is (= java.lang.Integer (type (get-total-outcomes iter))))
       (is (= java.lang.Boolean (type (has-next? iter))))
-      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! iter-w-labels))))
+      (is (= org.nd4j.linalg.dataset.DataSet (type (next-example! cifar-iter))))
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;; this is going to fail when this is running in an enviro with gpus or spark I think
       ;; need to implement other forms of computation to verify this
       (is (= org.nd4j.linalg.cpu.nativecpu.NDArray
-             (type (get-features (next-example! (reset-iter! iter-w-labels)))))))))
+             (type (get-features (next-example! (reset-iter! cifar-iter)))))))))
 
 (deftest label-generators-test
   (testing "the creation of label generators and their functionality"
@@ -604,7 +603,7 @@
 
 (deftest input-split-interface-testing
   (testing "the interfaces used by input splits"
-    (let [f-split (new-filesplit :path "resources/poker/" :as-code? false)]
+    (let [f-split (new-filesplit :path "resources/poker-hand-testing.csv" :as-code? false)]
       (is (= java.lang.Long (type (length f-split))))
       (is (= java.net.URI (type (first (locations f-split)))))
       (is (= org.datavec.api.util.files.UriFromPathIterator
@@ -653,10 +652,10 @@
 
     (is (= org.datavec.api.records.reader.impl.csv.CSVRecordReader
            (type (new-csv-record-reader :skip-n-lines 1 :delimiter ","
-                                        :strip-quotes nil :as-code? false))))
-    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader. 1 "," nil)
+                                        :strip-quotes "'" :as-code? false))))
+    (is (= '(org.datavec.api.records.reader.impl.csv.CSVRecordReader. 1 "," "'")
            (new-csv-record-reader :skip-n-lines 1 :delimiter ","
-                                  :strip-quotes nil)))
+                                  :strip-quotes "'")))
 
     ;; csv-seq-rr
     (is (= org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
@@ -868,49 +867,7 @@
                1
                (org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator.
                 5 100))
-             (new-multiple-epochs-iterator :iter iter :n-epochs 1)))
-
-      (is (= org.deeplearning4j.datasets.iterator.DoublesDataSetIterator
-             (type (new-doubles-dataset-iterator :features [0.2 0.4]
-                                              :labels [0.4 0.8]
-                                              :batch-size 2
-                                              :as-code? false))))
-      (is (= '(org.deeplearning4j.datasets.iterator.DoublesDataSetIterator.
-               [(dl4clj.berkeley/new-pair
-                 :p1 (clojure.core/double-array [0.2 0.4])
-                 :p2 (clojure.core/double-array [0.4 0.8]))]
-               2)
-             (new-doubles-dataset-iterator :features [0.2 0.4]
-                                           :labels [0.4 0.8]
-                                           :batch-size 2)))
-
-      (is (= org.deeplearning4j.datasets.iterator.FloatsDataSetIterator
-             (type (new-floats-dataset-iterator :features [0.2 0.4]
-                                                 :labels [0.4 0.8]
-                                                 :batch-size 2
-                                                 :as-code? false))))
-      (is (= '(org.deeplearning4j.datasets.iterator.FloatsDataSetIterator.
-               [(dl4clj.berkeley/new-pair
-                 :p1 (clojure.core/float-array [0.2 0.4])
-                 :p2 (clojure.core/float-array [0.4 0.8]))]
-               2)
-             (new-floats-dataset-iterator :features [0.2 0.4]
-                                          :labels [0.4 0.8]
-                                          :batch-size 2)))
-
-      (is (= org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator
-             (type (new-INDArray-dataset-iterator :features [1 2]
-                                                  :labels [2 2]
-                                                  :batch-size 2
-                                                  :as-code? false))))
-      (is (= '(org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator.
-               [(dl4clj.berkeley/new-pair
-                 :p1 (nd4clj.linalg.factory.nd4j/vec-or-matrix->indarray [1 2])
-                 :p2 (nd4clj.linalg.factory.nd4j/vec-or-matrix->indarray [2 2]))]
-               2)
-             (new-INDArray-dataset-iterator :features [1 2]
-                                            :labels [2 2]
-                                            :batch-size 2))))))
+             (new-multiple-epochs-iterator :iter iter :n-epochs 1))))))
 
 (deftest rr-ds-iterator-test
   (testing "the creation of record reader dataset iterators"

@@ -22,15 +22,7 @@
            ;; spark
            [org.deeplearning4j.spark.api RDDTrainingApproach Repartition RepartitionStrategy]
            [org.deeplearning4j.spark.datavec DataVecSequencePairDataSetFunction$AlignmentMode]
-           [org.apache.spark.storage StorageLevel]
-
-           ;; clustering
-           [org.deeplearning4j.clustering.algorithm.optimisation
-            ClusteringOptimization
-            ClusteringOptimizationType]
-           [org.deeplearning4j.clustering.algorithm.strategy
-            ClusteringStrategy
-            ClusteringStrategyType]))
+           [org.apache.spark.storage StorageLevel]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi fn
@@ -193,29 +185,6 @@
       (= lvl :memory-only) (StorageLevel/MEMORY_ONLY)
       (= lvl :none) (StorageLevel/NONE)
       (= lvl :off-heap) (StorageLevel/OFF_HEAP))))
-
-(defmethod value-of :clustering-optimization [opts]
-  (let [optim (:clustering-optimization opts)]
-    ;; I dont see implementations within dl4j src for all of these types
-    (cond
-      (= optim :minimize-avg-point-to-center)
-      (ClusteringOptimizationType/MINIMIZE_AVERAGE_POINT_TO_CENTER_DISTANCE)
-      (= optim :minimize-avg-point-to-point)
-      (ClusteringOptimizationType/MINIMIZE_AVERAGE_POINT_TO_POINT_DISTANCE)
-      (= optim :minimize-max-point-to-center)
-      (ClusteringOptimizationType/MINIMIZE_MAXIMUM_POINT_TO_CENTER_DISTANCE)
-      (= optim :minimize-max-point-to-point)
-      (ClusteringOptimizationType/MINIMIZE_MAXIMUM_POINT_TO_POINT_DISTANCE)
-      (= optim :minimize-per-cluster-point-count)
-      (ClusteringOptimizationType/MINIMIZE_PER_CLUSTER_POINT_COUNT)
-      :else
-      (assert false "you must supply a valid optimization-type"))))
-
-(defmethod value-of :clustering-strategy [opts]
-  (let [strat (:clustering-strategy opts)]
-    (if (= strat :fixed-cluster-count)
-      (ClusteringStrategyType/FIXED_CLUSTER_COUNT)
-      (ClusteringStrategyType/OPTIMIZATION))))
 
 (defn input-types
   [opts]

@@ -19,6 +19,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn replace-layer-helper
+  ;; currently breaking
+  ;; https://github.com/deeplearning4j/deeplearning4j/blob/2c3bb382a4a4cf8eb8330cec74d19c01aacf2088/deeplearning4j-nn/src/main/java/org/deeplearning4j/nn/transferlearning/TransferLearning.java#L179
+  ;; I get  org.apache.commons.lang3.tuple.ImmutablePair cannot be cast to org.nd4j.linalg.primitives.Pair
+  ;; this conversion seems to happen at the method level within the java src.  Not sure if i can get around this
+  ;; without reimplementing the method
   "performs the replacement of n-out for a supplied layer
 
   This fn is called within multi-layer-network-mutater-builder
@@ -161,6 +166,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
                              :next-weight-init (keyword)}
    - see replace-n-out for further details about the args
    - see dl4clj.nn.conf.distribution.distribution for creating distributions
+   - CURRENTLY NOT SUPPORTED!
 
   :remove-last-n-layers (int), Remove last n layers of the net
    - At least an output layer must be added back in
@@ -183,7 +189,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
                                         ~mln
                                         (init! :model ~mln))))
 
-        replacement-layer* (if replacement-layer
+        #_replacement-layer* #_(if replacement-layer
                              (replace-layer-helper replacement-layer))
 
         input-pre-processor* (if input-pre-processor
@@ -196,7 +202,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/transferlearning/Trans
         fine-tune-conf* (if fine-tune-conf
                           `(eval-and-build ~fine-tune-conf))
 
-        updated-opts {:replacement-layer replacement-layer*
+        updated-opts { ;;:replacement-layer replacement-layer*
                       :input-pre-processor input-pre-processor*
                       :fine-tune-conf fine-tune-conf*}
 

@@ -1,16 +1,8 @@
 (ns dl4clj.datasets.fetchers.default-dataset-fetchers
   (:import [org.deeplearning4j.datasets.fetchers
-            MnistDataFetcher IrisDataFetcher CurvesDataFetcher])
+            MnistDataFetcher IrisDataFetcher])
   (:require [clojure.core.match :refer [match]]
             [dl4clj.utils :refer [obj-or-code?]]))
-
-(defn curves-fetcher
-  "gets the Curves dataset."
-  [& {:keys [as-code?]
-      :or {as-code? true}}]
-  (if as-code?
-    `(CurvesDataFetcher.)
-    (CurvesDataFetcher.)))
 
 (defn iris-fetcher
   "fetches the iris dataset"

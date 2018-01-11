@@ -5,7 +5,7 @@
            [org.deeplearning4j.datasets.iterator
             DoublesDataSetIterator FloatsDataSetIterator INDArrayDataSetIterator
             AsyncDataSetIterator AsyncMultiDataSetIterator CombinedPreProcessor
-            CombinedPreProcessor$Builder CurvesDataSetIterator IteratorDataSetIterator
+            CombinedPreProcessor$Builder IteratorDataSetIterator
             IteratorMultiDataSetIterator MovingWindowBaseDataSetIterator
             MultipleEpochsIterator ReconstructionDataSetIterator SamplingDataSetIterator
             ExistingDataSetIterator]
@@ -21,7 +21,6 @@
             PortableDataStreamMultiDataSetIterator]
            [java.util Random])
   (:require [dl4clj.constants :refer [value-of]]
-            [dl4clj.berkeley :refer [new-pair]]
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn
                                   obj-or-code?]]
@@ -175,7 +174,7 @@
 ;; dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod iterator :doubles-dataset-iter [opts]
+#_(defmethod iterator :doubles-dataset-iter [opts]
   (let [config (:doubles-dataset-iter opts)
         {features :features
          labels :labels
@@ -184,7 +183,7 @@
                                          :p2 (double-array ~labels))]
                               ~batch-size)))
 
-(defmethod iterator :floats-dataset-iter [opts]
+#_(defmethod iterator :floats-dataset-iter [opts]
   (let [config (:floats-dataset-iter opts)
         {features :features
          labels :labels
@@ -193,7 +192,7 @@
                                         :p2 (float-array ~labels))]
                              ~batch-size)))
 
-(defmethod iterator :INDArray-dataset-iter [opts]
+#_(defmethod iterator :INDArray-dataset-iter [opts]
   (let [config (:INDArray-dataset-iter opts)
         {features :features
          labels :labels
@@ -314,12 +313,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; default dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod iterator :curves-dataset-iter [opts]
-  (let [config (:curves-dataset-iter opts)
-        {batch :batch-size
-         n-examples :n-examples} config]
-    `(CurvesDataSetIterator. ~batch ~n-examples)))
 
 (defmethod iterator :cifar-dataset-iter [opts]
   (let [config (:cifar-dataset-iter opts)
@@ -770,7 +763,7 @@
   (let [code (iterator {:iterator-multi-dataset-iter opts})]
     (obj-or-code? as-code? code)))
 
-(defn new-doubles-dataset-iterator
+#_(defn new-doubles-dataset-iterator
   "creates a dataset iterator which iterates over the supplied features and labels
 
   :features (coll of doubles), a collection of doubles which acts as inputs
@@ -790,7 +783,7 @@
   (let [code (iterator {:doubles-dataset-iter opts})]
     (obj-or-code? as-code? code)))
 
-(defn new-floats-dataset-iterator
+#_(defn new-floats-dataset-iterator
   "creates a dataset iterator which iterates over the supplied iterable
 
   :features (coll of floats), a collection of floats which acts as inputs
@@ -808,7 +801,7 @@
   (let [code (iterator {:floats-dataset-iter opts})]
     (obj-or-code? as-code? code)))
 
-(defn new-INDArray-dataset-iterator
+#_(defn new-INDArray-dataset-iterator
   "creates a dataset iterator given a pair of INDArrays and a batch-size
 
   :features (vec or INDArray), an INDArray which acts as inputs
@@ -875,22 +868,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; default dataset iterators user facing fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn new-curves-dataset-iterator
-  "creates a dataset iterator for curbes data
-
-  :batch-size (int), the size of the batch
-
-  :as-code? (boolean), return java object or code for creating it
-
-  :n-examples (int), the total number of examples
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/CurvesDataSetIterator.html"
-  [& {:keys [batch-size n-examples as-code?]
-      :or {as-code? true}
-      :as opts}]
-  (let [code (iterator {:curves-dataset-iter opts})]
-    (obj-or-code? as-code? code)))
 
 (defn new-cifar-data-set-iterator
   "Load the images from the cifar dataset,

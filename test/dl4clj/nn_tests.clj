@@ -292,6 +292,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; nn-conf-builder
 ;; dl4clj.nn.conf.builders.nn
+;; TODO: looks like defaults now override layer params...
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest setting-vals
@@ -410,7 +411,8 @@
       (is (= 0.1 (:adamVarDecay l2)))
       (is (= 0.7 (:biasInit l2)))
       (is (= 0.1 (:biasLearningRate l2)))
-      (is (= {:normal {:mean 0.0, :std 1.0}} (:dist l2)))
+      (is (= {:type "org.deeplearning4j.nn.conf.distribution.NormalDistribution", :mean 0.0, :std 1.0}
+             (:dist l2)))
       (is (= 0.2 (:dropOut l2)))
       (is (= 0.3 (:epsilon l2)))
       (is (= "None" (:gradientNormalization l2)))
@@ -1173,11 +1175,11 @@
                                                      :layer-name "first layer"
                                                      :activation-fn :relu
                                                      :weight-init :xavier}}
-                                    1 {:activation-layer {:n-in 100
-                                                          :n-out 10
-                                                          :layer-name "second layer"
-                                                          :activation-fn :soft-max
-                                                          :weight-init :xavier}}
+                                    1 {:dense-layer {:n-in 100
+                                                     :n-out 10
+                                                     :layer-name "second layer"
+                                                     :activation-fn :soft-max
+                                                     :weight-init :xavier}}
                                     2 {:output-layer {:n-in 10
                                                       :n-out 1
                                                       :layer-name "output layer"
@@ -1358,7 +1360,6 @@
                                       {:gradient-normalization :none}))
                                     (.nIn 10)
                                     (.name "second layer"))))))))))
-                      (.nOutReplace 0 101 (dl4clj.constants/value-of {:weight-init :relu}))
                       (.setInputPreProcessor
                        0
                        (dl4clj.nn.conf.input-pre-processor/pre-processors
@@ -1431,7 +1432,6 @@
                                  :regularization? false
                                  :seed 1234)
                 :remove-last-n-layers 1
-                :replacement-layer {:layer-idx 0 :n-out 101 :weight-init :relu}
                 :add-layers {2 {:dense-layer {:n-in 100
                                               :n-out 10
                                               :layer-name "third layer"
@@ -1462,7 +1462,6 @@
                       :mln mln-code
                       :fine-tune-conf ft-conf-code
                       :remove-output-layer? true
-                      :replacement-layer {:layer-idx 0 :n-out 1001 :weight-init :xavier-uniform}
                       :remove-last-n-layers 1
                       :add-layers (layer/output-layer-builder
                                    :n-in 100
@@ -1478,7 +1477,7 @@
                 (tl/builder :tlb tlb-code
                             :fine-tune-conf ft-conf-code
                             :remove-last-n-layers 2
-                            :add-layers {1 (layer/activation-layer-builder
+                            :add-layers {1 (layer/dense-layer-builder
                                             :n-in 10
                                             :n-out 100
                                             :layer-name "replacement another layer"
@@ -1509,22 +1508,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; any layer builder
 ;; dl4clj.nn.conf.builders.builders
+;; TODO: look into updaters being set, have been seeing unexpected results for adam and adadelta
+;; TODO: there were a bunch of changes to the builder methods of the layers, need to go back and update args
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest activation-layer-test
   (testing "the creation of a activation layer from a nn-conf"
     (let [conf {:activation-layer
-                {:n-in 10 :n-out 2 :activation-fn :relu
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo" :learning-rate 0.1
-                 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                 :updater :nesterovs :weight-init :distribution}}]
+                {:drop-out 0.2
+                 :layer-name "foo"}}]
       (is (= :activation (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.ActivationLayer
              (type (layer-creation/new-layer
@@ -1567,7 +1559,6 @@
                  :layer-name "foo2"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :rho 0.7 :updater :adadelta
                  :weight-init :distribution}}]
       (is (= :output (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.OutputLayer
@@ -1717,7 +1708,6 @@
                 {:n-in 10 :n-out 2
                  :kernel-size [2 2] :padding [2 2] :stride [2 2]
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1726,7 +1716,7 @@
                  :layer-name "foo9"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}
+                 :weight-init :distribution}}
           conf-1d {:convolution-1d-layer
                    {:n-in 10 :n-out 2
                     :kernel-size 6 :stride 3 :padding 3
@@ -1739,7 +1729,6 @@
                     :layer-name "foo10"
                     :learning-rate 0.1 :learning-rate-policy :inverse
                     :learning-rate-schedule {0 0.2 1 0.5}
-                    :rms-decay 0.7 :updater :rmsprop
                     :weight-init :distribution}}]
       (is (= :convolution (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
        (is (= org.deeplearning4j.nn.layers.convolution.ConvolutionLayer
@@ -1786,7 +1775,7 @@
                  :layer-name "foo12"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :rms-decay 0.7 :updater :rmsprop
+                 :updater :rmsprop
                  :weight-init :distribution}}]
       (is (= :embedding (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer
@@ -1798,17 +1787,7 @@
   (testing "the creation of a local response normalization layer from a nn-conf"
     (let [conf {:local-response-normalization
                 {:alpha 0.2 :beta 0.2 :k 0.2 :n 1
-                 :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo13"
-                 :learning-rate 0.1 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}]
+                 :layer-name "foo13"}}]
       (is (= :local-response-normalization (layer-creation/layer-type
                                             {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.normalization.LocalResponseNormalization
@@ -1822,33 +1801,14 @@
                 {:kernel-size [2 2] :stride [2 2] :padding [2 2]
                  :pooling-type :sum
                  :build? true
-                 :activation-fn :relu
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo14"
-                 :learning-rate 0.1 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                 :updater :nesterovs :weight-init :distribution}}
+                 :drop-out 0.2
+                 :layer-name "foo14"}}
           conf-1d {:subsampling-1d-layer
                    {:kernel-size 2 :stride 2 :padding 2
                     :pooling-type :sum
                     :build? true
-                    :activation-fn :relu
-                    :adam-mean-decay 0.2 :adam-var-decay 0.1
-                    :bias-init 0.7 :bias-learning-rate 0.1
-                    :dist {:normal {:mean 0 :std 1}}
-                    :drop-out 0.2 :epsilon 0.3
-                    :gradient-normalization :none
-                    :gradient-normalization-threshold 0.9
-                    :layer-name "foo15"
-                    :learning-rate 0.1 :learning-rate-policy :inverse
-                    :learning-rate-schedule {0 0.2 1 0.5}
-                    :updater :adam :weight-init :distribution}}]
-
+                    :drop-out 0.2
+                    :layer-name "foo15"}}]
       (is (= :subsampling (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.convolution.subsampling.SubsamplingLayer
              (type (layer-creation/new-layer
@@ -1909,17 +1869,8 @@
                  :collapse-dimensions? true
                  :pnorm 2
                  :pooling-type :pnorm
-                 :activation-fn :relu
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo18"
-                 :updater :rmsprop
-                 :learning-rate 0.1 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :weight-init :distribution}}]
+                 :drop-out 0.2
+                 :layer-name "foo18"}}]
       (is (= org.deeplearning4j.nn.layers.pooling.GlobalPoolingLayer
              (type (layer-creation/new-layer
                     :as-code? false
@@ -1929,17 +1880,8 @@
   (testing "the creation of a zero padding layer from a nn-conf"
     (let [conf {:zero-padding-layer
                 {:pad-top 1 :pad-bot 2 :pad-left 3 :pad-right 4
-                 :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
-                 :bias-init 0.7 :bias-learning-rate 0.1
-                 :dist {:normal {:mean 0 :std 1}}
-                 :drop-out 0.2 :epsilon 0.3
-                 :gradient-normalization :none
-                 :gradient-normalization-threshold 0.9
-                 :layer-name "foo19"
-                 :learning-rate 0.1 :learning-rate-policy :inverse
-                 :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}]
+                 :drop-out 0.2
+                 :layer-name "foo19"}}]
       (is (= :zero-padding (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.convolution.ZeroPaddingLayer
              (type (layer-creation/new-layer
@@ -1962,7 +1904,6 @@
                  :vae-loss-fn {:output-activation-fn :sigmoid :loss-fn :mse}
                  :num-samples 2 :pzx-activation-function :tanh
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1971,7 +1912,7 @@
                  :layer-name "foo20"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}]
+                 :weight-init :distribution}}]
       (is (= :variational-autoencoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.variational.VariationalAutoencoder
              (type (layer-creation/new-layer
@@ -1983,16 +1924,15 @@
     (let [layer-conf {:dense-layer
                       {:n-in 10 :n-out 2
                        :activation-fn :relu
-                       :adam-mean-decay 0.2 :adam-var-decay 0.1
                        :bias-init 0.7 :bias-learning-rate 0.1
                        :dist {:normal {:mean 0 :std 1}}
                        :drop-out 0.2 :epsilon 0.3
                        :gradient-normalization :none
                        :gradient-normalization-threshold 0.9
-                       :layer-name "foo11"
+                       :layer-name "fooz"
                        :learning-rate 0.1 :learning-rate-policy :inverse
                        :learning-rate-schedule {0 0.2 1 0.5}
-                       :updater :adam :weight-init :distribution}}]
+                       :weight-init :distribution}}]
       (is (= org.deeplearning4j.nn.layers.FrozenLayer
              (type (layer-creation/new-frozen-layer
                     :as-code? false

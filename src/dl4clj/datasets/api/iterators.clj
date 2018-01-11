@@ -78,6 +78,7 @@
 
 (defn next-example!
   "returns the next example in an iterator"
+  ;; TODO: has problems with multi-ds iterators, will need to figure this out
   [iter & {:keys [as-code?]
            :or {as-code? true}}]
   (match [iter]
