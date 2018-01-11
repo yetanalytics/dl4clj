@@ -41,12 +41,12 @@
   (match [opts]
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
-           :labels-list (:or (_ :guard vector?)
-                             (_ :guard seq?))
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))
            :top-n (:or (_ :guard number?)
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter (into '() ~labels) (int ~top-n)))
-         [{:mln _ :iter _ :labels-list _ :top-n _}]
+         [{:mln _ :iter _ :labels _ :top-n _}]
          (let [[model i ls t-n] (eval-if-code [mln seq?]
                                               [iter seq?]
                                               [labels seq? vector?]
@@ -54,13 +54,13 @@
            (.evaluate model (reset-iterator! i) (reverse (into '() ls)) t-n))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
-           :labels-list (:or (_ :guard vector?)
-                             (_ :guard seq?))}]
+           :labels (:or (_ :guard vector?)
+                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter (reverse (into '() ~labels))))
-         [{:mln _ :iter _ :labels-list _}]
+         [{:mln _ :iter _ :labels _}]
          (let [[model i ls] (eval-if-code [mln seq?] [iter seq?]
                                           [labels seq? vector?])]
-          (.evaluate model (reset-iterator! i) (reverse (into '() ls))))
+           (.evaluate model (reset-iterator! i) (reverse (into '() ls))))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter))

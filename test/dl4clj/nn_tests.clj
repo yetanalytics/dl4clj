@@ -1040,7 +1040,7 @@
       (is (= org.deeplearning4j.eval.Evaluation
              (type
               (mln/evaluate-classification :mln init-no-ds :iter mnist-iter
-                                       :labels-list ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9"]))))
+                                       :labels ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9"]))))
       (is (= org.deeplearning4j.eval.RegressionEvaluation
              (type (mln/evaluate-regression :mln init-no-ds :iter mnist-iter))))
       (is (= java.util.ArrayList
