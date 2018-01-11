@@ -74,7 +74,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                     :report-score? '.reportScore
                     :report-time? '.reportTime
                     :frequency '.setFrequency}
-        code (builder-fn '(PerformanceListener$Builder.) method-map conf)]
+        code (builder-fn `(PerformanceListener$Builder.) method-map (dissoc conf :as-code?))]
     (if build?
       `(.build ~code)
       code)))
@@ -134,6 +134,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
       (array-of :data code-or-obj
                 :java-type IterationListener)
       code-or-obj)))
+
 
 (defn new-score-iteration-listener
   "Score iteration listener
