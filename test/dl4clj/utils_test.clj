@@ -96,6 +96,18 @@
       (is (= :map (arg-matching* needs-nested-map)))
       (is (= "no matching pattern" (arg-matching* '()))))))
 
+(deftest eval-if-code-test
+  (testing "the helper fn eval-if-code"
+    (is (= [2] (eval-if-code [(+ 1 1) number?])))
+    (is (= [`(clojure.core/+ 1 1)] (eval-if-code [`(+ 1 1) number?])))
+    (is (= [2] (eval-if-code [`(+ 1 1) [number? seq?]])))
+    (is (= [2 `(clojure.core/+ 2 2)] (eval-if-code [`(+ 1 1) [number? seq?]]
+                                                   [`(+ 2 2) number?])))
+    (is (= [2 4] (eval-if-code [`(+ 1 1) [number? seq?]]
+                               [`(+ 2 2) seq?])))
+    (is (= ["foo"] (eval-if-code [`(java.lang.String. "foo") seq?])))
+    (is (= [`(java.lang.String. "foo")] (eval-if-code [`(java.lang.String. "foo") vector?])))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; constants, value-of, input-type

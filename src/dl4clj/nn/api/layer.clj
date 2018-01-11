@@ -3,7 +3,7 @@
  see http://deeplearning4j.org/doc/org/deeplearning4j/nn/api/Layer.html"}
   dl4clj.nn.api.layer
   (:import [org.deeplearning4j.nn.api Layer])
-  (:require [dl4clj.utils :refer [contains-many? obj-or-code?]]
+  (:require [dl4clj.utils :refer [contains-many? obj-or-code? eval-if-code]]
             [dl4clj.constants :as enum]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
@@ -73,7 +73,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getL1ByParam ~layer ~param-name))
          :else
-         (.getL1ByParam layer param-name)))
+         (let [[p-name] (eval-if-code [param-name seq? string?])]
+           (.getL1ByParam layer p-name))))
 
 (defn get-l2-by-param-layer
   "Get the L2 coefficient for the given parameter."
@@ -86,7 +87,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getL2ByParam ~layer ~param-name))
          :else
-         (.getL2ByParam layer param-name)))
+         (let [[p-name] (eval-if-code [param-name seq? string?])]
+           (.getL2ByParam layer p-name))))
 
 (defn get-learning-rate-by-param-layer
   "Get the (initial) learning rate coefficient for the given parameter."
@@ -99,7 +101,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLearningRateByParam ~layer ~param-name))
          :else
-         (.getLearningRateByParam layer param-name)))
+         (let [[p-name] (eval-if-code [param-name seq? string?])]
+           (.getLearningRateByParam layer p-name))))
 
 (defn get-output-type
   "returns the output type of the provided layer given the layer input type
@@ -121,7 +124,9 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getOutputType ~layer (int ~layer-idx) (enum/input-types ~input-type)))
          :else
-         (.getOutputType layer layer-idx (enum/input-types input-type))))
+         (let [[l-idx i-type] (eval-if-code [layer-idx seq? number?]
+                                            [input-type seq? map?])]
+           (.getOutputType layer l-idx (enum/input-types i-type)))))
 
 (defn get-pre-processor-for-input-type
   "For the given type of input to this layer, what preprocessor (if any) is required?
@@ -139,7 +144,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getPreProcessorForInputType ~layer (enum/input-types ~input-type)))
          :else
-         (.getPreProcessorForInputType layer (enum/input-types input-type))))
+         (let [[i-type] (eval-if-code [input-type seq? map?])]
+           (.getPreProcessorForInputType layer (enum/input-types i-type)))))
 
 (defn get-updater-by-param
   "Get the updater for the given parameter."
@@ -152,7 +158,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getUpdaterByParam ~layer ~param-name))
          :else
-         (.getUpdaterByParam layer param-name)))
+         (let [[p-name] (eval-if-code [param-name seq? string?])]
+           (.getUpdaterByParam layer p-name))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; setters
@@ -173,8 +180,9 @@
           `(doto ~layer
             (.setIndex (int ~index))))
          :else
-         (doto layer
-           (.setIndex (int index)))))
+         (let [[i] (eval-if-code [index seq? number?])]
+          (doto layer
+           (.setIndex (int i))))))
 
 (defn set-layer-input!
   "set the layer's input and return the layer"
@@ -190,8 +198,8 @@
           `(doto ~layer
              (.setInput (vec-or-matrix->indarray ~input))))
          :else
-         (doto layer
-           (.setInput (vec-or-matrix->indarray input)))))
+         (let [[i l] (eval-if-code [input seq?] [layer seq?])]
+          (doto l (.setInput (vec-or-matrix->indarray i))))))
 
 (defn set-input-mini-batch-size!
   "Set current/last input mini-batch size and return the layer.
@@ -208,8 +216,9 @@
           `(doto ~layer
             (.setInputMiniBatchSize (int ~size))))
          :else
-         (doto layer
-           (.setInputMiniBatchSize size))))
+         (let [[s] (eval-if-code [size seq? number?])]
+          (doto layer
+           (.setInputMiniBatchSize s)))))
 
 (defn set-layer-listeners!
   "Set the iteration listeners for the supplied layer and returns the layer.
@@ -219,14 +228,15 @@
       :as opts}]
   (match [opts]
          [{:layer (_ :guard seq?)
-           :listeners _}]
+           :listeners (_ :guard seq?)}]
          (obj-or-code?
           as-code?
           `(doto ~layer
             (.setListeners ~listeners)))
          :else
-         (doto layer
-           (.setListeners listeners))))
+         (let [[l listenerz] (eval-if-code [layer seq?] [listeners seq?])]
+          (doto l
+           (.setListeners listenerz)))))
 
 (defn set-mask-array!
   "Set the mask array for this layer and return the layer
@@ -243,8 +253,8 @@
           `(doto ~layer
             (.setMaskArray (vec-or-matrix->indarray ~mask-array))))
          :else
-         (doto layer
-           (.setMaskArray (vec-or-matrix->indarray mask-array)))))
+         (let [[m-vec l] (eval-if-code [mask-array seq?] [layer seq?])]
+           (doto l (.setMaskArray (vec-or-matrix->indarray m-vec))))))
 
 (defn set-n-in!
   "Set the nIn value (number of inputs, or input depth for CNNs) based on the given input type
@@ -270,7 +280,9 @@
           as-code?
           `(doto ~layer (.setNIn (enum/input-types ~input-type) ~override?)))
          :else
-         (doto layer (.setNIn (enum/input-types input-type) override?))))
+         (let [[i-type o?] (eval-if-code [input-type seq? map?]
+                                         [override? seq? boolean?])]
+           (doto layer (.setNIn (enum/input-types i-type) o?)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
@@ -307,7 +319,7 @@
   (match [opts]
          [{:layer (_ :guard seq?)
            :conf (_ :guard seq?)
-           :listener _
+           :listener (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
            :layer-param-view (:or (_ :guard vector?)
@@ -320,9 +332,13 @@
                         (vec-or-matrix->indarray ~layer-param-view)
                         ~initialize-params?))
          :else
-         (.instantiate layer conf listener layer-idx
-                       (vec-or-matrix->indarray layer-param-view)
-                       initialize-params?)))
+         (let [[l c listen l-idx p-view-vec init-params?]
+               (eval-if-code [layer seq?] [conf seq?] [listener seq?]
+                             [layer-idx seq? number?] [layer-param-view seq?]
+                             [initialize-params? seq? boolean?])]
+           (.instantiate l c listen l-idx
+                         (vec-or-matrix->indarray p-view-vec)
+                         init-params?))))
 
 (defn activate-layer
   "6 opts for triggering an activation
@@ -351,7 +367,9 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.activate ~model (vec-or-matrix->indarray ~input) ~training?))
          [{:model _ :input _ :training? _}]
-         (.activate model (vec-or-matrix->indarray input) training?)
+         (let [[i t? m] (eval-if-code [input seq?] [training? seq? boolean?]
+                                      [model seq?])]
+          (.activate m (vec-or-matrix->indarray i) t?))
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -363,19 +381,23 @@
                      (vec-or-matrix->indarray ~input)
                      (enum/value-of {:layer-training-mode ~training-mode})))
          [{:model _ :input _ :training-mode _}]
-         (.activate model (vec-or-matrix->indarray input) (enum/value-of {:layer-training-mode training-mode}))
+         (let [[i t-m m] (eval-if-code [input seq?] [training-mode seq? keyword?]
+                                       [model seq?])]
+          (.activate m (vec-or-matrix->indarray i) (enum/value-of {:layer-training-mode t-m})))
          [{:model (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.activate ~model (vec-or-matrix->indarray ~input)))
          [{:model _ :input _}]
-         (.activate model (vec-or-matrix->indarray input))
+         (let [[i m] (eval-if-code [input seq?] [model seq?])]
+           (.activate m (vec-or-matrix->indarray i)))
          [{:model (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.activate ~model ~training?))
          [{:model _ :training? _}]
-         (.activate model training?)
+         (let [[t?] (eval-if-code [training? seq? boolean?])]
+           (.activate model t?))
          [{:model (_ :guard seq?)
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
@@ -383,7 +405,8 @@
           as-code?
           `(.activate ~model (enum/value-of {:layer-training-mode ~training-mode})))
          [{:model _ :training-mode _}]
-         (.activate model (enum/value-of {:layer-training-mode training-mode}))
+         (let [[t-m] (eval-if-code [training-mode seq? keyword?])]
+          (.activate model (enum/value-of {:layer-training-mode t-m})))
          [{:model (_ :guard seq?)}]
          (obj-or-code? as-code? `(.activate ~model))
          :else
@@ -408,19 +431,23 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~layer (vec-or-matrix->indarray ~input) ~training?))
          [{:layer _ :input _ :training? _}]
-         (.output layer (vec-or-matrix->indarray input) training?)
+         (let [[i t? l] (eval-if-code [input seq?] [training? seq? boolean?]
+                                      [layer seq?])]
+           (.output l (vec-or-matrix->indarray i) t?))
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~layer (vec-or-matrix->indarray ~input)))
          [{:layer _ :input _ }]
-         (.output layer (vec-or-matrix->indarray input))
+         (let [[i l] (eval-if-code [input seq?] [layer seq?])]
+           (.output l (vec-or-matrix->indarray i)))
          [{:layer (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~layer ~training?))
          [{:layer _ :training? _}]
-         (.output layer training?)))
+         (let [[t?] (eval-if-code [training? seq? boolean?])]
+           (.output layer t?))))
 
 (defn feed-forward-mask-array
   "Feed forward the input mask array, setting in in the layer as appropriate.
@@ -450,9 +477,13 @@
                                  (enum/value-of {:mask-state ~mask-state})
                                  (int ~batch-size)))
          :else
-         (.feedForwardMaskArray layer (vec-or-matrix->indarray mask-array)
-                                (enum/value-of {:mask-state mask-state})
-                                batch-size)))
+         (let [[l m-vec m-state b-size]
+               (eval-if-code [layer seq?] [mask-array seq?]
+                             [mask-state seq? keyword?]
+                             [batch-size seq? number?])]
+           (.feedForwardMaskArray l (vec-or-matrix->indarray m-vec)
+                                  (enum/value-of {:mask-state m-state})
+                                  b-size))))
 
 (defn backprop-gradient
   "Calculate the gradient relative to the error in the next layer
@@ -466,7 +497,8 @@
                          (_ :guard seq?))}]
          (obj-or-code? as-code? `(.backpropGradient ~layer (vec-or-matrix->indarray ~epsilon)))
          :else
-         (.backpropGradient layer (vec-or-matrix->indarray epsilon))))
+         (let [[e l] (eval-if-code [epsilon seq?] [layer seq?])]
+          (.backpropGradient l (vec-or-matrix->indarray e)))))
 
 (defn calc-l1
   "Calculate the l1 regularization term. 0.0 if regularization is not used."
@@ -479,7 +511,8 @@
                                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.calcL1 ~layer ~backprop-only-params?))
          :else
-         (.calcL1 layer backprop-only-params?)))
+         (let [[bp-only?] (eval-if-code [backprop-only-params? seq? boolean?])]
+           (.calcL1 layer bp-only?))))
 
 (defn calc-l2
   "Calculate the l2 regularization term. 0.0 if regularization is not used."
@@ -492,7 +525,8 @@
                                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.calcL2 ~layer ~backprop-only-params?))
          :else
-         (.calcL2 layer backprop-only-params?)))
+         (let [[bp-only?] (eval-if-code [backprop-only-params? seq? boolean?])]
+           (.calcL2 layer bp-only?))))
 
 (defn is-pretrain-layer?
   "Returns true if the layer can be trained in an unsupervised/pretrain manner (VAE, RBMs etc)"
@@ -528,7 +562,9 @@
           as-code?
           `(.preOutput ~layer (vec-or-matrix->indarray ~input) ~training?))
          [{:layer _ :input _ :training? _}]
-         (.preOutput layer (vec-or-matrix->indarray input) training?)
+         (let [[i t? l] (eval-if-code [input seq?] [training? seq? boolean?]
+                                      [layer seq?])]
+           (.preOutput l (vec-or-matrix->indarray i) t?))
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -540,21 +576,26 @@
                       (vec-or-matrix->indarray ~input)
                       (enum/value-of {:training-mode ~training-mode})))
          [{:layer _ :input _ :training-mode _}]
-         (.preOutput layer
-                     (vec-or-matrix->indarray input)
-                     (enum/value-of {:training-mode training-mode}))
+         (let [[i t-m l] (eval-if-code [input seq?]
+                                       [training-mode seq? keyword?]
+                                       [layer seq?])]
+           (.preOutput l
+                       (vec-or-matrix->indarray i)
+                       (enum/value-of {:training-mode t-m})))
          [{:layer (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.preOutput ~layer ~training?))
          [{:layer _ :training? _}]
-         (.preOutput layer training?)
+         (let [[t?] (eval-if-code [training? seq? boolean?])]
+           (.preOutput layer t?))
          [{:layer (_ :guard seq?)
            :input (:or (_ :guard seq?)
                        (_ :guard vector?))}]
          (obj-or-code? as-code? `(.preOutput ~layer (vec-or-matrix->indarray ~input)))
          [{:layer _ :input _ }]
-         (.preOutput layer (vec-or-matrix->indarray input))))
+         (let [[i l] (eval-if-code [input seq?] [layer seq?])]
+           (.preOutput l (vec-or-matrix->indarray i)))))
 
 (defn transpose
   "Return a transposed copy of the weights/bias

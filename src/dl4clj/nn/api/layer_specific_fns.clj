@@ -12,7 +12,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
            [org.deeplearning4j.nn.api.layers RecurrentLayer]
            [org.deeplearning4j.nn.api.layers IOutputLayer])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
-            [dl4clj.utils :refer [contains-many? obj-or-code?]]
+            [dl4clj.utils :refer [contains-many? obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
             [dl4clj.constants :as enum]))
 
@@ -110,7 +110,12 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.computeScore ~output-layer (double ~full-network-l1)
                          (double ~full-network-l2) ~training?))
          :else
-         (.computeScore output-layer full-network-l1 full-network-l2 training?)))
+         (let [[o-l n-l1 n-l2 t?]
+               (eval-if-code [output-layer seq?]
+                             [full-network-l1 seq? number?]
+                             [full-network-l2 seq? number?]
+                             [training? seq? boolean?])]
+           (.computeScore o-l n-l1 n-l2 t?))))
 
 (defn compute-score-for-examples
   "Compute the score for each example individually, after labels and input have been set.
@@ -133,7 +138,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.computeScoreForExamples ~output-layer (double ~full-network-l1)
                                     (double ~full-network-l2)))
          :else
-         (.computeScoreForExamples output-layer full-network-l1 full-network-l2)))
+         (let [[n-l1 n-l2] (eval-if-code [full-network-l1 seq? number?]
+                                         [full-network-l2 seq? number?])]
+           (.computeScoreForExamples output-layer n-l1 n-l2))))
 
 (defn set-labels!
   "Set the labels array for this output layer and returns the layer
@@ -151,8 +158,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(doto ~output-layer
             (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
-         (doto output-layer
-           (.setLabels (vec-or-matrix->indarray labels)))))
+         (let [[o-layer l] (eval-if-code [output-layer seq?] [labels seq?])]
+          (doto o-layer (.setLabels (vec-or-matrix->indarray l))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; base pretrain layer
@@ -178,8 +185,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.getCorruptedInput ~base-pretrain-network (vec-or-matrix->indarray ~features)
                               (double ~corruption-level)))
          :else
-         (.getCorruptedInput base-pretrain-network (vec-or-matrix->indarray features)
-                             corruption-level)))
+         (let [[f c-lvl bpn] (eval-if-code [features seq?]
+                                           [corruption-level seq? number?]
+                                           [base-pretrain-network seq?])]
+           (.getCorruptedInput bpn (vec-or-matrix->indarray f) c-lvl))))
 
 (defn sample-hidden-given-visible
   "Sample the hidden distribution given the visible
@@ -197,8 +206,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.sampleHiddenGivenVisible ~base-pretrain-network
                                      (vec-or-matrix->indarray ~visible)))
          :else
-         (.sampleHiddenGivenVisible base-pretrain-network
-                                    (vec-or-matrix->indarray visible))))
+         (let [[v bpn] (eval-if-code [visible seq?] [base-pretrain-network seq?])]
+          (.sampleHiddenGivenVisible bpn (vec-or-matrix->indarray v)))))
 
 (defn sample-visible-given-hidden
   "Sample the visible distribution given the hidden
@@ -216,8 +225,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.sampleVisibleGivenHidden ~base-pretrain-network
                                      (vec-or-matrix->indarray ~hidden)))
          :else
-         (.sampleVisibleGivenHidden base-pretrain-network
-                                    (vec-or-matrix->indarray hidden))))
+         (let [[h bpn] (eval-if-code [hidden seq?] [base-pretrain-network seq?])]
+           (.sampleVisibleGivenHidden bpn (vec-or-matrix->indarray h)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; autoencoders
@@ -236,7 +245,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.decode ~autoencoder (vec-or-matrix->indarray ~layer-output)))
          :else
-         (.decode autoencoder (vec-or-matrix->indarray layer-output))))
+         (let [[l-o a] (eval-if-code [layer-output seq?] [autoencoder seq?])]
+           (.decode a (vec-or-matrix->indarray l-o)))))
 
 (defn encode
   "encodes an input to be passed to an autoencoder"
@@ -253,7 +263,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.encode ~autoencoder (vec-or-matrix->indarray ~input) ~training?))
          :else
-         (.encode autoencoder (vec-or-matrix->indarray input) training?)))
+         (let [[i t? a] (eval-if-code [input seq?]
+                                      [training? seq? boolean?]
+                                      [autoencoder seq?])]
+           (.encode a (vec-or-matrix->indarray i) t?))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rbm
@@ -272,15 +285,14 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
                               (_ :guard vector?))}]
          (obj-or-code? as-code? `(.gibbhVh ~rbm (vec-or-matrix->indarray ~hidden-input)))
          :else
-         (.gibbhVh rbm (vec-or-matrix->indarray hidden-input))))
+         (let [[h-i rbm-model] (eval-if-code [hidden-input seq?] [rbm seq?])]
+           (.gibbhVh rbm-model (vec-or-matrix->indarray h-i)))))
 
 (defn prop-up
   "Calculates the activation of the visible : sigmoid(v * W + hbias)"
   [& {:keys [rbm visible-input training? as-code?]
       :or {as-code? true}
       :as opts}]
-  (assert (contains-many? opts :rbm :visible-input)
-          "you must supply a rbm and the visible input")
   (match [opts]
          [{:rbm (_ :guard seq?)
            :visible-input (:or (_ :guard seq?)
@@ -293,7 +305,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
          [{:rbm _
            :visible-input _
            :training? _}]
-         (.propUp rbm (vec-or-matrix->indarray visible-input) training?)
+         (let [[v-i t? rbm-model] (eval-if-code [visible-input seq?]
+                                                [training? seq? boolean?]
+                                                [rbm seq?])]
+           (.propUp rbm-model (vec-or-matrix->indarray v-i) t?))
          [{:rbm (_ :guard seq?)
            :visible-input (:or (_ :guard seq?)
                                (_ :guard vector?))}]
@@ -301,7 +316,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           (obj-or-code? as-code? `(.propUp ~rbm (vec-or-matrix->indarray ~visible-input))))
          :else
-         (.propUp rbm (vec-or-matrix->indarray visible-input))))
+         (let [[v-i rbm-model] (eval-if-code [visible-input seq?]
+                                             [rbm seq?])]
+           (.propUp rbm-model (vec-or-matrix->indarray v-i)))))
 
 (defn prop-up-derivative
   "derivative of the prop-up activation"
@@ -316,7 +333,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.propUpDerivative ~rbm (vec-or-matrix->indarray ~prop-up-vals)))
          :else
-         (.propUpDerivative rbm (vec-or-matrix->indarray prop-up-vals))))
+         (let [[p-up rbm-model] (eval-if-code [prop-up-vals seq?]
+                                              [rbm seq?])]
+           (.propUpDerivative rbm-model (vec-or-matrix->indarray p-up)))))
 
 (defn prop-down
   "Calculates the activation of the hidden: (activation (h * W + vbias))"
@@ -329,7 +348,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
                               (_ :guard vector?))}]
          (obj-or-code? as-code? `(.propDown ~rbm (vec-or-matrix->indarray ~hidden-input)))
          :else
-         (.propDown rbm (vec-or-matrix->indarray hidden-input))))
+         (let [[h-i rbm-model] (eval-if-code [hidden-input seq?] [rbm seq?])]
+           (.propDown rbm-model (vec-or-matrix->indarray h-i)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; frozen layer
@@ -348,7 +368,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~frozen-layer (.logTestMode ~training?)))
          [{:frozen-layer _ :training? _}]
-         (doto frozen-layer (.logTestMode training?))
+         (let [[t?] (eval-if-code [training? seq? boolean?])]
+           (doto frozen-layer (.logTestMode t?)))
          [{:frozen-layer (_ :guard seq?)
            :training-mode (:or (_ :guard keyword?)
                                (_ :guard seq?))}]
@@ -357,8 +378,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(doto ~frozen-layer
             (.logTestMode (enum/value-of {:layer-training-mode ~training-mode}))))
          [{:frozen-layer _ :training-mode _}]
-         (doto frozen-layer
-           (.logTestMode (enum/value-of {:layer-training-mode training-mode})))))
+         (let [[t-mode] (eval-if-code [training-mode seq? keyword?])]
+          (doto frozen-layer
+            (.logTestMode (enum/value-of {:layer-training-mode t-mode}))))))
 
 (defn get-inside-layer
   [frozen-layer & {:keys [as-code?]
@@ -386,7 +408,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.getShape ~batch-norm (vec-or-matrix->indarray ~features)))
          :else
-         (.getShape batch-norm (vec-or-matrix->indarray features))))
+         (let [[f b-norm] (eval-if-code [features seq?] [batch-norm seq?])]
+           (.getShape b-norm (vec-or-matrix->indarray f)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vae
@@ -405,7 +428,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.isPretrainParam ~vae ~param))
          :else
-         (.isPretrainParam vae param)))
+         (let [[p] (eval-if-code [param seq? string?])]
+           (.isPretrainParam vae p))))
 
 (defn reconstruction-probability
   "Calculate the reconstruction probability,
@@ -444,7 +468,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.reconstructionProbability ~vae (vec-or-matrix->indarray ~data) (int ~num-samples)))
          :else
-         (.reconstructionProbability vae (vec-or-matrix->indarray data) num-samples)))
+         (let [[d n-samples model] (eval-if-code [data seq?]
+                                                 [num-samples seq? number?]
+                                                 [vae seq?])]
+           (.reconstructionProbability model (vec-or-matrix->indarray d) n-samples))))
 
 (defn reconstruction-log-probability
   "Return the log reconstruction probability given the specified number of samples.
@@ -464,7 +491,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.reconstructionLogProbability ~vae (vec-or-matrix->indarray ~data)
                                          (int ~num-samples)))
          :else
-         (.reconstructionLogProbability vae (vec-or-matrix->indarray data) num-samples)))
+         (let [[d n-samples model] (eval-if-code [data seq?]
+                                                 [num-samples seq? number?]
+                                                 [vae seq?])]
+           (.reconstructionLogProbability model (vec-or-matrix->indarray d) n-samples))))
 
 (defn generate-random-given-z
   "Given a specified values for the latent space as input (latent space being z in p(z|data)),
@@ -485,7 +515,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.generateRandomGivenZ ~vae (vec-or-matrix->indarray ~latent-space-values)))
          :else
-         (.generateRandomGivenZ vae (vec-or-matrix->indarray latent-space-values))))
+         (let [[lsv model] (eval-if-code [latent-space-values seq?]
+                                         [vae seq?])]
+           (.generateRandomGivenZ model (vec-or-matrix->indarray lsv)))))
 
 (defn generate-at-mean-given-z
   "Given a specified values for the latent space as input (latent space being z in p(z|data)),
@@ -507,7 +539,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.generateAtMeanGivenZ ~vae (vec-or-matrix->indarray ~latent-space-values)))
          :else
-         (.generateAtMeanGivenZ vae (vec-or-matrix->indarray latent-space-values))))
+         (let [[lsv model] (eval-if-code [latent-space-values seq?]
+                                         [vae seq?])]
+           (.generateAtMeanGivenZ model (vec-or-matrix->indarray lsv)))))
 
 (defn has-loss-fn?
   "Does the reconstruction distribution have a loss function (such as mean squared error)
@@ -544,7 +578,8 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.reconstructionError ~vae (vec-or-matrix->indarray ~data)))
          :else
-         (.reconstructionError vae (vec-or-matrix->indarray data))))
+         (let [[d model] (eval-if-code [data seq?] [vae seq?])]
+           (.reconstructionError model (vec-or-matrix->indarray d)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; recurrent layers
@@ -573,8 +608,10 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.rnnActivateUsingStoredState rnn-layer (vec-or-matrix->indarray input)
                                         training? store-last-for-tbptt?))
          :else
-         (.rnnActivateUsingStoredState rnn-layer (vec-or-matrix->indarray input)
-                                       training? store-last-for-tbptt?)))
+         (let [[rnn i t? store?] (eval-if-code [rnn-layer seq?] [input seq?]
+                                               [training? seq? boolean?]
+                                               [store-last-for-tbptt? seq? boolean?])]
+          (.rnnActivateUsingStoredState rnn (vec-or-matrix->indarray i) t? store?))))
 
 (defn rnn-clear-previous-state!
   "Reset/clear the stateMap for rnn-time-step and
@@ -624,14 +661,15 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
       :as opts}]
   (match [opts]
          [{:rnn-layer (_ :guard seq?)
-           :state (_ :guard map?)}]
+           :state (:or (_ :guard map?)
+                       (_ :guard seq?))}]
          (obj-or-code?
           as-code?
           `(doto ~rnn-layer
             (.rnnSetTBPTTState ~state)))
          :else
-         (doto rnn-layer
-           (.rnnSetTBPTTState state))))
+         (let [[s] (eval-if-code [state seq? map?])]
+          (doto rnn-layer (.rnnSetTBPTTState s)))))
 
 (defn rnn-layer-set-prev-state!
   "Set the stateMap (stored history) and return the layer.
@@ -645,14 +683,16 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
       :as opts}]
   (match [opts]
          [{:rnn-layer (_ :guard seq?)
-           :state (_ :guard map?)}]
+           :state (:or
+                   (_ :guard seq?)
+                   (_ :guard map?))}]
          (obj-or-code?
           as-code?
           `(doto ~rnn-layer
             (.rnnSetPreviousState ~state)))
          :else
-         (doto rnn-layer
-           (.rnnSetPreviousState state))))
+         (let [[s] (eval-if-code [state seq? map?])]
+           (doto rnn-layer (.rnnSetPreviousState s)))))
 
 (defn rnn-layer-time-step
   "Do one or more time steps using the previous time step state stored in stateMap.
@@ -672,7 +712,9 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           as-code?
           `(.rnnTimeStep ~rnn-layer (vec-or-matrix->indarray ~input)))
          :else
-         (.rnnTimeStep rnn-layer (vec-or-matrix->indarray input))))
+         (let [[rnn i] (eval-if-code [rnn-layer seq?]
+                                     [input seq?])]
+           (.rnnTimeStep rnn (vec-or-matrix->indarray i)))))
 
 (defn tbptt-backprop-gradient
   "Returns the Truncated BPTT gradient
@@ -693,5 +735,7 @@ and https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/package-fra
           `(.tbpttBackpropGradient ~rnn-layer (vec-or-matrix->indarray ~epsilon)
                                   (int ~tbptt-back-length)))
          :else
-         (.tbpttBackpropGradient rnn-layer (vec-or-matrix->indarray epsilon)
-                                 tbptt-back-length)))
+         (let [[rnn e length] (eval-if-code [rnn-layer seq?]
+                                            [epsilon seq?]
+                                            [tbptt-back-length seq? number?])]
+           (.tbpttBackpropGradient rnn (vec-or-matrix->indarray e) length))))

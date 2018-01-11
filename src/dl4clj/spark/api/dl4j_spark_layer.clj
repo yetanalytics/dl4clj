@@ -1,7 +1,7 @@
 (ns dl4clj.spark.api.dl4j-spark-layer
   (:import [org.deeplearning4j.spark.impl.layer SparkDl4jLayer])
   (:require [dl4clj.datasets.api.record-readers :refer [reset-rr!]]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 (defn fit-spark-layer!
@@ -28,14 +28,13 @@
       :or {as-code? false}
       :as opts}]
   (match [opts]
-         [{:spark-layer (_ :guard seq?)
-           :spark-context (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark layer, spark-context and rdds must be objects"))
          [{:spark-layer _
            :spark-context _
            :rdd _}]
-         (.fit spark-layer spark-context rdd)
+         (let [[l c r] (eval-if-code [spark-layer seq?]
+                                     [spark-context seq?]
+                                     [rdd seq?])]
+           (.fit l c r))
          [{:spark-layer (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))
@@ -49,7 +48,11 @@
            :path _
            :label-idx _
            :record-reader _}]
-         (.fit spark-layer path label-idx (reset-rr! record-reader))))
+         (let [[l p idx rr] (eval-if-code [spark-layer seq?]
+                                          [path seq? string?]
+                                          [label-idx seq? number?]
+                                          [record-reader seq?])]
+           (.fit l p idx (reset-rr! rr)))))
 
 (defn fit-spark-layer-with-ds!
   "fit the spark layer with a rdd which contains a DataSet
@@ -59,12 +62,8 @@
   returns the fit layer"
   [& {:keys [spark-layer rdd]
       :as opts}]
-  (match [opts]
-         [{:spark-layer (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (.fitDataSet spark-layer rdd)))
+  (let [[l r] (eval-if-code [spark-layer seq?] [rdd seq?])]
+    (.fitDataSet l r)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; remember to look into creation of the spark matrices/vectors

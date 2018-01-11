@@ -2,7 +2,7 @@
   (:import [org.deeplearning4j.nn.conf.distribution BinomialDistribution
             NormalDistribution UniformDistribution GaussianDistribution])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; binomial distribution fns
@@ -43,7 +43,8 @@
           as-code?
           `(doto ~binomial-dist (.setProbabilityOfSuccess (double ~prob))))
          :else
-         (doto binomial-dist (.setProbabilityOfSuccess prob))))
+         (let [[prob-n] (eval-if-code [prob seq? number?])]
+           (doto binomial-dist (.setProbabilityOfSuccess prob)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; normal/gaussian distribution fns
@@ -84,7 +85,8 @@
                       (_ :guard number?))}]
          (obj-or-code? as-code? `(doto ~normal-dist (.setMean (double ~mean))))
          :else
-         (doto normal-dist (.setMean mean))))
+         (let [[mean-n] (eval-if-code [mean seq? number?])]
+           (doto normal-dist (.setMean mean-n)))))
 
 (defn set-std
   "sets the standard deviation for the normal/gaussian distribution supplied.
@@ -101,7 +103,8 @@
                      (_ :guard number?))}]
          (obj-or-code? as-code? `(doto ~normal-dist (.setStd (double ~std))))
          :else
-         (doto normal-dist (.setStd std))))
+         (let [[std-n] (eval-if-code [std seq? number?])]
+           (doto normal-dist (.setStd std-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; uniform distribution fns
@@ -142,7 +145,8 @@
                        (_ :guard number?))}]
          (obj-or-code? as-code? `(doto ~uniform-dist (.setLower (double ~lower))))
          :else
-         (doto uniform-dist (.setLower lower))))
+         (let [[l-n] (eval-if-code [lower seq? number?])]
+           (doto uniform-dist (.setLower l-n)))))
 
 (defn set-upper!
   "sets the upper bound of the supplied uniform distribution
@@ -159,4 +163,5 @@
                        (_ :guard number?))}]
          (obj-or-code? as-code? `(doto ~uniform-dist (.setUpper (double ~upper))))
          :else
-         (doto uniform-dist (.setUpper upper))))
+         (let [[u-n] (eval-if-code [upper seq? number?])]
+           (doto uniform-dist (.setUpper u-n)))))

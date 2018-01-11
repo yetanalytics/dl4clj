@@ -1,7 +1,7 @@
 (ns dl4clj.nn.api.gradient
   (:import [org.deeplearning4j.nn.gradient DefaultGradient])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 (defn clear!
@@ -25,7 +25,8 @@
                           (_ :guard string?))}]
          (obj-or-code? as-code? `(.flatteningOrderForVariable ~grad ~variable))
          :else
-         (.flatteningOrderForVariable grad variable)))
+         (let [[v] (eval-if-code [variable seq? string?])]
+           (.flatteningOrderForVariable grad v))))
 
 (defn get-gradient-for
   "The gradient for the given variable"
@@ -38,7 +39,8 @@
                           (_ :guard string?))}]
          (obj-or-code? as-code? `(.getGradientFor ~grad ~variable))
          :else
-         (.getGradientFor grad variable)))
+         (let [[v] (eval-if-code [variable seq? string?])]
+           (.getGradientFor grad v))))
 
 (defn gradient
   "The full gradient as one flat vector"
@@ -49,7 +51,8 @@
          [{:grad (_ :guard seq?) :order (_ :guard seq?)}]
          (obj-or-code? as-code? `(.gradient ~grad ~order))
          [{:grad _ :order _}]
-         (.gradient grad order)
+         (let [[g o] (eval-if-code [grad seq?] [order seq?])]
+           (.gradient g o))
          [{:grad (_ :guard seq?)}]
          (obj-or-code? as-code? `(.gradient ~grad))
          :else
@@ -86,9 +89,11 @@
            :variable _
            :new-gradient _
            :flattening-order _}]
-         (doto grad (.setGradientFor variable
-                                     (vec-or-matrix->indarray new-gradient)
-                                     flattening-order))
+         (let [[v ng-vec order g] (eval-if-code [variable seq? string?]
+                                                [new-gradient seq?]
+                                                [flattening-order seq?]
+                                                [grad seq?])]
+           (doto g (.setGradientFor v (vec-or-matrix->indarray ng-vec) order)))
          [{:grad (_ :guard seq?)
            :variable (:or (_ :guard seq?)
                           (_ :guard string?))
@@ -99,4 +104,7 @@
           `(doto ~grad
             (.setGradientFor ~variable (vec-or-matrix->indarray ~new-gradient))))
          :else
-         (doto grad (.setGradientFor variable (vec-or-matrix->indarray new-gradient)))))
+         (let [[v ng-vec g] (eval-if-code [variable seq? string?]
+                                          [new-gradient seq?]
+                                          [grad seq?])]
+           (doto g (.setGradientFor v (vec-or-matrix->indarray ng-vec))))))

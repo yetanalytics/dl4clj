@@ -8,7 +8,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
     dl4clj.spark.api.training-stats
   (:import [org.deeplearning4j.spark.api.stats SparkTrainingStats])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -47,7 +47,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getShortNameForKey ~training-stats ~stat-key))
          :else
-         (.getShortNameForKey training-stats stat-key)))
+         (let [[s k] (eval-if-code [training-stats seq?]
+                                   [stat-key seq? string?])]
+          (.getShortNameForKey s k))))
 
 (defn get-value-for-key
   "Get the statistic value for this key"
@@ -60,7 +62,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getValue ~training-stats ~stat-key))
          :else
-         (.getValue training-stats stat-key)))
+         (let [[t s] (eval-if-code [training-stats seq?] [stat-key seq? string?])]
+           (.getValue t s))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
@@ -82,7 +85,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
           as-code?
           `(doto ~training-stats (.addOtherTrainingStats ~other-training-stats)))
          :else
-         (doto training-stats (.addOtherTrainingStats other-training-stats))))
+         (let [[s1 s2] (eval-if-code [training-stats seq?]
+                                     [other-training-stats seq?])]
+           (doto s1 (.addOtherTrainingStats s2)))))
 
 (defn default-include-in-plots
   "When plotting statistics, we don't necessarily want to plot everything.
@@ -102,7 +107,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
           as-code?
           `(doto ~training-stats (.defaultIncludeInPlots ~stat-key-to-include)))
          :else
-         (doto training-stats (.defaultIncludeInPlots stat-key-to-include))))
+         (let [[t k] (eval-if-code [training-stats seq?]
+                                   [stat-key-to-include seq? string?])]
+           (doto t (.defaultIncludeInPlots k)))))
 
 (defn export-stat-files!
   "Export the stats as a collection of files.
@@ -117,11 +124,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/stats/SparkTrai
   [& {:keys [training-stats path spark-context as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [opts]
-         [{:spark-context (_ :guard seq?)}]
-         (throw (Exception. "your spark context should be an object"))
-         :else
-         (doto training-stats (.exportStatFiles path spark-context))))
+  (let [[t p c] (eval-if-code [training-stats seq?]
+                              [path seq? string?]
+                              [spark-context seq?])]
+   (doto t (.exportStatFiles p c))))
 
 (defn stats-as-string
   "get the stats as a string"

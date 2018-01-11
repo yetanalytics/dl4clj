@@ -8,7 +8,7 @@
             LBFGS
             BackTrackLineSearch])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Base optimizer methods not inherited from ConvexOptimizer
@@ -75,7 +75,9 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~back-track (.setAbsTolx (double ~tolerance))))
          :else
-         (doto back-track (.setAbsTolx tolerance))))
+         (let [[b t] (eval-if-code [back-track seq?]
+                                   [tolerance seq? number?])]
+           (doto b (.setAbsTolx t)))))
 
 (defn set-max-iterations!
   "sets the max number of iterations for the optimizer
@@ -92,7 +94,9 @@
                                 (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~back-track (.setMaxIterations (int ~max-iterations))))
          :else
-         (doto back-track (.setMaxIterations max-iterations))))
+         (let [[b i] (eval-if-code [back-track seq?]
+                                   [max-iterations seq? number?])]
+           (doto b (.setMaxIterations i)))))
 
 (defn set-relative-tolerance!
   "Sets the tolerance of relative difference in function value
@@ -111,7 +115,9 @@
           as-code?
           `(doto ~back-track (.setRelTolx (double ~tolerance))))
          :else
-         (doto back-track (.setRelTolx tolerance))))
+         (let [[b t] (eval-if-code [back-track seq?]
+                                   [tolerance seq? number?])]
+           (doto b (.setRelTolx t)))))
 
 (defn set-step-max!
   "sets the max step size for the back-track optimizer
@@ -128,4 +134,6 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~back-track (.setStepMax (double ~step-max))))
          :else
-         (doto back-track (.setStepMax step-max))))
+         (let [[b s] (eval-if-code [back-track seq?]
+                                   [step-max seq? number?])]
+           (doto b (.setStepMax s)))))

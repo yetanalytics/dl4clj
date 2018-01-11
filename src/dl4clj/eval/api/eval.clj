@@ -1,7 +1,7 @@
 (ns dl4clj.eval.api.eval
   (:import [org.deeplearning4j.eval Evaluation RegressionEvaluation BaseEvaluation
             IEvaluation])
-  (:require [dl4clj.utils :refer [contains-many? get-labels obj-or-code?]]
+  (:require [dl4clj.utils :refer [contains-many? get-labels obj-or-code? eval-if-code]]
             [dl4clj.datasets.api.iterators :refer [has-next? next-example!]]
             [dl4clj.nn.api.multi-layer-network :refer [output]]
             [dl4clj.datasets.api.datasets :refer [get-features]]
@@ -44,10 +44,14 @@
            :labels _
            :network-predictions _
            :record-meta-data _}]
-         (doto evaler
-            (.eval (vec-or-matrix->indarray labels)
-                   (vec-or-matrix->indarray network-predictions)
-                   (into '() record-meta-data)))
+         (let [[e-obj l-vec p-vec md-obj] (eval-if-code [evaler seq?]
+                                                        [labels seq?]
+                                                        [network-predictions seq?]
+                                                        [record-meta-data seq?])]
+           (doto e-obj
+             (.eval (vec-or-matrix->indarray l-vec)
+                   (vec-or-matrix->indarray p-vec)
+                   (into '() md-obj))))
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -65,10 +69,14 @@
            :labels _
            :network-predictions _
            :mask-array _}]
-         (doto evaler
-            (.eval (vec-or-matrix->indarray labels)
-                   (vec-or-matrix->indarray network-predictions)
-                   (vec-or-matrix->indarray mask-array)))
+         (let [[e-obj l-vec p-vec m-vec] (eval-if-code [evaler seq?]
+                                                       [labels seq?]
+                                                       [network-predictions seq?]
+                                                       [mask-array seq?])]
+           (doto e-obj
+             (.eval (vec-or-matrix->indarray l-vec)
+                    (vec-or-matrix->indarray p-vec)
+                    (vec-or-matrix->indarray m-vec))))
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -84,9 +92,13 @@
            :labels _
            :features _
            :mln _}]
-         (doto evaler (.eval (vec-or-matrix->indarray labels)
-                             (vec-or-matrix->indarray features)
-                             mln))
+         (let [[e-obj l-vec f-vec mln-obj] (eval-if-code [evaler seq?]
+                                                         [labels seq?]
+                                                         [features seq?]
+                                                         [mln seq?])]
+           (doto e-obj (.eval (vec-or-matrix->indarray l-vec)
+                              (vec-or-matrix->indarray f-vec)
+                              mln-obj)))
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -100,9 +112,12 @@
          [{:evaler _
            :labels _
            :network-predictions _}]
-         (doto evaler
-            (.eval (vec-or-matrix->indarray labels)
-                   (vec-or-matrix->indarray network-predictions)))
+         (let [[e-obj l-vec p-vec] (eval-if-code [evaler seq?]
+                                                 [labels seq?]
+                                                 [network-predictions seq?])]
+           (doto e-obj
+             (.eval (vec-or-matrix->indarray l-vec)
+                    (vec-or-matrix->indarray p-vec))))
          [{:evaler (_ :guard seq?)
            :predicted-idx (:or (_ :guard number?)
                                (_ :guard seq?))
@@ -114,7 +129,10 @@
          [{:evaler _
            :predicted-idx _
            :actual-idx _}]
-         (doto evaler (.eval predicted-idx actual-idx))))
+         (let [[e-obj p-idx a-idx] (eval-if-code [evaler seq?]
+                                                 [predicted-idx seq?]
+                                                 [actual-idx seq? number?])]
+           (doto e-obj (.eval p-idx a-idx)))))
 
 (defn eval-time-series!
   "evalatues a time series given labels and predictions.
@@ -141,10 +159,14 @@
            :labels _
            :predicted _
            :labels-mask _}]
-         (doto evaler (.evalTimeSeries
-                         (vec-or-matrix->indarray labels)
-                         (vec-or-matrix->indarray predicted)
-                         (vec-or-matrix->indarray labels-mask)))
+         (let [[e-obj l-vec p-vec m-vec] (eval-if-code [evaler seq?]
+                                                       [labels seq?]
+                                                       [predicted seq?]
+                                                       [labels-mask seq?])]
+           (doto e-obj (.evalTimeSeries
+                        (vec-or-matrix->indarray l-vec)
+                        (vec-or-matrix->indarray p-vec)
+                        (vec-or-matrix->indarray m-vec))))
          [{:evaler (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
@@ -158,9 +180,12 @@
          [{:evaler _
            :labels _
            :predicted _}]
-         (doto evaler (.evalTimeSeries
-                       (vec-or-matrix->indarray labels)
-                       (vec-or-matrix->indarray predicted)))))
+         (let [[e-obj l-vec p-vec] (eval-if-code [evaler seq?]
+                                                 [labels seq?]
+                                                 [predicted seq?])]
+           (doto e-obj (.evalTimeSeries
+                        (vec-or-matrix->indarray l-vec)
+                        (vec-or-matrix->indarray p-vec))))))
 
 (defn get-stats
   "Method to obtain the classification report as a String"
@@ -174,7 +199,8 @@
          (obj-or-code? as-code? `(.stats ~evaler ~suppress-warnings?))
          [{:evaler _
            :suppress-warnings? _}]
-         (.stats evaler suppress-warnings?)
+         (let [[w-b] (eval-if-code [suppress-warnings? seq? boolean?])]
+           (.stats evaler w-b))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.stats ~evaler))
          [{:evaler _}]
@@ -205,7 +231,8 @@
                                  (_ :guard seq?))}]
          (obj-or-code? as-code? `(.classCount ~evaler (int ~class-label-idx)))
          :else
-         (.classCount evaler (int class-label-idx))))
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
+           (.classCount evaler (int idx-n)))))
 
 (defn confusion-to-string
   "Get a String representation of the confusion matrix"
@@ -233,7 +260,8 @@
          (obj-or-code? as-code? `(.f1 ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _ }]
-         (.f1 evaler (int class-label-idx))
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
+           (.f1 evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.f1 ~evaler))
          [{:evaler _}]
@@ -269,14 +297,17 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (.falseNegativeRate evaler (int class-label-idx) edge-case)
+         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
+           (.falseNegativeRate evaler (int idx-n) (double edge-case-n)))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
          (obj-or-code? as-code? `(.falseNegativeRate ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (.falseNegativeRate evaler (int class-label-idx))
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
+           (.falseNegativeRate evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.falseNegativeRate ~evaler))
          [{:evaler _}]
@@ -312,7 +343,9 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (.falsePositiveRate evaler (int class-label-idx) edge-case)
+         (let [[idx-n edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
+           (.falsePositiveRate evaler (int idx-n) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
@@ -321,7 +354,8 @@
           `(.falsePositiveRate ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (.falsePositiveRate evaler (int class-label-idx))
+         (let [[idx-n] (eval-if-code [class-label-idx seq? number?])]
+           (.falsePositiveRate evaler (int idx-n)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code?
           as-code?
@@ -352,7 +386,8 @@
           as-code?
           `(.getClassLabel ~evaler (int ~label-idx)))
          :else
-         (.getClassLabel evaler (int label-idx))))
+         (let [[l-idx] (eval-if-code [label-idx seq? number?])]
+           (.getClassLabel evaler (int l-idx)))))
 
 (defn get-confusion-matrix
   "Returns the confusion matrix variable"
@@ -387,7 +422,8 @@
           as-code?
           `(.getPredictionByPredictedClass ~evaler (int ~idx-of-predicted-class)))
          :else
-         (.getPredictionByPredictedClass evaler (int idx-of-predicted-class))))
+         (let [[idx-n] (eval-if-code [idx-of-predicted-class seq? number?])]
+           (.getPredictionByPredictedClass evaler (int idx-n)))))
 
 (defn get-prediction-errors
   "Get a list of prediction errors, on a per-record basis"
@@ -415,7 +451,9 @@
           as-code?
           `(.getPredictions ~evaler (int ~actual-class-idx) (int ~predicted-class-idx)))
          :else
-         (.getPredictions evaler actual-class-idx predicted-class-idx)))
+         (let [[a-idx p-idx] (eval-if-code [actual-class-idx seq? number?]
+                                           [predicted-class-idx seq? number?])]
+           (.getPredictions evaler a-idx p-idx))))
 
 (defn get-predictions-by-actual-class
   "Get a list of predictions, for all data with the specified actual class,
@@ -431,7 +469,8 @@
           as-code?
           `(.getPredictionsByActualClass ~evaler (int ~actual-class-idx)))
          :else
-         (.getPredictionsByActualClass evaler actual-class-idx)))
+         (let [[a-idx] (eval-if-code [actual-class-idx seq? number?])]
+           (.getPredictionsByActualClass evaler a-idx))))
 
 (defn get-top-n-correct-count
   "Return the number of correct predictions according to top N value."
@@ -493,7 +532,9 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (.precision evaler (int class-label-idx) edge-case)
+         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
+           (.precision evaler (int l-idx) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
@@ -502,7 +543,8 @@
           `(.precision ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (.precision evaler (int class-label-idx))
+         (let [[l-idx] (eval-if-code [class-label-idx seq?])]
+           (.precision evaler (int l-idx)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.precision ~evaler))
          [{:evaler _}]
@@ -528,14 +570,17 @@
          [{:evaler _
            :class-label-idx _
            :edge-case _}]
-         (.recall evaler (int class-label-idx) edge-case)
+         (let [[l-idx edge-case-n] (eval-if-code [class-label-idx seq? number?]
+                                                 [edge-case seq? number?])]
+           (.recall evaler (int l-idx) edge-case-n))
          [{:evaler (_ :guard seq?)
            :class-label-idx (:or (_ :guard number?)
                                  (_ :guard seq?))}]
          (obj-or-code? as-code? `(.recall ~evaler (int ~class-label-idx)))
          [{:evaler _
            :class-label-idx _}]
-         (.recall evaler (int class-label-idx))
+         (let [[l-idx] (eval-if-code [class-label-idx seq? number?])]
+           (.recall evaler (int l-idx)))
          [{:evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(.recall ~evaler))
          [{:evaler _}]
@@ -586,7 +631,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.meanSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (.meanSquaredError regression-evaler column-idx)))
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
+           (.meanSquaredError regression-evaler idx-n))))
 
 (defn get-mean-absolute-error
   "returns MAE"
@@ -599,7 +645,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.meanAbsoluteError ~regression-evaler (int ~column-idx)))
          :else
-         (.meanAbsoluteError regression-evaler column-idx)))
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
+           (.meanAbsoluteError regression-evaler idx-n))))
 
 (defn get-root-mean-squared-error
   "returns rMSE"
@@ -612,7 +659,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.rootMeanSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (.rootMeanSquaredError regression-evaler column-idx)))
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
+           (.rootMeanSquaredError regression-evaler idx-n))))
 
 (defn get-correlation-r2
   "return the R2 correlation"
@@ -625,7 +673,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.correlationR2 ~regression-evaler (int ~column-idx)))
          :else
-         (.correlationR2 regression-evaler column-idx)))
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
+           (.correlationR2 regression-evaler idx-n))))
 
 (defn get-relative-squared-error
   "return relative squared error"
@@ -638,7 +687,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.relativeSquaredError ~regression-evaler (int ~column-idx)))
          :else
-         (.relativeSquaredError regression-evaler column-idx)))
+         (let [[idx-n] (eval-if-code [column-idx seq? number?])]
+           (.relativeSquaredError regression-evaler idx-n))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; general
@@ -656,4 +706,6 @@
            :other-evaler (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~evaler (.merge ~other-evaler)))
          :else
-         (doto evaler (.merge other-evaler))))
+         (let [[e1 e2] (eval-if-code [evaler seq?]
+                                     [other-evaler seq?])]
+           (doto e1 (.merge e2)))))

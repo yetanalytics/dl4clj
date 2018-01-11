@@ -4,7 +4,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
     dl4clj.earlystopping.api.score-calc
   (:import [org.deeplearning4j.earlystopping.scorecalc ScoreCalculator])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 (defn calculate-score
   "Calculate the score for the given MultiLayerNetwork
@@ -23,4 +23,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/earlystopping/scorecalc/S
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.calculateScore ~score-calculator ~mln))
          :else
-         (.calculateScore score-calculator mln)))
+         (let [[sc-obj mln-obj] (eval-if-code [score-calculator seq?]
+                                              [mln seq?])]
+           (.calculateScore sc-obj mln-obj))))

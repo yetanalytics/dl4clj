@@ -8,7 +8,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
     dl4clj.spark.api.training-master
   (:import [org.deeplearning4j.spark.api TrainingMaster])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -34,7 +34,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
            :spark-mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getWorkerInstance ~master ~spark-mln))
          :else
-         (.getWorkerInstance master spark-mln)))
+         (let [[m mln] (eval-if-code [master seq?] [spark-mln seq?])]
+           (.getWorkerInstance m mln))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; setters
@@ -56,7 +57,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
          (obj-or-code? as-code? `(doto ~master (.setCollectTrainingStats ~collect-stats?)))
          [{:master _
            :collect-stats? _}]
-         (doto master (.setCollectTrainingStats collect-stats?))
+         (let [[m s?] (eval-if-code [master seq?] [collect-stats? seq? boolean?])]
+          (doto m (.setCollectTrainingStats s?)))
          [{:master (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~master (.setCollectTrainingStats ~collect-stats?)))
          :else
@@ -87,14 +89,19 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
          [{:master _
            :stats-storage-router _
            :listeners _}]
-         (doto master (.setListeners stats-storage-router listeners))
+         (let [[m router listen] (eval-if-code [master seq?]
+                                               [stats-storage-router seq?]
+                                               [listeners seq? coll?])]
+           (doto m (.setListeners router listen)))
          [{:master (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~master (.setListeners ~listeners)))
          [{:master _
            :listeners _}]
-         (doto master (.setListeners listeners))))
+         (let [[m listen] (eval-if-code [master seq?]
+                                        [listeners seq? coll?])]
+           (doto m (.setListeners listen)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
@@ -121,7 +128,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
            :spark-context (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~master (.deleteTempFiles ~spark-context)))
          :else
-         (doto master (.deleteTempFiles spark-context))))
+         (let [[m c] (eval-if-code [master seq?]
+                                   [spark-context seq?])]
+           (doto m (.deleteTempFiles c)))))
 
 (defn execute-training!
   "Train the SparkDl4jMultiLayer with the specified data set
@@ -135,13 +144,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingMaster.
   [& {:keys [spark-mln master rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :master (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (doto master (.executeTraining spark-mln rdd))))
+  (let [[m mln r] (eval-if-code [master seq?] [spark-mln seq?] [rdd seq?])]
+    (doto m (.executeTraining mln r))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn collecting-training-stats?

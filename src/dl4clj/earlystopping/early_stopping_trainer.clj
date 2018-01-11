@@ -3,7 +3,7 @@
   (:import [org.deeplearning4j.earlystopping.trainer
             EarlyStoppingTrainer BaseEarlyStoppingTrainer]
            [org.deeplearning4j.spark.earlystopping SparkEarlyStoppingTrainer])
-  (:require [dl4clj.utils :refer [contains-many? obj-or-code?]]
+  (:require [dl4clj.utils :refer [contains-many? obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
             [dl4clj.helpers :refer [reset-iterator!]]))
 
@@ -28,40 +28,13 @@
            :mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(EarlyStoppingTrainer. ~early-stopping-conf ~mln ~iter))
-         [{:early-stopping-conf (_ :guard seq?)
-           :mln _
-           :iter (_ :guard seq?)}]
-         (EarlyStoppingTrainer. (eval early-stopping-conf)
-                                mln
-                                (eval iter))
-         [{:early-stopping-conf (_ :guard seq?)
-           :mln (_ :guard seq?)
-           :iter _}]
-         (EarlyStoppingTrainer. (eval early-stopping-conf)
-                                (eval mln)
-                                iter)
-         [{:early-stopping-conf _
-           :mln (_ :guard seq?)
-           :iter (_ :guard seq?)}]
-         (EarlyStoppingTrainer. early-stopping-conf
-                                (eval mln)
-                                (eval iter))
-         [{:early-stopping-conf _
-           :mln _
-           :iter (_ :guard seq?)}]
-         (EarlyStoppingTrainer. early-stopping-conf mln (eval iter))
-         [{:early-stopping-conf (_ :guard seq?)
-           :mln _
-           :iter _}]
-         (EarlyStoppingTrainer. (eval early-stopping-conf) mln iter)
-         [{:early-stopping-conf _
-           :mln (_ :guard seq?)
-           :iter _}]
-         (EarlyStoppingTrainer. early-stopping-conf (eval mln) iter)
          [{:early-stopping-conf _
            :mln _
            :iter _}]
-         (EarlyStoppingTrainer. early-stopping-conf mln iter)))
+         (let [[es-conf-obj mln-obj iter-obj] (eval-if-code [early-stopping-conf seq?]
+                                                            [mln seq?]
+                                                            [iter seq?])]
+           (EarlyStoppingTrainer. es-conf-obj mln-obj iter-obj))))
 
 (defn new-spark-early-stopping-trainer
   ;; TODO this needs to be addapted to work with the no multiple spark context issues
@@ -93,7 +66,6 @@
              mln training-rdd early-stopping-listener as-code?]
       :or {as-code? true}
       :as opts}]
-  ;; update this like above
   (match [opts]
          [{:spark-context (_ :guard seq?)
            :training-master (_ :guard seq?)
@@ -112,8 +84,12 @@
            :mln _
            :training-rdd _
            :early-stopping-listener _}]
-         (SparkEarlyStoppingTrainer. spark-context training-master early-stopping-conf
-                                     mln training-rdd early-stopping-listener)
+         (let [[sc-obj master-obj conf-obj mln-obj rdd-obj es-listen-obj]
+               (eval-if-code [spark-context seq?] [training-master seq?]
+                             [early-stopping-conf seq?] [mln seq?]
+                             [training-rdd seq?] [early-stopping-listener seq?])]
+           (SparkEarlyStoppingTrainer. sc-obj master-obj conf-obj mln-obj
+                                       rdd-obj es-listen-obj))
          [{:spark-context (_ :guard seq?)
            :training-master (_ :guard seq?)
            :early-stopping-conf (_ :guard seq?)
@@ -129,5 +105,8 @@
            :early-stopping-conf _
            :mln _
            :training-rdd _}]
-         (SparkEarlyStoppingTrainer. spark-context training-master early-stopping-conf
-                                     mln training-rdd)))
+         (let [[sc-obj master-obj conf-obj mln-obj rdd-obj]
+               (eval-if-code [spark-context seq?] [training-master seq?]
+                             [early-stopping-conf seq?] [mln seq?]
+                             [training-rdd seq?])]
+           (SparkEarlyStoppingTrainer. sc-obj master-obj conf-obj mln-obj rdd-obj))))

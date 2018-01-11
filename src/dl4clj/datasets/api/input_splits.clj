@@ -7,7 +7,7 @@
             PatternPathLabelGenerator]
            [org.datavec.api.writable Writable]
            [org.datavec.api.split InputSplit])
-  (:require [dl4clj.utils :refer [array-of obj-or-code?]]
+  (:require [dl4clj.utils :refer [array-of obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -61,7 +61,8 @@
                       (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLabelForPath ~label-generator ~path))
          :else
-         (.getLabelForPath label-generator path)))
+         (let [[a-str] (eval-if-code [path seq?])]
+           (.getLabelForPath label-generator a-str))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input splits, see: https://deeplearning4j.org/datavecdoc/org/datavec/api/split/InputSplit.html
@@ -134,8 +135,9 @@
   [& {:keys [input-split out-put-path as-code?]
       :as opts}]
   (match [opts]
-         [{:input-split (_ :guard seq?)
-           :out-put-path (_ :guard seq?)}]
+         [{:input-split  (_ :guard seq?)
+           :out-put-path (:or (_ :guard seq?)
+                              (_ :guard string?))}]
          (obj-or-code? as-code? `(doto ~input-split (.write ~out-put-path)))
          :else
          (doto input-split (.write out-put-path))))
@@ -168,7 +170,10 @@
           as-code?
           `(.sample ~input-split ~path-filter (double-array ~weights)))
          :else
-         (.sample input-split path-filter (double-array weights))))
+         (let [[is-obj pf-obj weight-coll] (eval-if-code [input-split seq?]
+                                                         [path-filter seq?]
+                                                         [weights seq? coll?])]
+           (.sample is-obj pf-obj (double-array weight-coll)))))
 
 (defn to-double!
   "convert writable to double"
@@ -256,7 +261,9 @@
            :is (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~input-stream-input-split (.setIs ~is)))
          :else
-         (doto input-stream-input-split (.setIs is))))
+         (let [[isis is-obj] (eval-if-code [input-stream-input-split seq?]
+                                           [is seq?])]
+           (doto isis (.setIs is-obj)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; string input-splits

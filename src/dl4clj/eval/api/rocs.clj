@@ -1,7 +1,7 @@
 (ns dl4clj.eval.api.rocs
   (:import [org.deeplearning4j.eval ROCMultiClass ROC])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 (defn calculate-area-under-curve
   "Calculate the AUC - Area Under Curve
@@ -21,7 +21,8 @@
          (obj-or-code? as-code? `(.calculateAUC ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (.calculateAUC roc class-idx)
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
+           (.calculateAUC roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.calculateAUC ~roc))
          [{:roc _}]
@@ -44,7 +45,8 @@
          (obj-or-code? as-code? `(.getPrecisionRecallCurve ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (.getPrecisionRecallCurve roc class-idx)
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
+           (.getPrecisionRecallCurve roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getPrecisionRecallCurve ~roc))
          [{:roc _}]
@@ -69,7 +71,8 @@
          (obj-or-code? as-code? `(.getResults ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (.getResults roc class-idx)
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
+           (.getResults roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getResults ~roc))
          [{:roc _}]
@@ -94,7 +97,8 @@
          (obj-or-code? as-code? `(.getResultsAsArray ~roc (int ~class-idx)))
          [{:roc _
            :class-idx _}]
-         (.getResultsAsArray roc class-idx)
+         (let [[idx-n] (eval-if-code [class-idx seq? number?])]
+           (.getResultsAsArray roc idx-n))
          [{:roc (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getResultsAsArray ~roc))
          [{:roc _}]

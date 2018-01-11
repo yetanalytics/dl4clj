@@ -2,7 +2,7 @@
   dl4clj.nn.api.nn-conf
   (:import [org.deeplearning4j.nn.conf NeuralNetConfiguration])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -18,7 +18,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getL1ByParam ~nn-conf ~var-name))
          :else
-         (.getL1ByParam nn-conf var-name)))
+         (let [[nn v-name] (eval-if-code [nn-conf seq?] [var-name seq? string?])]
+           (.getL1ByParam nn v-name))))
 
 (defn get-l2-by-param
   [& {:keys [nn-conf var-name as-code?]
@@ -30,7 +31,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getL2ByParam ~nn-conf ~var-name))
          :else
-         (.getL2ByParam nn-conf var-name)))
+         (let [[nn v-name] (eval-if-code [nn-conf seq?] [var-name seq? string?])]
+           (.getL2ByParam nn v-name))))
 
 (defn get-learning-rate-by-param
   [& {:keys [nn-conf var-name as-code?]
@@ -42,7 +44,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLearningRateByParam ~nn-conf ~var-name))
          :else
-         (.getLearningRateByParam nn-conf var-name)))
+         (let [[nn v-name] (eval-if-code [nn-conf seq?] [var-name seq? string?])]
+           (.getLearningRateByParam nn v-name))))
 
 (defn list-variables
   [& {:keys [nn-conf copy? as-code?]
@@ -55,12 +58,12 @@
          (obj-or-code? as-code? `(.variables ~nn-conf ~copy?))
          [{:nn-conf _
            :copy? _}]
-         (.variables nn-conf copy?)
+         (let [[nn c?] (eval-if-code [nn-conf seq?] [copy? seq? boolean?])]
+           (.variables nn-conf c?))
          [{:nn-conf (_ :guard seq?)}]
          (obj-or-code? as-code? `(.variables ~nn-conf))
          :else
          (.variables nn-conf)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; setters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,7 +79,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~nn-conf (.setLayerParamLR ~var-name)))
          :else
-         (doto nn-conf (.setLayerParamLR var-name))))
+         (let [[nn v-name] (eval-if-code [nn-conf seq?] [var-name seq? string?])]
+           (doto nn (.setLayerParamLR v-name)))))
 
 (defn set-learning-rate-by-param!
   ":rate (double), the learning rate for the variable supplied
@@ -95,7 +99,10 @@
           as-code?
           `(doto ~nn-conf (.setLearningRateByParam ~var-name (double ~rate))))
          :else
-         (doto nn-conf (.setLearningRateByParam var-name rate))))
+         (let [[nn v-name r] (eval-if-code [nn-conf seq?]
+                                           [var-name seq? string?]
+                                           [rate seq? number?])]
+           (doto nn (.setLearningRateByParam v-name r)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
@@ -113,7 +120,9 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~nn-conf (.addVariable ~var-name)))
          :else
-         (doto nn-conf (.addVariable var-name))))
+         (let [[nn v-name] (eval-if-code [nn-conf seq?]
+                                         [var-name seq? string?])]
+           (doto nn (.addVariable v-name)))))
 
 (defn clear-variables!
   [nn-conf & {:keys [as-code?]
@@ -161,18 +170,6 @@
          (obj-or-code? as-code? `(.mapperYaml ~nn-conf))
          :else
          (.mapperYaml nn-conf)))
-
-#_(defn reinit-mapper-with-subtypes
-  "Reinitialize and return the Jackson/json ObjectMapper with additional named types.
-
-  typez (coll), a collection of json named types"
-  [& {:keys [typez as-code?]
-      :or {as-code? true}}]
-  (match [typez]
-         [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.reinitMapperWithSubtypes ~typez))
-         :else
-         (.reinitMapperWithSubtypes typez)))
 
 (defn to-json
   [nn-conf & {:keys [as-code?]

@@ -1,7 +1,7 @@
 (ns dl4clj.nn.api.input-type
   (:import [org.deeplearning4j.nn.conf.layers InputTypeUtil])
   (:require [dl4clj.constants :as enum]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 (defn get-output-type-cnn-layers
@@ -63,13 +63,23 @@
            (enum/value-of {:convolution-mode ~convolution-mode})
            ~output-depth ~layer-idx ~layer-name ~layer-class))
          :else
-         (InputTypeUtil/getOutputTypeCnnLayers
-          (enum/input-types input-type)
-          (int-array kernel-size)
-          (int-array stride)
-          (int-array padding)
-          (enum/value-of {:convolution-mode convolution-mode})
-          output-depth layer-idx layer-name layer-class)))
+         (let [[i-type k-s s p c-m o-d l-idx l-name l-class]
+               (eval-if-code [input-type seq? map?]
+                             [kernel-size seq? vector?]
+                             [stride seq? vector?]
+                             [padding seq? vector?]
+                             [convolution-mode seq? keyword?]
+                             [output-depth seq? number?]
+                             [layer-idx seq? number?]
+                             [layer-name seq? string?]
+                             [layer-class seq? class?])]
+           (InputTypeUtil/getOutputTypeCnnLayers
+            (enum/input-types i-type)
+            (int-array k-s)
+            (int-array s)
+            (int-array p)
+            (enum/value-of {:convolution-mode c-m})
+            o-d l-idx l-name l-class))))
 
 (defn get-pre-processor-for-input-type-cnn-layers
   "Utility method for determining the appropriate preprocessor for CNN layers
@@ -95,8 +105,10 @@
           `(InputTypeUtil/getPreProcessorForInputTypeCnnLayers
            (enum/input-types ~input-type) ~layer-name))
          :else
-         (InputTypeUtil/getPreProcessorForInputTypeCnnLayers
-          (enum/input-types input-type) layer-name)))
+         (let [[i-type l-name] (eval-if-code [input-type seq? map?]
+                                             [layer-name seq? string?])]
+          (InputTypeUtil/getPreProcessorForInputTypeCnnLayers
+           (enum/input-types i-type) l-name))))
 
 (defn get-pre-processor-for-input-type-rnn-layers
   "Utility method for determining the appropriate preprocessor for recurrent layers
@@ -122,5 +134,7 @@
           `(InputTypeUtil/getPreprocessorForInputTypeRnnLayers
            (enum/input-types ~input-type) ~layer-name))
          :else
-         (InputTypeUtil/getPreprocessorForInputTypeRnnLayers
-          (enum/input-types input-type) layer-name)))
+         (let [[i-type l-name] (eval-if-code [input-type seq? keyword?]
+                                             [layer-name seq? string?])]
+          (InputTypeUtil/getPreprocessorForInputTypeRnnLayers
+           (enum/input-types i-type) l-name))))

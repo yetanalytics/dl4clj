@@ -1,7 +1,7 @@
 (ns dl4clj.datasets.api.rearrange
   (:import [org.deeplearning4j.datasets.rearrange LocalUnstructuredDataFormatter])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;; untested
 (defn get-new-destination
@@ -25,7 +25,10 @@
           as-code?
           `(.getNewDestination ~unstructured-formatter ~file-path ~train?))
          :else
-         (.getNewDestination unstructured-formatter file-path train?)))
+         (let [[formatter path t?] (eval-if-code [unstructured-formatter seq?]
+                                                 [file-path seq? string?]
+                                                 [train? seq? boolean?])]
+           (.getNewDestination formatter path t?))))
 
 (defn get-name-label
   "returns the name of the label assigned to a file
@@ -44,7 +47,9 @@
           as-code?
           `(.getNameLabel ~unstructured-formatter ~file-path))
          :else
-         (.getNameLabel unstructured-formatter file-path)))
+         (let [[formatter path] (eval-if-code [unstructured-formatter seq?]
+                                              [file-path seq? string?])]
+           (.getNameLabel formatter path))))
 
 (defn get-num-examples-total
   "returns the total number of examples in the dataset"
@@ -91,7 +96,9 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getPathLabel ~unstructured-formatter ~file-path))
          :else
-         (.getPathLabel unstructured-formatter file-path)))
+         (let [[formatter path] (eval-if-code [unstructured-formatter seq?]
+                                              [file-path seq?])]
+           (.getPathLabel formatter path))))
 
 (defn get-test
   "returns the file containing the test split of the dataset"

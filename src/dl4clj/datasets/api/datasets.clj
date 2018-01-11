@@ -2,9 +2,9 @@
   (:import [org.nd4j.linalg.dataset.api DataSet]
            [org.nd4j.linalg.api.ndarray INDArray]
            [java.util Random])
-  (:require [dl4clj.utils :refer [array-of contains-many? obj-or-code?]]
+  (:require [dl4clj.utils :refer [array-of contains-many? obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
-            [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
+            [dl4clj.indarray :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -61,7 +61,13 @@
          (.get ds idx)
          [{:ds _
            :idx (_ :guard coll?)}]
-         (.get ds (int-array idx))))
+         (.get ds (int-array idx))
+         :else
+         (let [[ds-obj idx-n] (eval-if-code [ds seq?]
+                                            [idx seq?])]
+           (if (number? idx-n)
+             (.get ds-obj idx-n)
+             (.get ds-obj (int-array idx-n))))))
 
 (defn get-column-names
   "return the names of the columns in a dataset"
@@ -107,24 +113,30 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :as-list? true}]
-         (obj-or-code? as-code? `(.getLabelNamesList ~ds))
-         [{:ds _ :as-list? true}]
-         (.getLabelNamesList ds)
-         [{:ds (_ :guard seq?)
            :idx (:or (_ :guard number?)
                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLabelName ~ds (int ~idx)))
-         [{:ds _ :idx (_ :guard number?)}]
-         (.getLabelName ds idx)
          [{:ds (_ :guard seq?)
            :idx (:or (_ :guard vector?)
                      (_ :guard seq?))}]
          (obj-or-code?
           as-code?
           `(.getLabelNames ~ds (vec-or-matrix->indarray ~idx)))
+         [{:ds _ :idx (_ :guard number?)}]
+         (.getLabelName ds idx)
          [{:ds _ :idx (_ :guard vector?)}]
          (.getLabelNames ds (vec-or-matrix->indarray idx))
+         ;; if it comes in as an existing INDArray
+         [{:ds _ :idx _}]
+         (let [[idx-n] (eval-if-code [idx seq?])]
+           (if (vector? idx-n)
+             (.getLabelNames ds (vec-or-matrix->indarray idx-n))
+             (.getLabelNames ds idx-n)))
+         [{:ds (_ :guard seq?)
+           :as-list? true}]
+         (obj-or-code? as-code? `(.getLabelNamesList ~ds))
+         [{:ds _ :as-list? true}]
+         (.getLabelNamesList ds)
          [{:ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getLabels ~ds))
          :else
@@ -146,7 +158,7 @@
   [& {:keys [ds from to as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [(dissoc opts as-code?)]
+  (match [opts]
          [{:ds (_ :guard seq?)
            :from (:or (_ :guard number?)
                       (_ :guard seq?))
@@ -154,7 +166,9 @@
                     (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getRange ~ds (int ~from) (int ~to)))
          :else
-         (.getRange ds from to)))
+         (let [[ds-obj from-n to-n] (eval-if-code [ds seq?] [from seq? number?]
+                                                  [to seq? number?])]
+           (.getRange ds-obj from-n to-n))))
 
 (defn get-ds-id
   "returns the id of the dataset"
@@ -231,9 +245,10 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :names (_ :guard seq?)}]
+           :names (_ :guard list?)}]
          (obj-or-code? as-code? `(doto ~ds (.setColumnNames ~names)))
          :else
+         ;; consider guarding against vectors
          (doto ds (.setColumnNames names))))
 
 (defn set-features!
@@ -251,7 +266,9 @@
           as-code?
           `(doto ~ds (.setFeatures (vec-or-matrix->indarray ~features))))
          :else
-         (doto ds (.setFeatures (vec-or-matrix->indarray features)))))
+         (let [[obj-ds features-vec] (eval-if-code [ds seq?]
+                                                   [features seq?])]
+           (doto obj-ds (.setFeatures (vec-or-matrix->indarray features-vec))))))
 
 (defn set-features-mask-array!
   "set the features mask array for the supplied dataset
@@ -268,7 +285,8 @@
           as-code?
           `(doto ~ds (.setFeaturesMaskArray (vec-or-matrix->indarray ~input-mask))))
          :else
-         (doto ds (.setFeaturesMaskArray (vec-or-matrix->indarray input-mask)))))
+         (let [[obj-ds i-mask-vec] (eval-if-code [ds seq?] [input-mask seq?])]
+           (doto obj-ds (.setFeaturesMaskArray (vec-or-matrix->indarray i-mask-vec))))))
 
 (defn set-label-names!
   "sets the label names
@@ -279,9 +297,10 @@
       :as opts}]
   (match [opts]
          [{:ds (_ :guard seq?)
-           :label-names (_ :guard seq?)}]
+           :label-names (_ :guard list?)}]
          (obj-or-code? as-code? `(doto ~ds (.setLabelNames ~label-names)))
          :else
+         ;; consider guarding against vectors for label-names
          (doto ds (.setLabelNames label-names))))
 
 (defn set-labels!
@@ -299,7 +318,8 @@
           as-code?
           `(doto ~ds (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
-         (doto ds (.setLabels (vec-or-matrix->indarray labels)))))
+         (let [[ds-obj labels-vec] (eval-if-code [ds seq?] [labels seq? vector?])]
+          (doto ds-obj (.setLabels (vec-or-matrix->indarray labels-vec))))))
 
 (defn set-labels-mask-array!
   "sets the labels mask array for the dataset
@@ -316,7 +336,8 @@
           as-code?
           `(doto ~ds (.setLabelsMaskArray (vec-or-matrix->indarray ~mask-array))))
          :else
-         (doto ds (.setLabelsMaskArray (vec-or-matrix->indarray mask-array)))))
+         (let [[ds-obj m-array] (eval-if-code [ds seq?] [mask-array seq?])]
+           (doto ds-obj (.setLabelsMaskArray (vec-or-matrix->indarray m-array))))))
 
 (defn set-new-number-of-labels!
   "sets a new number of labels for the dataset"
@@ -329,7 +350,9 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.setNewNumberOfLabels (int ~n-labels))))
          :else
-         (doto ds (.setNewNumberOfLabels n-labels))))
+         (let [[ds-obj num-labels] (eval-if-code [ds seq?]
+                                                 [n-labels seq? number?])]
+           (doto ds-obj (.setNewNumberOfLabels (int num-labels))))))
 
 (defn set-outcome!
   "sets an outcome for a given example"
@@ -346,7 +369,10 @@
           as-code?
           `(doto ~ds (.setOutcome (int ~example-idx) (int ~label-idx))))
          :else
-         (doto ds (.setOutcome example-idx label-idx))))
+         (let [[ds-obj example-idx-n label-idx-n]
+               (eval-if-code [ds seq?] [example-idx seq? number?]
+                             [label-idx seq? number?])]
+           (doto ds-obj (.setOutcome example-idx-n label-idx-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; manipulation
@@ -379,8 +405,10 @@
           `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~feature)
                                        (int ~example-idx))))
          [{:ds _ :feature _ :example-idx _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray feature)
-                                     example-idx))
+         (let [[ds-obj feature-vec idx-n]
+               (eval-if-code [ds seq?] [feature seq?] [example-idx seq? number?])]
+           (doto ds-obj (.addFeatureVector (vec-or-matrix->indarray feature-vec)
+                                           idx-n)))
          [{:ds (_ :guard seq?)
            :to-add (:or (_ :guard vector?)
                         (_ :guard seq?))}]
@@ -388,7 +416,8 @@
           as-code?
           `(doto ~ds (.addFeatureVector (vec-or-matrix->indarray ~to-add))))
          [{:ds _ :to-add _}]
-         (doto ds (.addFeatureVector (vec-or-matrix->indarray to-add)))))
+         (let [[ds-obj to-add-vec] (eval-if-code [ds seq?] [to-add seq?])]
+           (doto ds-obj (.addFeatureVector (vec-or-matrix->indarray to-add-vec))))))
 
 (defn add-row!
   "adds a dataset object to an existing datset object as a new row
@@ -408,7 +437,9 @@
                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.addRow ~row ~idx)))
          :else
-         (doto ds (.addRow row idx))))
+         (let [[ds-obj row-obj idx-n] (eval-if-code [ds seq?] [row seq?]
+                                                    [idx seq? number?])]
+           (doto ds-obj (.addRow row-obj idx-n)))))
 
 (defn batch-by!
   "Partitions a dataset in to mini batches where each dataset in each list
@@ -424,7 +455,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.batchBy ~ds (int ~n-examples)))
          :else
-         (.batchBy ds n-examples)))
+         (let [[n-e] (eval-if-code [n-examples seq? number?])]
+           (.batchBy ds (int n-e)))))
 
 (defn batch-by-n-labels!
   "partitions a dataset in to mini batches where each datset in each list
@@ -448,7 +480,8 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.binarize (double ~cutoff))))
          [{:ds _ :cutoff _}]
-         (doto ds (.binarize cutoff))
+         (let [[cutoff-n] (eval-if-code [cutoff seq? number?])]
+           (doto ds (.binarize cutoff-n)))
          [{:ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~ds .binarize))
          :else
@@ -465,7 +498,8 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.divideBy (int ~scalar))))
          :else
-         (doto ds (.divideBy scalar))))
+         (let [[scalar-n] (eval-if-code [scalar seq? number?])]
+           (doto ds (.divideBy scalar-n)))))
 
 (defn filt-and-strip-labels!
   "Strips the dataset down to the specified labels (by indexs) and remaps them
@@ -497,7 +531,8 @@
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.filterBy ~ds (int-array ~label-idxs)))
          :else
-         (.filterBy ds (int-array label-idxs))))
+         (let [[idx-coll] (eval-if-code [label-idxs seq? coll?])]
+           (.filterBy ds (int-array idx-coll)))))
 
 (defn multiply-by!
   "multiply the features in a dataset by a scalar
@@ -512,7 +547,8 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.multiplyBy (double ~scalar))))
          :else
-         (doto ds (.multiplyBy scalar))))
+         (let [[scalar-n] (eval-if-code [scalar seq? number?])]
+           (doto ds (.multiplyBy scalar-n)))))
 
 (defn normalize!
   "normalize the dataset to have a mean of 0 and a stdev of 1 per input"
@@ -537,7 +573,9 @@
                       (_ :guard seq?))}]
          (obj-or-code? as-code? `(.reshape ~ds ~rows ~cols))
          :else
-         (.reshape ds rows cols)))
+         (let [[row-n col-n] (eval-if-code [rows seq? number?]
+                                           [cols seq? number?])]
+           (.reshape ds row-n col-n))))
 
 (defn round-to-the-nearest!
   "rounts values in the dataset to the supplied nearest value
@@ -552,7 +590,8 @@
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~ds (.roundToTheNearest ~round-to)))
          :else
-         (doto ds (.roundToTheNearest round-to))))
+         (let [[round-to-n] (eval-if-code [round-to seq? number?])]
+           (doto ds (.roundToTheNearest round-to-n)))))
 
 (defn scale-ds!
   "scales a the input data to be in the range of :max-val and :min-val if supplied.
@@ -572,7 +611,9 @@
          [{:ds _
            :max-val _
            :min-val _}]
-         (doto ds (.scaleMinAndMax min-val max-val))
+         (let [[max-n min-n] (eval-if-code [max-val seq? number?]
+                                           [min-val seq? number?])]
+           (doto ds (.scaleMinAndMax min-n max-n)))
          [{:ds (_ :guard seq?)}]
          `(doto ~ds .scale)
          [{:ds _}]
@@ -622,19 +663,23 @@
           as-code?
           `(.splitTestAndTrain ~ds (int ~n-holdout) (new Random ~seed)))
          [{:ds _ :n-holdout _ :seed _}]
-         (.splitTestAndTrain ds n-holdout (new Random seed))
+         (let [[holdout-n seed-n] (eval-if-code [n-holdout seq? number?]
+                                                [seed seq? number?])]
+           (.splitTestAndTrain ds holdout-n (new Random seed-n)))
          [{:ds (_ :guard seq?)
            :n-holdout (:or (_ :guard number?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.splitTestAndTrain ~ds (int ~n-holdout)))
          [{:ds _ :n-holdout _}]
-         (.splitTestAndTrain ds n-holdout)
+         (let [[holdout-n] (eval-if-code [n-holdout seq? number?])]
+           (.splitTestAndTrain ds holdout-n))
          [{:ds (_ :guard seq?)
            :percent-train (:or (_ :guard number?)
                                (_ :guard seq?))}]
          (obj-or-code? as-code? `(.splitTestAndTrain ~ds (double ~percent-train)))
          [{:ds _ :percent-train _}]
-         (.splitTestAndTrain ds percent-train)))
+         (let [[percent-train-n] (eval-if-code [percent-train seq? number?])]
+           (.splitTestAndTrain ds percent-train-n))))
 
 (defn squish-to-range!
   "Squeezes input data to a max and a min"
@@ -651,7 +696,9 @@
           as-code?
           `(doto ~ds (.squishToRange (double ~min-val) (double ~max-val))))
          :else
-         (doto ds (.squishToRange min-val max-val))))
+         (let [[min-n max-n] (eval-if-code [min-val seq? number?]
+                                           [max-val seq? number?])]
+           (doto ds (.squishToRange min-n max-n)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc
@@ -725,7 +772,11 @@
           as-code?
           `(.sample ~ds (int ~n-samples) (new Random ~seed) ~with-replacement?))
          [{:ds _ :n-samples _ :with-replacement? _ :seed _}]
-         (.sample ds n-samples (new Random seed) with-replacement?)
+         (let [[samples-n replacement-b seed-n]
+               (eval-if-code [n-samples seq? number?]
+                             [with-replacement? seq? boolean?]
+                             [seed seq? number?])]
+           (.sample ds samples-n (new Random seed-n) replacement-b))
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -735,7 +786,9 @@
           as-code?
           `(.sample ~ds (int ~n-samples) (new Random ~seed)))
          [{:ds _ :n-samples _  :seed _}]
-         (.sample ds n-samples (new Random seed))
+         (let [[samples-n seed-n] (eval-if-code [n-samples seq? number?]
+                                                [seed seq? number?])]
+           (.sample ds samples-n (new Random seed-n)))
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -745,13 +798,17 @@
           as-code?
           `(.sample ~ds (int ~n-samples) ~with-replacement?))
          [{:ds _ :n-samples _ :with-replacement? _}]
-         (.sample ds n-samples with-replacement?)
+         (let [[samples-n replacement-b] (eval-if-code [n-samples seq? number?]
+                                                       [with-replacement? seq? boolean?])]
+
+              (.sample ds samples-n replacement-b))
          [{:ds (_ :guard seq?)
            :n-samples (:or (_ :guard number?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.sample ~ds (int ~n-samples)))
          :else
-         (.sample ds n-samples)))
+         (let [[samples-n] (eval-if-code [n-samples seq? number?])]
+           (.sample ds samples-n))))
 
 (defn save-ds!
   "saves a datset to a given file or output stream
@@ -768,7 +825,8 @@
          (obj-or-code? as-code? `(doto ~ds (.save ~out)))
          [{:ds _
            :out _}]
-         (doto ds (.save out))
+         (let [[ds-obj out-obj] (eval-if-code [ds seq?] [out seq?])]
+           (doto ds-obj (.save out-obj)))
          [{:ds (_ :guard seq?)
            :file-path (:or (_ :guard string?)
                            (_ :guard seq?))}]
@@ -777,7 +835,8 @@
           `(doto ~ds (.save (clojure.java.io/as-file ~file-path))))
          [{:ds _
            :file-path _}]
-         (doto ds (.save (clojure.java.io/as-file file-path)))))
+         (let [[f-path] (eval-if-code [file-path seq? string?])]
+           (doto ds (.save (clojure.java.io/as-file f-path))))))
 
 (defn validate-ds!
   "validates a dataset"

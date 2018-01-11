@@ -2,7 +2,7 @@
     dl4clj.nn.api.multi-layer-conf
   (:import [org.deeplearning4j.nn.conf MultiLayerConfiguration])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 (defn to-json
   [multi-layer-conf & {:keys [as-code?]
@@ -61,7 +61,9 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getConf ~multi-layer-conf (int ~layer-idx)))
          :else
-         (.getConf multi-layer-conf layer-idx)))
+         (let [[conf l-idx] (eval-if-code [multi-layer-conf seq?]
+                                          [layer-idx seq? number?])]
+           (.getConf conf l-idx))))
 
 (defn get-input-pre-process
   ":layer-idx (int), the index of the layer, within the multi-layer-conf,
@@ -75,4 +77,5 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getInputPreProcess ~multi-layer-conf ~layer-idx))
          :else
-         (.getInputPreProcess multi-layer-conf layer-idx)))
+         (let [[l-idx] (eval-if-code [layer-idx seq? number?])]
+           (.getInputPreProcess multi-layer-conf l-idx))))

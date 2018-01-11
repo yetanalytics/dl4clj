@@ -24,8 +24,6 @@ If you have any questions,
   - check the args as they come in, dispatch once I know its safe, test the pure output
 - collapse overlapping api namespaces
 - add to core use case flows
-- determine how much saftey to build into api fns and core fns
-  - dealing with args coming in as code and objs.
 
 ## Features
 
@@ -56,11 +54,8 @@ If you have any questions,
 
 ## Artifacts
 
-NOT YET RELEASED, WILL HAPPEN TUESDAY, OCTOBER 17th
-
-dl4clj artifacts are released to Clojars.
-- this is an ALPHA version so you can play around with it in your own work
-  - this is not perfect but will get the job done in many cases
+NOT YET RELEASED TO CLOJARS
+- fork or clone to try it out
 
 If using Maven add the following repository definition to your pom.xml:
 
@@ -75,21 +70,20 @@ If using Maven add the following repository definition to your pom.xml:
 
 With Leiningen:
 
-STILL NOT DEPLOYED, NEED TO IRON SOME THINGS OUT ON MY END
-WILL BE SOON I PROMISE!
-
 ```
-[com.yetanalytics/dl4clj "0.1.0-alpha"]
+n/a
 
 ```
 
 With Maven:
 
+n/a
+
 ```
 <dependency>
-  <groupId>com.yetanalytics</groupId>
-  <artifactId>dl4clj</artifactId>
-  <version>0.1.0-alpha</version>
+  <groupId>_</groupId>
+  <artifactId>_</artifactId>
+  <version>_</version>
 </dependency>
 ```
 
@@ -100,23 +94,13 @@ With Maven:
   - All of these functions have an option to return the dl4j object
     - :as-code? = false
   - This because all builders require the code representation of dl4j objects
-    - this requirement is very unlikely to change
-
-- ***** vec-or-matrix->indarray returns the dl4j obj
-
-- ***** this is accounted for in all fns which use it
-
-- ***** have not decided if im going to change this
-
-- ***** there is no :as-code? option for that fn
+    - this requirement is not going to change
+  - INDarray creation fns default to objects, this is for convenience
+    - :as-code? is still respected
 
 - API functions return code when all args are provided as code
 - API functions return the value of calling the wrapped method when
-  all args (which can be dl4j objects) are provided as dl4j objects
-
-- There are currently a few API fns which can handle being passed a mixture
-  of objs and code as args.  These fns are rare!
-  - there will be more of them in future releases
+  args are provided as a mixture of objects and code or just objects
 
 - The tests are there to help clarify behavior, if you are unsure of how
   to use a fn, search the tests

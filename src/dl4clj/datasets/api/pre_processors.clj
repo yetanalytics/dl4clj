@@ -16,11 +16,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
             VGG16ImagePreProcessor]
            [org.deeplearning4j.datasets.iterator CombinedPreProcessor])
   (:require [dl4clj.helpers :refer [reset-iterator!]]
-            [dl4clj.utils :refer [array-of obj-or-code?]]
+            [dl4clj.utils :refer [array-of obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
-
-;; TODO: make pre-processor/normalizer language consistent
 
 (defn pre-process-dataset!
   "Pre process a dataset
@@ -35,8 +33,9 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
          (obj-or-code? as-code? `(do (.preProcess ~pre-processor ~ds)
                                      ~ds))
          :else
-         (do (.preProcess pre-processor ds)
-             ds)))
+         (let [[pp-obj ds-obj] (eval-if-code [pre-processor seq?] [ds seq?])]
+           (do (.preProcess pp-obj ds-obj)
+               ds-obj))))
 
 (defn pre-process-iter-combined-pp!
   "Pre process a dataset sequentially using a combined pre-processor
@@ -51,198 +50,219 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
            :dataset (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~iter (.preProcess ~dataset)))
          :else
-         (doto (reset-iterator! iter) (.preProcess dataset))))
+         (let [[iter-obj ds-obj] (eval-if-code [iter seq?] [dataset seq?])]
+           (doto (reset-iterator! iter-obj) (.preProcess ds-obj)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generic normalizer (pre-processor) fns
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn get-normalizer-type
-  "Get the enum type of this normalizer"
-  [normalizer & {:keys [as-code?]
+(defn get-pre-processor-type
+  "Get the enum type of this pre-processor"
+  [pre-processor & {:keys [as-code?]
                  :or {as-code? true}}]
-  (match [normalizer]
+  (match [pre-processor]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.getType ~normalizer))
+         (obj-or-code? as-code? `(.getType ~pre-processor))
          :else
-         (.getType normalizer)))
+         (.getType pre-processor)))
 
 (defn fit-iter!
   "Iterates over a dataset accumulating statistics for normalization
 
-  returns the fit normalizer"
-  [& {:keys [normalizer iter as-code?]
+  returns the fit pre-processor"
+  [& {:keys [pre-processor iter as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :iter (_ :guard seq?)}]
-         (obj-or-code? as-code? `(doto ~normalizer (.fit ~iter)))
+         (obj-or-code? as-code? `(doto ~pre-processor (.fit ~iter)))
          :else
-         (doto normalizer (.fit iter))))
+         (let [[norm-obj iter-obj] (eval-if-code [pre-processor seq?] [iter seq?])]
+           (doto norm-obj (.fit iter-obj)))))
 
 (defn fit-labels!?
   "Flag to specify if the labels/outputs in the dataset should be also normalized.
 
-  returns the normalizer"
-  [& {:keys [normalizer fit-labels? as-code?]
+  returns the pre-processor"
+  [& {:keys [pre-processor fit-labels? as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :fit-labels (:or (_ :guard boolean?)
                             (_ :guard seq?))}]
-         (obj-or-code? as-code? `(doto ~normalizer (.fitLabel ~fit-labels?)))
+         (obj-or-code? as-code? `(doto ~pre-processor (.fitLabel ~fit-labels?)))
          :else
-         (doto normalizer (.fitLabel fit-labels?))))
+         (let [[norm-obj fit-labels-b] (eval-if-code [pre-processor seq?]
+                                                     [fit-labels? seq? boolean?])]
+           (doto norm-obj (.fitLabel fit-labels-b)))))
 
 (defn normalize-labels?
   "Whether normalization for the labels is also enabled."
-  [normalizer & {:keys [as-code?]
+  [pre-processor & {:keys [as-code?]
                  :or {as-code? true}}]
-  (match [normalizer]
+  (match [pre-processor]
          [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.isFitLabel ~normalizer))
+         (obj-or-code? as-code? `(.isFitLabel ~pre-processor))
          :else
-         (.isFitLabel normalizer)))
+         (.isFitLabel pre-processor)))
 
 (defn revert-features!
-  "Undo the normalization applied by the normalizer on the features array
+  "Undo the normalization applied by the pre-processor on the features array
 
   :features (vec or INDArray), nn input
 
   :features-mask (vec or INDArray), mask for the nn-input
 
   returns the (un)normalized features"
-  [& {:keys [normalizer features features-mask as-code?]
+  [& {:keys [pre-processor features features-mask as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
            :features-mask (:or (_ :guard vector?)
                                (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.revertFeatures ~normalizer (vec-or-matrix->indarray ~features)
+         (obj-or-code? as-code? `(.revertFeatures ~pre-processor (vec-or-matrix->indarray ~features)
                                                   (vec-or-matrix->indarray ~features-mask)))
-         [{:normalizer _
+         [{:pre-processor _
            :features _
            :features-mask _}]
-         (.revertFeatures normalizer (vec-or-matrix->indarray features)
-                          (vec-or-matrix->indarray features-mask))
-         [{:normalizer (_ :guard seq?)
+         (let [[norm-obj features-vec mask-vec] (eval-if-code [pre-processor seq?]
+                                                              [features seq?]
+                                                              [features-mask seq?])]
+           (.revertFeatures norm-obj (vec-or-matrix->indarray features-vec)
+                            (vec-or-matrix->indarray mask-vec)))
+         [{:pre-processor (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.revertFeatures ~normalizer (vec-or-matrix->indarray ~features)))
-         [{:normalizer _
+         (obj-or-code? as-code? `(.revertFeatures ~pre-processor (vec-or-matrix->indarray ~features)))
+         [{:pre-processor _
            :features _}]
-         (.revertFeatures normalizer (vec-or-matrix->indarray features))))
+         (let [[norm-obj feature-vec] (eval-if-code [pre-processor seq?] [features seq?])]
+           (.revertFeatures norm-obj (vec-or-matrix->indarray feature-vec)))))
 
 (defn revert-labels!
-  "Undo the normalization applied by the normalizer on the labels array
+  "Undo the normalization applied by the pre-processor on the labels array
 
   :labels (vec or INDArray), nn targets
 
   :labels-mask (vec or INDArray), mask for the nn-targets
 
   returns the (un)normalized labels"
-  [& {:keys [normalizer labels labels-mask as-code?]
+  [& {:keys [pre-processor labels labels-mask as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
            :labels-mask (:or (_ :guard vector?)
                              (_ :guard seq?))}]
          (obj-or-code?
           as-code?
-          `(.revertLabels ~normalizer (vec-or-matrix->indarray ~labels)
+          `(.revertLabels ~pre-processor (vec-or-matrix->indarray ~labels)
                           (vec-or-matrix->indarray ~labels-mask)))
-         [{:normalizer _
+         [{:pre-processor _
            :labels _
            :labels-mask _}]
-         (.revertLabels normalizer (vec-or-matrix->indarray labels)
-                        (vec-or-matrix->indarray labels-mask))
-         [{:normalizer (_ :guard seq?)
+         (let [[norm-obj labels-vec mask-vec] (eval-if-code [pre-processor seq?]
+                                                            [labels seq?]
+                                                            [labels-mask seq?])]
+           (.revertLabels norm-obj (vec-or-matrix->indarray labels-vec)
+                          (vec-or-matrix->indarray mask-vec)))
+         [{:pre-processor (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.revertLabels ~normalizer (vec-or-matrix->indarray ~labels)))
-         [{:normalizer _
+         (obj-or-code? as-code? `(.revertLabels ~pre-processor (vec-or-matrix->indarray ~labels)))
+         [{:pre-processor _
            :labels _}]
-         (.revertLabels normalizer (vec-or-matrix->indarray labels))))
+         (let [[norm-obj labels-vec] (eval-if-code [pre-processor seq?] [labels seq?])]
+           (.revertLabels norm-obj (vec-or-matrix->indarray labels-vec)))))
 
 (defn transform-features!
-  "applies the transform specified by the normalizer to the features
+  "applies the transform specified by the pre-processor to the features
 
   :features (vec or INDArray), nn input
 
   :features-mask (vec or INDArray), mask for the nn-input
 
   returns the normalized features"
-  [& {:keys [normalizer features features-mask as-code?]
+  [& {:keys [pre-processor features features-mask as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))
            :features-mask (:or (_ :guard vector?)
                                (_ :guard seq?))}]
          (obj-or-code?
           as-code?
-          `(.transform ~normalizer (vec-or-matrix->indarray ~features)
+          `(.transform ~pre-processor (vec-or-matrix->indarray ~features)
                        (vec-or-matrix->indarray ~features-mask)))
-         [{:normalizer _
+         [{:pre-processor _
            :features _
            :features-mask _}]
-         (.transform normalizer (vec-or-matrix->indarray features)
-                     (vec-or-matrix->indarray features-mask))
-         [{:normalizer (_ :guard seq?)
+         (let [[norm-obj features-vec mask-vec] (eval-if-code [pre-processor seq?]
+                                                              [features seq?]
+                                                              [features-mask seq?])]
+           (.transform norm-obj (vec-or-matrix->indarray features-vec)
+                       (vec-or-matrix->indarray mask-vec)))
+         [{:pre-processor (_ :guard seq?)
            :features (:or (_ :guard vector?)
                           (_ :guard seq?))}]
          (obj-or-code?
           as-code?
-          `(.transform ~normalizer (vec-or-matrix->indarray ~features)))
-         [{:normalizer _
+          `(.transform ~pre-processor (vec-or-matrix->indarray ~features)))
+         [{:pre-processor _
            :features _}]
-         (.transform normalizer (vec-or-matrix->indarray features))))
+         (let [[norm-obj features-vec] (eval-if-code [pre-processor seq?]
+                                                     [features seq?])]
+           (.transform norm-obj (vec-or-matrix->indarray features-vec)))))
 
 (defn transform-labels!
-  "applies the transform specified by the normalizer to the labels
+  "applies the transform specified by the pre-processor to the labels
 
   :labels (vec or INDArray), nn targets
 
   :labels-mask (vec or INDArray), mask for the nn-targets
 
   returns the normalized labels"
-  [& {:keys [normalizer labels labels-mask as-code?]
+  [& {:keys [pre-processor labels labels-mask as-code?]
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:normalizer (_ :guard seq?)
+         [{:pre-processor (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))
            :labels-mask (:or (_ :guard vector?)
                              (_ :guard seq?))}]
          (obj-or-code?
           as-code?
-          `(.transformLabel ~normalizer (vec-or-matrix->indarray ~labels)
+          `(.transformLabel ~pre-processor (vec-or-matrix->indarray ~labels)
                             (vec-or-matrix->indarray ~labels-mask)))
-         [{:normalizer _
+         [{:pre-processor _
            :labels _
            :labels-mask _}]
-         (.transformLabel normalizer (vec-or-matrix->indarray labels)
-                          (vec-or-matrix->indarray labels-mask))
-         [{:normalizer (_ :guard seq?)
+         (let [[norm-obj labels-vec mask-vec] (eval-if-code [pre-processor seq?]
+                                                            [labels seq?]
+                                                            [labels-mask seq?])]
+           (.transformLabel norm-obj (vec-or-matrix->indarray labels-vec)
+                            (vec-or-matrix->indarray mask-vec)))
+         [{:pre-processor (_ :guard seq?)
            :labels (:or (_ :guard vector?)
                         (_ :guard seq?))}]
          (obj-or-code?
           as-code?
-          `(.transformLabel ~normalizer (vec-or-matrix->indarray ~labels)))
-         [{:normalizer _
+          `(.transformLabel ~pre-processor (vec-or-matrix->indarray ~labels)))
+         [{:pre-processor _
            :labels _}]
-         (.transformLabel normalizer (vec-or-matrix->indarray labels))))
+         (let [[norm-obj labels-vec] (eval-if-code [pre-processor seq?] [labels seq?])]
+           (.transformLabel norm-obj (vec-or-matrix->indarray labels-vec)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; min-max-normalization specific fns
@@ -382,4 +402,5 @@ see: http://nd4j.org/doc/org/nd4j/linalg/dataset/api/preprocessor/DataNormalizat
                           (_ :guard seq?))}]
          (obj-or-code? as-code? `(.preProcess ~vgg16-pp (vec-or-matrix->indarray ~features)))
          :else
-         (.preProcess vgg16-pp (vec-or-matrix->indarray features))))
+         (let [[pp-obj features-vec] (eval-if-code [vgg16-pp seq?] [features seq?])]
+           (.preProcess pp-obj (vec-or-matrix->indarray features-vec)))))
