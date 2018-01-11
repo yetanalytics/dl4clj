@@ -4,7 +4,6 @@
             [dl4clj.datasets.api.pre-processors :as norm-api]
             [dl4clj.nn.multilayer.multi-layer-network :as mln]
             [dl4clj.nn.api.model :as m-api]
-            #_[dl4clj.nn.api.multi-layer-network :as mln-api]
             [dl4clj.earlystopping.model-saver :as saver]
             [dl4clj.earlystopping.score-calc :as scorer]
             [dl4clj.earlystopping.early-stopping-config :as es-conf]
@@ -35,14 +34,14 @@
            (u/obj-or-code?
             as-code?
             `(let [~i ~iter
-                   ~norm (norm-api/fit-iter! :normalizer ~normalizer
+                   ~norm (norm-api/fit-iter! :pre-processor ~normalizer
                                              :iter ~i)]
                (iter-api/set-pre-processor! :pre-processor ~norm
                                             :iter ~i))))
          [{:iter _
            :normalizer _}]
          (let [[i n] (u/eval-if-code [iter seq?] [normalizer seq?])
-               norm (norm-api/fit-iter! :normalizer n
+               norm (norm-api/fit-iter! :pre-processor n
                                         :iter i)]
            (iter-api/set-pre-processor! :pre-processor norm
                                         :iter i))))
@@ -246,10 +245,10 @@
            :rdd _}]
          ;; provided an rdd instead of an iterator
          (let [[sc conf master r n-e] (u/eval-if-code [spark-context seq?]
-                                                        [mln-conf seq?]
-                                                        [training-master seq?]
-                                                        [rdd seq?]
-                                                        [n-epochs seq? number?])
+                                                      [mln-conf seq?]
+                                                      [training-master seq?]
+                                                      [rdd seq?]
+                                                      [n-epochs seq? number?])
                spark-mln (spark-mln/new-spark-multi-layer-network
                           :spark-context sc
                           :mln-conf conf

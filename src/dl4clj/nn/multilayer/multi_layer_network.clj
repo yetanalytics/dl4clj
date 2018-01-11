@@ -45,7 +45,6 @@
              :iter (_ :guard seq?)
              :n-epochs (:or (_ :guard number?)
                             (_ :guard seq?))}]
-           ;; figure out whats going wrong here
            (obj-or-code?
             as-code?
             `(let [~mln* ~mln]

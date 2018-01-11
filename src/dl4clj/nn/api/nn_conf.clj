@@ -171,18 +171,6 @@
          :else
          (.mapperYaml nn-conf)))
 
-#_(defn reinit-mapper-with-subtypes
-  "Reinitialize and return the Jackson/json ObjectMapper with additional named types.
-
-  typez (coll), a collection of json named types"
-  [& {:keys [typez as-code?]
-      :or {as-code? true}}]
-  (match [typez]
-         [(_ :guard seq?)]
-         (obj-or-code? as-code? `(.reinitMapperWithSubtypes ~typez))
-         :else
-         (.reinitMapperWithSubtypes typez)))
-
 (defn to-json
   [nn-conf & {:keys [as-code?]
               :or {as-code? true}}]

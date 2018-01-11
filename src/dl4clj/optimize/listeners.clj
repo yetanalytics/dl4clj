@@ -10,7 +10,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
             CollectScoresIterationListener]
            [org.deeplearning4j.optimize.api IterationListener])
   (:require [dl4clj.utils :refer [contains-many? generic-dispatching-fn
-                                  array-of obj-or-code?]]))
+                                  array-of obj-or-code? builder-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multi method that sets up the constructor/builder
@@ -68,23 +68,16 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
          report-time? :report-time?
          freq :frequency
          build? :build?} conf
-        b (PerformanceListener$Builder.)]
-    ;; update this to use builder fn
-    (cond-> b
-      (contains? conf :report-batch?)
-      (.reportBatch report-batch?)
-      (contains? conf :report-iteration?)
-      (.reportIteration report-iteration?)
-      (contains? conf :report-sample?)
-      (.reportSample report-sample?)
-      (contains? conf :report-score?)
-      (.reportScore report-score?)
-      (contains? conf :report-time?)
-      (.reportTime report-time?)
-      (contains? conf :frequency)
-      (.setFrequency freq)
-      (true? build?)
-      .build)))
+        method-map {:report-batch? '.reportBatch
+                    :report-iteration? '.reportIteration
+                    :report-sample? '.reportSample
+                    :report-score? '.reportScore
+                    :report-time? '.reportTime
+                    :frequency '.setFrequency}
+        code (builder-fn '(PerformanceListener$Builder.) method-map conf)]
+    (if build?
+      `(.build ~code)
+      code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user facing fns that specify args for making listeners
@@ -119,10 +112,11 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
 
   defaults are only used if no kw args are supplied"
   [& {:keys [report-batch? report-iteration? report-sample?
-             report-score? report-time? build? frequency array?]
-      :or {array? false}
+             report-score? report-time? build? frequency array?
+             as-code?]
+      :or {array? false
+           as-code? true}
       :as opts}]
-  ;; refactor
   (let [conf (if (nil? opts)
                {:build? true
                 :report-batch? true
@@ -131,11 +125,15 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/listeners/packag
                 :report-score? true
                 :report-time? true
                 :frequency 1}
-               opts)]
-    (if (true? array?)
-    (array-of :data (listeners {:performance conf})
-              :java-type IterationListener)
-    (listeners {:performance conf}))))
+               opts)
+        data (listeners {:performance conf})
+        code-or-obj (if as-code?
+                      data
+                      (eval data))]
+    (if (and (true? array?) (false? as-code?))
+      (array-of :data code-or-obj
+                :java-type IterationListener)
+      code-or-obj)))
 
 (defn new-score-iteration-listener
   "Score iteration listener

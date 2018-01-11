@@ -80,7 +80,6 @@
   [& {:keys [rr listeners as-code?]
       :or {as-code? true}
       :as opts}]
-  ;; TODO: come back and update with eval-if-code
   (match [opts]
          [{:rr (_ :guard seq?)
            :listeners (:or (_ :guard coll?)
@@ -136,20 +135,11 @@
            :uri (:or (_ :guard string?)
                      (_ :guard seq?))
            :data-in-stream (_ :guard seq?)}]
-         ;; this will break if the uri seq evals to a uri
-         ;; need a way to account for the return type
          (obj-or-code? as-code? `(.record ~rr (java.net.URI. ~uri) ~data-in-stream))
-         [{:rr _
-           :uri (_ :guard string?)
-           :data-in-stream (_ :guard seq?)}]
-         (.record rr (java.net.URI. uri) (eval data-in-stream))
-         [{:rr (_ :guard seq?)
-           :uri (_ :guard string?)
-           :data-in-stream _}]
-         (.record (eval rr) (java.net.URI. uri) data-in-stream)
-         ;; there might be another condition im missing here
          :else
-         (.record rr (java.net.URI. uri) data-in-stream)))
+         (let [[r s in] (eval-if-code [rr seq?] [uri seq? string?]
+                                      [data-in-stream seq?])]
+           (.record r (java.net.URI. s) in))))
 
 (defn initialize-rr!
   "will need to be updated when other rr's are implemented
@@ -230,7 +220,6 @@
   "Load a sequence record from the given data-in-stream
   Unlike next-data-record the internal state of the record-reader is not modified
   Implementations of this method should not close the data-in-stream"
-  ;; need to note that this fn assumes uri is a string
   [& {:keys [rr uri data-in-stream as-code?]
       :or {as-code? true}
       :as opts}]

@@ -763,9 +763,9 @@
 (deftest ds-iterators-test
   (testing "the creation of various dataset iterators"
     (let [iter (new-mnist-data-set-iterator :batch 5 :n-examples 100)
-          pp1 (fit-iter! :normalizer (new-image-scaling-ds-preprocessor)
+          pp1 (fit-iter! :pre-processor (new-image-scaling-ds-preprocessor)
                          :iter iter)
-          pp2 (fit-iter! :normalizer (new-standardize-normalization-ds-preprocessor)
+          pp2 (fit-iter! :pre-processor (new-standardize-normalization-ds-preprocessor)
                          :iter iter)
           multi-iter (new-multi-data-set-iterator-adapter
                       :iter
