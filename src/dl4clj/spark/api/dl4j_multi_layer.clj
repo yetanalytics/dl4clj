@@ -1,7 +1,7 @@
 (ns dl4clj.spark.api.dl4j-multi-layer
   (:import [org.deeplearning4j.spark.impl.multilayer SparkDl4jMultiLayer])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code? gensym*]]
+            [dl4clj.utils :refer [obj-or-code? gensym* eval-if-code]]
             [dl4clj.spark.data.java-rdd :as rdd]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,19 +79,22 @@
   [& {:keys [spark-mln rdd average? mini-batch-size]
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :average? _
            :mini-batch-size _}]
-         (.calculateScore spark-mln rdd average? mini-batch-size)
+         (let [[model r a? size] (eval-if-code [spark-mln seq?]
+                                               [rdd seq?]
+                                               [average? seq? boolean?]
+                                               [mini-batch-size seq? number?])]
+           (.calculateScore model r a? size))
          [{:spark-mln _
            :rdd _
            :average? _}]
-         (.calculateScore spark-mln rdd average?)
-         ))
+         (let [[model r a?] (eval-if-code [spark-mln seq?]
+                                          [rdd seq?]
+                                          [average? seq? boolean?])]
+          (.calculateScore model r a?))))
 
 (defn eval-classification-spark-mln
   "Evaluate the network in a distributed manner on the provided data
@@ -108,21 +111,23 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :labels _
            :batch-size _}]
-         (.evaluate spark-mln rdd labels batch-size)
+         (let [[model r size] (eval-if-code [spark-mln seq?]
+                                              [rdd seq?]
+                                              [batch-size seq? number?])]
+           (.evaluate model r labels size))
          [{:spark-mln _
            :rdd _
            :labels _}]
-         (.evaluate spark-mln rdd labels)
+         (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+           (.evaluate model r labels))
          [{:spark-mln _
            :rdd _}]
-         (.evaluate spark-mln rdd)))
+         (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+           (.evaluate model r))))
 
 (defn eval-regression-spark-mln
   "Evaluate the network in a distributed manner on the provided data
@@ -135,16 +140,18 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :mini-batch-size _}]
-         (.evaluateRegression spark-mln rdd mini-batch-size)
+         (let [[model r size] (eval-if-code [spark-mln seq?]
+                                            [rdd seq?]
+                                            [mini-batch-size seq? number?])]
+           (.evaluateRegression model r size))
          [{:spark-mln _
            :rdd _}]
-         (.evaluateRegression spark-mln rdd)))
+         (let [[model r] (eval-if-code [spark-mln seq?]
+                                       [rdd seq?])]
+           (.evaluateRegression model r))))
 
 (defn eval-roc-spark-mln
   "Perform ROC analysis/evaluation on the given DataSet in a distributed manner
@@ -161,17 +168,18 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :threshold-steps _
            :mini-batch-size _}]
-         (.evaluateROC spark-mln rdd threshold-steps mini-batch-size)
+         (let [[model r steps size] (eval-if-code [spark-mln seq?] [rdd seq?]
+                                                  [threshold-steps seq? number?]
+                                                  [mini-batch-size seq? number?])]
+           (.evaluateROC model r steps size))
          [{:spark-mln _
            :rdd _}]
-         (.evaluateROC spark-mln rdd)))
+         (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+           (.evaluateROC model r))))
 
 (defn eval-multi-class-roc-spark-mln
   "Perform ROC analysis/evaluation on the given DataSet in a distributed manner
@@ -189,17 +197,18 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :threshold-steps _
            :mini-batch-size _}]
-         (.evaluateROCMultiClass spark-mln rdd threshold-steps mini-batch-size)
+         (let [[model r steps size] (eval-if-code [spark-mln seq?] [rdd seq?]
+                                                  [threshold-steps seq? number?]
+                                                  [mini-batch-size seq? number?])]
+           (.evaluateROCMultiClass model r steps size))
          [{:spark-mln _
            :rdd _}]
-         (.evaluateROCMultiClass spark-mln rdd)))
+         (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+           (.evaluateROCMultiClass model r))))
 
 (defn feed-forward-with-key
   "Feed-forward the specified data, with the given keys.
@@ -210,12 +219,10 @@
   [& {:keys [spark-mln pair-rdd batch-size as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :pair-rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (.feedForwardWithKey spark-mln pair-rdd batch-size)))
+  (let [[model r size] (eval-if-code [spark-mln seq?]
+                                     [pair-rdd seq?]
+                                     [batch-size seq? number?])]
+         (.feedForwardWithKey model r size)))
 
 (defn fit-spark-mln!
   "Fit the supplied model to the supplied dataset
@@ -233,14 +240,13 @@
            as-code? false}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "use train-with-spark in dl4clj.nn.training"))
          [{:spark-mln _
            :rdd _}]
-         (do (dotimes [n n-epochs]
-               (doto spark-mln (.fit rdd)))
-             spark-mln)
+         (let [[model r n-e] (eval-if-code [spark-mln seq?] [rdd seq?]
+                                           [n-epochs seq? number?])]
+          (do (dotimes [n n-e]
+               (doto model (.fit r)))
+             model))
          [{:spark-mln (_ :guard seq?)
            :path-to-data (:or (_ :guard string?)
                               (_ :guard seq?))}]
@@ -252,9 +258,12 @@
                  ~spark-mln)))
          [{:spark-mln _
            :path-to-data _}]
-         (do (dotimes [n n-epochs]
-               (doto spark-mln (.fit path-to-data)))
-             spark-mln)))
+         (let [[model s n-e] (eval-if-code [spark-mln seq?]
+                                           [path-to-data seq? string?]
+                                           [n-epochs seq? number?])]
+           (do (dotimes [n n-e]
+                 (doto model (.fit s)))
+               model))))
 
 (defn fit-continous-labeled-point!
   "Fits a MultiLayerNetwork using Spark MLLib LabeledPoint instances
@@ -264,12 +273,8 @@
   :rdd (JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>) the data"
   [& {:keys [spark-mln rdd]
       :as opts}]
-  (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (.fitContinuousLabeledPoint spark-mln rdd)))
+  (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+         (.fitContinuousLabeledPoint model r)))
 
 (defn fit-labeled-point!
   "Fit a MultiLayerNetwork using Spark MLLib LabeledPoint instances.
@@ -277,12 +282,8 @@
   :rdd JavaRDD<org.apache.spark.mllib.regression.LabeledPoint>"
   [& {:keys [spark-mln rdd]
       :as opts}]
-  (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (.fitLabeledPoint spark-mln rdd)))
+  (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+         (.fitLabeledPoint model r)))
 
 (defn fit-from-paths!
   "Fit the network using a list of paths for serialized DataSet objects.
@@ -291,12 +292,8 @@
   [& {:keys [spark-mln rdd as-code?]
       :or {as-code? true}
       :as opts}]
-  (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
-         :else
-         (.fitPaths spark-mln rdd)))
+  (let [[model r] (eval-if-code [spark-mln seq?] [rdd seq?])]
+         (.fitPaths model r)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; remember to look into creation of the spark matrices/vectors
@@ -333,15 +330,19 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-mln (_ :guard seq?)
-           :rdd (_ :guard seq?)}]
-         (throw (Exception. "spark mlns and rdds must be objects"))
          [{:spark-mln _
            :rdd _
            :include-regularization-terms? _
            :batch-size _}]
-         (.scoreExamples spark-mln rdd include-regularization-terms? batch-size)
+         (let [[model r terms? size] (eval-if-code [spark-mln seq?]
+                                                   [rdd seq?]
+                                                   [include-regularization-terms? seq? boolean?]
+                                                   [batch-size seq? number?])]
+           (.scoreExamples model r terms? size))
          [{:spark-mln _
            :rdd _
            :include-regularization-terms? _}]
-         (.scoreExamples spark-mln rdd include-regularization-terms?)))
+         (let [[model r terms?] (eval-if-code [spark-mln seq?]
+                                              [rdd seq?]
+                                              [include-regularization-terms? seq? boolean?])]
+           (.scoreExamples model r terms?))))

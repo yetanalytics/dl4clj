@@ -3,7 +3,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
     dl4clj.optimize.api.convex-optimizer
   (:import [org.deeplearning4j.optimize.api ConvexOptimizer])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; getters
@@ -78,7 +78,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~optimizer (.setBatchSize (int ~batch-size))))
          :else
-         (doto optimizer (.setBatchSize batch-size))))
+         (let [[o s] (eval-if-code [optimizer seq?]
+                                   [batch-size seq? number?])]
+           (doto o (.setBatchSize s)))))
 
 (defn set-listeners!
   "sets the listeners for the supplied optimizerizer
@@ -96,7 +98,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~optimizer (.setListeners ~listeners)))
          :else
-         (doto optimizer (.setListeners listeners))))
+         (let [[o l] (eval-if-code [optimizer seq?] [listeners seq? vector?])]
+           (doto o (.setListeners l)))))
 
 (defn set-updater!
   "sets the updater for the optimizerizer
@@ -112,7 +115,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/optimize/api/ConvexOptimi
            :updater (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~optimizer (.setUpdater ~updater)))
          :else
-         (doto optimizer (.setUpdater updater))))
+         (let [[o u] (eval-if-code [optimizer seq?] [updater seq?])]
+           (doto o (.setUpdater u)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; misc

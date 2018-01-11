@@ -89,10 +89,11 @@
            :variable _
            :new-gradient _
            :flattening-order _}]
-         (let [[v ng-vec order] (eval-if-code [variable seq? string?]
-                                              [new-gradient seq?]
-                                              [flattening-order seq?])]
-           (doto grad (.setGradientFor v (vec-or-matrix->indarray ng-vec) order)))
+         (let [[v ng-vec order g] (eval-if-code [variable seq? string?]
+                                                [new-gradient seq?]
+                                                [flattening-order seq?]
+                                                [grad seq?])]
+           (doto g (.setGradientFor v (vec-or-matrix->indarray ng-vec) order)))
          [{:grad (_ :guard seq?)
            :variable (:or (_ :guard seq?)
                           (_ :guard string?))
@@ -103,6 +104,7 @@
           `(doto ~grad
             (.setGradientFor ~variable (vec-or-matrix->indarray ~new-gradient))))
          :else
-         (let [[v ng-vec] (eval-if-code [variable seq? string?]
-                                        [new-gradient seq?])]
-           (doto grad (.setGradientFor v (vec-or-matrix->indarray ng-vec))))))
+         (let [[v ng-vec g] (eval-if-code [variable seq? string?]
+                                          [new-gradient seq?]
+                                          [grad seq?])]
+           (doto g (.setGradientFor v (vec-or-matrix->indarray ng-vec))))))

@@ -4,7 +4,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
   (:import [org.deeplearning4j.nn.conf.layers.variational ReconstructionDistribution
             CompositeReconstructionDistribution])
   (:require [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -26,7 +26,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.distributionInputSize ~dist (int ~data-size)))
          :else
-         (.distributionInputSize dist data-size)))
+         (let [[d d-s] (eval-if-code [dist seq?] [data-size seq? number?])]
+           (.distributionInputSize d d-s))))
 
 (defn example-neg-log-probability
   "Calculate the negative log probability for each example individually
@@ -52,9 +53,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
                                      (vec-or-matrix->indarray ~features)
                                      (vec-or-matrix->indarray ~pre-out-dist-params)))
          :else
-         (.exampleNegLogProbability dist
-                                    (vec-or-matrix->indarray features)
-                                    (vec-or-matrix->indarray pre-out-dist-params))))
+         (let [[d f p] (eval-if-code [dist seq?] [features seq?]
+                                     [pre-out-dist-params seq?])]
+          (.exampleNegLogProbability d (vec-or-matrix->indarray f) (vec-or-matrix->indarray p)))))
 
 (defn generate-at-mean
   "Generate a sample from P(x|z), where x = E[P(x|z)]
@@ -75,7 +76,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
           as-code?
           `(.generateAtMean ~dist (vec-or-matrix->indarray ~pre-out-dist-params)))
          :else
-         (.generateAtMean dist (vec-or-matrix->indarray pre-out-dist-params))))
+         (let [[d p] (eval-if-code [dist seq?] [pre-out-dist-params seq?])]
+           (.generateAtMean d (vec-or-matrix->indarray p)))))
 
 (defn generate-random
   "Randomly sample from P(x|z) using the specified distribution parameters
@@ -95,7 +97,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
           as-code?
           `(.generateRandom ~dist (vec-or-matrix->indarray ~pre-out-dist-params)))
          :else
-         (.generateRandom dist (vec-or-matrix->indarray pre-out-dist-params))))
+         (let [[d p] (eval-if-code [dist seq?]
+                                   [pre-out-dist-params seq?])]
+           (.generateRandom d (vec-or-matrix->indarray p)))))
 
 (defn gradient
   "Calculate the gradient of the negative log probability with
@@ -121,8 +125,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
           `(.gradient ~dist (vec-or-matrix->indarray ~features)
                      (vec-or-matrix->indarray ~pre-out-dist-params)))
          :else
-         (.gradient dist (vec-or-matrix->indarray features)
-                    (vec-or-matrix->indarray pre-out-dist-params))))
+         (let [[d f p] (eval-if-code [dist seq?] [features seq?]
+                                     [pre-out-dist-params seq?])]
+           (.gradient d (vec-or-matrix->indarray f)
+                      (vec-or-matrix->indarray p)))))
 
 (defn has-loss-fn?
   "Does this reconstruction distribution has a standard neural network loss function
@@ -164,8 +170,10 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
           `(.negLogProbability ~dist (vec-or-matrix->indarray ~features)
                               (vec-or-matrix->indarray ~pre-out-dist-params) ~average?))
          :else
-         (.negLogProbability dist (vec-or-matrix->indarray features)
-                      (vec-or-matrix->indarray pre-out-dist-params) average?)))
+         (let [[d f p a?] (eval-if-code [dist seq?] [features seq?]
+                                        [pre-out-dist-params seq?]
+                                        [average? seq? boolean?])]
+           (.negLogProbability d (vec-or-matrix->indarray f) (vec-or-matrix->indarray p) a?))))
 
 (defn compute-loss-fn-score-array
   "computes the loss function score.
@@ -190,5 +198,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/conf/layers/variationa
           `(.computeLossFunctionScoreArray ~composite-dist (vec-or-matrix->indarray ~features)
                                           (vec-or-matrix->indarray ~reconstruction)))
          :else
-         (.computeLossFunctionScoreArray composite-dist (vec-or-matrix->indarray features)
-                                  (vec-or-matrix->indarray reconstruction))))
+         (let [[d f r] (eval-if-code [composite-dist seq?] [features seq?]
+                                     [reconstruction seq?])]
+          (.computeLossFunctionScoreArray d (vec-or-matrix->indarray f) (vec-or-matrix->indarray r)))))

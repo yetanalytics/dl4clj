@@ -6,7 +6,7 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
     dl4clj.spark.api.training-worker
   (:import [org.deeplearning4j.spark.api TrainingWorker])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]))
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]))
 
 ;; param-avg-worker currently only implementer
 
@@ -34,7 +34,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getFinalResult ~worker ~mln))
          :else
-         (.getFinalResult worker mln)))
+         (let [[w m] (eval-if-code [worker seq?] [mln seq?])]
+           (.getFinalResult w m))))
 
 (defn get-final-result-with-stats
   "Get the final result to be returned to the driver
@@ -48,7 +49,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
            :mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.getFinalResultWithStats ~worker ~mln))
          :else
-         (.getFinalResultWithStats worker mln)))
+         (let [[w m] (eval-if-code [worker seq?] [mln seq?])]
+           (.getFinalResultWithStats w m))))
 
 (defn get-final-result-no-data
   "Get the final result to be returned to the driver, if no data was available for this executor"
@@ -98,7 +100,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
            :training-hook (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~worker (.addHook ~training-hook)))
          :else
-         (doto worker (.addHook training-hook))))
+         (let [[w h] (eval-if-code [worker seq?] [training-hook seq?])]
+           (doto w (.addHook h)))))
 
 (defn remove-hook!
   "removes a training hook from the worker
@@ -112,7 +115,8 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
            :training-hook (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~worker (.removeHook ~training-hook)))
          :else
-         (doto worker (.removeHook training-hook))))
+         (let [[w h] (eval-if-code [worker seq?] [training-hook seq?])]
+           (doto w (.removeHook h)))))
 
 (defn process-mini-batch!
   "Process (fit) a minibatch for a MultiLayerNetwork
@@ -137,7 +141,9 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
           as-code?
           `(doto ~worker (.processMinibatch ~data-set ~mln ~is-last?)))
          :else
-         (doto worker (.processMinibatch data-set mln is-last?))))
+         (let [[w ds m l?] (eval-if-code [worker seq?] [data-set seq?] [mln seq?]
+                                         [is-last? seq? boolean?])]
+           (doto w (.processMinibatch ds m l?)))))
 
 (defn process-mini-batch-with-stats!
   "Process (fit) a minibatch for a MultiLayerNetwork
@@ -162,4 +168,6 @@ see: https://deeplearning4j.org/doc/org/deeplearning4j/spark/api/TrainingWorker.
           as-code?
           `(.processMinibatchWithStats ~worker ~data-set ~mln ~is-last?))
          :else
-         (.processMinibatchWithStats worker data-set mln is-last?)))
+         (let [[w ds m l?] (eval-if-code [worker seq?] [data-set seq?]
+                                         [mln seq?] [is-last? seq? boolean?])]
+           (.processMinibatchWithStats w ds m l?))))

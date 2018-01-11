@@ -4,7 +4,7 @@
            [org.apache.spark SparkConf])
   (:require [dl4clj.helpers :refer [data-from-iter reset-iterator!]]
             [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code? as-code]]))
+            [dl4clj.utils :refer [obj-or-code? as-code eval-if-code]]))
 
 (defn new-java-spark-context
   "creates a java spark context from a spark conf
@@ -52,7 +52,10 @@
                            (_ :guard seq?))
            :min-partitions (:or (_ :guard number?)
                                 (_ :guard seq?))}]
-         (.textFile spark-context file-name (int min-partitions))
+         (let [[sc f-n p] (eval-if-code [spark-context seq?]
+                                       [file-name seq? string?]
+                                       [min-partitions seq? number?])]
+           (.textFile sc f-n (int p)))
          [{:spark-context (_ :guard seq?)
            :file-name (:or (_ :guard string?)
                            (_ :guard seq?))}]
@@ -60,7 +63,9 @@
          [{:spark-context _
            :file-name (:or (_ :guard string?)
                            (_ :guard seq?))}]
-         (.textFile spark-context file-name)))
+         (let [[sc f-n] (eval-if-code [spark-context seq?]
+                                      [file-name seq? string?])]
+           (.textFile sc f-n))))
 
 (defn whole-text-files
   "Read a directory of text files from HDFS, a local file system (available on all nodes),
@@ -90,7 +95,9 @@
                            (_ :guard seq?))
            :min-partitions (:or (_ :guard number?)
                                 (_ :guard seq?))}]
-         (.wholeTextFiles spark-context path (int min-partitions))
+         (let [[sc p n-p] (eval-if-code [spark-context seq?] [path seq? string?]
+                                        [min-partitions seq? number?])]
+           (.wholeTextFiles sc p (int n-p)))
          [{:spark-context (_ :guard seq?)
            :path (:or (_ :guard string?)
                       (_ :guard seq?))}]
@@ -98,7 +105,8 @@
          [{:spark-context _
            :path (:or (_ :guard string?)
                       (_ :guard seq?))}]
-         (.wholeTextFiles spark-context path)))
+         (let [[sc p] (eval-if-code [spark-context seq?] [path seq? string?])]
+           (.wholeTextFiles sc p))))
 
 (defn parallelize
   "Distributes a local collection to form/return an RDD
@@ -112,24 +120,26 @@
   [& {:keys [spark-context data num-slices as-code?]
       :as opts}]
   (match [opts]
-         [{:spark-context (_ :guard seq?)}]
-         (throw (Exception. "the spark context should be an object"))
          [{:spark-context _
            :data (:or (_ :guard coll?)
                       (_ :guard seq?))
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         (.parallelize spark-context
-                       (if (vector? data)
-                         (reverse (into '() data))
-                         data)
-                       (int num-slices))
+         (let [[sc d n-slices] (eval-if-code [spark-context seq?]
+                                             [data seq? coll?]
+                                             [num-slices seq? number?])]
+          (.parallelize sc
+                       (if (vector? d)
+                         (reverse (into '() d))
+                         d)
+                       (int n-slices)))
          [{:spark-context _
            :data (:or (_ :guard coll?)
                       (_ :guard seq?))}]
-         (.parallelize spark-context (if (vector? data)
-                                       (reverse (into '() data))
-                                       data))))
+         (let [[sc d] (eval-if-code [spark-context seq?] [data seq? coll?])]
+           (.parallelize sc (if (vector? d)
+                              (reverse (into '() d))
+                              d)))))
 
 (defn parallelize-pairs
   "Distributes a local collection to form/return a Pair RDD
@@ -144,25 +154,27 @@
       :or {as-code? true}
       :as opts}]
   (match [opts]
-         [{:spark-context (_ :guard seq?)}]
-         (throw (Exception. "the spark context should be an object"))
          [{:spark-context _
            :data (:or (_ :guard coll?)
                       (_ :guard seq?))
            :num-slices (:or (_ :guard number?)
                             (_ :guard seq?))}]
-         (.parallelizePairs spark-context
-                            (if (vector? data)
-                              (reverse (into '() data))
-                              data)
-                            num-slices)
+         (let [[sc d n-slices] (eval-if-code [spark-context seq?]
+                                             [data seq? coll?]
+                                             [num-slices seq? number?])]
+           (.parallelizePairs sc
+                              (if (vector? d)
+                                (reverse (into '() d))
+                                d)
+                              n-slices))
          [{:spark-context _
            :data (:or (_ :guard coll?)
                       (_ :guard seq?))}]
-         (.parallelizePairs spark-context
-                            (if (vector? data)
-                              (reverse (into '() data))
-                              data))))
+         (let [[sc d] (eval-if-code [spark-context seq?]
+                                    [data seq? coll?])]
+           (.parallelizePairs sc (if (vector? d)
+                                   (reverse (into '() d))
+                                   d)))))
 
 (defn java-rdd-from-iter
   "given a spark context and an iterator, creates a javaRDD from the
@@ -170,8 +182,6 @@
   [& {:keys [spark-context iter num-slices]
       :as opts}]
   (match [opts]
-         [{:spark-context (_ :guard seq?)}]
-         (throw (Exception. "pass the spark context as a java object"))
          [{:spark-context _
            :iter (_ :guard seq?)
            :num-slices (:or (_ :guard number?)
@@ -180,17 +190,11 @@
                       :data (data-from-iter iter :as-code? false)
                       :num-slices num-slices)
          [{:spark-context _
-           :iter _
-           :num-slices (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-         (parallelize :spark-context spark-context
-                      :data (data-from-iter (reset-iterator! iter))
-                      :num-slices num-slices)
-         [{:spark-context _
            :iter (_ :guard seq?)}]
          (parallelize :spark-context spark-context
                       :data (data-from-iter iter :as-code? false))
          [{:spark-context _
            :iter _}]
-         (parallelize :spark-context spark-context
-                      :data (data-from-iter (reset-iterator! iter)))))
+         (let [[i] (eval-if-code [iter seq?])]
+          (parallelize :spark-context spark-context
+                      :data (data-from-iter (reset-iterator! i))))))

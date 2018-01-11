@@ -378,8 +378,6 @@
 ;; manipulation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; left off implementing eval-if-code here
-
 (defn add-feature-vector!
   "adds a feature vector to a dataset, if :to-add is supplied, the fn adds a
    feature for each example on to the current feature vector.  Otherwise,

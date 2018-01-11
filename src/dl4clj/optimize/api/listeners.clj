@@ -1,7 +1,7 @@
 (ns dl4clj.optimize.api.listeners
   (:import [org.deeplearning4j.optimize.api IterationListener])
   (:require [clojure.core.match :refer [match]]
-            [dl4clj.utils :refer [obj-or-code?]]
+            [dl4clj.utils :refer [obj-or-code? eval-if-code]]
             [clojure.java.io :refer [as-file]]))
 
 (defn invoked?
@@ -40,7 +40,10 @@
          [{:listener _
            :file _
            :delim _}]
-         (doto listener (.exportScores (as-file file) delim))
+         (let [[l f d] (eval-if-code [listener seq?]
+                                     [file seq? string?]
+                                     [delim seq? string?])]
+           (doto l (.exportScores (as-file f) d)))
          [{:listener (_ :guard seq?)
            :output-stream (_ :guard seq?)
            :delim (:or (_ :guard string?)
@@ -51,20 +54,25 @@
          [{:listener _
            :output-stream _
            :delim _}]
-         (doto listener (.exportScores output-stream delim))
+         (let [[l o d] (eval-if-code [listener seq?]
+                                     [output-stream seq?]
+                                     [delim seq? string?])]
+           (doto l (.exportScores o d)))
          [{:listener (_ :guard seq?)
            :file (:or (_ :guard string?)
                       (_ :guard seq?))}]
          (obj-or-code? as-code? `(doto ~listener (.exportScores (as-file ~file))))
          [{:listener _
            :file _}]
-         (doto listener (.exportScores (as-file file)))
+         (let [[l f] (eval-if-code [listener seq?] [file seq? string?])]
+           (doto l (.exportScores (as-file f))))
          [{:listener (_ :guard seq?)
            :output-stream (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~listener (.exportScores ~output-stream)))
          [{:listener _
            :output-stream _}]
-         (doto listener (.exportScores output-stream))))
+         (let [[l o] (eval-if-code [listener seq?] [output-stream seq?])]
+           (doto l (.exportScores o)))))
 
 (defn get-scores-vs-iter
   "currently results in a stack over flow error,

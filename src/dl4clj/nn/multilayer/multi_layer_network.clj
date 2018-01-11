@@ -1,6 +1,6 @@
 (ns ^{:doc "see: https://deeplearning4j.org/doc/org/deeplearning4j/nn/multilayer/MultiLayerNetwork.html"}
     dl4clj.nn.multilayer.multi-layer-network
-  (:require [dl4clj.utils :refer [contains-many? gensym* obj-or-code?]]
+  (:require [dl4clj.utils :refer [contains-many? gensym* obj-or-code? eval-if-code]]
             [dl4clj.constants :as enum]
             [dl4clj.nn.api.model :refer [fit! init!]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
@@ -21,7 +21,8 @@
                         (_ :guard seq?))}]
          `(MultiLayerNetwork. ~conf (vec-or-matrix->indarray ~params))
          [{:conf _ :params _}]
-         (MultiLayerNetwork. conf (vec-or-matrix->indarray params))
+         (let [[c p] (eval-if-code [conf seq?] [params seq?])]
+           (MultiLayerNetwork. c (vec-or-matrix->indarray p)))
          [{:conf (_ :guard seq?)}]
          `(MultiLayerNetwork. ~conf)
          :else
@@ -51,17 +52,10 @@
                (dotimes [~n* ~n-epochs]
                  (fit! :mln ~mln* :iter ~iter))
                ~mln*))
-           [{:mln _
-             :iter (_ :guard seq?)
-             :n-epochs (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-           (throw (Exception. "you must provide both the mln and iter as objects or code"))
-           [{:mln (_ :guard seq?)
-             :iter _
-             :n-epochs (:or (_ :guard number?)
-                            (_ :guard seq?))}]
-           (throw (Exception. "you must provide both the mln and iter as objects or code"))
            :else
-           (do (dotimes [n n-epochs]
-                 (fit! :mln mln :iter iter))
-               mln))))
+           (let [[model i n-e] (eval-if-code [mln seq?]
+                                             [iter seq?]
+                                             [n-epochs seq? number?])]
+            (do (dotimes [n n-e]
+                 (fit! :mln model :iter i))
+               model)))))

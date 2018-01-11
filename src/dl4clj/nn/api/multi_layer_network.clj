@@ -1,7 +1,7 @@
 (ns dl4clj.nn.api.multi-layer-network
   (:import [org.deeplearning4j.nn.multilayer MultiLayerNetwork]
            [org.deeplearning4j.nn.api Layer])
-  (:require [dl4clj.utils :refer [contains-many? array-of obj-or-code?]]
+  (:require [dl4clj.utils :refer [contains-many? array-of obj-or-code? eval-if-code]]
             [dl4clj.helpers :refer [new-lazy-iter reset-if-empty?! reset-iterator!]]
             [clojure.core.match :refer [match]]
             [dl4clj.constants :as enum]
@@ -20,7 +20,8 @@
            :ds (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~mln (.initialize ~ds)))
          :else
-         (doto mln (.initialize ds))))
+         (let [[model d] (eval-if-code [mln seq?] [ds seq?])]
+           (doto model (.initialize d)))))
 
 (defn evaluate-classification
   "if you only supply mln and iter: Evaluate the network (classification performance)
@@ -46,21 +47,27 @@
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter (into '() ~labels) (int ~top-n)))
          [{:mln _ :iter _ :labels-list _ :top-n _}]
-         (.evaluate mln (reset-iterator! iter) (into '() labels) top-n)
+         (let [[model i ls t-n] (eval-if-code [mln seq?]
+                                              [iter seq?]
+                                              [labels seq? vector?]
+                                              [top-n seq? number?])]
+           (.evaluate model (reset-iterator! i) (reverse (into '() ls)) t-n))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :labels-list (:or (_ :guard vector?)
                              (_ :guard seq?))}]
-         (obj-or-code? as-code? `(.evaluate ~mln ~iter (into '() ~labels)))
+         (obj-or-code? as-code? `(.evaluate ~mln ~iter (reverse (into '() ~labels))))
          [{:mln _ :iter _ :labels-list _}]
-         (.evaluate mln (reset-iterator! iter) (into '() labels))
+         (let [[model i ls] (eval-if-code [mln seq?] [iter seq?]
+                                          [labels seq? vector?])]
+          (.evaluate model (reset-iterator! i) (reverse (into '() ls))))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.evaluate ~mln ~iter))
-         [{:mln _ :iter (_ :guard seq?)}]
-         (.evaluate mln (eval iter))
          :else
-         (.evaluate mln (reset-iterator! iter))))
+         (let [[model i] (eval-if-code [mln seq?]
+                                       [iter seq?])]
+           (.evaluate model (reset-iterator! i)))))
 
 (defn evaluate-regression
   "Evaluate the network for regression performance
@@ -75,7 +82,8 @@
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.evaluateRegression ~mln ~iter))
          :else
-         (.evaluateRegression mln (reset-iterator! iter))))
+         (let [[model i] (eval-if-code [mln seq?] [iter seq?])]
+           (.evaluateRegression model (reset-iterator! i)))))
 
 (defn evaluate-roc
   "Evaluate the network (must be a binary classifier) on the specified data
@@ -96,7 +104,9 @@
                                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(.evaluateROC ~mln ~iter (int ~roc-threshold-steps)))
          :else
-         (.evaluateROC mln (reset-iterator! iter) roc-threshold-steps)))
+         (let [[model i steps] (eval-if-code [mln seq?] [iter seq?]
+                                             [roc-threshold-steps seq? number?])]
+           (.evaluateROC model (reset-iterator! i) steps))))
 
 (defn evaluate-roc-multi-class
   "Evaluate the network on the specified data.
@@ -116,7 +126,9 @@
                                      (_ :guard seq?))}]
          (obj-or-code? as-code? `(.evaluateROCMultiClass ~mln ~iter (int ~roc-threshold-steps)))
          :else
-         (.evaluateROCMultiClass mln (reset-iterator! iter) roc-threshold-steps)))
+         (let [[model i steps] (eval-if-code [mln seq?] [iter seq?]
+                                             [roc-threshold-steps seq? number?])]
+           (.evaluateROCMultiClass model (reset-iterator! i) steps))))
 
 (defn score-examples
   "Calculate the score for each example in a DataSet individually.
@@ -142,14 +154,18 @@
                                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.scoreExamples ~mln ~dataset ~add-regularization-terms?))
          [{:mln _ :dataset _ :add-regularization-terms? _}]
-         (.scoreExamples mln dataset add-regularization-terms?)
+         (let [[model ds terms?] (eval-if-code [mln seq?] [dataset seq?]
+                                               [add-regularization-terms? seq? boolean?])]
+           (.scoreExamples model ds terms?))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :add-regularization-terms? (:or (_ :guard boolean?)
                                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.scoreExamples ~mln ~iter ~add-regularization-terms?))
          [{:mln _ :iter _ :add-regularization-terms? _}]
-         (.scoreExamples mln (reset-iterator! iter) add-regularization-terms?)))
+         (let [[model i terms?] (eval-if-code [mln seq?] [iter seq?]
+                                              [add-regularization-terms? seq? boolean?])]
+           (.scoreExamples model (reset-iterator! i) terms?))))
 
 (defn output
   "label the probabilities of the input or if masks are supplied,
@@ -191,9 +207,14 @@
                     (vec-or-matrix->indarray ~features-mask)
                     (vec-or-matrix->indarray ~labels-mask)))
          [{:mln _ :input _ :train? _ :features-mask _ :labels-mask _}]
-         (.output mln (vec-or-matrix->indarray input) train?
-                  (vec-or-matrix->indarray features-mask)
-                  (vec-or-matrix->indarray labels-mask))
+         (let [[model i t? f-mask l-mask] (eval-if-code [mln seq?]
+                                                        [input seq?]
+                                                        [train? seq? boolean?]
+                                                        [features-mask seq?]
+                                                        [labels-mask seq?])]
+          (.output model (vec-or-matrix->indarray i) t?
+                   (vec-or-matrix->indarray f-mask)
+                   (vec-or-matrix->indarray l-mask)))
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -204,8 +225,10 @@
           `(.output ~mln (vec-or-matrix->indarray ~input)
                    (enum/value-of {:layer-training-mode ~training-mode})))
          [{:mln _ :input _ :training-mode _}]
-         (.output mln (vec-or-matrix->indarray input)
-                  (enum/value-of {:layer-training-mode training-mode}))
+         (let [[model i t-m] (eval-if-code [mln seq?] [input set?]
+                                           [training-mode seq? keyword?])]
+          (.output model (vec-or-matrix->indarray i)
+                  (enum/value-of {:layer-training-mode t-m})))
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -213,25 +236,30 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~mln (vec-or-matrix->indarray ~input) ~train?))
          [{:mln _ :input _ :train? _}]
-         (.output mln (vec-or-matrix->indarray input) train?)
+         (let [[model i t?] (eval-if-code [mln seq?] [input seq?]
+                                          [train? seq? boolean?])]
+           (.output model (vec-or-matrix->indarray i) t?))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~mln ~iter ~train?))
          [{:mln _ :iter _ :train? _}]
-         (.output mln (reset-if-empty?! iter) train?)
+         (let [[model i t?] (eval-if-code [mln seq?] [iter seq?] [train? seq? boolean?])]
+           (.output model (reset-if-empty?! i) t?))
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.output ~mln (vec-or-matrix->indarray ~input)))
          [{:mln _ :input _}]
-         (.output mln (vec-or-matrix->indarray input))
+         (let [[model i] (eval-if-code [mln seq?] [input seq?])]
+           (.output model (vec-or-matrix->indarray i)))
          [{:mln (_ :guard seq?)
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.output ~mln ~iter))
          [{:mln _ :iter _}]
-         (.output mln (reset-if-empty?! iter))))
+         (let [[model i] (eval-if-code [mln seq?] [iter seq?])]
+           (.output model (reset-if-empty?! i)))))
 
 
 (defn initialize-layers!
@@ -250,8 +278,8 @@
           `(doto ~mln
             (.initializeLayers (vec-or-matrix->indarray ~input))))
          :else
-         (doto mln
-           (.initializeLayers (vec-or-matrix->indarray input)))))
+         (let [[model i] (eval-if-code [mln seq?] [input seq?])]
+          (doto model (.initializeLayers (vec-or-matrix->indarray i))))))
 
 (defn pre-train!
   "Perform layerwise pretraining on all pre-trainable layers in the network (VAEs, RBMs, Autoencoders, etc)
@@ -269,7 +297,8 @@
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.pretrain ~mln ~iter))
          :else
-         (.pretrain mln (reset-iterator! iter))))
+         (let [[model i] (eval-if-code [mln seq?] [iter seq?])]
+           (.pretrain model (reset-iterator! i)))))
 
 (defn pre-train-layer!
   "Perform layerwise unsupervised training on a single pre-trainable layer
@@ -292,7 +321,9 @@
            :iter (_ :guard seq?)}]
          (obj-or-code? as-code? `(.pretrainLayer ~mln (int ~layer-idx) ~iter))
          [{:mln _ :layer-idx _ :iter _}]
-         (.pretrainLayer mln layer-idx (reset-iterator! iter))
+         (let [[model l-idx i] (eval-if-code [mln seq?] [layer-idx seq? number?]
+                                             [iter seq?])]
+           (.pretrainLayer model l-idx (reset-iterator! i)))
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -302,7 +333,9 @@
           as-code?
           `(.pretrainLayer ~mln (int ~layer-idx) (vec-or-matrix->indarray ~features)))
          [{:mln _ :layer-idx _ :features _}]
-         (.pretrainLayer mln layer-idx (vec-or-matrix->indarray features))))
+         (let [[model l-idx f] (eval-if-code [mln seq?] [layer-idx seq? number?]
+                                             [features seq?])]
+           (.pretrainLayer model l-idx (vec-or-matrix->indarray f)))))
 
 (defn fine-tune!
   "Run SGD based on the given labels
@@ -337,7 +370,8 @@
           as-code?
           `(.rnnTimeStep ~mln (vec-or-matrix->indarray ~input)))
          :else
-         (.rnnTimeStep mln (vec-or-matrix->indarray input))))
+         (let [[model i] (eval-if-code [mln seq?] [input seq?])]
+           (.rnnTimeStep model (vec-or-matrix->indarray i)))))
 
 (defn reconstruct
   "reconstructs the input from the output of a given layer
@@ -361,7 +395,9 @@
           as-code?
           `(.reconstruct ~mln (vec-or-matrix->indarray ~layer-output) (int ~layer-idx)))
          :else
-         (.reconstruct mln (vec-or-matrix->indarray layer-output) layer-idx)))
+         (let [[model l-o l-idx] (eval-if-code [mln seq?] [layer-output seq?]
+                                               [layer-idx seq? number?])]
+           (.reconstruct model (vec-or-matrix->indarray l-o) l-idx))))
 
 (defn summary
   "String detailing the architecture of the multi-layer-network. (mln)"
@@ -400,7 +436,9 @@
                                    (int ~to)
                                    (vec-or-matrix->indarray ~input)))
          :else
-         (.activateSelectedLayers mln from to (vec-or-matrix->indarray input))))
+         (let [[model f t i] (eval-if-code [mln seq?] [from seq? number?]
+                                           [to seq? number?] [input seq?])]
+           (.activateSelectedLayers model f t (vec-or-matrix->indarray i)))))
 
 (defn activate-from-prev-layer
   "Calculate activation from previous layer including pre processing where necessary
@@ -427,8 +465,11 @@
           `(.activationFromPrevLayer ~mln ~current-layer-idx
                                     (vec-or-matrix->indarray ~input) ~training?))
          :else
-         (.activationFromPrevLayer mln current-layer-idx
-                                   (vec-or-matrix->indarray input) training?)))
+         (let [[model cur-idx i t?] (eval-if-code [mln seq?]
+                                                  [current-layer-idx seq? number?]
+                                                  [input seq?]
+                                                  [training? seq? boolean?])]
+           (.activationFromPrevLayer model cur-idx (vec-or-matrix->indarray i) t?))))
 
 (defn clear-layer-mask-arrays!
   "Remove the mask arrays from all layers.
@@ -461,13 +502,16 @@
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.computeZ ~mln (vec-or-matrix->indarray ~input) ~training?))
          [{:mln _ :training? _ :input _}]
-         (.computeZ mln (vec-or-matrix->indarray input) training?)
+         (let [[model i t?] (eval-if-code [mln seq?] [input seq?]
+                                          [training? seq? boolean?])]
+           (.computeZ model (vec-or-matrix->indarray i) t?))
          [{:mln (_ :guard seq?)
            :training? (:or (_ :guard boolean?)
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.computeZ ~mln ~training?))
          :else
-         (.computeZ mln training?)))
+         (let [[model t?] (eval-if-code [mln seq?] [training? seq? boolean?])]
+           (.computeZ model t?))))
 
 (defn get-epsilon
   "returns epsilon for a given multi-layer-network (mln)"
@@ -513,9 +557,13 @@
                          (vec-or-matrix->indarray ~features-mask)
                          (vec-or-matrix->indarray ~labels-mask)))
          [{:mln _ :input _ :features-mask _ :labels-mask _}]
-         (.feedForward mln (vec-or-matrix->indarray input)
-                       (vec-or-matrix->indarray features-mask)
-                       (vec-or-matrix->indarray labels-mask))
+         (let [[model i f-m l-m] (eval-if-code [mln seq?]
+                                               [input seq?]
+                                               [features-mask seq?]
+                                               [labels-mask seq?])]
+           (.feedForward model (vec-or-matrix->indarray i)
+                         (vec-or-matrix->indarray f-m)
+                         (vec-or-matrix->indarray l-m)))
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))
@@ -523,19 +571,23 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.feedForward ~mln (vec-or-matrix->indarray ~input) ~train?))
          [{:mln _ :input _ :train? _}]
-         (.feedForward mln (vec-or-matrix->indarray input) train?)
+         (let [[model i t?] (eval-if-code [mln seq?] [input seq?]
+                                          [train? seq? boolean?])]
+           (.feedForward model (vec-or-matrix->indarray i) t?))
          [{:mln (_ :guard seq?)
            :input (:or (_ :guard vector?)
                        (_ :guard seq?))}]
          (obj-or-code? as-code? `(.feedForward ~mln (vec-or-matrix->indarray ~input)))
          [{:mln _ :input _}]
-         (.feedForward mln (vec-or-matrix->indarray input))
+         (let [[model i] (eval-if-code [mln seq?] [input seq?])]
+           (.feedForward model (vec-or-matrix->indarray i)))
          [{:mln (_ :guard seq?)
            :train? (:or (_ :guard boolean?)
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.feedForward ~mln ~train?))
          [{:mln _ :train? _}]
-         (.feedForward mln train?)
+         (let [[model t?] (eval-if-code [mln seq?] [train? seq? boolean?])]
+           (.feedForward model t?))
          [{:mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(.feedForward ~mln))
          :else
@@ -569,8 +621,9 @@
                                (vec-or-matrix->indarray ~input)
                                ~train?))
          [{:mln _ :layer-idx _ :train? _ :input _}]
-         (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input)
-                              train?)
+         (let [[model l-idx i t?] (eval-if-code [mln seq?] [layer-idx seq? number?]
+                                                [input seq?] [train? seq? boolean?])]
+           (.feedForwardToLayer model l-idx (vec-or-matrix->indarray i) t?))
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -581,7 +634,9 @@
           `(.feedForwardToLayer ~mln (int ~layer-idx)
                                (vec-or-matrix->indarray ~input)))
          [{:mln _ :layer-idx _ :input _}]
-         (.feedForwardToLayer mln layer-idx (vec-or-matrix->indarray input))
+         (let [[model l-idx i] (eval-if-code [mln seq?] [layer-idx seq? number?]
+                                             [input seq?])]
+           (.feedForwardToLayer model l-idx (vec-or-matrix->indarray i)))
          [{:mln (_ :guard seq?)
            :layer-idx (:or (_ :guard number?)
                            (_ :guard seq?))
@@ -589,7 +644,9 @@
                         (_ :guard seq?))}]
          (obj-or-code? as-code? `(.feedForwardToLayer ~mln (int ~layer-idx) ~train?))
          [{:mln _ :layer-idx _ :train? _}]
-         (.feedForwardToLayer mln layer-idx train?)))
+         (let [[model l-idx t?] (eval-if-code [mln seq?] [layer-idx seq? number?]
+                                              [train? seq? boolean?])]
+           (.feedForwardToLayer model l-idx t?))))
 
 (defn get-default-config
   "gets the default config for the multi-layer-network"
@@ -626,13 +683,15 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLayer ~mln (int ~layer-idx)))
          [{:mln _ :layer-idx _}]
-         (.getLayer mln layer-idx)
+         (let [[model l-idx] (eval-if-code [mln seq?] [layer-idx seq? number?])]
+           (.getLayer model l-idx))
          [{:mln (_ :guard seq?)
            :layer-name (:or (_ :guard string?)
                             (_ :guard seq?))}]
          (obj-or-code? as-code? `(.getLayer ~mln ~layer-name))
          [{:mln _ :layer-name _}]
-         (.getLayer mln layer-name)))
+         (let [[model l-name] (eval-if-code [mln seq?] [layer-name seq? string?])]
+           (.getLayer model l-name))))
 
 (defn get-layer-names
   "return a list of the layer names in the mln"
@@ -775,8 +834,11 @@
           `(.rnnActivateUsingStoredState ~mln (vec-or-matrix->indarray ~input)
                                         ~training? ~store-last-for-tbptt?))
          :else
-         (.rnnActivateUsingStoredState mln (vec-or-matrix->indarray input)
-                                       training? store-last-for-tbptt?)))
+         (let [[model i t? store-last?] (eval-if-code [mln seq?] [input seq?]
+                                                      [training? seq? boolean?]
+                                                      [store-last-for-tbptt? seq? boolean?])]
+           (.rnnActivateUsingStoredState model (vec-or-matrix->indarray i)
+                                         t? store-last?))))
 
 (defn rnn-clear-prev-state!
   "clear the previous state of the rnn layers if any and return the mln"
@@ -801,7 +863,8 @@
                            (_ :guard seq?))}]
          (obj-or-code? as-code? `(.rnnGetPreviousState ~mln (int ~layer-idx)))
          :else
-         (.rnnGetPreviousState mln layer-idx)))
+         (let [[model l-idx] (eval-if-code [mln seq?] [layer-idx seq? number?])]
+           (.rnnGetPreviousState model l-idx))))
 
 (defn rnn-set-prev-state!
   "Set the state of the RNN layer and return the updated mln
@@ -825,8 +888,10 @@
           `(doto ~mln
             (.rnnSetPreviousState (int ~layer-idx) ~state)))
          :else
-         (doto mln
-           (.rnnSetPreviousState layer-idx state))))
+         (let [[model l-idx s] (eval-if-code [mln seq?]
+                                             [layer-idx seq? number?]
+                                             [state seq? map?])]
+          (doto model (.rnnSetPreviousState l-idx s)))))
 
 (defn set-mln-input!
   "Note that if input isn't nil and the neuralNets are nil,
@@ -845,8 +910,8 @@
           `(doto ~mln
             (.setInput (vec-or-matrix->indarray ~input))))
          :else
-         (doto mln
-           (.setInput (vec-or-matrix->indarray input)))))
+         (let [[model i] (eval-if-code [mln seq?] [input seq?])]
+          (doto model (.setInput (vec-or-matrix->indarray i))))))
 
 (defn set-labels-mln!
   "sets the labels given an array of labels,
@@ -865,8 +930,8 @@
           `(doto ~mln
             (.setLabels (vec-or-matrix->indarray ~labels))))
          :else
-         (doto mln
-           (.setLabels (vec-or-matrix->indarray labels)))))
+         (let [[model l] (eval-if-code [mln seq?] [labels seq?])]
+          (doto model (.setLabels (vec-or-matrix->indarray l))))))
 
 (defn set-layers!
   "sets the layers of the mln in the order in which they appear in the supplied coll.
@@ -886,9 +951,8 @@
            (.setLayers (array-of :data ~layers
                                  :java-type Layer))))
          :else
-         (doto mln
-           (.setLayers (array-of :data layers
-                                 :java-type Layer)))))
+         (let [[model ls] (eval-if-code [mln seq?] [layers seq? coll?])]
+          (doto model (.setLayers (array-of :data ls :java-type Layer))))))
 
 (defn set-layer-wise-config!
   "sets the configuration for a mln given a multi-layer configuration.
@@ -911,8 +975,8 @@
           `(doto ~mln
             (.setLayerWiseConfigurations ~multi-layer-conf)))
          :else
-         (doto mln
-           (.setLayerWiseConfigurations multi-layer-conf))))
+         (let [[model conf] (eval-if-code [mln seq?] [multi-layer-conf seq?])]
+          (doto model (.setLayerWiseConfigurations conf)))))
 
 (defn set-mask!
   "set the mask, returns the mln
@@ -930,8 +994,8 @@
           `(doto ~mln
             (.setMask (vec-or-matrix->indarray ~mask))))
          :else
-         (doto mln
-           (.setMask (vec-or-matrix->indarray mask)))))
+         (let [[model m] (eval-if-code [mln seq?] [mask seq?])]
+          (doto model (.setMask (vec-or-matrix->indarray m))))))
 
 (defn set-parameters!
   "set the paramters for this model (mln).
@@ -953,8 +1017,8 @@
           `(doto ~mln
             (.setParameters (vec-or-matrix->indarray ~params))))
          :else
-         (doto mln
-           (.setParameters (vec-or-matrix->indarray params)))))
+         (let [[model p] (eval-if-code [mln seq?] [params seq?])]
+          (doto model (.setParameters (vec-or-matrix->indarray p))))))
 
 (defn update-mln!
   "Assigns the parameters of mln to the ones specified by another mln.
@@ -970,7 +1034,8 @@
            :other-mln (_ :guard seq?)}]
          (obj-or-code? as-code? `(doto ~mln (.update ~other-mln)))
          :else
-         (doto mln (.update other-mln))))
+         (let [[model1 model2] (eval-if-code [mln seq?] [other-mln seq?])]
+           (doto model1 (.update model2)))))
 
 (defn update-rnn-state-with-tbptt-state!
   "updates the rnn state to be that of the tbptt state.
@@ -1010,4 +1075,6 @@
           `(.zFromPrevLayer ~mln (int ~current-layer-idx)
                            (vec-or-matrix->indarray ~input) ~training?))
          :else
-         (.zFromPrevLayer mln current-layer-idx (vec-or-matrix->indarray input) training?)))
+         (let [[model cur-idx i t?] (eval-if-code [mln seq?] [current-layer-idx seq? number?]
+                                                  [input seq?] [training? seq? boolean?])]
+           (.zFromPrevLayer model cur-idx (vec-or-matrix->indarray i) t?))))
