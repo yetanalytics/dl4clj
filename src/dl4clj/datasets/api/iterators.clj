@@ -201,3 +201,12 @@
                    iter-obj
                    (reset-iter! iter-obj))
              (.setPreProcessor pp-obj)))))
+
+(defn shutdown-asyn-iter
+  [iter & {:keys [as-code?]
+           :or {as-code? true}}]
+  (match [iter]
+         [(_ :guard seq?)]
+         (obj-or-code? as-code? `(doto ~iter .shutdown))
+         :else
+         (doto iter .shutdown)))
