@@ -19,21 +19,44 @@
             PathSparkMultiDataSetIterator
             PortableDataStreamDataSetIterator
             PortableDataStreamMultiDataSetIterator]
+           [org.deeplearning4j.parallelism AsyncIterator]
            [java.util Random])
   (:require [dl4clj.constants :refer [value-of]]
             [dl4clj.helpers :refer :all]
             [dl4clj.utils :refer [contains-many? generic-dispatching-fn builder-fn
                                   obj-or-code?]]
+            [dl4clj.custom-errors :refer [obj-must-be-code]]
             [clojure.core.match :refer [match]]
             [nd4clj.linalg.factory.nd4j :refer [vec-or-matrix->indarray]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multimethod
+;; TODO:
+;; need to implement specs for object arg catching
+;; need to make multimethod and method calls local to this ns and then expose
+;; the user facing fns. this way spec can catch objects at the fn level and
+;; I wont need to implement error handling within the multimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti iterator
+(defmulti #^{:private true} iterator
   "Multimethod that builds a dataset iterator based on the supplied type and opts"
   generic-dispatching-fn)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; async wrapper for iterators
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod iterator :async [opts]
+  (let [config (:async opts)
+        {iter :iter
+         buffer-size :buffer-size} config]
+    (match [config]
+           [{:iter _
+             :buffer-size _}]
+           `(AsyncIterator. ~iter ~buffer-size)
+           [{:iter _}]
+           `(AsyncIterator. ~iter))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterator mulimethods
@@ -173,33 +196,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dataset iterator mulimethods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-#_(defmethod iterator :doubles-dataset-iter [opts]
-  (let [config (:doubles-dataset-iter opts)
-        {features :features
-         labels :labels
-         batch-size :batch-size} config]
-    `(DoublesDataSetIterator. [(new-pair :p1 (double-array ~features)
-                                         :p2 (double-array ~labels))]
-                              ~batch-size)))
-
-#_(defmethod iterator :floats-dataset-iter [opts]
-  (let [config (:floats-dataset-iter opts)
-        {features :features
-         labels :labels
-         batch-size :batch-size} config]
-    `(FloatsDataSetIterator. [(new-pair :p1 (float-array ~features)
-                                        :p2 (float-array ~labels))]
-                             ~batch-size)))
-
-#_(defmethod iterator :INDArray-dataset-iter [opts]
-  (let [config (:INDArray-dataset-iter opts)
-        {features :features
-         labels :labels
-         batch-size :batch-size} config]
-    `(INDArrayDataSetIterator. [(new-pair :p1 (vec-or-matrix->indarray ~features)
-                                          :p2 (vec-or-matrix->indarray ~labels))]
-                               ~batch-size)))
 
 (defmethod iterator :iterator-multi-dataset-iter [opts]
   (let [config (:iterator-multi-dataset-iter opts)
@@ -459,6 +455,22 @@
     (if streams
       `(PortableDataStreamMultiDataSetIterator. ~streams)
       `(PortableDataStreamMultiDataSetIterator. ~iter))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; async iter for parallelism
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn new-async-parallel-iterator
+  "creates an asynchronous iterator for better performance of iterators from the parallelism package
+
+  :iter (iterator), a datastructure that evaluates to the iterator you want wrapped
+
+  :buffer-size (int), the size of the blocking que buffer"
+  [& {:keys [iter buffer-size as-code?]
+      :or {as-code? true}
+      :as opts}]
+  (let [code (iterator {:async opts})]
+    (obj-or-code? as-code? code)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; record reader dataset iterators user facing fns
@@ -761,64 +773,6 @@
       :or {as-code? true}
       :as opts}]
   (let [code (iterator {:iterator-multi-dataset-iter opts})]
-    (obj-or-code? as-code? code)))
-
-#_(defn new-doubles-dataset-iterator
-  "creates a dataset iterator which iterates over the supplied features and labels
-
-  :features (coll of doubles), a collection of doubles which acts as inputs
-   - [0.2 0.4 ...]
-
-  :labels (coll of doubles), a collection of doubles which acts as targets
-   - [0.4 0.8 ...]
-
-  :as-code? (boolean), return java object or code for creating it
-
-  :batch-size (int), the batch size
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/DoublesDataSetIterator.html"
-  [& {:keys [features labels batch-size as-code?]
-      :or {as-code? true}
-      :as opts}]
-  (let [code (iterator {:doubles-dataset-iter opts})]
-    (obj-or-code? as-code? code)))
-
-#_(defn new-floats-dataset-iterator
-  "creates a dataset iterator which iterates over the supplied iterable
-
-  :features (coll of floats), a collection of floats which acts as inputs
-
-  :labels (coll of floats), a collection of floats which acts as the targets
-
-  :as-code? (boolean), return java object or code for creating it
-
-  :batch-size (int), the batch size
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/FloatsDataSetIterator.html"
-  [& {:keys [features labels batch-size as-code?]
-      :or {as-code? true}
-      :as opts}]
-  (let [code (iterator {:floats-dataset-iter opts})]
-    (obj-or-code? as-code? code)))
-
-#_(defn new-INDArray-dataset-iterator
-  "creates a dataset iterator given a pair of INDArrays and a batch-size
-
-  :features (vec or INDArray), an INDArray which acts as inputs
-   - see: nd4clj.linalg.factory.nd4j
-
-  :labels (vec or INDArray), an INDArray which as the targets
-   - see: nd4clj.linalg.factory.nd4j
-
-  :as-code? (boolean), return java object or code for creating it
-
-  :batch-size (int), the batch size
-
-  see: https://deeplearning4j.org/doc/org/deeplearning4j/datasets/iterator/INDArrayDataSetIterator.html"
-  [& {:keys [features labels batch-size as-code?]
-      :or {as-code? true}
-      :as opts}]
-  (let [code (iterator {:INDArray-dataset-iter opts})]
     (obj-or-code? as-code? code)))
 
 (defn new-multi-data-set-iterator-adapter
