@@ -45,4 +45,14 @@
                    org.apache.commons/commons-lang3
                    org.slf4j/slf4j-api]]
                  [org.clojure/core.match "0.3.0-alpha5"]
-                 [cheshire "5.7.1"]])
+                 [org.deeplearning4j/deeplearning4j-parallel-wrapper_2.11 "0.9.1"
+                  :exclusions [com.fasterxml.jackson.datatype/jackson-datatype-jsr310
+                               com.fasterxml.jackson.datatype/jackson-datatype-jdk8
+                               io.netty/netty
+                               com.google.guava/guava
+                               org.eclipse.collections/eclipse-collections-forkjoin
+                               org.eclipse.collections/eclipse-collections-api
+                               org.eclipse.collections/eclipse-collections
+                               org.yaml/snakeyaml]]
+                 [cheshire "5.7.1"]
+                 [slingshot "0.12.2"]])
