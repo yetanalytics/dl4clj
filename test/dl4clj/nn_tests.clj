@@ -304,7 +304,7 @@
                        :default-updater :nesterovs
                        :default-weight-init :xavier-uniform
                        :default-bias-init 0.2
-                       :default-bias-learning-rate 0.2
+                       :default-bias-learning-rate 0.3
                        :default-drop-out 0.2
                        :default-gradient-normalization :renormalize-l2-per-layer
                        :default-gradient-normalization-threshold 0.3
@@ -338,8 +338,6 @@
                                 1 {:dense-layer {:n-in 1000
                                                  :n-out 2
                                                  :activation-fn :tanh
-                                                 :adam-mean-decay 0.2
-                                                 :adam-var-decay 0.1
                                                  :bias-init 0.7
                                                  :bias-learning-rate 0.1
                                                  :dist {:normal {:mean 0 :std 1}}
@@ -351,10 +349,12 @@
                                                  :l1-bias 0.1
                                                  :l2 0.4
                                                  :l2-bias 0.3
+                                                 :adam-mean-decay 0.2
+                                                 :adam-var-decay 0.1
+                                                 :updater :adam
                                                  :layer-name "second layer"
                                                  :learning-rate 0.1
                                                  :learning-rate-schedule {0 0.2 1 0.5}
-                                                 :updater :adam
                                                  :weight-init :distribution}}}
                        ;;mln vals
                        :backprop? true
@@ -1529,7 +1529,6 @@
                 {:alpha 0.1 :gradient-check? false :lambda 0.1
                  :loss-fn :mse :layer-name "foo1"
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1537,7 +1536,6 @@
                  :gradient-normalization-threshold 0.9
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam
                  :weight-init :distribution}}]
       (is (= :center-loss-output-layer (layer-creation/layer-type
                                         {:nn-conf (quick-nn-conf conf)})))
@@ -1579,7 +1577,6 @@
                  :layer-name "foo3"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :rms-decay 0.7 :updater :rmsprop
                  :weight-init :distribution}}]
       (is (= :rnnoutput (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.RnnOutputLayer
@@ -1594,7 +1591,6 @@
                  :loss-fn :mse :visible-bias-init 0.1
                  :corruption-level 0.7 :sparsity 0.4
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1603,7 +1599,6 @@
                  :layer-name "foo4"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam
                  :weight-init :distribution}}]
       (is (= :auto-encoder (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.autoencoder.AutoEncoder
@@ -1618,7 +1613,6 @@
                       :hidden-unit :softmax :visible-unit :identity
                       :k 2 :sparsity 0.6
                       :activation-fn :relu
-                      :adam-mean-decay 0.2 :adam-var-decay 0.1
                       :bias-init 0.7 :bias-learning-rate 0.1
                       :dist {:normal {:mean 0 :std 1}}
                       :drop-out 0.2 :epsilon 0.3
@@ -1627,7 +1621,7 @@
                       :layer-name "foo5"
                       :learning-rate 0.1 :learning-rate-policy :inverse
                       :learning-rate-schedule {0 0.2 1 0.5}
-                      :updater :adam :weight-init :distribution}}]
+                      :weight-init :distribution}}]
       (is (= :rbm (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.rbm.RBM
              (type (layer-creation/new-layer
@@ -1640,7 +1634,6 @@
                 {:n-in 10 :n-out 2 :forget-gate-bias-init 0.2
                  :gate-activation-fn :relu
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1649,7 +1642,7 @@
                  :layer-name "foo6"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}]
+                 :weight-init :distribution}}]
       (is (= :graves-bidirectional-lstm (layer-creation/layer-type
                                          {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.GravesBidirectionalLSTM
@@ -1671,8 +1664,7 @@
                  :layer-name "foo7"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :momentum 0.2 :momentum-after {0 0.3 1 0.4}
-                 :updater :nesterovs :weight-init :distribution}}]
+                 :weight-init :distribution}}]
       (is (= :graves-lstm (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.recurrent.GravesLSTM
              (type (layer-creation/new-layer
@@ -1694,7 +1686,6 @@
                  :layer-name "foo8"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :rho 0.7 :updater :adadelta
                  :weight-init :distribution}}]
       (is (= :batch-normalization (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.normalization.BatchNormalization
@@ -1746,7 +1737,6 @@
   (testing "creation of a dense layer from a nn-conf"
     (let [conf {:dense-layer {:n-in 10 :n-out 2
                               :activation-fn :relu
-                              :adam-mean-decay 0.2 :adam-var-decay 0.1
                               :bias-init 0.7 :bias-learning-rate 0.1
                               :dist {:normal {:mean 0 :std 1}}
                               :drop-out 0.2 :epsilon 0.3
@@ -1755,7 +1745,7 @@
                               :layer-name "foo11"
                               :learning-rate 0.1 :learning-rate-policy :inverse
                               :learning-rate-schedule {0 0.2 1 0.5}
-                              :updater :adam :weight-init :distribution}}]
+                              :weight-init :distribution}}]
       (is (= :dense (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.feedforward.dense.DenseLayer
              (type (layer-creation/new-layer
@@ -1824,7 +1814,6 @@
   (testing "the creation of a loss layer from a nn-conf"
     (let [conf {:loss-layer {:loss-fn :mse
                              :activation-fn :relu
-                             :adam-mean-decay 0.2 :adam-var-decay 0.1
                              :bias-init 0.7 :bias-learning-rate 0.1
                              :dist {:normal {:mean 0 :std 1}}
                              :drop-out 0.2 :epsilon 0.3
@@ -1833,7 +1822,7 @@
                              :layer-name "foo16"
                              :learning-rate 0.1 :learning-rate-policy :inverse
                              :learning-rate-schedule {0 0.2 1 0.5}
-                             :updater :adam :weight-init :distribution}}]
+                             :weight-init :distribution}}]
       (is (= :loss (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.LossLayer
              (type (layer-creation/new-layer
@@ -1845,7 +1834,6 @@
     (let [conf {:dropout-layer
                 {:n-in 2 :n-out 10
                  :activation-fn :relu
-                 :adam-mean-decay 0.2 :adam-var-decay 0.1
                  :bias-init 0.7 :bias-learning-rate 0.1
                  :dist {:normal {:mean 0 :std 1}}
                  :drop-out 0.2 :epsilon 0.3
@@ -1854,7 +1842,7 @@
                  :layer-name "foo17"
                  :learning-rate 0.1 :learning-rate-policy :inverse
                  :learning-rate-schedule {0 0.2 1 0.5}
-                 :updater :adam :weight-init :distribution}}]
+                 :weight-init :distribution}}]
       (is (= :dropout (layer-creation/layer-type {:nn-conf (quick-nn-conf conf)})))
       (is (= org.deeplearning4j.nn.layers.DropoutLayer
              (type (layer-creation/new-layer
