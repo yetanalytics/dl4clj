@@ -39,7 +39,7 @@
 (defn tensor->indarray
   [matrix]
   (let [dim (count (shape matrix))
-        f3 #(let [m (map %2 %1)
+        f3 #(let [m (pmap %2 %1)
                   a (Nd4j/zeros (int-array (shape %1)))]
               (dotimes [i (count m)]
                 (.putRow a i (nth m i)))
