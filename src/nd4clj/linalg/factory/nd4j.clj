@@ -36,6 +36,22 @@
       (vec->indarray data))
     data))
 
+(defn tensor->indarray
+  [matrix]
+  (let [dim (count (shape matrix))
+        f3 #(let [m (pmap %2 %1)
+                  a (Nd4j/zeros (int-array (shape %1)))]
+              (dotimes [i (count m)]
+                (.putRow a i (nth m i)))
+              a)]
+    (case dim
+      0 matrix
+      1 (vec->indarray matrix)
+      2 (matrix->indarray matrix)
+      3 (f3 matrix matrix->indarray)
+      4 (f3 matrix tensor->indarray)
+      (throw (Exception. "not implement")))))
+
 (defn indarray-of-zeros
   [& {:keys [rows columns as-code?]
       :or {rows 1
