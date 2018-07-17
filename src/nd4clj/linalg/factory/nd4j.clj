@@ -38,9 +38,9 @@
 
 (defn shape [matrix]
   (assert (vector? matrix) "shape can just take vector param")
-  (loop [matrix matrix
-         shape [(count matrix)]]
-    (let [x (first matrix)]
+  (loop [matrix* matrix
+         shape [(count matrix*)]]
+    (let [x (first matrix*)]
       (if ((complement vector?) x)
         shape
         (recur x
