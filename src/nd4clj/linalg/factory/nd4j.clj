@@ -36,6 +36,33 @@
       (vec->indarray data))
     data))
 
+(defn shape [matrix]
+  (assert (vector? matrix) "shape can just take vector param")
+  (loop [matrix* matrix
+         shape [(count matrix*)]]
+    (let [x (first matrix*)]
+      (if ((complement vector?) x)
+        shape
+        (recur x
+               (->> x count (conj shape)))))))
+
+(defn tensor->indarray
+  [matrix]
+  (assert (vector? matrix) "tensor->indarray can just take vector param")
+  (let [dim (count (shape matrix))
+        f3 #(let [m (pmap %2 %1)
+                  a (Nd4j/zeros (int-array (shape %1)))]
+              (dotimes [i (count m)]
+                (.putRow a i (nth m i)))
+              a)]
+    (case dim
+      0 matrix
+      1 (vec->indarray matrix)
+      2 (matrix->indarray matrix)
+      3 (f3 matrix matrix->indarray)
+      4 (f3 matrix tensor->indarray)
+      (throw (Exception. "tensor over 4 dim not implemented")))))
+
 (defn indarray-of-zeros
   [& {:keys [rows columns as-code?]
       :or {rows 1
